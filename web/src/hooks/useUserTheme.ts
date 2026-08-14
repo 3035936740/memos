@@ -7,19 +7,30 @@ import { getThemeWithFallback, loadTheme, setupSystemThemeListener } from "@/uti
  * Priority: User setting → localStorage → system preference
  */
 export const useUserTheme = () => {
-  const { userGeneralSetting } = useAuth();
+  const { currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting } = useAuth();
 
-  // Apply theme when user setting changes or user logs in
+  // Guests always start in the instance Cosmic theme. Authenticated users keep
+  // their account preference once settings have finished loading.
   useEffect(() => {
-    if (!userGeneralSetting) {
+    if (!isIdentityInitialized) {
       return;
     }
-    const theme = getThemeWithFallback(userGeneralSetting.theme);
+
+    if (!currentUser) {
+      loadTheme("cosmic-dark");
+      return;
+    }
+
+    if (!isUserSettingsInitialized) return;
+
+    const theme = getThemeWithFallback(userGeneralSetting?.theme);
     loadTheme(theme);
-  }, [userGeneralSetting?.theme]);
+  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.theme]);
 
   // Listen for system theme changes when using "system" theme
   useEffect(() => {
+    if (!isIdentityInitialized || !currentUser || !isUserSettingsInitialized) return;
+
     const theme = getThemeWithFallback(userGeneralSetting?.theme);
 
     // Only set up listener if theme is "system"
@@ -33,5 +44,5 @@ export const useUserTheme = () => {
     });
 
     return cleanup;
-  }, [userGeneralSetting?.theme]);
+  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.theme]);
 };

@@ -10,17 +10,17 @@ const CustomMarkdownPage = () => {
   const currentUser = useCurrentUser();
   const page = parseInstancePages(generalSetting.customPagesJson).find((item) => item.slug === slug);
 
-  if (!page) return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">Page not found.</div>;
+  if (!page) return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">Page not found.</div>;
   if (!canAccessInstanceContent(page.access, currentUser)) {
-    return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">You do not have access to this page.</div>;
+    return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">You do not have access to this page.</div>;
   }
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-4 py-8">
-      <article className="border-border bg-card text-card-foreground rounded-lg border px-5 py-4">
-        <h1 className="mb-5 text-3xl font-bold">{page.title}</h1>
+    <section className="min-h-full w-full">
+      <div className="mx-auto w-full max-w-2xl py-6 sm:py-8">
+        <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">{page.title}</h1>
         <MemoMarkdownRenderer content={page.markdown} resolvedMentionUsernames={new Set()} standalone />
-      </article>
+      </div>
     </section>
   );
 };

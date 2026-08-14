@@ -1,14 +1,4 @@
-import {
-  CheckIcon,
-  ChevronsUpDownIcon,
-  GlobeIcon,
-  InfoIcon,
-  LogOutIcon,
-  PaletteIcon,
-  SettingsIcon,
-  SquareUserIcon,
-  User2Icon,
-} from "lucide-react";
+import { CheckIcon, ChevronsUpDownIcon, GlobeIcon, LogOutIcon, PaletteIcon, SettingsIcon, SquareUserIcon, User2Icon } from "lucide-react";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -178,10 +168,6 @@ const UserMenu = (props: Props) => {
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuItem onClick={() => navigateFromMenu(Routes.ABOUT)}>
-          <InfoIcon className="size-4 text-muted-foreground" />
-          {t("common.about")}
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigateFromMenu(Routes.SETTING)}>
           <SettingsIcon className="size-4 text-muted-foreground" />
           {t("common.settings")}

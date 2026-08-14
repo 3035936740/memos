@@ -465,7 +465,6 @@ const GlobalNavigation = () => {
           icon: EarthIcon,
           active: routeKind === "explore" || routeKind === "profile" || routeKind === "memo",
         },
-        { id: "about", label: t("common.about"), path: ROUTES.ABOUT, icon: InfoIcon, active: location.pathname === ROUTES.ABOUT },
       ];
   const customIconMap: Record<string, LucideIcon> = {
     book: BookOpenIcon,

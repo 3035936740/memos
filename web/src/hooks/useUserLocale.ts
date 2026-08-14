@@ -9,16 +9,25 @@ import { getLocaleWithFallback, loadLocale } from "@/utils/i18n";
  */
 export const useUserLocale = () => {
   const { i18n } = useTranslation();
-  const { userGeneralSetting } = useAuth();
+  const { currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting } = useAuth();
 
-  // Apply locale when user setting changes or user logs in
+  // Guests always start in Simplified Chinese. Authenticated users keep their
+  // saved account locale once settings have finished loading.
   useEffect(() => {
-    if (!userGeneralSetting) {
+    if (!isIdentityInitialized) {
       return;
     }
-    const locale = getLocaleWithFallback(userGeneralSetting.locale);
+
+    if (!currentUser) {
+      loadLocale("zh-Hans");
+      return;
+    }
+
+    if (!isUserSettingsInitialized) return;
+
+    const locale = getLocaleWithFallback(userGeneralSetting?.locale);
     loadLocale(locale);
-  }, [userGeneralSetting?.locale]);
+  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.locale]);
 
   // Update HTML lang and dir attributes based on current locale
   useEffect(() => {
