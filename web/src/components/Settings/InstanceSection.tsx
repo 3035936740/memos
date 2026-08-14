@@ -17,6 +17,8 @@ import {
 } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
+import InstanceCategoryEditor from "./InstanceCategoryEditor";
+import InstanceContentEditor from "./InstanceContentEditor";
 import SettingGroup from "./SettingGroup";
 import { SettingCodeEditor, SettingList, SettingListItem } from "./SettingList";
 import SettingSection from "./SettingSection";
@@ -53,9 +55,9 @@ const InstanceSection = () => {
   );
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
-    setInstanceGeneralSetting(
+    setInstanceGeneralSetting((currentSetting) =>
       create(InstanceSetting_GeneralSettingSchema, {
-        ...instanceGeneralSetting,
+        ...currentSetting,
         ...partial,
       }),
     );
@@ -102,6 +104,22 @@ const InstanceSection = () => {
           placeholder={t("setting.system.additional-script-placeholder")}
           value={instanceGeneralSetting.additionalScript}
           onChange={(additionalScript) => updatePartialSetting({ additionalScript })}
+        />
+      </SettingGroup>
+
+      <SettingGroup title="页面与导航" description="可视化管理导航按钮、独立 Markdown 页面、外部链接、图标和访问权限。" showSeparator>
+        <InstanceContentEditor
+          navigationJson={instanceGeneralSetting.navigationJson}
+          pagesJson={instanceGeneralSetting.customPagesJson}
+          onNavigationChange={(navigationJson) => updatePartialSetting({ navigationJson })}
+          onPagesChange={(customPagesJson) => updatePartialSetting({ customPagesJson })}
+        />
+      </SettingGroup>
+
+      <SettingGroup title="备忘录分类" description="可视化创建分类、设置访问权限，并选择需要归类的备忘录。" showSeparator>
+        <InstanceCategoryEditor
+          value={instanceGeneralSetting.memoCategoriesJson}
+          onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}
         />
       </SettingGroup>
 

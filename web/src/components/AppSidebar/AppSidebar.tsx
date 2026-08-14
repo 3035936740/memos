@@ -3,14 +3,17 @@ import {
   ArchiveIcon,
   ArrowRightIcon,
   BellIcon,
+  BookOpenIcon,
   ChevronDownIcon,
   EarthIcon,
   FileAudioIcon,
   FileTextIcon,
+  FolderIcon,
   HouseIcon,
   ImageIcon,
   InfoIcon,
   LayoutListIcon,
+  LinkIcon,
   ListIcon,
   type LucideIcon,
   MapIcon,
@@ -46,6 +49,7 @@ import { type MemoStatsContext, useFilteredMemoStats } from "@/hooks/useFiltered
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { useMemoViews, useNotifications, userKeys, useUser } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
+import { canAccessInstanceContent, parseInstanceCategories, parseInstanceNavigation } from "@/lib/instance-content";
 import {
   BUILTIN_TASKS_VIEW_ID,
   getMemoScopePath,
@@ -389,6 +393,7 @@ interface GlobalNavItem {
   label: string;
   path: string;
   icon: LucideIcon;
+  iconUrl?: string;
   active: boolean;
   count?: number;
 }
@@ -398,6 +403,7 @@ const GlobalNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
+  const { generalSetting } = useInstance();
   const { data: notifications = [] } = useNotifications();
   const { memoDetail, memoScope, setMemoScope, setMobileOpen } = useAppSidebar();
   const { filters } = useMemoFilterContext();
@@ -433,7 +439,7 @@ const GlobalNavigation = () => {
     setMobileOpen(false);
   };
 
-  const items: GlobalNavItem[] = currentUser
+  const builtinItems: GlobalNavItem[] = currentUser
     ? [
         {
           id: "attachments",
@@ -461,6 +467,29 @@ const GlobalNavigation = () => {
         },
         { id: "about", label: t("common.about"), path: ROUTES.ABOUT, icon: InfoIcon, active: location.pathname === ROUTES.ABOUT },
       ];
+  const customIconMap: Record<string, LucideIcon> = {
+    book: BookOpenIcon,
+    folder: FolderIcon,
+    link: LinkIcon,
+    info: InfoIcon,
+    earth: EarthIcon,
+    attachment: PaperclipIcon,
+  };
+  const customItems: GlobalNavItem[] = parseInstanceNavigation(generalSetting.navigationJson)
+    .filter((item) => item.id && item.label && item.path && canAccessInstanceContent(item.access, currentUser))
+    .map((item) => ({
+      id: `custom-${item.id}`,
+      label: item.label,
+      path: item.path,
+      icon: customIconMap[item.icon?.toLowerCase() ?? ""] ?? LinkIcon,
+      iconUrl: item.iconUrl,
+      active: location.pathname === item.path,
+    }));
+  const categories = parseInstanceCategories(generalSetting.memoCategoriesJson).filter(
+    (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
+  );
+  const activeCategory = categories.find((category) => location.pathname === `/categories/${category.slug}`);
+  const items = [...builtinItems, ...customItems];
 
   const scopeTrigger = (
     <DropdownMenuTrigger
@@ -503,7 +532,13 @@ const GlobalNavigation = () => {
 
   return (
     <TooltipProvider>
-      <nav className={cn("flex h-9 items-center gap-1", SIDEBAR_HORIZONTAL_PADDING)} aria-label="Primary">
+      <nav
+        className={cn(
+          "flex h-9 items-center gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          SIDEBAR_HORIZONTAL_PADDING,
+        )}
+        aria-label="Primary"
+      >
         {currentUser && (
           <>
             {scopeRouteActive ? (
@@ -530,6 +565,51 @@ const GlobalNavigation = () => {
             )}
           </>
         )}
+        {categories.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="分类"
+                  aria-current={activeCategory ? "page" : undefined}
+                  className={cn(
+                    "flex h-[30px] min-w-0 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    activeCategory
+                      ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                      : "hover:bg-sidebar-accent/65 hover:text-foreground",
+                  )}
+                />
+              }
+            >
+              <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
+              {activeCategory && <span className="max-w-[5.5rem] truncate text-[12px]">{activeCategory.title}</span>}
+              <ChevronDownIcon className="size-3 shrink-0 opacity-55" strokeWidth={1.8} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
+              {categories.map((category) => {
+                const path = `/categories/${category.slug}`;
+                const active = location.pathname === path;
+                return (
+                  <DropdownMenuItem
+                    key={category.slug}
+                    aria-current={active ? "page" : undefined}
+                    className={cn("h-[30px] shrink-0 py-0 text-[13px]", active && "bg-accent font-medium text-accent-foreground")}
+                    onClick={() => {
+                      navigate(path);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    <FolderIcon className="size-4" strokeWidth={1.8} />
+                    <span className="truncate">{category.title}</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground">{category.memoNames.length}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         {items.map((item) => {
           const Icon = item.icon;
           const alwaysShowLabel = !currentUser && item.id === "explore";
@@ -542,7 +622,11 @@ const GlobalNavigation = () => {
           );
           const itemContent = (
             <>
-              <Icon className="size-4 shrink-0" strokeWidth={1.8} />
+              {item.iconUrl ? (
+                <img src={item.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
+              ) : (
+                <Icon className="size-4 shrink-0" strokeWidth={1.8} />
+              )}
               {(item.active || alwaysShowLabel) && <span className="max-w-[5.5rem] truncate text-[12px]">{item.label}</span>}
               {!!item.count && item.count > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-4 text-primary-foreground">
@@ -551,7 +635,20 @@ const GlobalNavigation = () => {
               )}
             </>
           );
-          const content = (
+          const external = /^https?:\/\//i.test(item.path);
+          const content = external ? (
+            <a
+              key={item.id}
+              href={item.path}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMobileOpen(false)}
+              aria-label={item.label}
+              className={itemClassName}
+            >
+              {itemContent}
+            </a>
+          ) : (
             <Link
               key={item.id}
               to={item.path}

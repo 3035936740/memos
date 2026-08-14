@@ -471,7 +471,7 @@ func getDeleteUserAttachmentStorageSetting(ctx context.Context, stores *store.St
 
 func getDefaultUserGeneralSetting() *v1pb.UserSetting_GeneralSetting {
 	return &v1pb.UserSetting_GeneralSetting{
-		Locale:         "en",
+		Locale:         "zh-Hans",
 		MemoVisibility: "PRIVATE",
 		Theme:          "",
 	}

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	"strings"
 
@@ -164,6 +165,21 @@ func (s *APIV1Service) getInstanceSettingByName(ctx context.Context, name string
 	}
 
 	result := convertInstanceSettingFromStore(instanceSetting)
+	if instanceSetting.Key == storepb.InstanceSettingKey_GENERAL {
+		user, err := caller.currentUser(ctx, s)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
+		}
+		if user == nil || user.Role != store.RoleAdmin {
+			general := result.GetGeneralSetting()
+			if general != nil {
+				isAuthenticated := user != nil
+				general.NavigationJson = filterInstanceContentJSON(general.NavigationJson, isAuthenticated)
+				general.CustomPagesJson = filterInstanceContentJSON(general.CustomPagesJson, isAuthenticated)
+				general.MemoCategoriesJson = filterInstanceContentJSON(general.MemoCategoriesJson, isAuthenticated)
+			}
+		}
+	}
 	if instanceSetting.Key == storepb.InstanceSettingKey_AI && !isAdminCaller {
 		// Non-admin callers only need transcription.provider_id to gate the
 		// editor's Transcribe button. Model / language / prompt are
@@ -176,6 +192,33 @@ func (s *APIV1Service) getInstanceSettingByName(ctx context.Context, name string
 		}
 	}
 	return result, nil
+}
+
+// filterInstanceContentJSON prevents restricted navigation/page/category
+// definitions (including Markdown content) from being sent to unauthorized
+// clients. Administrators bypass this filter so the settings editor retains
+// the complete configuration.
+func filterInstanceContentJSON(value string, isAuthenticated bool) string {
+	if value == "" {
+		return ""
+	}
+	var items []map[string]any
+	if err := json.Unmarshal([]byte(value), &items); err != nil {
+		return "[]"
+	}
+	filtered := make([]map[string]any, 0, len(items))
+	for _, item := range items {
+		access, _ := item["access"].(string)
+		if access == "admin" || (access == "authenticated" && !isAuthenticated) {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	encoded, err := json.Marshal(filtered)
+	if err != nil {
+		return "[]"
+	}
+	return string(encoded)
 }
 
 func (s *APIV1Service) UpdateInstanceSetting(ctx context.Context, request *v1pb.UpdateInstanceSettingRequest) (*v1pb.InstanceSetting, error) {

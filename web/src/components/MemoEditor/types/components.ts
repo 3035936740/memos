@@ -10,6 +10,8 @@ export interface MemoEditorProps {
   /** Existing memo to edit. When provided, the editor initializes from it without fetching. */
   memo?: Memo;
   parentMemoName?: string;
+  /** Initial text for a newly-created memo/comment when no cached draft exists. */
+  initialContent?: string;
   autoFocus?: boolean;
   /** Opens this editor instance directly in the existing focus-mode presentation. */
   initialFocusMode?: boolean;

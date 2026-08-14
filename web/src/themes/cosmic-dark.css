@@ -1,0 +1,58 @@
+:root {
+  --background: oklch(0.145 0.035 275);
+  --foreground: oklch(0.92 0.018 275);
+  --card: oklch(0.205 0.035 275);
+  --card-foreground: oklch(0.93 0.015 275);
+  --popover: oklch(0.225 0.045 278);
+  --popover-foreground: oklch(0.94 0.014 275);
+  --primary: oklch(0.73 0.145 285);
+  --primary-foreground: oklch(0.15 0.04 275);
+  --secondary: oklch(0.255 0.052 275);
+  --secondary-foreground: oklch(0.91 0.018 275);
+  --muted: oklch(0.245 0.038 275);
+  --muted-foreground: oklch(0.72 0.035 275);
+  --accent: oklch(0.31 0.07 280);
+  --accent-foreground: oklch(0.96 0.012 275);
+  --destructive: oklch(0.64 0.19 25);
+  --destructive-foreground: oklch(0.98 0.01 275);
+  --success: oklch(0.72 0.14 165);
+  --success-foreground: oklch(0.16 0.035 165);
+  --warning: oklch(0.78 0.14 78);
+  --warning-foreground: oklch(0.2 0.035 78);
+  --border: oklch(0.35 0.055 278);
+  --input: oklch(0.4 0.065 278);
+  --ring: oklch(0.7 0.14 285);
+  --sidebar: oklch(0.125 0.034 277);
+  --sidebar-foreground: oklch(0.79 0.034 275);
+  --sidebar-accent: oklch(0.245 0.065 280);
+  --sidebar-accent-foreground: oklch(0.94 0.016 275);
+  --sidebar-accent-border: oklch(0.42 0.09 283);
+  --shadow-xs: 0 1px 3px rgb(0 0 0 / 18%);
+  --shadow-sm: 0 2px 5px rgb(0 0 0 / 22%), 0 1px 2px rgb(90 70 180 / 8%);
+  --shadow: 0 3px 8px rgb(0 0 0 / 24%), 0 1px 3px rgb(100 80 220 / 8%);
+  --shadow-md: 0 5px 14px rgb(0 0 0 / 26%), 0 2px 5px rgb(100 80 220 / 9%);
+  --shadow-lg: 0 10px 24px rgb(0 0 0 / 28%), 0 3px 8px rgb(105 85 230 / 10%);
+  --shadow-xl: 0 16px 34px rgb(0 0 0 / 32%), 0 4px 12px rgb(110 90 240 / 10%);
+}
+
+html[data-theme="cosmic-dark"] body {
+  background-color: oklch(0.125 0.034 277);
+  background-image:
+    radial-gradient(ellipse at 16% 14%, rgb(89 72 184 / 22%) 0%, rgb(69 52 148 / 10%) 24%, transparent 52%),
+    radial-gradient(ellipse at 82% 25%, rgb(42 102 177 / 17%) 0%, rgb(43 66 143 / 8%) 26%, transparent 55%),
+    radial-gradient(ellipse at 58% 88%, rgb(119 63 170 / 12%) 0%, transparent 48%);
+  background-attachment: fixed;
+}
+
+html[data-theme="cosmic-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="cosmic-dark"] body > #root > .bg-background,
+html[data-theme="cosmic-dark"] main > .bg-background,
+html[data-theme="cosmic-dark"] main > section > .bg-background,
+html[data-theme="cosmic-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

@@ -1,5 +1,6 @@
 import { LoaderCircleIcon, MessageCircleIcon } from "lucide-react";
-import { type ComponentType, useCallback, useState } from "react";
+import { type ComponentType, useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { loadMemoEditor } from "@/components/MemoEditor/loader";
 import type { MemoEditorProps } from "@/components/MemoEditor/types";
 import MemoView from "@/components/MemoView";
@@ -21,14 +22,20 @@ interface Props {
 const MemoCommentSection = ({ memo, comments, parentPage, hasMoreComments, isFetchingMoreComments, onLoadMoreComments }: Props) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
+  const location = useLocation();
+  const quickReplyHandled = useRef("");
   const [showEditor, setShowEditor] = useState(false);
   const [isEditorLoading, setIsEditorLoading] = useState(false);
   const [EditorComponent, setEditorComponent] = useState<ComponentType<MemoEditorProps>>();
+  const [replyToMemo, setReplyToMemo] = useState("");
+  const [initialContent, setInitialContent] = useState("");
 
   const showCreateButton = currentUser && !showEditor;
 
   const handleCommentCreated = async (_memoCommentName: string) => {
     setShowEditor(false);
+    setReplyToMemo("");
+    setInitialContent("");
   };
 
   const preloadEditor = useCallback(() => {
@@ -51,6 +58,21 @@ const MemoCommentSection = ({ memo, comments, parentPage, hasMoreComments, isFet
       setIsEditorLoading(false);
     }
   }, [isEditorLoading]);
+
+  useEffect(() => {
+    const state = location.state as {
+      quickReplyMemo?: string;
+      replyToMemo?: string;
+      quickReplyContent?: string;
+      quickReplyRequest?: number;
+    } | null;
+    const requestKey = `${state?.quickReplyMemo ?? ""}:${state?.replyToMemo ?? "root"}:${state?.quickReplyRequest ?? 0}`;
+    if (quickReplyHandled.current === requestKey || !currentUser || state?.quickReplyMemo !== memo.name) return;
+    quickReplyHandled.current = requestKey;
+    setReplyToMemo(state.replyToMemo ?? "");
+    setInitialContent(state.quickReplyContent ?? "");
+    void openEditor();
+  }, [currentUser, location.state, memo.name, openEditor]);
 
   return (
     <div className="pt-8 pb-16 w-full">
@@ -102,12 +124,18 @@ const MemoCommentSection = ({ memo, comments, parentPage, hasMoreComments, isFet
         {showEditor && EditorComponent && (
           <div className="w-full mb-2">
             <EditorComponent
-              cacheKey={`${memo.name}-comment`}
+              key={replyToMemo || "comment"}
+              cacheKey={replyToMemo ? `${memo.name}-reply-${replyToMemo}` : `${memo.name}-comment`}
               placeholder={t("editor.add-your-comment-here")}
               parentMemoName={memo.name}
+              initialContent={initialContent}
               autoFocus
               onConfirm={handleCommentCreated}
-              onCancel={() => setShowEditor(false)}
+              onCancel={() => {
+                setShowEditor(false);
+                setReplyToMemo("");
+                setInitialContent("");
+              }}
             />
           </div>
         )}

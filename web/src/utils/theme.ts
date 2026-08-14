@@ -1,3 +1,4 @@
+import cosmicDarkThemeContent from "../themes/cosmic-dark.css?raw";
 import defaultDarkThemeContent from "../themes/default-dark.css?raw";
 import paperThemeContent from "../themes/paper.css?raw";
 
@@ -5,7 +6,7 @@ import paperThemeContent from "../themes/paper.css?raw";
 // Types and Constants
 // ============================================================================
 
-const VALID_THEMES = ["system", "default", "default-dark", "paper"] as const;
+const VALID_THEMES = ["system", "default", "default-dark", "paper", "cosmic-dark"] as const;
 
 export type Theme = (typeof VALID_THEMES)[number];
 export type ResolvedTheme = Exclude<Theme, "system">;
@@ -22,12 +23,14 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
   default: null,
   "default-dark": defaultDarkThemeContent,
   paper: paperThemeContent,
+  "cosmic-dark": cosmicDarkThemeContent,
 };
 
 const THEME_COLORS: Record<ResolvedTheme, string> = {
   default: "#faf9f5",
   "default-dark": "#1d1f23",
   paper: "#f5ede4",
+  "cosmic-dark": "#0c1026",
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -35,6 +38,7 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { value: "default", label: "Light" },
   { value: "default-dark", label: "Dark" },
   { value: "paper", label: "Paper" },
+  { value: "cosmic-dark", label: "Cosmic" },
 ];
 
 // ============================================================================
@@ -106,7 +110,7 @@ const setStoredTheme = (theme: Theme): void => {
  * Priority: localStorage -> system preference
  */
 export const getInitialTheme = (): Theme => {
-  return getStoredTheme() ?? "system";
+  return getStoredTheme() ?? "cosmic-dark";
 };
 
 /**
@@ -128,8 +132,8 @@ export const getThemeWithFallback = (userTheme?: string): Theme => {
     return stored;
   }
 
-  // Priority 3: System preference
-  return "system";
+  // Priority 3: Instance default for first-time visitors
+  return "cosmic-dark";
 };
 
 // ============================================================================

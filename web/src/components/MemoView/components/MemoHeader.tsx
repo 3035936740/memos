@@ -1,12 +1,12 @@
-import { BookmarkIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { BookmarkIcon, MessageCircleIcon } from "lucide-react";
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { memoServiceClient } from "@/connect";
 import { useNewMemo } from "@/contexts/NewMemoContext";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import i18n from "@/i18n";
-import { cn } from "@/lib/utils";
 import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -21,7 +21,6 @@ import type { MemoHeaderProps } from "../types";
 
 const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, showPinned }) => {
   const t = useTranslate();
-  const [reactionSelectorOpen, setReactionSelectorOpen] = useState(false);
 
   const { memo, creator, currentUser, parentPage, isArchived, readonly, openEditor } = useMemoViewContext();
   const { createTime, updateTime, displayTime: memoDisplayTime, isDisplayingUpdatedTime, relativeTimeFormat } = useMemoViewDerived();
@@ -31,6 +30,36 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   const handleGotoMemoDetailPage = useCallback(() => {
     navigateTo(`/${memo.name}`, { state: { from: parentPage } });
   }, [memo.name, parentPage, navigateTo]);
+  const handleQuickReply = useCallback(async () => {
+    let replyParentName = memo.name;
+    if (memo.parent) {
+      replyParentName = memo.parent;
+      const visited = new Set([memo.name]);
+      for (let depth = 0; depth < 20 && replyParentName && !visited.has(replyParentName); depth += 1) {
+        visited.add(replyParentName);
+        try {
+          const parentMemo = await memoServiceClient.getMemo({ name: replyParentName });
+          if (!parentMemo.parent) {
+            replyParentName = parentMemo.name;
+            break;
+          }
+          replyParentName = parentMemo.parent;
+        } catch {
+          break;
+        }
+      }
+    }
+
+    navigateTo(`/${replyParentName}#comments`, {
+      state: {
+        from: parentPage,
+        quickReplyMemo: replyParentName,
+        replyToMemo: memo.parent ? memo.name : undefined,
+        quickReplyContent: memo.parent && creator?.username ? `@${creator.username} ` : undefined,
+        quickReplyRequest: Date.now(),
+      },
+    });
+  }, [creator?.username, memo.name, memo.parent, navigateTo, parentPage]);
 
   const { unpinMemo } = useMemoActions(memo);
 
@@ -71,12 +100,24 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
 
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
         {currentUser && !isArchived && (
-          <ReactionSelector
-            className={cn("border-none w-auto h-auto", reactionSelectorOpen && "block!", "block sm:hidden sm:group-hover:block")}
-            memo={memo}
-            onOpenChange={setReactionSelectorOpen}
-          />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={t("memo.comment.write-a-comment")}
+                  className="flex size-4 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  onClick={handleQuickReply}
+                />
+              }
+            >
+              <MessageCircleIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t("memo.comment.write-a-comment")}</TooltipContent>
+          </Tooltip>
         )}
+
+        {currentUser && !isArchived && <ReactionSelector className="block h-auto w-auto border-none" memo={memo} />}
 
         {showVisibility && memo.visibility !== Visibility.PRIVATE && (
           <Tooltip>

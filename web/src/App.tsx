@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, ScrollRestoration } from "react-router-dom";
+import CosmicBackground from "./components/CosmicBackground";
 import { useInstance } from "./contexts/InstanceContext";
 import useNavigateTo from "./hooks/useNavigateTo";
 import { useUserLocale } from "./hooks/useUserLocale";
@@ -59,6 +60,7 @@ const App = () => {
 
   return (
     <>
+      <CosmicBackground />
       <Outlet />
       <ScrollRestoration />
     </>

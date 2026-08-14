@@ -63,6 +63,12 @@ message InstanceGeneralSetting {
   bool disallow_change_username = 8;
   // disallow_change_nickname disallows changing nickname.
   bool disallow_change_nickname = 9;
+  // navigation_json stores additional global navigation items.
+  string navigation_json = 10;
+  // custom_pages_json stores instance Markdown pages.
+  string custom_pages_json = 11;
+  // memo_categories_json stores instance memo categories.
+  string memo_categories_json = 12;
 }
 
 message InstanceCustomProfile {

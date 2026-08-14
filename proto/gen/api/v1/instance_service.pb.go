@@ -916,8 +916,14 @@ type InstanceSetting_GeneralSetting struct {
 	DisallowChangeUsername bool `protobuf:"varint,8,opt,name=disallow_change_username,json=disallowChangeUsername,proto3" json:"disallow_change_username,omitempty"`
 	// disallow_change_nickname disallows changing nickname.
 	DisallowChangeNickname bool `protobuf:"varint,9,opt,name=disallow_change_nickname,json=disallowChangeNickname,proto3" json:"disallow_change_nickname,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// navigation_json configures additional global navigation items.
+	NavigationJson string `protobuf:"bytes,10,opt,name=navigation_json,json=navigationJson,proto3" json:"navigation_json,omitempty"`
+	// custom_pages_json configures instance Markdown pages.
+	CustomPagesJson string `protobuf:"bytes,11,opt,name=custom_pages_json,json=customPagesJson,proto3" json:"custom_pages_json,omitempty"`
+	// memo_categories_json configures instance categories and their memo resource names.
+	MemoCategoriesJson string `protobuf:"bytes,12,opt,name=memo_categories_json,json=memoCategoriesJson,proto3" json:"memo_categories_json,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1004,6 +1010,27 @@ func (x *InstanceSetting_GeneralSetting) GetDisallowChangeNickname() bool {
 		return x.DisallowChangeNickname
 	}
 	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetNavigationJson() string {
+	if x != nil {
+		return x.NavigationJson
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetCustomPagesJson() string {
+	if x != nil {
+		return x.CustomPagesJson
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetMemoCategoriesJson() string {
+	if x != nil {
+		return x.MemoCategoriesJson
+	}
+	return ""
 }
 
 // Storage is a configured attachment storage instance.
@@ -2076,7 +2103,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x06commit\x18\b \x01(\tR\x06commit\x12\x1f\n" +
 	"\vneeds_setup\x18\t \x01(\bR\n" +
 	"needsSetup\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\x9a!\n" +
+	"\x19GetInstanceProfileRequest\"\xa1\"\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2085,7 +2112,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\ftags_setting\x18\x05 \x01(\v2).memos.api.v1.InstanceSetting.TagsSettingH\x00R\vtagsSetting\x12f\n" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
-	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xca\x04\n" +
+	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xd1\x05\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -2094,7 +2121,11 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x0ecustom_profile\x18\x06 \x01(\v2:.memos.api.v1.InstanceSetting.GeneralSetting.CustomProfileR\rcustomProfile\x121\n" +
 	"\x15week_start_day_offset\x18\a \x01(\x05R\x12weekStartDayOffset\x128\n" +
 	"\x18disallow_change_username\x18\b \x01(\bR\x16disallowChangeUsername\x128\n" +
-	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x1ab\n" +
+	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x12'\n" +
+	"\x0fnavigation_json\x18\n" +
+	" \x01(\tR\x0enavigationJson\x12*\n" +
+	"\x11custom_pages_json\x18\v \x01(\tR\x0fcustomPagesJson\x120\n" +
+	"\x14memo_categories_json\x18\f \x01(\tR\x12memoCategoriesJson\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

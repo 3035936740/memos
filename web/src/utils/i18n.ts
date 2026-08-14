@@ -4,6 +4,7 @@ import i18n, { locales, TLocale } from "@/i18n";
 import enTranslation from "@/locales/en.json";
 
 const LOCALE_STORAGE_KEY = "memos-locale";
+const DEFAULT_LOCALE: Locale = "zh-Hans";
 
 const getStoredLocale = (): Locale | null => {
   try {
@@ -74,7 +75,7 @@ export const isValidLocale = (locale: string | undefined | null): boolean => {
 // Gets the locale to use with proper priority:
 // 1. User setting (if logged in and has preference)
 // 2. localStorage (from previous session)
-// 3. Browser language preference
+// 3. Instance default (Simplified Chinese)
 export const getLocaleWithFallback = (userLocale?: string): Locale => {
   // Priority 1: User setting (if logged in and valid)
   if (userLocale && isValidLocale(userLocale)) {
@@ -87,13 +88,13 @@ export const getLocaleWithFallback = (userLocale?: string): Locale => {
     return stored;
   }
 
-  // Priority 3: Browser language
-  return findNearestMatchedLanguage(navigator.language);
+  // Priority 3: Instance default
+  return DEFAULT_LOCALE;
 };
 
 // Applies and persists a locale setting
 export const loadLocale = (locale: string): Locale => {
-  const validLocale = isValidLocale(locale) ? (locale as Locale) : findNearestMatchedLanguage(navigator.language);
+  const validLocale = isValidLocale(locale) ? (locale as Locale) : DEFAULT_LOCALE;
   setStoredLocale(validLocale);
   i18n.changeLanguage(validLocale);
   document.documentElement.lang = validLocale;
@@ -102,11 +103,11 @@ export const loadLocale = (locale: string): Locale => {
 
 /**
  * Applies locale early during initial page load to prevent language flash.
- * Uses only localStorage and browser language (no user settings yet).
+ * Uses localStorage first, then the instance default (no user settings yet).
  */
 export const applyLocaleEarly = (): void => {
   const stored = getStoredLocale();
-  const locale = stored ?? findNearestMatchedLanguage(navigator.language);
+  const locale = stored ?? DEFAULT_LOCALE;
   loadLocale(locale);
 };
 

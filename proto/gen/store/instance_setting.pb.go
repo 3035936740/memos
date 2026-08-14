@@ -497,8 +497,14 @@ type InstanceGeneralSetting struct {
 	DisallowChangeUsername bool `protobuf:"varint,8,opt,name=disallow_change_username,json=disallowChangeUsername,proto3" json:"disallow_change_username,omitempty"`
 	// disallow_change_nickname disallows changing nickname.
 	DisallowChangeNickname bool `protobuf:"varint,9,opt,name=disallow_change_nickname,json=disallowChangeNickname,proto3" json:"disallow_change_nickname,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// navigation_json stores additional global navigation items.
+	NavigationJson string `protobuf:"bytes,10,opt,name=navigation_json,json=navigationJson,proto3" json:"navigation_json,omitempty"`
+	// custom_pages_json stores instance Markdown pages.
+	CustomPagesJson string `protobuf:"bytes,11,opt,name=custom_pages_json,json=customPagesJson,proto3" json:"custom_pages_json,omitempty"`
+	// memo_categories_json stores instance memo categories.
+	MemoCategoriesJson string `protobuf:"bytes,12,opt,name=memo_categories_json,json=memoCategoriesJson,proto3" json:"memo_categories_json,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -585,6 +591,27 @@ func (x *InstanceGeneralSetting) GetDisallowChangeNickname() bool {
 		return x.DisallowChangeNickname
 	}
 	return false
+}
+
+func (x *InstanceGeneralSetting) GetNavigationJson() string {
+	if x != nil {
+		return x.NavigationJson
+	}
+	return ""
+}
+
+func (x *InstanceGeneralSetting) GetCustomPagesJson() string {
+	if x != nil {
+		return x.CustomPagesJson
+	}
+	return ""
+}
+
+func (x *InstanceGeneralSetting) GetMemoCategoriesJson() string {
+	if x != nil {
+		return x.MemoCategoriesJson
+	}
+	return ""
 }
 
 type InstanceCustomProfile struct {
@@ -1284,7 +1311,6 @@ type TranscriptionConfig struct {
 	//   - whisper-1 (legacy, lower cost)
 	//   - gpt-4o-transcribe, gpt-4o-mini-transcribe (higher quality)
 	//   - gpt-4o-transcribe-diarize (includes speaker labels)
-	//
 	// GEMINI examples:
 	//   - gemini-2.5-flash (default, multimodal call)
 	//   - gemini-2.5-pro
@@ -1494,7 +1520,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xd6\x03\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xdd\x04\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -1503,7 +1529,11 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x0ecustom_profile\x18\x06 \x01(\v2\".memos.store.InstanceCustomProfileR\rcustomProfile\x121\n" +
 	"\x15week_start_day_offset\x18\a \x01(\x05R\x12weekStartDayOffset\x128\n" +
 	"\x18disallow_change_username\x18\b \x01(\bR\x16disallowChangeUsername\x128\n" +
-	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\"j\n" +
+	"\x18disallow_change_nickname\x18\t \x01(\bR\x16disallowChangeNickname\x12'\n" +
+	"\x0fnavigation_json\x18\n" +
+	" \x01(\tR\x0enavigationJson\x12*\n" +
+	"\x11custom_pages_json\x18\v \x01(\tR\x0fcustomPagesJson\x120\n" +
+	"\x14memo_categories_json\x18\f \x01(\tR\x12memoCategoriesJson\"j\n" +
 	"\x15InstanceCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

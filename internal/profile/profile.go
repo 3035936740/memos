@@ -3,6 +3,8 @@ package profile
 import (
 	"fmt"
 	"log/slog"
+	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -68,6 +70,32 @@ func checkDataDir(dataDir string) (string, error) {
 }
 
 func (p *Profile) Validate() error {
+	instanceURL := strings.TrimSpace(p.InstanceURL)
+	if instanceURL != "" {
+		if !strings.Contains(instanceURL, "://") {
+			host := instanceURL
+			if slash := strings.IndexAny(host, "/?#"); slash >= 0 {
+				host = host[:slash]
+			}
+			hostname := host
+			if parsedHost, _, err := net.SplitHostPort(host); err == nil {
+				hostname = parsedHost
+			}
+			hostname = strings.Trim(hostname, "[]")
+			scheme := "https"
+			ip := net.ParseIP(hostname)
+			if strings.EqualFold(hostname, "localhost") || (ip != nil && ip.IsLoopback()) {
+				scheme = "http"
+			}
+			instanceURL = scheme + "://" + instanceURL
+		}
+		parsed, err := url.Parse(instanceURL)
+		if err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			return errors.Errorf("instance URL must be an absolute HTTP(S) URL")
+		}
+		p.InstanceURL = strings.TrimRight(parsed.String(), "/")
+	}
+
 	// Set default data directory if not specified
 	if p.Data == "" {
 		if runtime.GOOS == "windows" {
