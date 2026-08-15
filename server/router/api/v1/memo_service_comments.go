@@ -5,6 +5,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -153,6 +154,14 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 	}
 
 	memoRelationComment := store.MemoRelationComment
+	orderByMemoIDAsc := false
+	switch strings.ToLower(strings.TrimSpace(request.OrderBy)) {
+	case "", "create_time desc":
+	case "create_time asc":
+		orderByMemoIDAsc = true
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "invalid order_by: only create_time asc and create_time desc are supported")
+	}
 	var limit, offset int
 	if request.PageToken != "" {
 		var pageToken v1pb.PageToken
@@ -170,6 +179,7 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 		RelatedMemoID:       &memo.ID,
 		Type:                &memoRelationComment,
 		SourceMemoRowStatus: &normal,
+		OrderByMemoIDAsc:    orderByMemoIDAsc,
 		Limit:               &limitPlusOne,
 		Offset:              &offset,
 	})
@@ -248,8 +258,16 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list memo creators: %v", err)
 	}
-	var memosResponse []*v1pb.Memo
+	memoByID := make(map[int32]*store.Memo, len(memos))
 	for _, m := range memos {
+		memoByID[m.ID] = m
+	}
+	var memosResponse []*v1pb.Memo
+	for _, memoRelation := range memoRelations {
+		m := memoByID[memoRelation.MemoID]
+		if m == nil {
+			continue
+		}
 		memoName := memoIDToNameMap[m.ID]
 		reactions := memoReactionsMap[memoName]
 		attachments := attachmentMap[m.ID]

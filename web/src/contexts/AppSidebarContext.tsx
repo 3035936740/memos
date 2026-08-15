@@ -37,7 +37,7 @@ export const AppSidebarProvider = ({ children }: { children: ReactNode }) => {
   const [memoDetail, setMemoDetailState] = useState<MemoDetailSidebarDescriptor>();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [quickFindOpen, setQuickFindOpen] = useState(false);
-  const [memoScope, setMemoScope] = useState<MemoScope>("home");
+  const [memoScope, setMemoScope] = useState<MemoScope>("explore");
 
   useEffect(() => {
     setMobileOpen(false);

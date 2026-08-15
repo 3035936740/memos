@@ -252,6 +252,19 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		}
 	}
 
+	totalSize := int32(0)
+	if request.ShowTotalSize {
+		countFind := *memoFind
+		countFind.ExcludeContent = true
+		countFind.Limit = nil
+		countFind.Offset = nil
+		matchingMemos, err := s.Store.ListMemos(ctx, &countFind)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to count memos: %v", err)
+		}
+		totalSize = int32(len(matchingMemos))
+	}
+
 	var limit, offset int
 	if request.PageToken != "" {
 		var pageToken v1pb.PageToken
@@ -262,6 +275,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		offset = max(int(pageToken.Offset), 0)
 	} else {
 		limit = normalizePageSize(request.PageSize)
+		offset = max(int(request.PageOffset), 0)
 	}
 	limit = min(limit, MaxPageSize)
 	limitPlusOne := limit + 1
@@ -286,6 +300,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		response := &v1pb.ListMemosResponse{
 			Memos:         memoMessages,
 			NextPageToken: nextPageToken,
+			TotalSize:     totalSize,
 		}
 		return response, nil
 	}
@@ -360,6 +375,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	response := &v1pb.ListMemosResponse{
 		Memos:         memoMessages,
 		NextPageToken: nextPageToken,
+		TotalSize:     totalSize,
 	}
 	return response, nil
 }

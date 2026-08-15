@@ -6,6 +6,7 @@ export interface MemoViewProps {
   showCreator?: boolean;
   showVisibility?: boolean;
   showPinned?: boolean;
+  hideCommentPreview?: boolean;
   className?: string;
   parentPage?: string;
   shareImageDialogOpen?: boolean;

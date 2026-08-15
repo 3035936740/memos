@@ -52,7 +52,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const location = useLocation();
   const isInMemoDetailPage = location.pathname.startsWith(`/${memoData.name}`) || location.pathname.startsWith("/memos/shares/");
-  const showCommentPreview = !isInMemoDetailPage && computeCommentAmount(memoData) > 0;
+  const showCommentPreview = !props.hideCommentPreview && !isInMemoDetailPage && computeCommentAmount(memoData) > 0;
 
   // The card width is only needed by the share-image dialog. Keep feed cards
   // free of a permanent ResizeObserver and measure only while that dialog is open.

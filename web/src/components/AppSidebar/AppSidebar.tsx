@@ -33,6 +33,7 @@ import { MemoDetailSidebar } from "@/components/MemoDetailSidebar";
 import MemoDisplaySettingMenu from "@/components/MemoDisplaySettingMenu";
 import { SETTINGS_SECTIONS } from "@/components/Settings/settingSections";
 import StatisticsView from "@/components/StatisticsView";
+import { ToolbarClock, ToolbarPreferences } from "@/components/TopToolbar";
 import UserMenu from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -75,6 +76,7 @@ import SidebarSection, {
 import TagsSection from "./TagsSection";
 
 const SIDEBAR_HORIZONTAL_PADDING = "px-3";
+const LAST_CATEGORY_STORAGE_KEY = "memos-last-instance-category";
 
 const ViewsSection = ({ manageActive = false }: { manageActive?: boolean }) => {
   const t = useTranslate();
@@ -119,68 +121,73 @@ const ViewsSection = ({ manageActive = false }: { manageActive?: boolean }) => {
         !manageActive && (
           <div className="flex items-center gap-0.5">
             <MemoDisplaySettingMenu />
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className={SIDEBAR_SECTION_ACTION_BUTTON_CLASSES}
-              onClick={handleCreate}
-              aria-label={t("common.create")}
-            >
-              <PlusIcon className={SIDEBAR_SECTION_ACTION_ICON_CLASSES} strokeWidth={1.8} />
-            </Button>
+            {currentUser && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className={SIDEBAR_SECTION_ACTION_BUTTON_CLASSES}
+                onClick={handleCreate}
+                aria-label={t("common.create")}
+              >
+                <PlusIcon className={SIDEBAR_SECTION_ACTION_ICON_CLASSES} strokeWidth={1.8} />
+              </Button>
+            )}
           </div>
         )
       }
     >
-      <SidebarRow
-        active={!manageActive && selectedMemoView === BUILTIN_TASKS_VIEW_ID}
-        label={t("common.tasks")}
-        onClick={() => handleView(BUILTIN_TASKS_VIEW_ID)}
-      />
-      {memoViews.map((memoView) => {
-        const id = getMemoViewId(memoView.name);
-        const active = !manageActive && selectedMemoView === id;
-        return (
-          <div key={memoView.name} className={cn(SIDEBAR_ROW_CLASSES, "group/view", sidebarRowStateClasses(active))}>
-            <button
-              type="button"
-              onClick={() => handleView(id)}
-              aria-pressed={active || undefined}
-              className="flex h-full min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
-              <span className="min-w-0 flex-1 truncate">{memoView.title}</span>
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                nativeButton={false}
-                render={
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${t("common.edit")} ${memoView.title}`}
-                    className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity hover:bg-background/70 md:opacity-0 md:group-hover/view:opacity-100 md:focus-visible:opacity-100 data-popup-open:opacity-100"
-                  />
-                }
+      {currentUser && (
+        <SidebarRow
+          active={!manageActive && selectedMemoView === BUILTIN_TASKS_VIEW_ID}
+          label={t("common.tasks")}
+          onClick={() => handleView(BUILTIN_TASKS_VIEW_ID)}
+        />
+      )}
+      {currentUser &&
+        memoViews.map((memoView) => {
+          const id = getMemoViewId(memoView.name);
+          const active = !manageActive && selectedMemoView === id;
+          return (
+            <div key={memoView.name} className={cn(SIDEBAR_ROW_CLASSES, "group/view", sidebarRowStateClasses(active))}>
+              <button
+                type="button"
+                onClick={() => handleView(id)}
+                aria-pressed={active || undefined}
+                className="flex h-full min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
-                <MoreHorizontalIcon className="size-3.5" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={2} size="sm">
-                <DropdownMenuItem
-                  onClick={() => {
-                    navigate(ROUTES.VIEWS, { state: { memoView } });
-                    setMobileOpen(false);
-                  }}
+                <span className="min-w-0 flex-1 truncate">{memoView.title}</span>
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  nativeButton={false}
+                  render={
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${t("common.edit")} ${memoView.title}`}
+                      className="-mr-1 flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-opacity hover:bg-background/70 md:opacity-0 md:group-hover/view:opacity-100 md:focus-visible:opacity-100 data-popup-open:opacity-100"
+                    />
+                  }
                 >
-                  {t("common.edit")}
-                </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(memoView)}>
-                  {t("common.delete")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      })}
+                  <MoreHorizontalIcon className="size-3.5" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={2} size="sm">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      navigate(ROUTES.VIEWS, { state: { memoView } });
+                      setMobileOpen(false);
+                    }}
+                  >
+                    {t("common.edit")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive" onClick={() => setDeleteTarget(memoView)}>
+                    {t("common.delete")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
       {manageActive && <SidebarRow active icon={MoreHorizontalIcon} label={t("common.manage")} />}
       <ConfirmDialog
         open={!!deleteTarget}
@@ -235,7 +242,9 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
     enabled: authInitialized && instanceInitialized && (md || mobileOpen),
   });
 
-  const showViews = !!currentUser && (context === "home" || context === "archived" || context === "explore");
+  const showViews = currentUser
+    ? context === "home" || context === "archived" || context === "explore"
+    : context === "explore" || context === "profile";
 
   // Off the collection routes (the library shown as fallback content), calendar and tag
   // clicks must land somewhere that renders the filtered feed.
@@ -474,7 +483,7 @@ const GlobalNavigation = () => {
     earth: EarthIcon,
     attachment: PaperclipIcon,
   };
-  const customItems: GlobalNavItem[] = parseInstanceNavigation(generalSetting.navigationJson)
+  const customItems: GlobalNavItem[] = parseInstanceNavigation(generalSetting?.navigationJson ?? "")
     .filter((item) => item.id && item.label && item.path && canAccessInstanceContent(item.access, currentUser))
     .map((item) => ({
       id: `custom-${item.id}`,
@@ -484,11 +493,40 @@ const GlobalNavigation = () => {
       iconUrl: item.iconUrl,
       active: location.pathname === item.path,
     }));
-  const categories = parseInstanceCategories(generalSetting.memoCategoriesJson).filter(
+  const categories = parseInstanceCategories(generalSetting?.memoCategoriesJson ?? "").filter(
     (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
   );
   const activeCategory = categories.find((category) => location.pathname === `/categories/${category.slug}`);
+  const [rememberedCategorySlug, setRememberedCategorySlug] = useState(() => {
+    try {
+      return localStorage.getItem(LAST_CATEGORY_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
+  const selectedCategory = activeCategory ?? categories.find((category) => category.slug === rememberedCategorySlug) ?? categories[0];
   const items = [...builtinItems, ...customItems];
+
+  const rememberCategory = (slug: string) => {
+    setRememberedCategorySlug(slug);
+    try {
+      localStorage.setItem(LAST_CATEGORY_STORAGE_KEY, slug);
+    } catch {
+      // Browsing still works when storage is unavailable.
+    }
+  };
+
+  const navigateToCategory = (slug: string) => {
+    rememberCategory(slug);
+    navigate(`/categories/${slug}`);
+    setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    if (activeCategory) {
+      rememberCategory(activeCategory.slug);
+    }
+  }, [activeCategory?.slug]);
 
   const scopeTrigger = (
     <DropdownMenuTrigger
@@ -529,6 +567,66 @@ const GlobalNavigation = () => {
     </DropdownMenuContent>
   );
 
+  const renderNavigationItem = (item: GlobalNavItem) => {
+    const Icon = item.icon;
+    const alwaysShowLabel = !currentUser && item.id === "explore";
+    const itemClassName = cn(
+      "relative flex min-w-0 items-center justify-center gap-2 rounded-md text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+      item.active || alwaysShowLabel ? "h-[30px] px-2" : "size-[30px] px-0",
+      item.active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/65 hover:text-foreground",
+    );
+    const itemContent = (
+      <>
+        {item.iconUrl ? (
+          <img src={item.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
+        ) : (
+          <Icon className="size-4 shrink-0" strokeWidth={1.8} />
+        )}
+        {(item.active || alwaysShowLabel) && <span className="max-w-[5.5rem] truncate text-[12px]">{item.label}</span>}
+        {!!item.count && item.count > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-4 text-primary-foreground">
+            {item.count > 99 ? "99+" : item.count}
+          </span>
+        )}
+      </>
+    );
+    const external = /^https?:\/\//i.test(item.path);
+    const content = external ? (
+      <a
+        key={item.id}
+        href={item.path}
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => setMobileOpen(false)}
+        aria-label={item.label}
+        className={itemClassName}
+      >
+        {itemContent}
+      </a>
+    ) : (
+      <Link
+        key={item.id}
+        to={item.path}
+        onClick={() => setMobileOpen(false)}
+        aria-label={item.label}
+        aria-current={item.active ? "page" : undefined}
+        className={itemClassName}
+      >
+        {itemContent}
+      </Link>
+    );
+    if (item.active) return content;
+    return (
+      <Tooltip key={item.id}>
+        <TooltipTrigger render={<span />}>{content}</TooltipTrigger>
+        <TooltipContent side="bottom">{item.label}</TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  const itemsBeforeCategory = currentUser ? [] : items.filter((item) => item.id === "explore");
+  const itemsAfterCategory = currentUser ? items : items.filter((item) => item.id !== "explore");
+
   return (
     <TooltipProvider>
       <nav
@@ -564,109 +662,61 @@ const GlobalNavigation = () => {
             )}
           </>
         )}
-        {categories.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  aria-label="分类"
-                  aria-current={activeCategory ? "page" : undefined}
-                  className={cn(
-                    "flex h-[30px] min-w-0 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                    activeCategory
-                      ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                      : "hover:bg-sidebar-accent/65 hover:text-foreground",
-                  )}
-                />
-              }
-            >
-              <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
-              {activeCategory && <span className="max-w-[5.5rem] truncate text-[12px]">{activeCategory.title}</span>}
-              <ChevronDownIcon className="size-3 shrink-0 opacity-55" strokeWidth={1.8} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
-              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
-              {categories.map((category) => {
-                const path = `/categories/${category.slug}`;
-                const active = location.pathname === path;
-                return (
-                  <DropdownMenuItem
-                    key={category.slug}
-                    aria-current={active ? "page" : undefined}
-                    className={cn("h-[30px] shrink-0 py-0 text-[13px]", active && "bg-accent font-medium text-accent-foreground")}
-                    onClick={() => {
-                      navigate(path);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    <FolderIcon className="size-4" strokeWidth={1.8} />
-                    <span className="truncate">{category.title}</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground">{category.memoNames.length}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-        {items.map((item) => {
-          const Icon = item.icon;
-          const alwaysShowLabel = !currentUser && item.id === "explore";
-          const itemClassName = cn(
-            "relative flex min-w-0 items-center justify-center gap-2 rounded-md text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-            item.active || alwaysShowLabel ? "h-[30px] px-2" : "size-[30px] px-0",
-            item.active
-              ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-              : "hover:bg-sidebar-accent/65 hover:text-foreground",
-          );
-          const itemContent = (
-            <>
-              {item.iconUrl ? (
-                <img src={item.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
-              ) : (
-                <Icon className="size-4 shrink-0" strokeWidth={1.8} />
-              )}
-              {(item.active || alwaysShowLabel) && <span className="max-w-[5.5rem] truncate text-[12px]">{item.label}</span>}
-              {!!item.count && item.count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-semibold leading-4 text-primary-foreground">
-                  {item.count > 99 ? "99+" : item.count}
-                </span>
-              )}
-            </>
-          );
-          const external = /^https?:\/\//i.test(item.path);
-          const content = external ? (
-            <a
-              key={item.id}
-              href={item.path}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => setMobileOpen(false)}
-              aria-label={item.label}
-              className={itemClassName}
-            >
-              {itemContent}
-            </a>
+        {itemsBeforeCategory.map(renderNavigationItem)}
+        {selectedCategory &&
+          (activeCategory ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={activeCategory.title}
+                    aria-current="page"
+                    className="flex h-[30px] min-w-0 shrink-0 items-center gap-2 rounded-md bg-sidebar-accent px-2 font-medium text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                  />
+                }
+              >
+                <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
+                <span className="max-w-[5.5rem] truncate text-[12px]">{activeCategory.title}</span>
+                <ChevronDownIcon className="size-3 shrink-0 opacity-55" strokeWidth={1.8} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
+                <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
+                {categories.map((category) => {
+                  const active = category.slug === activeCategory.slug;
+                  return (
+                    <DropdownMenuItem
+                      key={category.slug}
+                      aria-current={active ? "page" : undefined}
+                      className={cn("h-[30px] shrink-0 py-0 text-[13px]", active && "bg-accent font-medium text-accent-foreground")}
+                      onClick={() => navigateToCategory(category.slug)}
+                    >
+                      <FolderIcon className="size-4" strokeWidth={1.8} />
+                      <span className="truncate">{category.title}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground">{category.memoNames.length}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <Link
-              key={item.id}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-              aria-label={item.label}
-              aria-current={item.active ? "page" : undefined}
-              className={itemClassName}
-            >
-              {itemContent}
-            </Link>
-          );
-          if (item.active) return content;
-          return (
-            <Tooltip key={item.id}>
-              <TooltipTrigger render={<span />}>{content}</TooltipTrigger>
-              <TooltipContent side="bottom">{item.label}</TooltipContent>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={selectedCategory.title}
+                    className="flex size-[30px] shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                    onClick={() => navigateToCategory(selectedCategory.slug)}
+                  />
+                }
+              >
+                <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{selectedCategory.title}</TooltipContent>
             </Tooltip>
-          );
-        })}
+          ))}
+        {itemsAfterCategory.map(renderNavigationItem)}
       </nav>
     </TooltipProvider>
   );
@@ -741,6 +791,10 @@ export const MobileAppHeader = () => {
       >
         <MemosLogo compact />
       </Link>
+      <div className="ml-auto flex shrink-0 items-center gap-0.5">
+        <ToolbarPreferences />
+        <ToolbarClock compact />
+      </div>
     </header>
   );
 };

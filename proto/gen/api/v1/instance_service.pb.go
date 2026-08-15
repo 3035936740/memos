@@ -922,8 +922,20 @@ type InstanceSetting_GeneralSetting struct {
 	CustomPagesJson string `protobuf:"bytes,11,opt,name=custom_pages_json,json=customPagesJson,proto3" json:"custom_pages_json,omitempty"`
 	// memo_categories_json configures instance categories and their memo resource names.
 	MemoCategoriesJson string `protobuf:"bytes,12,opt,name=memo_categories_json,json=memoCategoriesJson,proto3" json:"memo_categories_json,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// memo_page_size controls the number of memos shown on each numbered list page.
+	// Values outside 1-100 fall back to 10 in the frontend.
+	MemoPageSize int32 `protobuf:"varint,13,opt,name=memo_page_size,json=memoPageSize,proto3" json:"memo_page_size,omitempty"`
+	// first_visit_default_locale is used when a browser has no saved locale preference.
+	// Empty values fall back to Simplified Chinese in the frontend.
+	FirstVisitDefaultLocale string `protobuf:"bytes,14,opt,name=first_visit_default_locale,json=firstVisitDefaultLocale,proto3" json:"first_visit_default_locale,omitempty"`
+	// first_visit_default_theme is used when a browser has no saved theme preference.
+	// Empty values fall back to Cosmic in the frontend.
+	FirstVisitDefaultTheme string `protobuf:"bytes,15,opt,name=first_visit_default_theme,json=firstVisitDefaultTheme,proto3" json:"first_visit_default_theme,omitempty"`
+	// default_background_image_url overrides the active theme's preset page background.
+	// Empty values keep the preset background provided by the selected theme.
+	DefaultBackgroundImageUrl string `protobuf:"bytes,16,opt,name=default_background_image_url,json=defaultBackgroundImageUrl,proto3" json:"default_background_image_url,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1029,6 +1041,34 @@ func (x *InstanceSetting_GeneralSetting) GetCustomPagesJson() string {
 func (x *InstanceSetting_GeneralSetting) GetMemoCategoriesJson() string {
 	if x != nil {
 		return x.MemoCategoriesJson
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetMemoPageSize() int32 {
+	if x != nil {
+		return x.MemoPageSize
+	}
+	return 0
+}
+
+func (x *InstanceSetting_GeneralSetting) GetFirstVisitDefaultLocale() string {
+	if x != nil {
+		return x.FirstVisitDefaultLocale
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetFirstVisitDefaultTheme() string {
+	if x != nil {
+		return x.FirstVisitDefaultTheme
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDefaultBackgroundImageUrl() string {
+	if x != nil {
+		return x.DefaultBackgroundImageUrl
 	}
 	return ""
 }
@@ -2103,7 +2143,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x06commit\x18\b \x01(\tR\x06commit\x12\x1f\n" +
 	"\vneeds_setup\x18\t \x01(\bR\n" +
 	"needsSetup\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\xa1\"\n" +
+	"\x19GetInstanceProfileRequest\"\x80$\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2112,7 +2152,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\ftags_setting\x18\x05 \x01(\v2).memos.api.v1.InstanceSetting.TagsSettingH\x00R\vtagsSetting\x12f\n" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
-	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xd1\x05\n" +
+	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xb0\a\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -2125,7 +2165,11 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x0fnavigation_json\x18\n" +
 	" \x01(\tR\x0enavigationJson\x12*\n" +
 	"\x11custom_pages_json\x18\v \x01(\tR\x0fcustomPagesJson\x120\n" +
-	"\x14memo_categories_json\x18\f \x01(\tR\x12memoCategoriesJson\x1ab\n" +
+	"\x14memo_categories_json\x18\f \x01(\tR\x12memoCategoriesJson\x12$\n" +
+	"\x0ememo_page_size\x18\r \x01(\x05R\fmemoPageSize\x12;\n" +
+	"\x1afirst_visit_default_locale\x18\x0e \x01(\tR\x17firstVisitDefaultLocale\x129\n" +
+	"\x19first_visit_default_theme\x18\x0f \x01(\tR\x16firstVisitDefaultTheme\x12?\n" +
+	"\x1cdefault_background_image_url\x18\x10 \x01(\tR\x19defaultBackgroundImageUrl\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

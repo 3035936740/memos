@@ -1,10 +1,12 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ArrowUpLeftFromCircleIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowUpLeftFromCircleIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo as useReactMemo, useRef, useState } from "react";
-import { Link, Navigate, useLocation, useParams } from "react-router-dom";
-import MemoCommentSection from "@/components/MemoCommentSection";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import BlogSidebar from "@/components/BlogSidebar";
+import MemoCommentSection, { type CommentSortOrder } from "@/components/MemoCommentSection";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import MemoView from "@/components/MemoView";
+import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
@@ -14,6 +16,7 @@ import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQue
 import { memoNamePrefix } from "@/lib/resource-names";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { useTranslate } from "@/utils/i18n";
 import { findMemoAnchorTarget } from "@/utils/markdown-manipulation";
 
 const MemoSidebarRegistration = ({
@@ -39,14 +42,28 @@ const MemoSidebarRegistration = ({
 };
 
 const MemoDetail = () => {
+  const t = useTranslate();
+  const navigate = useNavigate();
   const { isInitialized: authInitialized } = useAuth();
   const { isInitialized: instanceInitialized } = useInstance();
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
+  const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
   const location = useLocation();
   const { state: locationState, hash } = location;
   const parentPage = typeof locationState?.from === "string" ? locationState.from : undefined;
   const handleShareImageOpen = useCallback(() => setShareImageDialogOpen(true), []);
+  const handleBack = useCallback(() => {
+    if (parentPage) {
+      navigate(parentPage);
+      return;
+    }
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/explore");
+  }, [navigate, parentPage]);
 
   // Detect share mode from the route parameter.
   const shareToken = params.token;
@@ -86,6 +103,7 @@ const MemoDetail = () => {
     isFetchingNextPage: isFetchingNextComments,
   } = useInfiniteMemoComments(memoName, {
     enabled: !isShareMode && !!memo,
+    orderBy: `create_time ${commentSortOrder}`,
   });
 
   // Scroll to the hash target once it's in the DOM. The effect re-runs as the memo loads (footnote
@@ -118,12 +136,19 @@ const MemoDetail = () => {
   const userResolutionNames = Array.from(
     new Set([displayMemo, ...comments].flatMap((item) => [item.creator, ...(item.reactions ?? []).map((reaction) => reaction.creator)])),
   );
+  const detailPage = `${location.pathname}${location.search}`;
   return (
-    <section className="@container flex min-h-full w-full flex-col items-center pb-8 pt-3 md:pt-6">
+    <section className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4">
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
         <MemoSidebarRegistration memo={displayMemo} from={parentPage} readonly={isShareMode} onShareImageOpen={handleShareImageOpen} />
-        <div className="w-full max-w-2xl px-4 sm:px-6">
-          <div className="w-full">
+        <div className="w-full max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,48rem)_15rem] lg:items-start lg:gap-4">
+          <main className="min-w-0">
+            <div className="mb-3 flex items-center">
+              <Button variant="ghost" className="-ml-2 text-muted-foreground" onClick={handleBack}>
+                <ArrowLeftIcon />
+                {t("memo.back-to-list")}
+              </Button>
+            </div>
             {!isShareMode && parentMemo && (
               <div className="w-auto inline-block mb-2">
                 <Link
@@ -156,9 +181,17 @@ const MemoDetail = () => {
                 hasMoreComments={hasNextComments}
                 isFetchingMoreComments={isFetchingNextComments}
                 onLoadMoreComments={fetchNextComments}
+                sortOrder={commentSortOrder}
+                onSortOrderChange={setCommentSortOrder}
               />
             )}
-          </div>
+            <div className="mt-4 lg:hidden">
+              <BlogSidebar parentPage={detailPage} />
+            </div>
+          </main>
+          <aside className="sticky top-16 hidden min-w-0 lg:block">
+            <BlogSidebar parentPage={detailPage} />
+          </aside>
         </div>
       </MentionResolutionProvider>
     </section>

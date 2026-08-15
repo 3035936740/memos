@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render as testingLibraryRender, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, screen, render as testingLibraryRender } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AppSidebar, { MobileAppHeader } from "@/components/AppSidebar";
 import { SIDEBAR_SECTION_ACTION_BUTTON_CLASSES, SIDEBAR_SECTION_ACTION_ICON_CLASSES } from "@/components/AppSidebar/SidebarSection";
@@ -11,6 +11,9 @@ const authState = vi.hoisted(() => ({
 }));
 const sidebarState = vi.hoisted(() => ({
   memoScope: "home" as "home" | "explore" | "archived",
+}));
+const instanceState = vi.hoisted(() => ({
+  memoCategoriesJson: "",
 }));
 
 vi.mock("@/components/MemosLogo", () => ({
@@ -51,11 +54,11 @@ vi.mock("@/contexts/AppSidebarContext", () => ({
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
-  useAuth: () => ({ isInitialized: true }),
+  useAuth: () => ({ isInitialized: true, userGeneralSetting: undefined, refetchSettings: vi.fn() }),
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({
-  useInstance: () => ({ isInitialized: true }),
+  useInstance: () => ({ isInitialized: true, generalSetting: { memoCategoriesJson: instanceState.memoCategoriesJson } }),
 }));
 
 vi.mock("@/contexts/MemoFilterContext", () => ({
@@ -89,6 +92,7 @@ vi.mock("@/hooks/useUserQueries", () => ({
   },
   useMemoViews: () => ({ data: authState.memoViews }),
   useNotifications: () => ({ data: [] }),
+  useUpdateUserGeneralSetting: () => ({ mutate: vi.fn() }),
   useUser: () => ({ data: undefined }),
 }));
 
@@ -96,7 +100,8 @@ vi.mock("@/i18n", () => ({
   default: { language: "en" },
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 
@@ -105,22 +110,29 @@ const render = (ui: Parameters<typeof testingLibraryRender>[0]) =>
     <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{ui}</QueryClientProvider>,
   );
 
+const LocationProbe = () => {
+  const location = useLocation();
+  return <output aria-label="location">{location.pathname}</output>;
+};
+
 describe("App sidebar logo", () => {
   beforeEach(() => {
     authState.currentUser = { name: "users/test" };
     authState.memoViews = [];
     sidebarState.memoScope = "home";
+    instanceState.memoCategoriesJson = "";
+    localStorage.clear();
   });
 
   it("navigates home instead of opening a global editor", () => {
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <AppSidebar />
       </MemoryRouter>,
     );
 
     const logo = screen.getByRole("link", { name: "Memos logo" });
-    expect(logo).toHaveAttribute("href", "/");
+    expect(logo).toHaveAttribute("href", "/home");
     expect(screen.queryByRole("button", { name: /create.*memos/i })).not.toBeInTheDocument();
     expect(screen.queryByText("common.calendar")).not.toBeInTheDocument();
   });
@@ -134,7 +146,7 @@ describe("App sidebar logo", () => {
     );
 
     expect(screen.getByRole("link", { name: "common.explore" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
   });
@@ -170,11 +182,11 @@ describe("App sidebar logo", () => {
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.attachments" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.inbox" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
   });
 
-  it("marks About active for a guest on the About page", () => {
+  it("keeps the built-in About navigation hidden for a guest on the About page", () => {
     authState.currentUser = undefined;
     render(
       <MemoryRouter initialEntries={["/about"]}>
@@ -182,13 +194,13 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByText("Calendar")).toBeInTheDocument();
   });
 
   it("uses a compact scope menu and places views below the calendar", async () => {
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <AppSidebar />
       </MemoryRouter>,
     );
@@ -218,7 +230,7 @@ describe("App sidebar logo", () => {
   it("uses compact text-only actions for a saved view", async () => {
     authState.memoViews = [{ name: "memoViews/1", title: "testgp" }];
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/home"]}>
         <AppSidebar />
       </MemoryRouter>,
     );
@@ -258,6 +270,55 @@ describe("App sidebar logo", () => {
     expect(await screen.findByText("Calendar")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "common.home" })).toHaveTextContent("common.home");
     expect(screen.queryByRole("menuitem", { name: "common.explore" })).not.toBeInTheDocument();
+  });
+
+  it("opens the first category and remembers the last selected category", async () => {
+    instanceState.memoCategoriesJson = JSON.stringify([
+      { slug: "first", title: "First category", memoNames: [], access: "public" },
+      { slug: "second", title: "Second category", memoNames: ["memos/2"], access: "public" },
+    ]);
+
+    const firstRender = render(
+      <MemoryRouter initialEntries={["/inbox"]}>
+        <AppSidebar />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+
+    const inactiveCategory = screen.getByRole("button", { name: "First category" });
+    expect(inactiveCategory).toHaveClass("size-[30px]");
+    fireEvent.click(inactiveCategory);
+    expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/first");
+
+    fireEvent.click(screen.getByRole("button", { name: "First category" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Second category/ }));
+    expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/second");
+    expect(localStorage.getItem("memos-last-instance-category")).toBe("second");
+    firstRender.unmount();
+
+    render(
+      <MemoryRouter initialEntries={["/inbox"]}>
+        <AppSidebar />
+        <LocationProbe />
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Second category" }));
+    expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/second");
+  });
+
+  it("places public categories after Explore for a guest", () => {
+    authState.currentUser = undefined;
+    instanceState.memoCategoriesJson = JSON.stringify([{ slug: "public", title: "Public category", memoNames: [], access: "public" }]);
+
+    render(
+      <MemoryRouter initialEntries={["/explore"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    const explore = screen.getByRole("link", { name: "common.explore" });
+    const category = screen.getByRole("button", { name: "Public category" });
+    expect(explore.compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it.each([
@@ -302,7 +363,10 @@ describe("App sidebar logo", () => {
     );
 
     expect(screen.getByRole("button", { name: "Open navigation" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Memos logo" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Memos logo" })).toHaveAttribute("href", "/home");
+    expect(screen.getByRole("combobox", { name: /Theme:/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Language:/ })).toBeInTheDocument();
+    expect(screen.getByLabelText("Current time")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "common.search" })).not.toBeInTheDocument();
   });
 });

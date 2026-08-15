@@ -1,6 +1,7 @@
 import { CheckIcon, ChevronsUpDownIcon, GlobeIcon, LogOutIcon, PaletteIcon, SettingsIcon, SquareUserIcon, User2Icon } from "lucide-react";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useSSEConnectionStatus } from "@/hooks/useLiveMemoRefresh";
 import useNavigateTo from "@/hooks/useNavigateTo";
@@ -33,10 +34,11 @@ const UserMenu = (props: Props) => {
   const { setMobileOpen } = useAppSidebar();
   const currentUser = useCurrentUser();
   const { userGeneralSetting, refetchSettings, logout } = useAuth();
+  const { generalSetting } = useInstance();
   const { mutate: updateUserGeneralSetting } = useUpdateUserGeneralSetting(currentUser?.name);
   const sseStatus = useSSEConnectionStatus();
-  const currentLocale = getLocaleWithFallback(userGeneralSetting?.locale);
-  const currentTheme = getThemeWithFallback(userGeneralSetting?.theme);
+  const currentLocale = getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
+  const currentTheme = getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme);
 
   const handleLocaleChange = async (locale: Locale) => {
     if (!currentUser) return;

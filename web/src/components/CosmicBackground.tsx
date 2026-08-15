@@ -10,10 +10,15 @@ interface Particle {
   phase: number;
   pulseSpeed: number;
   pulseAmount: number;
+  wobblePhase: number;
+  wobbleSpeed: number;
+  wobbleAmount: number;
   color: [number, number, number];
 }
 
-const THEME_NAME = "cosmic-dark";
+type ParticleTheme = "cosmic-dark" | "twilight-dark";
+
+const PARTICLE_THEMES: ParticleTheme[] = ["cosmic-dark", "twilight-dark"];
 const FRAME_INTERVAL = 1000 / 30;
 
 const CosmicBackground = () => {
@@ -28,50 +33,66 @@ const CosmicBackground = () => {
     let animationFrame = 0;
     let resizeTimer = 0;
     let previousFrame = 0;
-    let active = false;
+    let activeTheme: ParticleTheme | undefined;
 
-    const createParticles = () => {
+    const createParticles = (theme: ParticleTheme) => {
       const width = window.innerWidth;
       const height = window.innerHeight;
       const mobile = width < 640;
-      const calculatedCount = Math.round((width * height) / (mobile ? 18000 : 22000));
-      const count = mobile ? Math.max(24, Math.min(calculatedCount, 38)) : Math.max(45, Math.min(calculatedCount, 75));
-      const colors: Particle["color"][] = [
-        [212, 219, 255],
-        [180, 200, 255],
-        [215, 188, 255],
-      ];
+      const firefly = theme === "twilight-dark";
+      const calculatedCount = Math.round((width * height) / (firefly ? (mobile ? 26000 : 38000) : mobile ? 18000 : 22000));
+      const count = firefly
+        ? mobile
+          ? Math.max(14, Math.min(calculatedCount, 24))
+          : Math.max(22, Math.min(calculatedCount, 36))
+        : mobile
+          ? Math.max(24, Math.min(calculatedCount, 38))
+          : Math.max(45, Math.min(calculatedCount, 75));
+      const colors: Particle["color"][] = firefly
+        ? [
+            [255, 221, 116],
+            [224, 255, 146],
+            [255, 174, 92],
+          ]
+        : [
+            [212, 219, 255],
+            [180, 200, 255],
+            [215, 188, 255],
+          ];
 
       particles = Array.from({ length: count }, () => {
         const direction = Math.random() * Math.PI * 2;
-        const speed = 0.012 + Math.random() * 0.055;
+        const speed = firefly ? 0.011 + Math.random() * 0.038 : 0.012 + Math.random() * 0.055;
         return {
           x: Math.random() * width,
           y: Math.random() * height,
-          radius: 0.4 + Math.random() * 1.15,
+          radius: firefly ? 0.7 + Math.random() * 1.1 : 0.4 + Math.random() * 1.15,
           velocityX: Math.cos(direction) * speed,
-          velocityY: Math.sin(direction) * speed,
-          alpha: 0.16 + Math.random() * 0.46,
+          velocityY: Math.sin(direction) * speed - (firefly ? 0.004 : 0),
+          alpha: firefly ? 0.18 + Math.random() * 0.5 : 0.16 + Math.random() * 0.46,
           phase: Math.random() * Math.PI * 2,
-          pulseSpeed: 0.012 + Math.random() * 0.027,
-          pulseAmount: 0.18 + Math.random() * 0.38,
+          pulseSpeed: firefly ? 0.02 + Math.random() * 0.04 : 0.012 + Math.random() * 0.027,
+          pulseAmount: firefly ? 0.42 + Math.random() * 0.42 : 0.18 + Math.random() * 0.38,
+          wobblePhase: Math.random() * Math.PI * 2,
+          wobbleSpeed: firefly ? 0.008 + Math.random() * 0.018 : 0,
+          wobbleAmount: firefly ? 0.004 + Math.random() * 0.014 : 0,
           color: colors[Math.floor(Math.random() * colors.length)],
         };
       });
     };
 
-    const resizeCanvas = () => {
+    const resizeCanvas = (theme: ParticleTheme) => {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.floor(window.innerWidth * pixelRatio);
       canvas.height = Math.floor(window.innerHeight * pixelRatio);
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-      createParticles();
+      createParticles(theme);
     };
 
     const draw = (timestamp: number) => {
-      if (!active) return;
+      if (!activeTheme) return;
       animationFrame = requestAnimationFrame(draw);
       if (timestamp - previousFrame < FRAME_INTERVAL) return;
 
@@ -79,11 +100,13 @@ const CosmicBackground = () => {
       previousFrame = timestamp;
       const width = window.innerWidth;
       const height = window.innerHeight;
+      const firefly = activeTheme === "twilight-dark";
       context.clearRect(0, 0, width, height);
 
       for (const particle of particles) {
-        particle.x += particle.velocityX * frameScale;
-        particle.y += particle.velocityY * frameScale;
+        particle.wobblePhase += particle.wobbleSpeed * frameScale;
+        particle.x += (particle.velocityX + Math.sin(particle.wobblePhase) * particle.wobbleAmount) * frameScale;
+        particle.y += (particle.velocityY + Math.cos(particle.wobblePhase * 0.83) * particle.wobbleAmount) * frameScale;
         particle.phase += particle.pulseSpeed * frameScale;
 
         if (particle.x < -3) particle.x = width + 3;
@@ -96,30 +119,31 @@ const CosmicBackground = () => {
         const radius = Math.max(0.35, particle.radius * (1 + pulse * 0.12));
         const [red, green, blue] = particle.color;
 
+        if ((firefly && alpha > 0.18) || (!firefly && particle.radius > 1.15 && alpha > 0.46)) {
+          context.beginPath();
+          context.arc(particle.x, particle.y, radius * (firefly ? 4.8 : 2.8), 0, Math.PI * 2);
+          context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha * (firefly ? 0.13 : 0.08)})`;
+          context.fill();
+        }
+
         context.beginPath();
         context.arc(particle.x, particle.y, radius, 0, Math.PI * 2);
         context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
         context.fill();
-
-        if (particle.radius > 1.15 && alpha > 0.46) {
-          context.beginPath();
-          context.arc(particle.x, particle.y, radius * 2.8, 0, Math.PI * 2);
-          context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha * 0.08})`;
-          context.fill();
-        }
       }
     };
 
     const syncTheme = () => {
-      const nextActive = document.documentElement.dataset.theme === THEME_NAME;
-      if (nextActive === active) return;
-      active = nextActive;
-      canvas.hidden = !active;
+      const theme = document.documentElement.dataset.theme;
+      const nextTheme = PARTICLE_THEMES.includes(theme as ParticleTheme) ? (theme as ParticleTheme) : undefined;
+      if (nextTheme === activeTheme) return;
+      activeTheme = nextTheme;
+      canvas.hidden = !activeTheme;
       cancelAnimationFrame(animationFrame);
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      if (active && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (activeTheme && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         previousFrame = 0;
-        resizeCanvas();
+        resizeCanvas(activeTheme);
         animationFrame = requestAnimationFrame(draw);
       }
     };
@@ -127,9 +151,9 @@ const CosmicBackground = () => {
     const handleResize = () => {
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => {
-        if (active) {
+        if (activeTheme) {
           previousFrame = 0;
-          resizeCanvas();
+          resizeCanvas(activeTheme);
         }
       }, 180);
     };
@@ -147,15 +171,7 @@ const CosmicBackground = () => {
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      hidden
-      aria-hidden="true"
-      className="pointer-events-none fixed inset-0 size-full"
-      style={{ zIndex: 0 }}
-    />
-  );
+  return <canvas ref={canvasRef} hidden aria-hidden="true" className="pointer-events-none fixed inset-0 size-full" style={{ zIndex: 0 }} />;
 };
 
 export default CosmicBackground;

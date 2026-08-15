@@ -22,11 +22,12 @@ describe("memo scopes", () => {
   });
 
   it("maps only the three collection routes to memo scopes", () => {
-    expect(isMemoScopeRoute("/")).toBe(true);
+    expect(isMemoScopeRoute("/")).toBe(false);
+    expect(isMemoScopeRoute("/home")).toBe(true);
     expect(isMemoScopeRoute("/explore")).toBe(true);
     expect(isMemoScopeRoute("/archived")).toBe(true);
     expect(isMemoScopeRoute("/attachments")).toBe(false);
-    expect(getMemoScopePath("home")).toBe("/");
+    expect(getMemoScopePath("home")).toBe("/home");
     expect(getMemoScopePath("explore")).toBe("/explore");
     expect(getMemoScopePath("archived")).toBe("/archived");
   });
@@ -91,9 +92,7 @@ describe("memo views", () => {
         filters: [{ factor: "displayTime", value: "2026-08-02" }],
         includePinned: false,
       }),
-    ).toBe(
-      `created_ts >= timestamp(${Math.floor(start.getTime() / 1000)}) && created_ts < timestamp(${Math.floor(end.getTime() / 1000)})`,
-    );
+    ).toBe(`created_ts >= timestamp(${Math.floor(start.getTime() / 1000)}) && created_ts < timestamp(${Math.floor(end.getTime() / 1000)})`);
   });
 
   it("ignores invalid display-time filter values", () => {

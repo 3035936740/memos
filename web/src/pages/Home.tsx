@@ -31,11 +31,11 @@ const Home = () => {
   });
 
   return (
-    <div className="w-full min-h-full bg-background text-foreground">
+    <div data-page-shell className="w-full min-h-full bg-background text-foreground">
       <NewMemoProvider>
         <PagedMemoList
-          renderer={(memo: Memo, { compact }) => (
-            <MemoView key={getMemoKey(memo)} memo={memo} showVisibility showPinned compact={compact} />
+          renderer={(memo: Memo, { compact, parentPage }) => (
+            <MemoView key={getMemoKey(memo)} memo={memo} parentPage={parentPage} showVisibility showPinned compact={compact} />
           )}
           listSort={listSort}
           orderBy={orderBy}

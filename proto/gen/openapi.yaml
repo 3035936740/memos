@@ -619,6 +619,17 @@ paths:
                   description: Optional. If true, show deleted memos in the response.
                   schema:
                     type: boolean
+                - name: pageOffset
+                  in: query
+                  description: Optional. Zero-based offset used by numbered pagination. Ignored when page_token is set.
+                  schema:
+                    type: integer
+                    format: int32
+                - name: showTotalSize
+                  in: query
+                  description: Optional. If true, calculate the total number of memos matching this request.
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -2754,6 +2765,27 @@ components:
                 memoCategoriesJson:
                     type: string
                     description: memo_categories_json configures instance categories and their memo resource names.
+                memoPageSize:
+                    type: integer
+                    description: |-
+                        memo_page_size controls the number of memos shown on each numbered list page.
+                         Values outside 1-100 fall back to 10 in the frontend.
+                    format: int32
+                firstVisitDefaultLocale:
+                    type: string
+                    description: |-
+                        first_visit_default_locale is used when a browser has no saved locale preference.
+                         Empty values fall back to Simplified Chinese in the frontend.
+                firstVisitDefaultTheme:
+                    type: string
+                    description: |-
+                        first_visit_default_theme is used when a browser has no saved theme preference.
+                         Empty values fall back to Cosmic in the frontend.
+                defaultBackgroundImageUrl:
+                    type: string
+                    description: |-
+                        default_background_image_url overrides the active theme's preset page background.
+                         Empty values keep the preset background provided by the selected theme.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object
@@ -3023,6 +3055,10 @@ components:
                 nextPageToken:
                     type: string
                     description: "A token that can be sent as `page_token` to retrieve the next page.\r\n If this field is omitted, there are no subsequent pages."
+                totalSize:
+                    type: integer
+                    description: Total number of memos matching the request. Populated when show_total_size is true.
+                    format: int32
         ListPersonalAccessTokensResponse:
             type: object
             properties:
@@ -3867,6 +3903,10 @@ components:
                 totalMemoCount:
                     type: integer
                     description: Total memo count.
+                    format: int32
+                totalCommentCount:
+                    type: integer
+                    description: Total comment count authored on memos visible to the caller.
                     format: int32
             description: User statistics messages
         UserStats_MemoTypeStats:

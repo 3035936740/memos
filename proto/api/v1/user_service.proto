@@ -383,6 +383,9 @@ message UserStats {
   // Total memo count.
   int32 total_memo_count = 6;
 
+  // Total comment count authored on memos visible to the caller.
+  int32 total_comment_count = 9;
+
   // Memo type statistics.
   message MemoTypeStats {
     int32 link_count = 1;

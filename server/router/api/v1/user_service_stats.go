@@ -56,8 +56,8 @@ func (s *APIV1Service) listUsernamesByID(ctx context.Context, userIDs []int32) (
 func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListAllUserStatsRequest) (*v1pb.ListAllUserStatsResponse, error) {
 	rowStatus := convertStateToStore(request.State)
 	memoFind := &store.FindMemo{
-		// Exclude comments by default.
-		ExcludeComments: true,
+		// Include comments so article and comment totals can be reported separately.
+		ExcludeComments: false,
 		ExcludeContent:  true,
 		RowStatus:       &rowStatus,
 	}
@@ -126,6 +126,10 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 			}
 
 			stats := userMemoStatMap[memo.CreatorID]
+			if memo.ParentUID != nil {
+				stats.TotalCommentCount++
+				continue
+			}
 
 			stats.MemoCreatedTimestamps = append(stats.MemoCreatedTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
 			stats.MemoUpdatedTimestamps = append(stats.MemoUpdatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
@@ -206,8 +210,8 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	normalStatus := store.Normal
 	memoFind := &store.FindMemo{
 		CreatorID: &userID,
-		// Exclude comments by default.
-		ExcludeComments: true,
+		// Include comments so article and comment totals can be reported separately.
+		ExcludeComments: false,
 		ExcludeContent:  true,
 		RowStatus:       &normalStatus,
 	}
@@ -227,6 +231,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	undoCount := int32(0)
 	pinnedMemos := []string{}
 	totalMemoCount := int32(0)
+	totalCommentCount := int32(0)
 
 	limit := 1000
 	offset := 0
@@ -242,9 +247,13 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 			break
 		}
 
-		totalMemoCount += int32(len(memos))
-
 		for _, memo := range memos {
+			if memo.ParentUID != nil {
+				totalCommentCount++
+				continue
+			}
+
+			totalMemoCount++
 			createdTimestamps = append(createdTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
 			updatedTimestamps = append(updatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
 			// Count different memo types based on content.
@@ -280,6 +289,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 		TagCount:              tagCount,
 		PinnedMemos:           pinnedMemos,
 		TotalMemoCount:        totalMemoCount,
+		TotalCommentCount:     totalCommentCount,
 		MemoTypeStats: &v1pb.UserStats_MemoTypeStats{
 			LinkCount: linkCount,
 			CodeCount: codeCount,

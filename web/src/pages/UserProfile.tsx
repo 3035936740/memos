@@ -77,7 +77,7 @@ const UserProfile = () => {
   if (isLoading) return null;
 
   return (
-    <section className="flex min-h-screen w-full flex-col bg-background">
+    <section data-page-shell className="flex min-h-screen w-full flex-col bg-background">
       {user ? (
         <>
           <ProfileHeader user={user} onCopyProfileLink={handleCopyProfileLink} shareLabel={t("common.share")} />
@@ -86,8 +86,8 @@ const UserProfile = () => {
             <div className="mx-auto w-full max-w-2xl">
               {activeTab === "memos" ? (
                 <PagedMemoList
-                  renderer={(memo: Memo, { compact }) => (
-                    <MemoView key={getMemoKey(memo)} memo={memo} showVisibility showPinned compact={compact} />
+                  renderer={(memo: Memo, { compact, parentPage }) => (
+                    <MemoView key={getMemoKey(memo)} memo={memo} parentPage={parentPage} showVisibility showPinned compact={compact} />
                   )}
                   listSort={listSort}
                   orderBy={orderBy}

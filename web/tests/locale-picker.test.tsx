@@ -1,6 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { LocaleSearchList } from "@/components/LocalePicker";
+import i18n from "@/i18n";
+
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 describe("<LocaleSearchList>", () => {
   it("links to GitHub feedback when no locale matches the search", async () => {

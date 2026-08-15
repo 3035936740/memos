@@ -1,37 +1,46 @@
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInstance } from "@/contexts/InstanceContext";
 import { getThemeWithFallback, loadTheme, setupSystemThemeListener } from "@/utils/theme";
 
 /**
  * Hook that reactively applies user theme preference.
- * Priority: User setting → localStorage → system preference
+ * Priority: user setting, local preference, instance first-visit default.
  */
 export const useUserTheme = () => {
   const { currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting } = useAuth();
+  const { generalSetting, isInitialized: isInstanceInitialized } = useInstance();
 
-  // Guests always start in the instance Cosmic theme. Authenticated users keep
-  // their account preference once settings have finished loading.
+  // Wait for the instance setting so the early fallback does not accidentally
+  // become a saved preference before the configured first-visit default arrives.
   useEffect(() => {
-    if (!isIdentityInitialized) {
+    if (!isIdentityInitialized || !isInstanceInitialized) {
       return;
     }
 
     if (!currentUser) {
-      loadTheme("cosmic-dark");
+      loadTheme(getThemeWithFallback(undefined, generalSetting.firstVisitDefaultTheme));
       return;
     }
 
     if (!isUserSettingsInitialized) return;
 
-    const theme = getThemeWithFallback(userGeneralSetting?.theme);
+    const theme = getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme);
     loadTheme(theme);
-  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.theme]);
+  }, [
+    currentUser,
+    generalSetting.firstVisitDefaultTheme,
+    isIdentityInitialized,
+    isInstanceInitialized,
+    isUserSettingsInitialized,
+    userGeneralSetting?.theme,
+  ]);
 
   // Listen for system theme changes when using "system" theme
   useEffect(() => {
-    if (!isIdentityInitialized || !currentUser || !isUserSettingsInitialized) return;
+    if (!isIdentityInitialized || !isInstanceInitialized || !currentUser || !isUserSettingsInitialized) return;
 
-    const theme = getThemeWithFallback(userGeneralSetting?.theme);
+    const theme = getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme);
 
     // Only set up listener if theme is "system"
     if (theme !== "system") {
@@ -44,5 +53,12 @@ export const useUserTheme = () => {
     });
 
     return cleanup;
-  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.theme]);
+  }, [
+    currentUser,
+    generalSetting.firstVisitDefaultTheme,
+    isIdentityInitialized,
+    isInstanceInitialized,
+    isUserSettingsInitialized,
+    userGeneralSetting?.theme,
+  ]);
 };

@@ -559,7 +559,11 @@ type ListMemosRequest struct {
 	//   content.contains("roadmap") && created_ts > now - duration("168h")
 	Filter string `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Optional. If true, show deleted memos in the response.
-	ShowDeleted   bool `protobuf:"varint,6,opt,name=show_deleted,json=showDeleted,proto3" json:"show_deleted,omitempty"`
+	ShowDeleted bool `protobuf:"varint,6,opt,name=show_deleted,json=showDeleted,proto3" json:"show_deleted,omitempty"`
+	// Optional. Zero-based offset used by numbered pagination. Ignored when page_token is set.
+	PageOffset int32 `protobuf:"varint,7,opt,name=page_offset,json=pageOffset,proto3" json:"page_offset,omitempty"`
+	// Optional. If true, calculate the total number of memos matching this request.
+	ShowTotalSize bool `protobuf:"varint,8,opt,name=show_total_size,json=showTotalSize,proto3" json:"show_total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -636,6 +640,20 @@ func (x *ListMemosRequest) GetShowDeleted() bool {
 	return false
 }
 
+func (x *ListMemosRequest) GetPageOffset() int32 {
+	if x != nil {
+		return x.PageOffset
+	}
+	return 0
+}
+
+func (x *ListMemosRequest) GetShowTotalSize() bool {
+	if x != nil {
+		return x.ShowTotalSize
+	}
+	return false
+}
+
 type ListMemosResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The list of memos.
@@ -643,6 +661,8 @@ type ListMemosResponse struct {
 	// A token that can be sent as `page_token` to retrieve the next page.
 	// If this field is omitted, there are no subsequent pages.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	// Total number of memos matching the request. Populated when show_total_size is true.
+	TotalSize     int32 `protobuf:"varint,3,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -689,6 +709,13 @@ func (x *ListMemosResponse) GetNextPageToken() string {
 		return x.NextPageToken
 	}
 	return ""
+}
+
+func (x *ListMemosResponse) GetTotalSize() int32 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
 }
 
 type GetMemoRequest struct {
@@ -2364,7 +2391,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\tlongitude\x18\x03 \x01(\x01B\x03\xe0A\x01R\tlongitude\"^\n" +
 	"\x11CreateMemoRequest\x12+\n" +
 	"\x04memo\x18\x01 \x01(\v2\x12.memos.api.v1.MemoB\x03\xe0A\x02R\x04memo\x12\x1c\n" +
-	"\amemo_id\x18\x02 \x01(\tB\x03\xe0A\x01R\x06memoId\"\xed\x01\n" +
+	"\amemo_id\x18\x02 \x01(\tB\x03\xe0A\x01R\x06memoId\"\xc0\x02\n" +
 	"\x10ListMemosRequest\x12 \n" +
 	"\tpage_size\x18\x01 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
 	"\n" +
@@ -2372,10 +2399,15 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x05state\x18\x03 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x01R\x05state\x12\x1e\n" +
 	"\border_by\x18\x04 \x01(\tB\x03\xe0A\x01R\aorderBy\x12\x1b\n" +
 	"\x06filter\x18\x05 \x01(\tB\x03\xe0A\x01R\x06filter\x12&\n" +
-	"\fshow_deleted\x18\x06 \x01(\bB\x03\xe0A\x01R\vshowDeleted\"e\n" +
+	"\fshow_deleted\x18\x06 \x01(\bB\x03\xe0A\x01R\vshowDeleted\x12$\n" +
+	"\vpage_offset\x18\a \x01(\x05B\x03\xe0A\x01R\n" +
+	"pageOffset\x12+\n" +
+	"\x0fshow_total_size\x18\b \x01(\bB\x03\xe0A\x01R\rshowTotalSize\"\x84\x01\n" +
 	"\x11ListMemosResponse\x12(\n" +
 	"\x05memos\x18\x01 \x03(\v2\x12.memos.api.v1.MemoR\x05memos\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"?\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x03 \x01(\x05R\ttotalSize\"?\n" +
 	"\x0eGetMemoRequest\x12-\n" +
 	"\x04name\x18\x01 \x01(\tB\x19\xe0A\x02\xfaA\x13\n" +
 	"\x11memos.api.v1/MemoR\x04name\"\x82\x01\n" +

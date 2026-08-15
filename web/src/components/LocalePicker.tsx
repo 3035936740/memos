@@ -85,11 +85,13 @@ interface LocalePickerProps {
   value: Locale;
   onChange: (locale: Locale) => void;
   className?: string;
+  iconOnly?: boolean;
 }
 
 const LocalePicker = (props: LocalePickerProps) => {
-  const { value, onChange, className } = props;
+  const { value, onChange, className, iconOnly = false } = props;
   const [open, setOpen] = useState(false);
+  const displayName = getLocaleDisplayName(value);
 
   const handleChange = (locale: Locale) => {
     onChange(locale);
@@ -98,12 +100,32 @@ const LocalePicker = (props: LocalePickerProps) => {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button type="button" variant="outline" className={cn("w-full justify-between", className)} />}>
-        <span className="flex min-w-0 flex-1 items-center gap-2">
-          <GlobeIcon className="size-4 shrink-0 text-muted-foreground" />
-          <span className="truncate">{getLocaleDisplayName(value)}</span>
-        </span>
-        <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground" />
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant={iconOnly ? "ghost" : "outline"}
+            size={iconOnly ? "icon" : undefined}
+            aria-label={iconOnly ? `Language: ${displayName}` : undefined}
+            title={iconOnly ? displayName : undefined}
+            className={cn(
+              iconOnly ? "bg-transparent text-muted-foreground shadow-none hover:bg-accent/65 hover:text-foreground" : "w-full justify-between",
+              className,
+            )}
+          />
+        }
+      >
+        {iconOnly ? (
+          <GlobeIcon className="size-4 shrink-0" />
+        ) : (
+          <>
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <GlobeIcon className="size-4 shrink-0 text-muted-foreground" />
+              <span className="truncate">{displayName}</span>
+            </span>
+            <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground" />
+          </>
+        )}
       </PopoverTrigger>
       <PopoverContent align="start" className="p-0">
         <LocaleSearchList value={value} onChange={handleChange} />

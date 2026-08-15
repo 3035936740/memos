@@ -1,33 +1,42 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { useInstance } from "@/contexts/InstanceContext";
 import { getLocaleWithFallback, loadLocale } from "@/utils/i18n";
 
 /**
  * Hook that reactively applies user locale preference.
- * Priority: User setting → localStorage → browser language
+ * Priority: user setting, local preference, instance first-visit default.
  */
 export const useUserLocale = () => {
   const { i18n } = useTranslation();
   const { currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting } = useAuth();
+  const { generalSetting, isInitialized: isInstanceInitialized } = useInstance();
 
-  // Guests always start in Simplified Chinese. Authenticated users keep their
-  // saved account locale once settings have finished loading.
+  // Wait for the instance setting so the early fallback does not accidentally
+  // become a saved preference before the configured first-visit default arrives.
   useEffect(() => {
-    if (!isIdentityInitialized) {
+    if (!isIdentityInitialized || !isInstanceInitialized) {
       return;
     }
 
     if (!currentUser) {
-      loadLocale("zh-Hans");
+      loadLocale(getLocaleWithFallback(undefined, generalSetting.firstVisitDefaultLocale));
       return;
     }
 
     if (!isUserSettingsInitialized) return;
 
-    const locale = getLocaleWithFallback(userGeneralSetting?.locale);
+    const locale = getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
     loadLocale(locale);
-  }, [currentUser, isIdentityInitialized, isUserSettingsInitialized, userGeneralSetting?.locale]);
+  }, [
+    currentUser,
+    generalSetting.firstVisitDefaultLocale,
+    isIdentityInitialized,
+    isInstanceInitialized,
+    isUserSettingsInitialized,
+    userGeneralSetting?.locale,
+  ]);
 
   // Update HTML lang and dir attributes based on current locale
   useEffect(() => {

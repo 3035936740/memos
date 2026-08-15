@@ -1,4 +1,4 @@
-import { Columns2Icon, Columns3Icon, InfinityIcon, type LucideIcon, Rows3Icon, SlidersHorizontalIcon } from "lucide-react";
+import { Columns2Icon, Columns3Icon, InfinityIcon, type LucideIcon, NewspaperIcon, Rows3Icon, SlidersHorizontalIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { SIDEBAR_SECTION_ACTION_BUTTON_CLASSES, SIDEBAR_SECTION_ACTION_ICON_CLASSES } from "@/components/AppSidebar/SidebarSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +29,9 @@ const LAYOUT_OPTIONS: Record<MemoMaxColumns, { icon: LucideIcon; key: "layout-li
   0: { icon: InfinityIcon, key: "layout-auto" },
 };
 
+const LAYOUT_CHOICES = [...MAX_COLUMNS_VALUES, "blog"] as const;
+type LayoutChoice = (typeof LAYOUT_CHOICES)[number];
+
 const SettingRow = ({ label, description, children }: SettingRowProps) => (
   <div className="flex min-h-7 items-center justify-between gap-3">
     <div className="min-w-0">
@@ -47,15 +50,26 @@ function MemoDisplaySettingsContent() {
     compactMode,
     linkPreview,
     maxColumns,
+    feedLayout,
     setTimeBasis,
     setOrderByTimeAsc,
     setCompactMode,
     setLinkPreview,
     setMaxColumns,
+    setFeedLayout,
   } = useView();
   // Multi-column grids always render compact tiles, so the toggle is shown as on and locked
   // there; it only becomes a real choice at a single column.
-  const compactLocked = maxColumns !== 1;
+  const compactLocked = feedLayout === "blog" || maxColumns !== 1;
+
+  const selectLayout = (choice: LayoutChoice) => {
+    if (choice === "blog") {
+      setFeedLayout("blog");
+      return;
+    }
+    setFeedLayout("memo");
+    setMaxColumns(choice);
+  };
 
   const timeBasisOptions = [
     { value: "create_time", label: t("common.created-at") },
@@ -73,15 +87,16 @@ function MemoDisplaySettingsContent() {
         <div
           role="radiogroup"
           aria-label={t("memo.layout")}
-          className="grid grid-cols-4 gap-0.5 rounded-lg bg-muted/55 p-0.5"
+          className="grid grid-cols-5 gap-0.5 rounded-lg bg-muted/55 p-0.5"
           onKeyDown={(event) => {
             const delta =
               event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
             if (delta === 0) return;
             event.preventDefault();
-            const index = MAX_COLUMNS_VALUES.indexOf(maxColumns);
-            const next = MAX_COLUMNS_VALUES[(index + delta + MAX_COLUMNS_VALUES.length) % MAX_COLUMNS_VALUES.length];
-            setMaxColumns(next);
+            const currentChoice: LayoutChoice = feedLayout === "blog" ? "blog" : maxColumns;
+            const index = LAYOUT_CHOICES.indexOf(currentChoice);
+            const next = LAYOUT_CHOICES[(index + delta + LAYOUT_CHOICES.length) % LAYOUT_CHOICES.length];
+            selectLayout(next);
             event.currentTarget.querySelector<HTMLButtonElement>(`[data-value="${next}"]`)?.focus();
           }}
         >
@@ -90,7 +105,7 @@ function MemoDisplaySettingsContent() {
             const label = t(`memo.${key}`, { n: value });
             const description = t(`memo.${key}-description`, { n: value });
             const shortLabel = value > 1 ? value.toString() : label;
-            const active = maxColumns === value;
+            const active = feedLayout === "memo" && maxColumns === value;
             return (
               <button
                 key={value}
@@ -101,7 +116,7 @@ function MemoDisplaySettingsContent() {
                 title={description}
                 tabIndex={active ? 0 : -1}
                 data-value={value}
-                onClick={() => setMaxColumns(value)}
+                onClick={() => selectLayout(value)}
                 className={cn(
                   "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[11px] transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                   active ? "bg-background text-foreground shadow-xs" : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
@@ -112,6 +127,25 @@ function MemoDisplaySettingsContent() {
               </button>
             );
           })}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={feedLayout === "blog"}
+            aria-label={t("memo.layout-blog")}
+            title={t("memo.layout-blog-description")}
+            tabIndex={feedLayout === "blog" ? 0 : -1}
+            data-value="blog"
+            onClick={() => selectLayout("blog")}
+            className={cn(
+              "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[11px] transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+              feedLayout === "blog"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
+            )}
+          >
+            <NewspaperIcon className="size-3.5 shrink-0" strokeWidth={1.8} />
+            <span className="truncate">{t("memo.layout-blog")}</span>
+          </button>
         </div>
       </section>
 
@@ -156,7 +190,10 @@ function MemoDisplaySettingsContent() {
       </section>
 
       <section className="space-y-2 border-t border-border/60 px-3 py-2.5">
-        <SettingRow label={t("memo.compact-mode")} description={compactLocked ? t("memo.grid-compact-hint") : undefined}>
+        <SettingRow
+          label={t("memo.compact-mode")}
+          description={feedLayout === "blog" ? t("memo.blog-compact-hint") : compactLocked ? t("memo.grid-compact-hint") : undefined}
+        >
           <Switch
             aria-label={t("memo.compact-mode")}
             checked={compactLocked || compactMode}

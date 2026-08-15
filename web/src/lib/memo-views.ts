@@ -50,5 +50,5 @@ export const resolveMemoScope = (pathname: string, options: ResolveMemoScopeOpti
     return "archived";
   }
 
-  return options.fallback ?? "home";
+  return options.fallback ?? "explore";
 };

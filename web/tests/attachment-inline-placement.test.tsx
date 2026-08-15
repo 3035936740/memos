@@ -2,6 +2,7 @@ import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import AttachmentListEditor from "@/components/MemoMetadata/Attachment/AttachmentListEditor";
+import i18n from "@/i18n";
 import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 
 const image = create(AttachmentSchema, {
@@ -11,7 +12,8 @@ const image = create(AttachmentSchema, {
   size: 128n,
 });
 
-beforeAll(() => {
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
   Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: () => ({

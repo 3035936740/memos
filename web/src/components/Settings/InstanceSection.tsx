@@ -2,12 +2,15 @@ import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+import LocalePicker from "@/components/LocalePicker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { identityProviderServiceClient } from "@/connect";
 import { useInstance } from "@/contexts/InstanceContext";
 import useDialog from "@/hooks/useDialog";
+import { DEFAULT_MEMO_FEED_PAGE_SIZE, MAX_MEMO_FEED_PAGE_SIZE, MIN_MEMO_FEED_PAGE_SIZE } from "@/lib/constants";
 import { IdentityProvider } from "@/types/proto/api/v1/idp_service_pb";
 import {
   InstanceSetting_GeneralSetting,
@@ -15,7 +18,8 @@ import {
   InstanceSetting_Key,
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
-import { useTranslate } from "@/utils/i18n";
+import { isValidLocale, useTranslate } from "@/utils/i18n";
+import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
@@ -53,6 +57,12 @@ const InstanceSection = () => {
     ],
     [t],
   );
+  const firstVisitDefaultLocale = isValidLocale(instanceGeneralSetting.firstVisitDefaultLocale)
+    ? (instanceGeneralSetting.firstVisitDefaultLocale as Locale)
+    : "zh-Hans";
+  const firstVisitDefaultTheme = isValidTheme(instanceGeneralSetting.firstVisitDefaultTheme)
+    ? instanceGeneralSetting.firstVisitDefaultTheme
+    : "cosmic-dark";
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
     setInstanceGeneralSetting((currentSetting) =>
@@ -85,6 +95,42 @@ const InstanceSection = () => {
             <Button variant="outline" onClick={customizeDialog.open}>
               {t("common.edit")}
             </Button>
+          </SettingListItem>
+          <SettingListItem
+            label={t("setting.system.memo-page-size")}
+            description={t("setting.system.memo-page-size-description", {
+              min: MIN_MEMO_FEED_PAGE_SIZE,
+              max: MAX_MEMO_FEED_PAGE_SIZE,
+              default: DEFAULT_MEMO_FEED_PAGE_SIZE,
+            })}
+          >
+            <Input
+              type="number"
+              min={MIN_MEMO_FEED_PAGE_SIZE}
+              max={MAX_MEMO_FEED_PAGE_SIZE}
+              className="w-24"
+              value={instanceGeneralSetting.memoPageSize || ""}
+              placeholder={DEFAULT_MEMO_FEED_PAGE_SIZE.toString()}
+              onChange={(event) => {
+                const rawValue = event.target.valueAsNumber;
+                const memoPageSize = Number.isFinite(rawValue)
+                  ? Math.min(MAX_MEMO_FEED_PAGE_SIZE, Math.max(MIN_MEMO_FEED_PAGE_SIZE, Math.trunc(rawValue)))
+                  : 0;
+                updatePartialSetting({ memoPageSize });
+              }}
+            />
+          </SettingListItem>
+          <SettingListItem
+            label={t("setting.system.default-background-image")}
+            description={t("setting.system.default-background-image-description")}
+          >
+            <Input
+              type="url"
+              className="w-80 max-w-full"
+              value={instanceGeneralSetting.defaultBackgroundImageUrl}
+              placeholder="https://example.com/background.webp"
+              onChange={(event) => updatePartialSetting({ defaultBackgroundImageUrl: event.target.value.trim() })}
+            />
           </SettingListItem>
         </SettingList>
       </SettingGroup>
@@ -125,6 +171,39 @@ const InstanceSection = () => {
 
       <SettingGroup title={t("setting.instance.access-title")} description={t("setting.instance.access-description")} showSeparator>
         <SettingList>
+          <SettingListItem
+            label={t("setting.instance.first-visit-default-language")}
+            description={t("setting.instance.first-visit-default-language-description")}
+          >
+            <LocalePicker
+              value={firstVisitDefaultLocale}
+              onChange={(firstVisitDefaultLocale) => updatePartialSetting({ firstVisitDefaultLocale })}
+              className="w-52"
+            />
+          </SettingListItem>
+
+          <SettingListItem
+            label={t("setting.instance.first-visit-default-theme")}
+            description={t("setting.instance.first-visit-default-theme-description")}
+          >
+            <Select
+              value={firstVisitDefaultTheme}
+              items={THEME_OPTIONS}
+              onValueChange={(firstVisitDefaultTheme) => updatePartialSetting({ firstVisitDefaultTheme })}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {THEME_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingListItem>
+
           <SettingListItem
             label={t("setting.instance.disallow-user-registration")}
             description={t("setting.instance.disallow-user-registration-description")}

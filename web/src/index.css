@@ -31,3 +31,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+html[data-instance-background="true"] body > #root,
+html[data-instance-background="true"] .bg-background,
+html[data-instance-background="true"] body > #root > .bg-background,
+html[data-instance-background="true"] main > .bg-background,
+html[data-instance-background="true"] main > section > .bg-background,
+html[data-instance-background="true"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

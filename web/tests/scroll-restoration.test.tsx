@@ -11,6 +11,14 @@ vi.mock("@/contexts/InstanceContext", () => ({
   }),
 }));
 
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ currentUser: undefined, isIdentityInitialized: true }),
+}));
+
+vi.mock("@/contexts/ViewContext", () => ({
+  useView: () => ({ setCompactMode: vi.fn(), setLinkPreview: vi.fn() }),
+}));
+
 vi.mock("@/hooks/useNavigateTo", () => ({ default: () => vi.fn() }));
 vi.mock("@/hooks/useUserLocale", () => ({ useUserLocale: vi.fn() }));
 vi.mock("@/hooks/useUserTheme", () => ({ useUserTheme: vi.fn() }));

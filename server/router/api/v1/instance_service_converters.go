@@ -87,16 +87,20 @@ func convertInstanceGeneralSettingFromStore(setting *storepb.InstanceGeneralSett
 	}
 
 	generalSetting := &v1pb.InstanceSetting_GeneralSetting{
-		DisallowUserRegistration: setting.DisallowUserRegistration,
-		DisallowPasswordAuth:     setting.DisallowPasswordAuth,
-		AdditionalScript:         setting.AdditionalScript,
-		AdditionalStyle:          setting.AdditionalStyle,
-		WeekStartDayOffset:       setting.WeekStartDayOffset,
-		DisallowChangeUsername:   setting.DisallowChangeUsername,
-		DisallowChangeNickname:   setting.DisallowChangeNickname,
-		NavigationJson:           setting.NavigationJson,
-		CustomPagesJson:          setting.CustomPagesJson,
-		MemoCategoriesJson:       setting.MemoCategoriesJson,
+		DisallowUserRegistration:  setting.DisallowUserRegistration,
+		DisallowPasswordAuth:      setting.DisallowPasswordAuth,
+		AdditionalScript:          setting.AdditionalScript,
+		AdditionalStyle:           setting.AdditionalStyle,
+		WeekStartDayOffset:        setting.WeekStartDayOffset,
+		DisallowChangeUsername:    setting.DisallowChangeUsername,
+		DisallowChangeNickname:    setting.DisallowChangeNickname,
+		NavigationJson:            setting.NavigationJson,
+		CustomPagesJson:           setting.CustomPagesJson,
+		MemoCategoriesJson:        setting.MemoCategoriesJson,
+		MemoPageSize:              setting.MemoPageSize,
+		FirstVisitDefaultLocale:   setting.FirstVisitDefaultLocale,
+		FirstVisitDefaultTheme:    setting.FirstVisitDefaultTheme,
+		DefaultBackgroundImageUrl: setting.DefaultBackgroundImageUrl,
 	}
 	if setting.CustomProfile != nil {
 		generalSetting.CustomProfile = &v1pb.InstanceSetting_GeneralSetting_CustomProfile{
@@ -113,16 +117,20 @@ func convertInstanceGeneralSettingToStore(setting *v1pb.InstanceSetting_GeneralS
 		return nil
 	}
 	generalSetting := &storepb.InstanceGeneralSetting{
-		DisallowUserRegistration: setting.DisallowUserRegistration,
-		DisallowPasswordAuth:     setting.DisallowPasswordAuth,
-		AdditionalScript:         setting.AdditionalScript,
-		AdditionalStyle:          setting.AdditionalStyle,
-		WeekStartDayOffset:       setting.WeekStartDayOffset,
-		DisallowChangeUsername:   setting.DisallowChangeUsername,
-		DisallowChangeNickname:   setting.DisallowChangeNickname,
-		NavigationJson:           setting.NavigationJson,
-		CustomPagesJson:          setting.CustomPagesJson,
-		MemoCategoriesJson:       setting.MemoCategoriesJson,
+		DisallowUserRegistration:  setting.DisallowUserRegistration,
+		DisallowPasswordAuth:      setting.DisallowPasswordAuth,
+		AdditionalScript:          setting.AdditionalScript,
+		AdditionalStyle:           setting.AdditionalStyle,
+		WeekStartDayOffset:        setting.WeekStartDayOffset,
+		DisallowChangeUsername:    setting.DisallowChangeUsername,
+		DisallowChangeNickname:    setting.DisallowChangeNickname,
+		NavigationJson:            setting.NavigationJson,
+		CustomPagesJson:           setting.CustomPagesJson,
+		MemoCategoriesJson:        setting.MemoCategoriesJson,
+		MemoPageSize:              setting.MemoPageSize,
+		FirstVisitDefaultLocale:   setting.FirstVisitDefaultLocale,
+		FirstVisitDefaultTheme:    setting.FirstVisitDefaultTheme,
+		DefaultBackgroundImageUrl: setting.DefaultBackgroundImageUrl,
 	}
 	if setting.CustomProfile != nil {
 		generalSetting.CustomProfile = &storepb.InstanceCustomProfile{

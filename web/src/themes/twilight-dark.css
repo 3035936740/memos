@@ -1,0 +1,64 @@
+:root {
+  --background: oklch(0.18 0.038 315);
+  --foreground: oklch(0.92 0.025 68);
+  --card: oklch(0.235 0.042 318);
+  --card-foreground: oklch(0.94 0.022 68);
+  --popover: oklch(0.255 0.048 316);
+  --popover-foreground: oklch(0.95 0.02 70);
+  --primary: oklch(0.73 0.15 46);
+  --primary-foreground: oklch(0.19 0.045 316);
+  --secondary: oklch(0.29 0.058 320);
+  --secondary-foreground: oklch(0.91 0.028 70);
+  --muted: oklch(0.285 0.042 318);
+  --muted-foreground: oklch(0.73 0.035 65);
+  --accent: oklch(0.39 0.095 345);
+  --accent-foreground: oklch(0.96 0.02 68);
+  --destructive: oklch(0.63 0.2 24);
+  --destructive-foreground: oklch(0.97 0.015 70);
+  --success: oklch(0.7 0.13 150);
+  --success-foreground: oklch(0.18 0.035 150);
+  --warning: oklch(0.78 0.15 70);
+  --warning-foreground: oklch(0.2 0.04 55);
+  --border: oklch(0.39 0.065 326);
+  --input: oklch(0.44 0.075 327);
+  --ring: oklch(0.72 0.15 45);
+  --sidebar: oklch(0.16 0.035 315);
+  --sidebar-foreground: oklch(0.82 0.035 68);
+  --sidebar-accent: oklch(0.31 0.068 326);
+  --sidebar-accent-foreground: oklch(0.96 0.022 68);
+  --sidebar-accent-border: oklch(0.48 0.105 342);
+  --shadow-xs: 0 1px 3px rgb(12 6 20 / 20%);
+  --shadow-sm: 0 2px 6px rgb(12 6 20 / 25%), 0 1px 2px rgb(225 105 88 / 8%);
+  --shadow: 0 4px 10px rgb(12 6 20 / 28%), 0 1px 3px rgb(225 105 88 / 9%);
+  --shadow-md: 0 7px 18px rgb(12 6 20 / 30%), 0 2px 5px rgb(225 105 88 / 10%);
+  --shadow-lg: 0 12px 28px rgb(12 6 20 / 34%), 0 3px 8px rgb(225 105 88 / 10%);
+  --shadow-xl: 0 18px 38px rgb(12 6 20 / 38%), 0 4px 12px rgb(225 105 88 / 11%);
+}
+
+html[data-theme="twilight-dark"] body {
+  background-color: #24172d;
+  background-image:
+    radial-gradient(ellipse at 50% 112%, rgb(244 135 72 / 34%) 0%, rgb(195 79 105 / 19%) 28%, transparent 58%),
+    radial-gradient(ellipse at 12% 18%, rgb(105 79 174 / 20%) 0%, transparent 46%),
+    radial-gradient(ellipse at 88% 12%, rgb(181 80 139 / 14%) 0%, transparent 42%),
+    linear-gradient(180deg, #171326 0%, #24162d 55%, #38202e 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="twilight-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="twilight-dark"] [data-app-shell],
+html[data-theme="twilight-dark"] [data-page-shell] {
+  background-color: transparent;
+}
+
+html[data-theme="twilight-dark"] body > #root > .bg-background,
+html[data-theme="twilight-dark"] main > .bg-background,
+html[data-theme="twilight-dark"] main > section > .bg-background,
+html[data-theme="twilight-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

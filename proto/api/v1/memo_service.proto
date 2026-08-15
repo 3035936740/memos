@@ -342,6 +342,12 @@ message ListMemosRequest {
 
   // Optional. If true, show deleted memos in the response.
   bool show_deleted = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Zero-based offset used by numbered pagination. Ignored when page_token is set.
+  int32 page_offset = 7 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. If true, calculate the total number of memos matching this request.
+  bool show_total_size = 8 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message ListMemosResponse {
@@ -351,6 +357,9 @@ message ListMemosResponse {
   // A token that can be sent as `page_token` to retrieve the next page.
   // If this field is omitted, there are no subsequent pages.
   string next_page_token = 2;
+
+  // Total number of memos matching the request. Populated when show_total_size is true.
+  int32 total_size = 3;
 }
 
 message GetMemoRequest {

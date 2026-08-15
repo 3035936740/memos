@@ -425,6 +425,44 @@ func TestListMemosTimeOrderBy(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestListMemosNumberedPagination(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "numbered-pagination-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	for i := range 23 {
+		_, err := ts.Service.CreateMemo(userCtx, &apiv1.CreateMemoRequest{
+			Memo: &apiv1.Memo{
+				Content:    fmt.Sprintf("memo-%02d", i),
+				Visibility: apiv1.Visibility_PRIVATE,
+			},
+		})
+		require.NoError(t, err)
+	}
+
+	secondPage, err := ts.Service.ListMemos(userCtx, &apiv1.ListMemosRequest{
+		PageSize:      10,
+		PageOffset:    10,
+		ShowTotalSize: true,
+	})
+	require.NoError(t, err)
+	require.Len(t, secondPage.Memos, 10)
+	require.Equal(t, int32(23), secondPage.TotalSize)
+
+	lastPage, err := ts.Service.ListMemos(userCtx, &apiv1.ListMemosRequest{
+		PageSize:      10,
+		PageOffset:    20,
+		ShowTotalSize: true,
+	})
+	require.NoError(t, err)
+	require.Len(t, lastPage.Memos, 3)
+	require.Equal(t, int32(23), lastPage.TotalSize)
+}
+
 func TestListMemosSkipsReactionsWithMissingCreators(t *testing.T) {
 	ctx := context.Background()
 
@@ -582,6 +620,52 @@ func TestListMemoCommentsPaginates(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, secondPage.Memos, 1)
 	require.Empty(t, secondPage.NextPageToken)
+}
+
+func TestListMemoCommentsOrdersFloorsAcrossPages(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	owner, err := ts.CreateRegularUser(ctx, "comment-order-owner")
+	require.NoError(t, err)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+	parent, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "ordered comments", Visibility: apiv1.Visibility_PUBLIC},
+	})
+	require.NoError(t, err)
+
+	created := make([]*apiv1.Memo, 0, 3)
+	for i := 0; i < 3; i++ {
+		comment, err := ts.Service.CreateMemoComment(ownerCtx, &apiv1.CreateMemoCommentRequest{
+			Name:    parent.Name,
+			Comment: &apiv1.Memo{Content: fmt.Sprintf("floor %d", i+1)},
+		})
+		require.NoError(t, err)
+		created = append(created, comment)
+	}
+
+	ascending, err := ts.Service.ListMemoComments(ownerCtx, &apiv1.ListMemoCommentsRequest{
+		Name: parent.Name, PageSize: 2, OrderBy: "create_time asc",
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{created[0].Name, created[1].Name}, []string{ascending.Memos[0].Name, ascending.Memos[1].Name})
+	require.NotEmpty(t, ascending.NextPageToken)
+
+	nextAscending, err := ts.Service.ListMemoComments(ownerCtx, &apiv1.ListMemoCommentsRequest{
+		Name: parent.Name, PageToken: ascending.NextPageToken, OrderBy: "create_time asc",
+	})
+	require.NoError(t, err)
+	require.Equal(t, created[2].Name, nextAscending.Memos[0].Name)
+
+	descending, err := ts.Service.ListMemoComments(ownerCtx, &apiv1.ListMemoCommentsRequest{
+		Name: parent.Name, PageSize: 2, OrderBy: "create_time desc",
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{created[2].Name, created[1].Name}, []string{descending.Memos[0].Name, descending.Memos[1].Name})
+
+	_, err = ts.Service.ListMemoComments(ownerCtx, &apiv1.ListMemoCommentsRequest{Name: parent.Name, OrderBy: "score desc"})
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
 }
 
 func TestListMemoCommentsFiltersArchivedBeforePagination(t *testing.T) {

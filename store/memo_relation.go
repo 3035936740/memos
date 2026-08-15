@@ -32,8 +32,11 @@ type FindMemoRelation struct {
 	SourceMemoIDList []int32
 	// RelatedMemoIDList matches relations where related_memo_id is in the list.
 	RelatedMemoIDList []int32
-	Limit             *int
-	Offset            *int
+	// OrderByMemoIDAsc orders relations by the source memo's insertion order.
+	// The zero value preserves the historical newest-first behavior.
+	OrderByMemoIDAsc bool
+	Limit            *int
+	Offset           *int
 }
 
 type DeleteMemoRelation struct {

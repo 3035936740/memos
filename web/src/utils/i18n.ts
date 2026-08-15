@@ -75,8 +75,9 @@ export const isValidLocale = (locale: string | undefined | null): boolean => {
 // Gets the locale to use with proper priority:
 // 1. User setting (if logged in and has preference)
 // 2. localStorage (from previous session)
-// 3. Instance default (Simplified Chinese)
-export const getLocaleWithFallback = (userLocale?: string): Locale => {
+// 3. Instance first-visit default
+// 4. Backward-compatible Simplified Chinese default
+export const getLocaleWithFallback = (userLocale?: string, instanceLocale?: string): Locale => {
   // Priority 1: User setting (if logged in and valid)
   if (userLocale && isValidLocale(userLocale)) {
     return userLocale as Locale;
@@ -88,14 +89,21 @@ export const getLocaleWithFallback = (userLocale?: string): Locale => {
     return stored;
   }
 
-  // Priority 3: Instance default
+  // Priority 3: Instance default for first-time visitors
+  if (isValidLocale(instanceLocale)) {
+    return instanceLocale as Locale;
+  }
+
+  // Priority 4: Backward-compatible application default
   return DEFAULT_LOCALE;
 };
 
 // Applies and persists a locale setting
-export const loadLocale = (locale: string): Locale => {
+export const loadLocale = (locale: string, options: { persist?: boolean } = {}): Locale => {
   const validLocale = isValidLocale(locale) ? (locale as Locale) : DEFAULT_LOCALE;
-  setStoredLocale(validLocale);
+  if (options.persist !== false) {
+    setStoredLocale(validLocale);
+  }
   i18n.changeLanguage(validLocale);
   document.documentElement.lang = validLocale;
   return validLocale;
@@ -108,7 +116,7 @@ export const loadLocale = (locale: string): Locale => {
 export const applyLocaleEarly = (): void => {
   const stored = getStoredLocale();
   const locale = stored ?? DEFAULT_LOCALE;
-  loadLocale(locale);
+  loadLocale(locale, { persist: false });
 };
 
 // Get the display name for a locale in its native language

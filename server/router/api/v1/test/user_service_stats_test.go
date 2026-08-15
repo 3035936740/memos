@@ -198,6 +198,42 @@ func TestGetUserStats_MemoUpdatedTimestamps(t *testing.T) {
 	)
 }
 
+func TestGetUserStats_ReportsCommentsSeparately(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateHostUser(ctx, "comment-stats-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+	parent, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID:        "comment-stats-parent",
+		CreatorID:  user.ID,
+		Content:    "parent",
+		Visibility: store.Public,
+	})
+	require.NoError(t, err)
+	comment, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID:        "comment-stats-comment",
+		CreatorID:  user.ID,
+		Content:    "comment",
+		Visibility: store.Public,
+	})
+	require.NoError(t, err)
+	_, err = ts.Store.UpsertMemoRelation(ctx, &store.MemoRelation{
+		MemoID:        comment.ID,
+		RelatedMemoID: parent.ID,
+		Type:          store.MemoRelationComment,
+	})
+	require.NoError(t, err)
+
+	response, err := ts.Service.GetUserStats(userCtx, &v1pb.GetUserStatsRequest{Name: fmt.Sprintf("users/%s", user.Username)})
+	require.NoError(t, err)
+	require.Equal(t, int32(1), response.TotalMemoCount)
+	require.Equal(t, int32(1), response.TotalCommentCount)
+	require.Len(t, response.MemoCreatedTimestamps, 1)
+}
+
 func TestGetUserStats_PinnedMemoUsesCanonicalResourceName(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestService(t)

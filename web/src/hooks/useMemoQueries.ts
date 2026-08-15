@@ -123,13 +123,14 @@ function patchMemoInCollectionQueries(queryClient: QueryClient, update: MemoPatc
   queryClient.setQueriesData<MemoCollectionQueryData>({ queryKey: memoKeys.all }, (data) => patchMemoListQueryData(data, update));
 }
 
-export function useMemos(request: Partial<ListMemosRequest> = {}) {
+export function useMemos(request: Partial<ListMemosRequest> = {}, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: memoKeys.list(request),
     queryFn: async () => {
       const response = await memoServiceClient.listMemos(create(ListMemosRequestSchema, request as Record<string, unknown>));
       return response;
     },
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -278,14 +279,15 @@ export function useDeleteMemo() {
   });
 }
 
-export function useMemoComments(name: string, options?: { enabled?: boolean; pageSize?: number }) {
+export function useMemoComments(name: string, options?: { enabled?: boolean; pageSize?: number; orderBy?: string }) {
   return useQuery({
-    queryKey: [...memoKeys.comments(name), options?.pageSize ?? 0],
+    queryKey: [...memoKeys.comments(name), options?.pageSize ?? 0, options?.orderBy ?? ""],
     queryFn: async () => {
       const response = await memoServiceClient.listMemoComments(
         create(ListMemoCommentsRequestSchema, {
           name,
           pageSize: options?.pageSize ?? 0,
+          orderBy: options?.orderBy ?? "",
         }),
       );
       return response;
@@ -297,15 +299,16 @@ export function useMemoComments(name: string, options?: { enabled?: boolean; pag
 
 // useInfiniteMemoComments paginates through every comment via nextPageToken, instead of
 // stopping at the server's default page size (the cause of comments being truncated to 10).
-export function useInfiniteMemoComments(name: string, options?: { enabled?: boolean; pageSize?: number }) {
+export function useInfiniteMemoComments(name: string, options?: { enabled?: boolean; pageSize?: number; orderBy?: string }) {
   const pageSize = options?.pageSize ?? DEFAULT_LIST_MEMOS_PAGE_SIZE;
   return useInfiniteQuery({
-    queryKey: [...memoKeys.comments(name), "infinite", pageSize],
+    queryKey: [...memoKeys.comments(name), "infinite", pageSize, options?.orderBy ?? ""],
     queryFn: async ({ pageParam }) => {
       const response = await memoServiceClient.listMemoComments(
         create(ListMemoCommentsRequestSchema, {
           name,
           pageSize,
+          orderBy: options?.orderBy ?? "",
           pageToken: pageParam || "",
         }),
       );

@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 export type MemoTimeBasis = "create_time" | "update_time";
+export type MemoFeedLayout = "memo" | "blog";
 
 /** Upper bound on feed columns, in display order. 1 = single reading column; 0 = as many as fit. */
 export const MAX_COLUMNS_VALUES = [1, 2, 3, 0] as const;
@@ -13,6 +14,7 @@ interface ViewState {
   compactMode: boolean;
   linkPreview: boolean;
   maxColumns: MemoMaxColumns;
+  feedLayout: MemoFeedLayout;
 }
 
 interface ViewContextValue {
@@ -21,18 +23,26 @@ interface ViewContextValue {
   compactMode: boolean;
   linkPreview: boolean;
   maxColumns: MemoMaxColumns;
+  feedLayout: MemoFeedLayout;
   setOrderByTimeAsc: (value: boolean) => void;
   setTimeBasis: (field: MemoTimeBasis) => void;
   setCompactMode: (value: boolean) => void;
   setLinkPreview: (value: boolean) => void;
   setMaxColumns: (value: MemoMaxColumns) => void;
+  setFeedLayout: (value: MemoFeedLayout) => void;
 }
 
 const ViewContext = createContext<ViewContextValue | null>(null);
 
 const LOCAL_STORAGE_KEY = "memos-view-setting";
 
-const DEFAULT_VIEW_STATE: ViewState = { orderByTimeAsc: false, compactMode: false, linkPreview: true, maxColumns: 1 };
+const DEFAULT_VIEW_STATE: ViewState = {
+  orderByTimeAsc: false,
+  compactMode: true,
+  linkPreview: true,
+  maxColumns: 1,
+  feedLayout: "blog",
+};
 
 export function ViewProvider({ children }: { children: ReactNode }) {
   const getInitialState = (): ViewState => {
@@ -51,6 +61,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
           compactMode: Boolean(data.compactMode ?? DEFAULT_VIEW_STATE.compactMode),
           linkPreview: Boolean(data.linkPreview ?? DEFAULT_VIEW_STATE.linkPreview),
           maxColumns,
+          feedLayout: data.feedLayout === "memo" || data.feedLayout === "blog" ? data.feedLayout : DEFAULT_VIEW_STATE.feedLayout,
         };
       }
     } catch (error) {
@@ -83,6 +94,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   const setCompactMode = (value: boolean) => updateState({ compactMode: value });
   const setLinkPreview = (value: boolean) => updateState({ linkPreview: value });
   const setMaxColumns = (value: MemoMaxColumns) => updateState({ maxColumns: value });
+  const setFeedLayout = (value: MemoFeedLayout) => updateState({ feedLayout: value });
 
   return (
     <ViewContext.Provider
@@ -92,11 +104,13 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         compactMode: viewState.compactMode,
         linkPreview: viewState.linkPreview,
         maxColumns: viewState.maxColumns,
+        feedLayout: viewState.feedLayout,
         setOrderByTimeAsc,
         setTimeBasis,
         setCompactMode,
         setLinkPreview,
         setMaxColumns,
+        setFeedLayout,
       }}
     >
       {children}

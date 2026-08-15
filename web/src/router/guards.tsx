@@ -19,29 +19,22 @@ export const RequireFullInitializationRoute = () => {
 };
 
 /**
- * Index-route gate mounted at `/`. Authenticated visitors fall through to the
- * nested Home page; unauthenticated visitors are redirected to `/explore`,
- * preserving the original query string and hash so bookmarks like `/?filter=foo`
- * keep working.
+ * The site entry always opens the public Explore feed. Home remains available at
+ * `/home`, while query strings and hashes on old root bookmarks are preserved.
  */
 export const LandingRoute = () => {
-  const currentUser = useCurrentUser();
   const location = useLocation();
 
-  if (!currentUser) {
-    return (
-      <Navigate
-        to={{
-          pathname: ROUTES.EXPLORE,
-          search: location.search,
-          hash: location.hash,
-        }}
-        replace
-      />
-    );
-  }
-
-  return <Outlet />;
+  return (
+    <Navigate
+      to={{
+        pathname: ROUTES.EXPLORE,
+        search: location.search,
+        hash: location.hash,
+      }}
+      replace
+    />
+  );
 };
 
 /**
@@ -75,7 +68,7 @@ export const RequireGuestRoute = () => {
 
   if (currentUser) {
     const redirectTarget = getSafeRedirectPath(searchParams.get(AUTH_REDIRECT_PARAM));
-    return <Navigate to={redirectTarget || ROUTES.HOME} replace />;
+    return <Navigate to={redirectTarget || ROUTES.EXPLORE} replace />;
   }
 
   return <Outlet />;

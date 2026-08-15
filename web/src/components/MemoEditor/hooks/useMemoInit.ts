@@ -57,11 +57,12 @@ export const useMemoInit = ({
     }
 
     const cachedCursor = cacheService.loadCursor(key);
+    const initialCursor = cachedCursor ?? (initialContent ? initialContent.length : undefined);
     let restoreCursorTimer: ReturnType<typeof setTimeout> | undefined;
-    if (autoFocus || cachedCursor !== undefined) {
+    if (autoFocus || initialCursor !== undefined) {
       restoreCursorTimer = setTimeout(() => {
-        if (cachedCursor !== undefined) {
-          editorRef.current?.setCursor(cachedCursor);
+        if (initialCursor !== undefined) {
+          editorRef.current?.setCursor(initialCursor);
         }
         if (autoFocus) {
           editorRef.current?.focus();

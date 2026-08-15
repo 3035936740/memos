@@ -11,12 +11,14 @@ import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 const editorRef = { current: null } as RefObject<EditorController | null>;
 let getEditorState: ReturnType<typeof useEditorContext>["getState"];
 
-function Probe() {
+function Probe({ initialContent, autoFocus }: { initialContent?: string; autoFocus?: boolean } = {}) {
   getEditorState = useEditorContext().getState;
   useMemoInit({
     editorRef,
     username: "users/steven",
     cacheKey: "restored-draft",
+    initialContent,
+    autoFocus,
   });
   return null;
 }
@@ -29,10 +31,12 @@ describe("useMemoInit", () => {
       setItem: vi.fn((key: string, value: string) => storage.set(key, value)),
       removeItem: vi.fn((key: string) => storage.delete(key)),
     });
+    editorRef.current = null;
     cacheService.clearAll();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -42,11 +46,7 @@ describe("useMemoInit", () => {
       filename: "image.png",
       type: "image/png",
     });
-    cacheService.saveNow(
-      cacheService.key("users/steven", "restored-draft"),
-      "![image](/file/attachments/image-one)",
-      [attachment],
-    );
+    cacheService.saveNow(cacheService.key("users/steven", "restored-draft"), "![image](/file/attachments/image-one)", [attachment]);
 
     render(
       <EditorProvider>
@@ -58,5 +58,23 @@ describe("useMemoInit", () => {
       expect(getEditorState().content).toBe("![image](/file/attachments/image-one)");
       expect(getEditorState().metadata.attachments).toEqual([attachment]);
     });
+  });
+
+  it("places the cursor after prefilled reply text before focusing", async () => {
+    vi.useFakeTimers();
+    const setCursor = vi.fn();
+    const focus = vi.fn();
+    editorRef.current = { setCursor, focus } as unknown as EditorController;
+
+    render(
+      <EditorProvider>
+        <Probe initialContent="@bing " autoFocus />
+      </EditorProvider>,
+    );
+
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(setCursor).toHaveBeenCalledWith(6);
+    expect(focus).toHaveBeenCalledOnce();
   });
 });

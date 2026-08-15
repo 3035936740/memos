@@ -1,12 +1,13 @@
 import cosmicDarkThemeContent from "../themes/cosmic-dark.css?raw";
 import defaultDarkThemeContent from "../themes/default-dark.css?raw";
 import paperThemeContent from "../themes/paper.css?raw";
+import twilightDarkThemeContent from "../themes/twilight-dark.css?raw";
 
 // ============================================================================
 // Types and Constants
 // ============================================================================
 
-const VALID_THEMES = ["system", "default", "default-dark", "paper", "cosmic-dark"] as const;
+const VALID_THEMES = ["system", "default", "default-dark", "paper", "cosmic-dark", "twilight-dark"] as const;
 
 export type Theme = (typeof VALID_THEMES)[number];
 export type ResolvedTheme = Exclude<Theme, "system">;
@@ -24,6 +25,7 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
   "default-dark": defaultDarkThemeContent,
   paper: paperThemeContent,
   "cosmic-dark": cosmicDarkThemeContent,
+  "twilight-dark": twilightDarkThemeContent,
 };
 
 const THEME_COLORS: Record<ResolvedTheme, string> = {
@@ -31,6 +33,7 @@ const THEME_COLORS: Record<ResolvedTheme, string> = {
   "default-dark": "#1d1f23",
   paper: "#f5ede4",
   "cosmic-dark": "#0c1026",
+  "twilight-dark": "#24172d",
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -39,6 +42,7 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { value: "default-dark", label: "Dark" },
   { value: "paper", label: "Paper" },
   { value: "cosmic-dark", label: "Cosmic" },
+  { value: "twilight-dark", label: "Twilight" },
 ];
 
 // ============================================================================
@@ -51,6 +55,10 @@ export const THEME_OPTIONS: ThemeOption[] = [
  */
 const validateTheme = (theme: string): Theme => {
   return VALID_THEMES.includes(theme as Theme) ? (theme as Theme) : "default";
+};
+
+export const isValidTheme = (theme: string | undefined | null): theme is Theme => {
+  return Boolean(theme && VALID_THEMES.includes(theme as Theme));
 };
 
 /**
@@ -107,7 +115,7 @@ const setStoredTheme = (theme: Theme): void => {
 
 /**
  * Gets the theme for initial page load (before user settings are available).
- * Priority: localStorage -> system preference
+ * Priority: localStorage -> backward-compatible Cosmic fallback
  */
 export const getInitialTheme = (): Theme => {
   return getStoredTheme() ?? "cosmic-dark";
@@ -118,9 +126,10 @@ export const getInitialTheme = (): Theme => {
  * Priority:
  * 1. User setting (if logged in and has preference)
  * 2. localStorage (from previous session)
- * 3. System preference
+ * 3. Instance first-visit default
+ * 4. Backward-compatible Cosmic fallback
  */
-export const getThemeWithFallback = (userTheme?: string): Theme => {
+export const getThemeWithFallback = (userTheme?: string, instanceTheme?: string): Theme => {
   // Priority 1: User setting
   if (userTheme && VALID_THEMES.includes(userTheme as Theme)) {
     return userTheme as Theme;
@@ -133,6 +142,11 @@ export const getThemeWithFallback = (userTheme?: string): Theme => {
   }
 
   // Priority 3: Instance default for first-time visitors
+  if (isValidTheme(instanceTheme)) {
+    return instanceTheme;
+  }
+
+  // Priority 4: Backward-compatible application default
   return "cosmic-dark";
 };
 
@@ -211,7 +225,7 @@ const updateColorScheme = (theme: ResolvedTheme): void => {
  * 5. Updates browser native UI colors
  * 6. Persists to localStorage
  */
-export const loadTheme = (themeName: string): void => {
+export const loadTheme = (themeName: string, options: { persist?: boolean } = {}): void => {
   const validTheme = validateTheme(themeName);
   const resolvedTheme = resolveTheme(validTheme);
 
@@ -219,7 +233,9 @@ export const loadTheme = (themeName: string): void => {
   setThemeAttribute(resolvedTheme);
   updateThemeColorMeta(resolvedTheme);
   updateColorScheme(resolvedTheme);
-  setStoredTheme(validTheme); // Store original theme preference (not resolved)
+  if (options.persist !== false) {
+    setStoredTheme(validTheme); // Store original theme preference (not resolved)
+  }
 };
 
 /**
@@ -228,7 +244,7 @@ export const loadTheme = (themeName: string): void => {
  */
 export const applyThemeEarly = (): void => {
   const theme = getInitialTheme();
-  loadTheme(theme);
+  loadTheme(theme, { persist: false });
 };
 
 // ============================================================================

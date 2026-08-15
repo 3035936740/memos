@@ -97,6 +97,10 @@ func (d *DB) ListMemoRelations(ctx context.Context, find *store.FindMemoRelation
 		}
 	}
 
+	order := "DESC"
+	if find.OrderByMemoIDAsc {
+		order = "ASC"
+	}
 	query := `
 		SELECT
 			memo_id,
@@ -104,7 +108,7 @@ func (d *DB) ListMemoRelations(ctx context.Context, find *store.FindMemoRelation
 			type
 		FROM memo_relation
 		WHERE ` + strings.Join(where, " AND ") + `
-		ORDER BY memo_id DESC`
+		ORDER BY memo_id ` + order
 	if find.Limit != nil {
 		query = fmt.Sprintf("%s LIMIT %d", query, *find.Limit)
 		if find.Offset != nil {

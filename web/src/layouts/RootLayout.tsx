@@ -9,6 +9,7 @@ import AppSidebar, {
   SidebarResizeHandle,
   useSidebarWidth,
 } from "@/components/AppSidebar";
+import TopToolbar from "@/components/TopToolbar";
 import { AppSidebarProvider } from "@/contexts/AppSidebarContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { MemoFilterProvider, useMemoFilterContext } from "@/contexts/MemoFilterContext";
@@ -68,7 +69,12 @@ const RootLayoutContent = () => {
 
   return (
     <AppSidebarProvider>
-      <div ref={shellRef} className="min-h-full w-full bg-background" style={{ [SIDEBAR_WIDTH_VAR]: `${sidebarWidth}px` } as CSSProperties}>
+      <div
+        ref={shellRef}
+        data-app-shell
+        className="min-h-full w-full bg-background"
+        style={{ [SIDEBAR_WIDTH_VAR]: `${sidebarWidth}px` } as CSSProperties}
+      >
         {md && (
           <div className="fixed inset-y-0 left-0 z-30 w-(--app-sidebar-width) border-r border-border/70">
             <AppSidebar />
@@ -83,7 +89,7 @@ const RootLayoutContent = () => {
         )}
         <MobileAppSidebar />
         <main className="flex min-h-full w-full min-w-0 flex-col items-center md:pl-(--app-sidebar-width)">
-          <MobileAppHeader />
+          {md ? <TopToolbar /> : <MobileAppHeader />}
           {profile.demo && <DemoBanner />}
           <Outlet />
         </main>

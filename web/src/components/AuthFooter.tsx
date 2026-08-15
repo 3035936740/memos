@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useInstance } from "@/contexts/InstanceContext";
 import { cn } from "@/lib/utils";
 import { loadLocale } from "@/utils/i18n";
-import { getInitialTheme, loadTheme, Theme } from "@/utils/theme";
+import { getInitialTheme, getThemeWithFallback, loadTheme, Theme } from "@/utils/theme";
 import LocaleSelect from "./LocaleSelect";
 import ThemeSelect from "./ThemeSelect";
 
@@ -12,8 +13,13 @@ interface Props {
 
 const AuthFooter = ({ className }: Props) => {
   const { i18n: i18nInstance } = useTranslation();
+  const { generalSetting } = useInstance();
   const currentLocale = i18nInstance.language as Locale;
   const [currentTheme, setCurrentTheme] = useState(getInitialTheme());
+
+  useEffect(() => {
+    setCurrentTheme(getThemeWithFallback(undefined, generalSetting.firstVisitDefaultTheme));
+  }, [generalSetting.firstVisitDefaultTheme]);
 
   const handleLocaleChange = (locale: Locale) => {
     loadLocale(locale);

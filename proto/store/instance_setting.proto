@@ -69,6 +69,18 @@ message InstanceGeneralSetting {
   string custom_pages_json = 11;
   // memo_categories_json stores instance memo categories.
   string memo_categories_json = 12;
+  // memo_page_size controls the number of memos shown on each numbered list page.
+  // Values outside 1-100 fall back to 10 in the frontend.
+  int32 memo_page_size = 13;
+  // first_visit_default_locale is used when a browser has no saved locale preference.
+  // Empty values fall back to Simplified Chinese in the frontend.
+  string first_visit_default_locale = 14;
+  // first_visit_default_theme is used when a browser has no saved theme preference.
+  // Empty values fall back to Cosmic in the frontend.
+  string first_visit_default_theme = 15;
+  // default_background_image_url overrides the active theme's preset page background.
+  // Empty values keep the preset background provided by the selected theme.
+  string default_background_image_url = 16;
 }
 
 message InstanceCustomProfile {

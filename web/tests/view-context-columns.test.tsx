@@ -14,9 +14,17 @@ describe("ViewContext maxColumns setting", () => {
     localStorage.clear();
   });
 
-  it("defaults to a single column", () => {
+  it("defaults to the single-column blog layout", () => {
     const { result } = renderHook(() => useView(), { wrapper });
     expect(result.current.maxColumns).toBe(1);
+    expect(result.current.feedLayout).toBe("blog");
+  });
+
+  it("defaults to compact cards with link previews enabled", () => {
+    const { result } = renderHook(() => useView(), { wrapper });
+
+    expect(result.current.compactMode).toBe(true);
+    expect(result.current.linkPreview).toBe(true);
   });
 
   it("updates and persists the column ceiling", () => {
@@ -26,6 +34,15 @@ describe("ViewContext maxColumns setting", () => {
 
     expect(result.current.maxColumns).toBe(0);
     expect(persisted().maxColumns).toBe(0);
+  });
+
+  it("switches away from the default and persists the selected feed layout", () => {
+    const { result } = renderHook(() => useView(), { wrapper });
+
+    act(() => result.current.setFeedLayout("memo"));
+
+    expect(result.current.feedLayout).toBe("memo");
+    expect(persisted().feedLayout).toBe("memo");
   });
 
   it("sets and persists the sort direction explicitly", () => {

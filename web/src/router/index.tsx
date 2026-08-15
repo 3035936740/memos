@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, type RouteObject } from "react-router-dom";
+import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import App from "@/App";
 import { ChunkLoadErrorFallback } from "@/components/ErrorBoundary";
 import MainLayout from "@/layouts/MainLayout";
@@ -69,18 +69,13 @@ export const routeConfig: RouteObject[] = [
           },
         ],
       },
-      // Backward compatibility: the old `/home` URL now lives at `/`.
-      { path: "home", element: <Navigate to={Routes.HOME} replace /> },
       {
         element: <RootLayout />,
         children: [
           {
             element: <MainLayout />,
             children: [
-              {
-                element: <LandingRoute />,
-                children: [{ index: true, element: <Home /> }],
-              },
+              { index: true, element: <LandingRoute /> },
               {
                 element: <RequireInstanceInitializationRoute />,
                 children: [{ path: Routes.ABOUT, element: <About /> }],
@@ -92,6 +87,7 @@ export const routeConfig: RouteObject[] = [
               {
                 element: <RequireAuthRoute />,
                 children: [
+                  { path: Routes.HOME, element: <Home /> },
                   { path: Routes.ARCHIVED, element: <Archived /> },
                   {
                     element: <RequireFullInitializationRoute />,

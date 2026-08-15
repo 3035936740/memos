@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -78,20 +78,18 @@ describe("initialization guards", () => {
 });
 
 describe("LandingRoute", () => {
-  it("renders the nested home page for an authenticated visitor at /", () => {
+  it("opens Explore by default for an authenticated visitor at /", () => {
     mockedUseCurrentUser.mockReturnValue(fakeUser);
 
     renderAt(
       "/",
       <Routes>
-        <Route path="/" element={<LandingRoute />}>
-          <Route index element={<div data-testid="home">home</div>} />
-        </Route>
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
 
-    expect(screen.getByTestId("home")).toHaveTextContent("home");
+    expect(screen.getByTestId("location").textContent).toBe("/explore");
   });
 
   it("sends an unauthenticated visitor from the entry to /explore", () => {
@@ -100,9 +98,7 @@ describe("LandingRoute", () => {
     renderAt(
       "/",
       <Routes>
-        <Route path="/" element={<LandingRoute />}>
-          <Route index element={<div data-testid="home">home</div>} />
-        </Route>
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
@@ -118,9 +114,7 @@ describe("LandingRoute", () => {
     renderAt(
       "/?filter=tag:work#latest",
       <Routes>
-        <Route path="/" element={<LandingRoute />}>
-          <Route index element={<div data-testid="home">home</div>} />
-        </Route>
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
@@ -178,7 +172,7 @@ describe("RequireGuestRoute", () => {
     expect(screen.getByTestId("sign-in")).toHaveTextContent("sign in");
   });
 
-  it("redirects already-authenticated users to / by default", () => {
+  it("redirects already-authenticated users to Explore by default", () => {
     mockedUseCurrentUser.mockReturnValue(fakeUser);
 
     renderAt(
@@ -187,11 +181,11 @@ describe("RequireGuestRoute", () => {
         <Route element={<RequireGuestRoute />}>
           <Route path="/auth" element={<div>sign in</div>} />
         </Route>
-        <Route path="/" element={<LocationProbe />} />
+        <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
 
-    expect(screen.getByTestId("location").textContent).toBe("/");
+    expect(screen.getByTestId("location").textContent).toBe("/explore");
   });
 
   it("honours a safe redirect target from the query string", () => {
@@ -211,7 +205,7 @@ describe("RequireGuestRoute", () => {
     expect(screen.getByTestId("location").textContent).toBe("/setting");
   });
 
-  it("ignores an auth-family redirect target and falls back to /", () => {
+  it("ignores an auth-family redirect target and falls back to Explore", () => {
     mockedUseCurrentUser.mockReturnValue(fakeUser);
 
     renderAt(
@@ -220,14 +214,14 @@ describe("RequireGuestRoute", () => {
         <Route element={<RequireGuestRoute />}>
           <Route path="/auth" element={<div>sign in</div>} />
         </Route>
-        <Route path="/" element={<LocationProbe />} />
+        <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
 
-    expect(screen.getByTestId("location").textContent).toBe("/");
+    expect(screen.getByTestId("location").textContent).toBe("/explore");
   });
 
-  it("ignores an external redirect target and falls back to /", () => {
+  it("ignores an external redirect target and falls back to Explore", () => {
     mockedUseCurrentUser.mockReturnValue(fakeUser);
 
     renderAt(
@@ -236,10 +230,10 @@ describe("RequireGuestRoute", () => {
         <Route element={<RequireGuestRoute />}>
           <Route path="/auth" element={<div>sign in</div>} />
         </Route>
-        <Route path="/" element={<LocationProbe />} />
+        <Route path="/explore" element={<LocationProbe />} />
       </Routes>,
     );
 
-    expect(screen.getByTestId("location").textContent).toBe("/");
+    expect(screen.getByTestId("location").textContent).toBe("/explore");
   });
 });

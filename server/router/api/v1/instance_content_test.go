@@ -28,18 +28,30 @@ func TestFilterInstanceContentJSON(t *testing.T) {
 
 func TestInstanceContentSettingsRoundTrip(t *testing.T) {
 	original := &v1pb.InstanceSetting_GeneralSetting{
-		NavigationJson:     `[{"id":"about"}]`,
-		CustomPagesJson:    `[{"slug":"about"}]`,
-		MemoCategoriesJson: `[{"slug":"design"}]`,
+		NavigationJson:            `[{"id":"about"}]`,
+		CustomPagesJson:           `[{"slug":"about"}]`,
+		MemoCategoriesJson:        `[{"slug":"design"}]`,
+		MemoPageSize:              12,
+		FirstVisitDefaultLocale:   "zh-Hans",
+		FirstVisitDefaultTheme:    "cosmic-dark",
+		DefaultBackgroundImageUrl: "https://example.com/background.webp",
 	}
 
 	stored := convertInstanceGeneralSettingToStore(original)
 	require.Equal(t, original.NavigationJson, stored.NavigationJson)
 	require.Equal(t, original.CustomPagesJson, stored.CustomPagesJson)
 	require.Equal(t, original.MemoCategoriesJson, stored.MemoCategoriesJson)
+	require.Equal(t, original.MemoPageSize, stored.MemoPageSize)
+	require.Equal(t, original.FirstVisitDefaultLocale, stored.FirstVisitDefaultLocale)
+	require.Equal(t, original.FirstVisitDefaultTheme, stored.FirstVisitDefaultTheme)
+	require.Equal(t, original.DefaultBackgroundImageUrl, stored.DefaultBackgroundImageUrl)
 
 	roundTripped := convertInstanceGeneralSettingFromStore(stored)
 	require.Equal(t, original.NavigationJson, roundTripped.NavigationJson)
 	require.Equal(t, original.CustomPagesJson, roundTripped.CustomPagesJson)
 	require.Equal(t, original.MemoCategoriesJson, roundTripped.MemoCategoriesJson)
+	require.Equal(t, original.MemoPageSize, roundTripped.MemoPageSize)
+	require.Equal(t, original.FirstVisitDefaultLocale, roundTripped.FirstVisitDefaultLocale)
+	require.Equal(t, original.FirstVisitDefaultTheme, roundTripped.FirstVisitDefaultTheme)
+	require.Equal(t, original.DefaultBackgroundImageUrl, roundTripped.DefaultBackgroundImageUrl)
 }
