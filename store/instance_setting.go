@@ -3,6 +3,7 @@ package store
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"slices"
 
 	"github.com/pkg/errors"
@@ -24,6 +25,67 @@ type FindInstanceSetting struct {
 
 type DeleteInstanceSetting struct {
 	Name string
+}
+
+// InstanceBlockedWordsSettingName is deliberately not part of the public
+// protobuf-backed instance settings. The word list is admin-only and must
+// never be included in the instance settings fetched by ordinary visitors.
+const InstanceBlockedWordsSettingName = "BLOCKED_WORDS"
+
+// InstanceBlockedWordsSetting is stored as one JSON value in system_setting.
+// Replacing it overwrites the single row instead of appending import history.
+type InstanceBlockedWordsSetting struct {
+	Words      []string `json:"words"`
+	SourceType string   `json:"sourceType,omitempty"`
+	SourceName string   `json:"sourceName,omitempty"`
+	SourceURL  string   `json:"sourceUrl,omitempty"`
+	UpdatedAt  string   `json:"updatedAt,omitempty"`
+}
+
+// GetInstanceBlockedWordsSetting returns the current database-backed word list.
+func (s *Store) GetInstanceBlockedWordsSetting(ctx context.Context) (*InstanceBlockedWordsSetting, error) {
+	rows, err := s.driver.ListInstanceSettings(ctx, &FindInstanceSetting{Name: InstanceBlockedWordsSettingName})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list blocked words setting")
+	}
+	if len(rows) == 0 {
+		return &InstanceBlockedWordsSetting{Words: []string{}}, nil
+	}
+	if len(rows) > 1 {
+		return nil, errors.New("found multiple blocked words settings")
+	}
+
+	setting := &InstanceBlockedWordsSetting{}
+	if err := json.Unmarshal([]byte(rows[0].Value), setting); err != nil {
+		return nil, errors.Wrap(err, "failed to decode blocked words setting")
+	}
+	if setting.Words == nil {
+		setting.Words = []string{}
+	}
+	return setting, nil
+}
+
+// ReplaceInstanceBlockedWordsSetting atomically replaces the single database
+// row. A failed validation or import never clears the previous working list.
+func (s *Store) ReplaceInstanceBlockedWordsSetting(ctx context.Context, setting *InstanceBlockedWordsSetting) error {
+	value, err := json.Marshal(setting)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode blocked words setting")
+	}
+	_, err = s.driver.UpsertInstanceSetting(ctx, &InstanceSetting{
+		Name:        InstanceBlockedWordsSettingName,
+		Value:       string(value),
+		Description: "Database-backed instance content moderation word list",
+	})
+	return errors.Wrap(err, "failed to replace blocked words setting")
+}
+
+// ClearInstanceBlockedWordsSetting removes the word-list row entirely.
+func (s *Store) ClearInstanceBlockedWordsSetting(ctx context.Context) error {
+	return errors.Wrap(
+		s.driver.DeleteInstanceSetting(ctx, &DeleteInstanceSetting{Name: InstanceBlockedWordsSettingName}),
+		"failed to clear blocked words setting",
+	)
 }
 
 func (s *Store) UpsertInstanceSetting(ctx context.Context, upsert *storepb.InstanceSetting) (*storepb.InstanceSetting, error) {

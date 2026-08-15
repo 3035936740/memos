@@ -121,6 +121,9 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if len(create.Content) > contentLengthLimit {
 		return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
 	}
+	if err := s.validateMemoContentAgainstBlockedWords(ctx, create.Content); err != nil {
+		return nil, err
+	}
 	if err := memopayload.RebuildMemoPayload(ctx, create, s.MarkdownService); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
 	}
@@ -492,6 +495,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			}
 			if len(request.Memo.Content) > contentLengthLimit {
 				return nil, status.Errorf(codes.InvalidArgument, "content too long (max %d characters)", contentLengthLimit)
+			}
+			if err := s.validateMemoContentAgainstBlockedWords(ctx, request.Memo.Content); err != nil {
+				return nil, err
 			}
 			nextMemo.Content = request.Memo.Content
 			if err := memopayload.RebuildMemoPayload(ctx, &nextMemo, s.MarkdownService); err != nil {

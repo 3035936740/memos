@@ -1,4 +1,5 @@
 import { ConnectError } from "@connectrpc/connect";
+import i18n from "@/i18n";
 
 export function getErrorMessage(error: unknown, fallback = "Unknown error"): string {
   if (error instanceof ConnectError) {
@@ -31,8 +32,16 @@ export function handleError(
 ): void {
   const contextPrefix = options?.context ? `${options.context}: ` : "";
   const fallback = options?.fallbackMessage;
+  // Derive raw message first, then map certain backend messages to i18n keys.
+  const raw = getErrorMessage(error, fallback);
 
-  const errorMessage = options?.context ? `${contextPrefix}${getErrorMessage(error, fallback)}` : getErrorMessage(error, fallback);
+  let mapped = raw;
+  // Map backend blocked-word response to a localized message.
+  if (typeof raw === "string" && raw.includes("content contains a blocked word")) {
+    mapped = i18n.t("editor.blocked-word");
+  }
+
+  const errorMessage = options?.context ? `${contextPrefix}${mapped}` : mapped;
 
   console.error(error);
   toast(errorMessage);

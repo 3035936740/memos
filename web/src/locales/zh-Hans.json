@@ -199,6 +199,7 @@
       "save-in-progress": "正在保存",
       "unsupported-attachment-image-url": "不支持的附件图片地址：{{url}}",
       "wait-for-upload": "请等待上传完成"
+      ,"blocked-word": "内容包含屏蔽词"
     },
     "insert-menu": {
       "add-attachment": "添加附件",

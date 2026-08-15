@@ -187,3 +187,28 @@ func TestSecureDialContextDialsResolvedIP(t *testing.T) {
 	require.NotNil(t, conn)
 	require.Equal(t, "93.184.216.34:80", dialedAddress)
 }
+
+func TestGetTextIsBounded(t *testing.T) {
+	originalHTTPClient := httpClient
+	t.Cleanup(func() {
+		httpClient = originalHTTPClient
+	})
+
+	httpClient = &http.Client{
+		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Header:     http.Header{"Content-Type": []string{"text/plain; charset=utf-8"}},
+				Body:       io.NopCloser(strings.NewReader("one\ntwo\nthree")),
+				Request:    req,
+			}, nil
+		}),
+	}
+
+	content, err := GetText("https://93.184.216.34/words.txt", 64)
+	require.NoError(t, err)
+	require.Equal(t, "one\ntwo\nthree", string(content))
+
+	_, err = GetText("https://93.184.216.34/words.txt", 4)
+	require.Error(t, err)
+}

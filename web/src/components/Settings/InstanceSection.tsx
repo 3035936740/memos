@@ -21,6 +21,7 @@ import {
 import { isValidLocale, useTranslate } from "@/utils/i18n";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
+import BlockedWordsEditor from "./BlockedWordsEditor";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
 import SettingGroup from "./SettingGroup";
@@ -167,6 +168,14 @@ const InstanceSection = () => {
           value={instanceGeneralSetting.memoCategoriesJson}
           onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}
         />
+      </SettingGroup>
+
+      <SettingGroup
+        title="屏蔽词审核"
+        description="使用数据库词库拦截备忘录、编辑内容和评论。支持手动填写、URL 导入和上传文件；每次导入都会整体替换旧词库。"
+        showSeparator
+      >
+        <BlockedWordsEditor />
       </SettingGroup>
 
       <SettingGroup title={t("setting.instance.access-title")} description={t("setting.instance.access-description")} showSeparator>

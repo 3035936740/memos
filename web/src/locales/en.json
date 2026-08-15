@@ -111,7 +111,8 @@
     "tabs": {
       "audio": "Audio",
       "documents": "Documents",
-      "media": "Media"
+      "media": "Media",
+      "blocked-word": "Content contains a blocked word"
     },
     "unused": {
       "confirm-description": "This removes every uploaded file that is not linked to a memo.",
