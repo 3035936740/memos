@@ -693,7 +693,6 @@ const GlobalNavigation = () => {
                     >
                       <FolderIcon className="size-4" strokeWidth={1.8} />
                       <span className="truncate">{category.title}</span>
-                      <span className="ml-auto text-[10px] text-muted-foreground">{category.memoNames.length}</span>
                     </DropdownMenuItem>
                   );
                 })}

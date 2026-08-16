@@ -20,7 +20,6 @@ export interface InstanceMemoCategory {
   slug: string;
   title: string;
   description?: string;
-  memoNames: string[];
   access?: InstanceContentAccess;
 }
 

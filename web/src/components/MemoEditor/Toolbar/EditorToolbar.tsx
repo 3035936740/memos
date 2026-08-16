@@ -6,6 +6,7 @@ import { useTranslate } from "@/utils/i18n";
 import { validationService } from "../services";
 import { useEditorContext, useEditorSelector } from "../state";
 import type { EditorToolbarProps } from "../types";
+import CategorySelector from "./CategorySelector";
 import InsertMenu from "./InsertMenu";
 import VisibilitySelector from "./VisibilitySelector";
 
@@ -13,6 +14,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onSave,
   onCancel,
   memoName,
+  showCategory = true,
   onAudioRecorderClick,
   isFormattingToolbarVisible,
   onToggleFormattingToolbar,
@@ -30,6 +32,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   const isUploading = useEditorSelector((s) => s.ui.isLoading.uploading);
   const location = useEditorSelector((s) => s.metadata.location);
   const visibility = useEditorSelector((s) => s.metadata.visibility);
+  const category = useEditorSelector((s) => s.metadata.category);
   const blockedMessage = valid
     ? undefined
     : blockedReason
@@ -48,6 +51,10 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
     dispatch(actions.setMetadata({ visibility: next }));
   };
 
+  const handleCategoryChange = (next?: string) => {
+    dispatch(actions.setMetadata({ category: next }));
+  };
+
   return (
     <div className="w-full flex flex-row justify-between items-center mb-2">
       <div className="flex flex-row justify-start items-center gap-1">
@@ -64,6 +71,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           onInsertImages={onInsertImages}
         />
         <VisibilitySelector value={visibility} onChange={handleVisibilityChange} />
+        {showCategory ? <CategorySelector value={category} onChange={handleCategoryChange} /> : null}
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">

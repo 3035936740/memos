@@ -40,6 +40,8 @@ export interface EditorToolbarProps {
   onSave: () => void;
   onCancel?: () => void;
   memoName?: string;
+  /** Comment editors should not expose category selection. */
+  showCategory?: boolean;
   onAudioRecorderClick: () => void;
   /** Whether the formatting toolbar is shown in normal mode (persisted preference). */
   isFormattingToolbarVisible: boolean;

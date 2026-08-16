@@ -130,6 +130,13 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if request.Memo.Location != nil {
 		create.Payload.Location = convertLocationToStore(request.Memo.Location)
 	}
+	if request.Memo.Category != nil {
+		category, err := s.normalizeMemoCategory(ctx, *request.Memo.Category)
+		if err != nil {
+			return nil, err
+		}
+		create.Payload.Category = category
+	}
 
 	preparedAttachments, err := s.prepareMemoAttachments(ctx, user, create, request.Memo.Attachments)
 	if err != nil {
@@ -542,6 +549,20 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				nextMemo.Payload = &storepb.MemoPayload{}
 			}
 			nextMemo.Payload.Location = convertLocationToStore(request.Memo.Location)
+			update.Payload = nextMemo.Payload
+		} else if path == "category" {
+			category := ""
+			if request.Memo.Category != nil {
+				category = *request.Memo.Category
+			}
+			normalized, err := s.normalizeMemoCategory(ctx, category)
+			if err != nil {
+				return nil, err
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.Category = normalized
 			update.Payload = nextMemo.Payload
 		} else if path == "attachments" {
 			attachmentsUpdated = true

@@ -349,6 +349,10 @@
       "public": "公开",
       "public-description": "对所有人可见"
     },
+    "category": {
+      "none": "未分类",
+      "none-description": "不归入任何类目"
+    },
     "outline": "概要",
     "share": {
       "active-links": "活跃的分享链接",

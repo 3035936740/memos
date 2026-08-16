@@ -464,6 +464,10 @@
       "protected-description": "Visible to signed-in users",
       "public": "Public",
       "public-description": "Visible to everyone"
+    },
+    "category": {
+      "none": "No category",
+      "none-description": "Do not assign a category"
     }
   },
   "message": {

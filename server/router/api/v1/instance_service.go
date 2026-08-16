@@ -111,6 +111,16 @@ func (s *APIV1Service) getInstanceSettingByName(ctx context.Context, name string
 		var setting *storepb.InstanceGeneralSetting
 		setting, err = s.Store.GetInstanceGeneralSetting(ctx)
 		instanceSetting = &storepb.InstanceSetting{Key: instanceSettingKey, Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: setting}}
+		if err == nil && setting != nil && categoriesHaveMemoNames(setting.MemoCategoriesJson) {
+			if sanitized, syncErr := s.prepareMemoCategoriesForGeneralUpdate(ctx, setting.MemoCategoriesJson); syncErr == nil {
+				setting.MemoCategoriesJson = sanitized
+				if _, upsertErr := s.Store.UpsertInstanceGeneralSettingSafely(ctx, instanceSetting); upsertErr != nil {
+					slog.Warn("failed to migrate legacy memo category memberships", "error", upsertErr)
+				}
+			} else {
+				slog.Warn("failed to migrate legacy memo category memberships", "error", syncErr)
+			}
+		}
 	case storepb.InstanceSettingKey_MEMO_RELATED:
 		var setting *storepb.InstanceMemoRelatedSetting
 		setting, err = s.Store.GetInstanceMemoRelatedSetting(ctx)
@@ -280,6 +290,14 @@ func (s *APIV1Service) UpdateInstanceSetting(ctx context.Context, request *v1pb.
 	case storepb.InstanceSettingKey_AI:
 		if err := s.prepareInstanceAISettingForUpdate(ctx, updateSetting.GetAiSetting()); err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid AI setting: %v", err)
+		}
+	case storepb.InstanceSettingKey_GENERAL:
+		if general := updateSetting.GetGeneralSetting(); general != nil {
+			sanitized, err := s.prepareMemoCategoriesForGeneralUpdate(ctx, general.MemoCategoriesJson)
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to sync memo categories: %v", err)
+			}
+			general.MemoCategoriesJson = sanitized
 		}
 	default:
 		// No credential preservation needed for other setting types.

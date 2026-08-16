@@ -337,6 +337,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             onSave={handleSave}
             onCancel={onCancel ? handleCancel : undefined}
             memoName={memoName}
+            showCategory={!parentMemoName}
             onAudioRecorderClick={handleAudioRecorderClick}
             isFormattingToolbarVisible={isFormattingToolbarVisible}
             onToggleFormattingToolbar={handleToggleFormattingToolbar}

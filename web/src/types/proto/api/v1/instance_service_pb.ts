@@ -240,7 +240,8 @@ export type InstanceSetting_GeneralSetting = Message<"memos.api.v1.InstanceSetti
   customPagesJson: string;
 
   /**
-   * memo_categories_json configures instance categories and their memo resource names.
+   * memo_categories_json configures instance categories (slug/title/access).
+   * Memo membership is stored on each memo's category field, not in this JSON.
    *
    * @generated from field: string memo_categories_json = 12;
    */

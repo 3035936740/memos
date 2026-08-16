@@ -163,7 +163,7 @@ const InstanceSection = () => {
         />
       </SettingGroup>
 
-      <SettingGroup title="备忘录分类" description="可视化创建分类、设置访问权限，并选择需要归类的备忘录。" showSeparator>
+      <SettingGroup title="备忘录分类" description="创建分类并设置访问权限。登录用户可在发布或编辑备忘录时选择类目。" showSeparator>
         <InstanceCategoryEditor
           value={instanceGeneralSetting.memoCategoriesJson}
           onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}

@@ -48,6 +48,10 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 		memoMessage.Tags = memo.Payload.Tags
 		memoMessage.Property = convertMemoPropertyFromStore(memo.Payload.Property)
 		memoMessage.Location = convertLocationFromStore(memo.Payload.Location)
+		if memo.Payload.Category != "" {
+			category := memo.Payload.Category
+			memoMessage.Category = &category
+		}
 	}
 
 	if memo.ParentUID != nil {

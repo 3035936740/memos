@@ -14,6 +14,7 @@ export interface EditorState {
     attachments: Attachment[];
     relations: MemoRelation[];
     location?: Location;
+    category?: string;
   };
   ui: {
     isFocusMode: boolean;
@@ -57,6 +58,7 @@ const defaultState: EditorState = {
     attachments: [],
     relations: [],
     location: undefined,
+    category: undefined,
   },
   ui: {
     isFocusMode: false,

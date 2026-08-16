@@ -920,7 +920,8 @@ type InstanceSetting_GeneralSetting struct {
 	NavigationJson string `protobuf:"bytes,10,opt,name=navigation_json,json=navigationJson,proto3" json:"navigation_json,omitempty"`
 	// custom_pages_json configures instance Markdown pages.
 	CustomPagesJson string `protobuf:"bytes,11,opt,name=custom_pages_json,json=customPagesJson,proto3" json:"custom_pages_json,omitempty"`
-	// memo_categories_json configures instance categories and their memo resource names.
+	// memo_categories_json configures instance categories (slug/title/access).
+	// Memo membership is stored on each memo's category field, not in this JSON.
 	MemoCategoriesJson string `protobuf:"bytes,12,opt,name=memo_categories_json,json=memoCategoriesJson,proto3" json:"memo_categories_json,omitempty"`
 	// memo_page_size controls the number of memos shown on each numbered list page.
 	// Values outside 1-100 fall back to 10 in the frontend.

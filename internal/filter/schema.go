@@ -240,6 +240,21 @@ func NewSchema() Schema {
 				CompareNeq: true,
 			},
 		},
+		"category": {
+			Name:   "category",
+			Kind:   FieldKindScalar,
+			Type:   FieldTypeString,
+			Column: Column{Table: "memo", Name: "payload"},
+			Expressions: map[DialectName]string{
+				DialectSQLite:   "COALESCE(JSON_EXTRACT(%s, '$.category'), '')",
+				DialectMySQL:    "COALESCE(JSON_UNQUOTE(JSON_EXTRACT(%s, '$.category')), '')",
+				DialectPostgres: "COALESCE(%s->>'category', '')",
+			},
+			AllowedComparisonOps: map[ComparisonOperator]bool{
+				CompareEq:  true,
+				CompareNeq: true,
+			},
+		},
 	}
 
 	envOptions := []cel.EnvOption{
@@ -257,6 +272,7 @@ func NewSchema() Schema {
 		cel.Variable("has_code", cel.BoolType),
 		cel.Variable("has_incomplete_tasks", cel.BoolType),
 		cel.Variable("has_location", cel.BoolType),
+		cel.Variable("category", cel.StringType),
 		cel.Variable("now", cel.TimestampType),
 		ext.Sets(),
 		cel.ASTValidators(cel.ValidateRegexLiterals()),

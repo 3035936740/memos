@@ -150,7 +150,8 @@ message InstanceSetting {
     string navigation_json = 10;
     // custom_pages_json configures instance Markdown pages.
     string custom_pages_json = 11;
-    // memo_categories_json configures instance categories and their memo resource names.
+    // memo_categories_json configures instance categories (slug/title/access).
+    // Memo membership is stored on each memo's category field, not in this JSON.
     string memo_categories_json = 12;
     // memo_page_size controls the number of memos shown on each numbered list page.
     // Values outside 1-100 fall back to 10 in the frontend.
