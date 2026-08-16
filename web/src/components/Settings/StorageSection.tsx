@@ -28,6 +28,7 @@ import SettingGroup from "./SettingGroup";
 import { SettingPanel } from "./SettingList";
 import SettingRow from "./SettingRow";
 import SettingSection from "./SettingSection";
+import StorageStaticFiles from "./StorageStaticFiles";
 import useInstanceSettingUpdater, { buildInstanceSettingName } from "./useInstanceSettingUpdater";
 
 const DEFAULT_FILEPATH_TEMPLATE = "assets/{timestamp}_{uuid}_{filename}";
@@ -380,6 +381,16 @@ const StorageSection = () => {
           </SettingRow>
         )}
       </SettingGroup>
+
+      {selectedStorageType === InstanceSetting_StorageType.LOCAL && (
+        <SettingGroup
+          title={t("setting.storage.static-files-title")}
+          description={t("setting.storage.static-files-description")}
+          showSeparator
+        >
+          <StorageStaticFiles />
+        </SettingGroup>
+      )}
 
       {selectedStorageType === InstanceSetting_StorageType.S3 && (
         <SettingGroup
