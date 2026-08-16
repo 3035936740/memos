@@ -50,6 +50,11 @@ html[data-theme="cosmic-dark"] body > #root {
   background: transparent;
 }
 
+html[data-theme="cosmic-dark"] [data-app-shell],
+html[data-theme="cosmic-dark"] [data-page-shell] {
+  background-color: transparent;
+}
+
 html[data-theme="cosmic-dark"] body > #root > .bg-background,
 html[data-theme="cosmic-dark"] main > .bg-background,
 html[data-theme="cosmic-dark"] main > section > .bg-background,
