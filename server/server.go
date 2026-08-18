@@ -100,7 +100,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	return s, nil
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server) Start() error {
 	var address, network string
 	if len(s.Profile.UNIXSock) == 0 {
 		address = fmt.Sprintf("%s:%d", s.Profile.Addr, s.Profile.Port)
@@ -128,7 +128,6 @@ func (s *Server) Start(ctx context.Context) error {
 			slog.Error("failed to start echo server", "error", err)
 		}
 	}()
-	s.startBackgroundRunners(ctx)
 
 	return nil
 }
@@ -139,10 +138,8 @@ func (s *Server) Shutdown(ctx context.Context) {
 
 	slog.Info("server shutting down")
 
-	s.stopBackgroundRunners()
 	s.closeLongLivedConnections()
 	s.shutdownHTTPServer(ctx)
-	s.waitBackgroundRunners(ctx)
 
 	// Close database connection.
 	if err := s.Store.Close(); err != nil {
