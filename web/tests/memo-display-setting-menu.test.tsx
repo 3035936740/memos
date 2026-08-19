@@ -1,3 +1,4 @@
+import { DirectionProvider } from "@base-ui/react/direction-provider";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SIDEBAR_SECTION_ACTION_BUTTON_CLASSES, SIDEBAR_SECTION_ACTION_ICON_CLASSES } from "@/components/AppSidebar/SidebarSection";
@@ -81,5 +82,21 @@ describe("MemoDisplaySettingMenu", () => {
     expect(screen.getByRole("switch", { name: "Compact mode" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Blog layout already uses article previews.")).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem("memos-view-setting") ?? "{}").feedLayout).toBe("blog-classic");
+  });
+
+  it("moves horizontally in the visual direction for RTL layouts", () => {
+    render(
+      <DirectionProvider direction="rtl">
+        <ViewProvider>
+          <MemoDisplaySettingMenu />
+        </ViewProvider>
+      </DirectionProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "View options" }));
+    fireEvent.click(screen.getByRole("radio", { name: "List" }));
+    fireEvent.keyDown(screen.getByRole("radiogroup", { name: "Layout" }), { key: "ArrowLeft" });
+
+    expect(screen.getByRole("radio", { name: "2 columns" })).toBeChecked();
   });
 });

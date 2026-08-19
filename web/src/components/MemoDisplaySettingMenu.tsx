@@ -1,3 +1,4 @@
+import { useDirection } from "@base-ui/react/direction-provider";
 import {
   Columns2Icon,
   Columns3Icon,
@@ -53,6 +54,7 @@ const SettingRow = ({ label, description, children }: SettingRowProps) => (
 
 function MemoDisplaySettingsContent() {
   const t = useTranslate();
+  const direction = useDirection();
   const {
     orderByTimeAsc,
     timeBasis,
@@ -99,7 +101,19 @@ function MemoDisplaySettingsContent() {
           className="grid grid-cols-3 gap-0.5 rounded-lg bg-muted/55 p-0.5"
           onKeyDown={(event) => {
             const delta =
-              event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
+              event.key === "ArrowRight"
+                ? direction === "rtl"
+                  ? -1
+                  : 1
+                : event.key === "ArrowLeft"
+                  ? direction === "rtl"
+                    ? 1
+                    : -1
+                  : event.key === "ArrowDown"
+                    ? 1
+                    : event.key === "ArrowUp"
+                      ? -1
+                      : 0;
             if (delta === 0) return;
             event.preventDefault();
             const currentChoice: LayoutChoice = feedLayout === "memo" ? maxColumns : feedLayout;

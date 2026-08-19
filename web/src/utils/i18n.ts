@@ -6,6 +6,31 @@ import customEnTranslation from "@/locales-custom/en.json";
 
 const LOCALE_STORAGE_KEY = "memos-locale";
 const DEFAULT_LOCALE: Locale = "zh-Hans";
+const LOCALE_DIRECTION_CHANGE_EVENT = "memos:locale-direction-change";
+
+export type LocaleDirection = "ltr" | "rtl";
+
+export const getLocaleDirection = (): LocaleDirection =>
+  typeof document !== "undefined" && document.documentElement.dir === "rtl" ? "rtl" : "ltr";
+
+export const subscribeToLocaleDirection = (listener: () => void): (() => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(LOCALE_DIRECTION_CHANGE_EVENT, listener);
+  return () => window.removeEventListener(LOCALE_DIRECTION_CHANGE_EVENT, listener);
+};
+
+export const applyDocumentLocale = (locale: string): LocaleDirection => {
+  const direction = i18n.dir(locale);
+  if (typeof document === "undefined") return direction;
+
+  const previousDirection = document.documentElement.getAttribute("dir");
+  document.documentElement.lang = locale;
+  document.documentElement.dir = direction;
+  if (previousDirection !== direction && typeof window !== "undefined") {
+    window.dispatchEvent(new Event(LOCALE_DIRECTION_CHANGE_EVENT));
+  }
+  return direction;
+};
 
 const getStoredLocale = (): Locale | null => {
   try {
@@ -105,8 +130,8 @@ export const loadLocale = (locale: string, options: { persist?: boolean } = {}):
   if (options.persist !== false) {
     setStoredLocale(validLocale);
   }
+  applyDocumentLocale(validLocale);
   i18n.changeLanguage(validLocale);
-  document.documentElement.lang = validLocale;
   return validLocale;
 };
 

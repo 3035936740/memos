@@ -1,3 +1,4 @@
+import { DirectionProvider } from "@base-ui/react/direction-provider";
 import { useEffect, useRef } from "react";
 import { Outlet, ScrollRestoration } from "react-router-dom";
 import CosmicBackground from "./components/CosmicBackground";
@@ -19,7 +20,7 @@ const App = () => {
   const guestViewDefaultsAppliedRef = useRef(false);
 
   // Apply user preferences reactively
-  useUserLocale();
+  const direction = useUserLocale();
   useUserTheme();
 
   // Apply the instance's guest defaults once, including for browsers that still
@@ -124,11 +125,11 @@ const App = () => {
   }, [instanceGeneralSetting.customProfile]);
 
   return (
-    <>
+    <DirectionProvider direction={direction}>
       <CosmicBackground />
       <Outlet />
       <ScrollRestoration />
-    </>
+    </DirectionProvider>
   );
 };
 
