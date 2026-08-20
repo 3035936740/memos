@@ -404,11 +404,19 @@ func (r *renderer) renderJSONBoolComparison(field Field, op ComparisonOperator, 
 		if value {
 			boolStr = "true"
 		}
+		if field.Name == "hidden" {
+			jsonExpr = fmt.Sprintf("COALESCE(%s, CAST('false' AS JSON))", jsonExpr)
+		}
 		return renderResult{
 			sql: fmt.Sprintf("%s %s CAST('%s' AS JSON)", jsonExpr, sqlOperator(op), boolStr),
 		}, nil
 	case DialectPostgres:
 		placeholder := r.addArg(value)
+		if field.Name == "hidden" {
+			return renderResult{
+				sql: fmt.Sprintf("COALESCE((%s)::boolean, false) %s %s", jsonExpr, sqlOperator(op), placeholder),
+			}, nil
+		}
 		return renderResult{
 			sql: fmt.Sprintf("(%s)::boolean %s %s", jsonExpr, sqlOperator(op), placeholder),
 		}, nil

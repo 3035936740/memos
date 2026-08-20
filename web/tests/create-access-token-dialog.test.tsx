@@ -14,7 +14,8 @@ vi.mock("@/hooks/useCurrentUser", () => ({
   default: () => ({ name: "users/alice" }),
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 

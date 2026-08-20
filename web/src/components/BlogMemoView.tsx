@@ -1,5 +1,5 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
+import { EyeOffIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
@@ -88,6 +88,12 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
         <div className="flex min-w-0 gap-4">
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex min-h-5 flex-wrap items-center gap-1.5">
+              {memo.hidden && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  <EyeOffIcon className="size-3" />
+                  {t("memo.hidden.label")}
+                </span>
+              )}
               {memo.pinned && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
                   <PinIcon className="size-3" />

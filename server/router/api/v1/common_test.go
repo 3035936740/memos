@@ -4,7 +4,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	storepb "github.com/usememos/memos/proto/gen/store"
+	"github.com/usememos/memos/store"
 )
+
+func TestAnonymousMemoCollectionVisibility(t *testing.T) {
+	t.Parallel()
+
+	require.False(t, isSuperUser(nil))
+	require.True(t, memoVisibleInCollection(&store.Memo{Payload: &storepb.MemoPayload{}}, nil))
+	require.False(t, memoVisibleInCollection(&store.Memo{Payload: &storepb.MemoPayload{Hidden: true}}, nil))
+}
 
 func TestNormalizePageSize(t *testing.T) {
 	t.Parallel()

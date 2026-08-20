@@ -38,6 +38,85 @@ func TestCreateMemoAcceptsUUID(t *testing.T) {
 	require.Equal(t, "memos/"+memoID, memo.Name)
 }
 
+func TestHiddenMemoIsDirectLinkPublicButOmittedFromCollections(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	admin, err := ts.CreateHostUser(ctx, "hidden-admin")
+	require.NoError(t, err)
+	owner, err := ts.CreateRegularUser(ctx, "hidden-owner")
+	require.NoError(t, err)
+	visitor, err := ts.CreateRegularUser(ctx, "hidden-visitor")
+	require.NoError(t, err)
+	adminCtx := ts.CreateUserContext(ctx, admin.ID)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+	visitorCtx := ts.CreateUserContext(ctx, visitor.ID)
+
+	visibleMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "visible in public collections", Visibility: apiv1.Visibility_PUBLIC},
+	})
+	require.NoError(t, err)
+
+	memo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "direct link only", Visibility: apiv1.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	memo, err = ts.Service.UpdateMemo(adminCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, Hidden: true},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"hidden"}},
+	})
+	require.NoError(t, err)
+	require.True(t, memo.Hidden)
+	require.Equal(t, apiv1.Visibility_PUBLIC, memo.Visibility)
+
+	ownerList, err := ts.Service.ListMemos(ownerCtx, &apiv1.ListMemosRequest{PageSize: 10, ShowTotalSize: true})
+	require.NoError(t, err)
+	require.Len(t, ownerList.Memos, 2)
+	require.Equal(t, int32(2), ownerList.TotalSize)
+
+	adminList, err := ts.Service.ListMemos(adminCtx, &apiv1.ListMemosRequest{PageSize: 10})
+	require.NoError(t, err)
+	require.Len(t, adminList.Memos, 2)
+
+	visitorList, err := ts.Service.ListMemos(visitorCtx, &apiv1.ListMemosRequest{PageSize: 1, ShowTotalSize: true})
+	require.NoError(t, err)
+	require.Len(t, visitorList.Memos, 1)
+	require.Equal(t, visibleMemo.Name, visitorList.Memos[0].Name)
+	require.Equal(t, int32(1), visitorList.TotalSize)
+
+	publicList, err := ts.Service.ListMemos(ctx, &apiv1.ListMemosRequest{PageSize: 1, ShowTotalSize: true})
+	require.NoError(t, err)
+	require.Len(t, publicList.Memos, 1)
+	require.Equal(t, visibleMemo.Name, publicList.Memos[0].Name)
+	require.Equal(t, int32(1), publicList.TotalSize)
+
+	directMemo, err := ts.Service.GetMemo(ctx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.Equal(t, memo.Name, directMemo.Name)
+	require.True(t, directMemo.Hidden)
+
+	_, err = ts.Service.UpdateMemo(ownerCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, Hidden: false},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"hidden"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+}
+
+func TestRegularUserCannotCreateHiddenMemo(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "hidden-create-user")
+	require.NoError(t, err)
+	_, err = ts.Service.CreateMemo(ts.CreateUserContext(ctx, user.ID), &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "not allowed", Visibility: apiv1.Visibility_PUBLIC, Hidden: true},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+}
+
 func TestCreateAndUpdateMemoRebuildsTagPayload(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestService(t)

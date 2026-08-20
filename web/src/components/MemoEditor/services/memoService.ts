@@ -52,6 +52,10 @@ function buildUpdateMask(
     mask.add("category");
     patch.category = state.metadata.category ?? "";
   }
+  if (!isEqual(state.metadata.hidden, prevMemo.hidden)) {
+    mask.add("hidden");
+    patch.hidden = state.metadata.hidden;
+  }
 
   // Auto-update timestamp if content changed
   if (["content", "attachments", "relations", "location"].some((key) => mask.has(key))) {
@@ -113,6 +117,7 @@ export const memoService = {
       relations: state.metadata.relations,
       location: state.metadata.location,
       ...(options.parentMemoName ? {} : { category: state.metadata.category }),
+      ...(options.parentMemoName ? {} : { hidden: state.metadata.hidden }),
       createTime: state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
       updateTime: state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
     });
@@ -141,6 +146,7 @@ export const memoService = {
         relations: memo.relations,
         location: memo.location,
         category: memo.category || undefined,
+        hidden: memo.hidden,
       },
       timestamps: {
         createTime: memo.createTime ? timestampDate(memo.createTime) : undefined,

@@ -142,6 +142,7 @@
     "confirm": "確認",
     "copy": "複製",
     "create": "建立",
+    "custom-navigation": "網站導覽",
     "created-at": "建立於",
     "database": "資料庫",
     "day": "日",
@@ -436,6 +437,10 @@
       "protected-description": "已登入的使用者可見",
       "public": "公開",
       "public-description": "所有人皆可見"
+    },
+    "hidden": {
+      "label": "隱藏直鏈",
+      "description": "僅透過直鏈公開存取，不在網站列表中顯示"
     }
   },
   "message": {

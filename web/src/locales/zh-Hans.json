@@ -74,6 +74,7 @@
     "confirm": "确定",
     "copy": "复制",
     "create": "创建",
+    "custom-navigation": "站点导航",
     "created-at": "创建时间",
     "database": "数据库",
     "day": "天",
@@ -198,8 +199,8 @@
       "resolve-image-uploads": "请先处理未完成的图片上传",
       "save-in-progress": "正在保存",
       "unsupported-attachment-image-url": "不支持的附件图片地址：{{url}}",
-      "wait-for-upload": "请等待上传完成"
-      ,"blocked-word": "内容包含屏蔽词"
+      "wait-for-upload": "请等待上传完成",
+      "blocked-word": "内容包含屏蔽词"
     },
     "insert-menu": {
       "add-attachment": "添加附件",
@@ -352,6 +353,10 @@
     "category": {
       "none": "未分类",
       "none-description": "不归入任何类目"
+    },
+    "hidden": {
+      "label": "隐藏直链",
+      "description": "仅通过直链公开访问，不在网站列表中显示"
     },
     "outline": "概要",
     "share": {

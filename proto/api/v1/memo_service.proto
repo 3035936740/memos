@@ -272,6 +272,11 @@ message Memo {
   // Empty means the memo is not categorized. Must match a configured category slug.
   optional string category = 19 [(google.api.field_behavior) = OPTIONAL];
 
+  // Whether the memo is omitted from feeds, profiles, search, RSS, and stats.
+  // Hidden memos remain readable by direct URL according to visibility. Only
+  // instance administrators may change this field; enabling it forces PUBLIC.
+  bool hidden = 20 [(google.api.field_behavior) = OPTIONAL];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;
@@ -336,7 +341,8 @@ message ListMemosRequest {
   //   tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
   //   has_task_list / has_link / has_code / has_incomplete_tasks (bool),
   //   has_location (bool; true when the memo has a location attached),
-  //   category (string; instance category slug, empty when uncategorized).
+  //   category (string; instance category slug, empty when uncategorized),
+  //   hidden (bool; omitted from collection views unless owned or viewed by an admin).
   // Note: the time fields here are created_ts / updated_ts, which differ from
   // the create_time / update_time names used by order_by.
   // Examples:

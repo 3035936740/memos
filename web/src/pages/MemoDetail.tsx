@@ -58,10 +58,6 @@ const MemoDetail = () => {
       navigate(parentPage);
       return;
     }
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
     navigate("/explore");
   }, [navigate, parentPage]);
 

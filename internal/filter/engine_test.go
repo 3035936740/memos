@@ -536,6 +536,25 @@ func TestRenderHasLocationPerDialect(t *testing.T) {
 	}
 }
 
+func TestRenderHiddenMemoFlagPerDialect(t *testing.T) {
+	t.Parallel()
+
+	engine, err := NewEngine(NewSchema())
+	require.NoError(t, err)
+
+	for _, dialect := range []DialectName{DialectSQLite, DialectMySQL, DialectPostgres} {
+		visible, err := engine.CompileToStatement(context.Background(), `hidden == false`, RenderOptions{Dialect: dialect})
+		require.NoError(t, err, dialect)
+		require.NotEmpty(t, visible.SQL, dialect)
+		require.Contains(t, visible.SQL, "hidden", dialect)
+		if dialect == DialectSQLite {
+			require.Empty(t, visible.Args, dialect)
+		} else {
+			require.Contains(t, visible.SQL, "COALESCE", dialect)
+		}
+	}
+}
+
 func TestRenderHasLocationNegationAndComparisons(t *testing.T) {
 	t.Parallel()
 

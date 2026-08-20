@@ -54,6 +54,7 @@ func (s *APIV1Service) CreateMemoComment(ctx context.Context, request *v1pb.Crea
 		return nil, status.Errorf(codes.Internal, "failed to clone memo comment")
 	}
 	comment.Visibility = convertVisibilityFromStore(relatedMemo.Visibility)
+	comment.Hidden = false
 
 	// Create the memo comment first; suppress the generic memo.created SSE event
 	// since CreateMemoComment broadcasts memo.comment.created for the parent instead.

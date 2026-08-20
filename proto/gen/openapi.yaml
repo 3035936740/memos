@@ -611,7 +611,7 @@ paths:
                     type: string
                 - name: filter
                   in: query
-                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized).\r\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
+                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized),\n   hidden (bool; omitted from collection views unless owned or viewed by an admin).\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
                   schema:
                     type: string
                 - name: showDeleted
@@ -3234,7 +3234,15 @@ components:
                     description: Optional. The location of the memo.
                 category:
                     type: string
-                    description: "Optional. Instance category slug assigned by the memo author.\r\n Empty means the memo is not categorized. Must match a configured category slug."
+                    description: |-
+                        Optional. Instance category slug assigned by the memo author.
+                         Empty means the memo is not categorized. Must match a configured category slug.
+                hidden:
+                    type: boolean
+                    description: |-
+                        Whether the memo is omitted from feeds, profiles, search, RSS, and stats.
+                         Hidden memos remain readable by direct URL according to visibility. Only
+                         instance administrators may change this field; enabling it forces PUBLIC.
         MemoRelation:
             required:
                 - memo

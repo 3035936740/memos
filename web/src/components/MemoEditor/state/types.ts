@@ -15,6 +15,7 @@ export interface EditorState {
     relations: MemoRelation[];
     location?: Location;
     category?: string;
+    hidden: boolean;
   };
   ui: {
     isFocusMode: boolean;
@@ -59,6 +60,7 @@ const defaultState: EditorState = {
     relations: [],
     location: undefined,
     category: undefined,
+    hidden: false,
   },
   ui: {
     isFocusMode: false,

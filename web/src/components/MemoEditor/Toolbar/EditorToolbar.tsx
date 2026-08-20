@@ -1,8 +1,10 @@
 import type { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { Location, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import { type Location, Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { isSuperUser } from "@/utils/user";
 import { validationService } from "../services";
 import { useEditorContext, useEditorSelector } from "../state";
 import type { EditorToolbarProps } from "../types";
@@ -21,6 +23,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onInsertImages,
 }) => {
   const t = useTranslate();
+  const currentUser = useCurrentUser();
   const { actions, dispatch } = useEditorContext();
   // Subscribe to narrow/derived slices so typing (which only changes content)
   // doesn't re-render the toolbar or the heavy InsertMenu it hosts. `valid`
@@ -33,6 +36,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   const location = useEditorSelector((s) => s.metadata.location);
   const visibility = useEditorSelector((s) => s.metadata.visibility);
   const category = useEditorSelector((s) => s.metadata.category);
+  const hidden = useEditorSelector((s) => s.metadata.hidden);
   const blockedMessage = valid
     ? undefined
     : blockedReason
@@ -55,6 +59,10 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
     dispatch(actions.setMetadata({ category: next }));
   };
 
+  const handleHiddenChange = (next: boolean) => {
+    dispatch(actions.setMetadata({ hidden: next, ...(next ? { visibility: Visibility.PUBLIC } : {}) }));
+  };
+
   return (
     <div className="w-full flex flex-row justify-between items-center mb-2">
       <div className="flex flex-row justify-start items-center gap-1">
@@ -70,7 +78,12 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           onToggleFormattingToolbar={onToggleFormattingToolbar}
           onInsertImages={onInsertImages}
         />
-        <VisibilitySelector value={visibility} onChange={handleVisibilityChange} />
+        <VisibilitySelector
+          value={visibility}
+          onChange={handleVisibilityChange}
+          hidden={hidden}
+          onHiddenChange={showCategory && isSuperUser(currentUser) ? handleHiddenChange : undefined}
+        />
         {showCategory ? <CategorySelector value={category} onChange={handleCategoryChange} /> : null}
       </div>
 

@@ -90,7 +90,6 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 			memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
 		}
 	}
-
 	userMemoStatMap := make(map[int32]*v1pb.UserStats)
 	pinnedMemoUIDsByUserID := make(map[int32][]string)
 	limit := 1000
@@ -107,7 +106,7 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 			break
 		}
 
-		for _, memo := range memos {
+		for _, memo := range filterMemosForCollection(memos, currentUser) {
 			// Initialize user stats if not exists
 			if _, exists := userMemoStatMap[memo.CreatorID]; !exists {
 				userMemoStatMap[memo.CreatorID] = &v1pb.UserStats{
@@ -221,7 +220,6 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	} else if currentUser.ID != userID {
 		memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
 	}
-
 	createdTimestamps := []*timestamppb.Timestamp{}
 	updatedTimestamps := []*timestamppb.Timestamp{}
 	tagCount := make(map[string]int32)
@@ -247,7 +245,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 			break
 		}
 
-		for _, memo := range memos {
+		for _, memo := range filterMemosForCollection(memos, currentUser) {
 			if memo.ParentUID != nil {
 				totalCommentCount++
 				continue

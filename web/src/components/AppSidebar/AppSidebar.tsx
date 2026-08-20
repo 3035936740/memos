@@ -497,6 +497,8 @@ const GlobalNavigation = () => {
     (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
   );
   const activeCategory = categories.find((category) => location.pathname === `/categories/${category.slug}`);
+  const activeCustomItem = customItems.find((item) => item.active);
+  const CustomNavigationIcon = activeCustomItem?.icon ?? LinkIcon;
   const [rememberedCategorySlug, setRememberedCategorySlug] = useState(() => {
     try {
       return localStorage.getItem(LAST_CATEGORY_STORAGE_KEY) ?? "";
@@ -505,7 +507,6 @@ const GlobalNavigation = () => {
     }
   });
   const selectedCategory = activeCategory ?? categories.find((category) => category.slug === rememberedCategorySlug) ?? categories[0];
-  const items = [...builtinItems, ...customItems];
 
   const rememberCategory = (slug: string) => {
     setRememberedCategorySlug(slug);
@@ -522,6 +523,15 @@ const GlobalNavigation = () => {
     setMobileOpen(false);
   };
 
+  const navigateToCustomItem = (item: GlobalNavItem) => {
+    if (/^https?:\/\//i.test(item.path)) {
+      window.open(item.path, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(item.path);
+    }
+    setMobileOpen(false);
+  };
+
   useEffect(() => {
     if (activeCategory) {
       rememberCategory(activeCategory.slug);
@@ -535,7 +545,7 @@ const GlobalNavigation = () => {
           type="button"
           aria-label={activeScopeItem.label}
           aria-current="page"
-          className="flex h-[30px] min-w-0 items-center gap-2 rounded-md bg-sidebar-accent px-2 font-medium text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="flex h-[30px] min-w-0 shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-sidebar-accent px-2 font-medium text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         />
       }
     >
@@ -624,8 +634,8 @@ const GlobalNavigation = () => {
     );
   };
 
-  const itemsBeforeCategory = currentUser ? [] : items.filter((item) => item.id === "explore");
-  const itemsAfterCategory = currentUser ? items : items.filter((item) => item.id !== "explore");
+  const itemsBeforeCategory = currentUser ? [] : builtinItems.filter((item) => item.id === "explore");
+  const itemsAfterCategory = currentUser ? builtinItems : builtinItems.filter((item) => item.id !== "explore");
 
   return (
     <TooltipProvider>
@@ -663,59 +673,97 @@ const GlobalNavigation = () => {
           </>
         )}
         {itemsBeforeCategory.map(renderNavigationItem)}
-        {selectedCategory &&
-          (activeCategory ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    aria-label={activeCategory.title}
-                    aria-current="page"
-                    className="flex h-[30px] min-w-0 shrink-0 items-center gap-2 rounded-md bg-sidebar-accent px-2 font-medium text-sidebar-accent-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                  />
-                }
-              >
-                <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
-                <span className="max-w-[5.5rem] truncate text-[12px]">{activeCategory.title}</span>
-                <ChevronDownIcon className="size-3 shrink-0 opacity-55" strokeWidth={1.8} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
-                <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
-                {categories.map((category) => {
-                  const active = category.slug === activeCategory.slug;
-                  return (
-                    <DropdownMenuItem
-                      key={category.slug}
-                      aria-current={active ? "page" : undefined}
-                      className={cn("h-[30px] shrink-0 py-0 text-[13px]", active && "bg-accent font-medium text-accent-foreground")}
-                      onClick={() => navigateToCategory(category.slug)}
-                    >
-                      <FolderIcon className="size-4" strokeWidth={1.8} />
-                      <span className="truncate">{category.title}</span>
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    type="button"
-                    aria-label={selectedCategory.title}
-                    className="flex size-[30px] shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                    onClick={() => navigateToCategory(selectedCategory.slug)}
-                  />
-                }
-              >
-                <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{selectedCategory.title}</TooltipContent>
-            </Tooltip>
-          ))}
+        {selectedCategory && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={selectedCategory.title}
+                  aria-current={activeCategory ? "page" : undefined}
+                  className={cn(
+                    "flex h-[30px] shrink-0 items-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    activeCategory
+                      ? "min-w-0 gap-2 bg-sidebar-accent px-2 font-medium text-sidebar-accent-foreground"
+                      : "size-[30px] justify-center text-muted-foreground hover:bg-sidebar-accent/65 hover:text-foreground",
+                  )}
+                />
+              }
+            >
+              <FolderIcon className="size-4 shrink-0" strokeWidth={1.8} />
+              {activeCategory && (
+                <>
+                  <span className="max-w-[5.5rem] truncate whitespace-nowrap text-[12px]">{activeCategory.title}</span>
+                  <ChevronDownIcon className="size-3 shrink-0 opacity-55" strokeWidth={1.8} />
+                </>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
+              {categories.map((category) => {
+                const active = category.slug === activeCategory?.slug;
+                return (
+                  <DropdownMenuItem
+                    key={category.slug}
+                    aria-current={active ? "page" : undefined}
+                    className={cn("h-[30px] shrink-0 py-0 text-[13px]", active && "bg-accent font-medium text-accent-foreground")}
+                    onClick={() => navigateToCategory(category.slug)}
+                  >
+                    <FolderIcon className="size-4" strokeWidth={1.8} />
+                    <span className="truncate">{category.title}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         {itemsAfterCategory.map(renderNavigationItem)}
+        {customItems.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label={activeCustomItem?.label ?? t("common.custom-navigation")}
+                  aria-current={activeCustomItem ? "page" : undefined}
+                  className={cn(
+                    "flex size-[30px] shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    activeCustomItem
+                      ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                      : "text-muted-foreground hover:bg-sidebar-accent/65 hover:text-foreground",
+                  )}
+                />
+              }
+            >
+              {activeCustomItem?.iconUrl ? (
+                <img src={activeCustomItem.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
+              ) : (
+                <CustomNavigationIcon className="size-4 shrink-0" strokeWidth={1.8} />
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{t("common.custom-navigation")}</div>
+              {customItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <DropdownMenuItem
+                    key={item.id}
+                    aria-current={item.active ? "page" : undefined}
+                    className={cn("h-[30px] shrink-0 py-0 text-[13px]", item.active && "bg-accent font-medium text-accent-foreground")}
+                    onClick={() => navigateToCustomItem(item)}
+                  >
+                    {item.iconUrl ? (
+                      <img src={item.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
+                    ) : (
+                      <Icon className="size-4" strokeWidth={1.8} />
+                    )}
+                    <span className="truncate">{item.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </nav>
     </TooltipProvider>
   );

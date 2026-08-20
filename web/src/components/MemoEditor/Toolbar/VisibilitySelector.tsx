@@ -1,5 +1,11 @@
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CheckIcon, ChevronDownIcon, EyeOffIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import VisibilityIcon from "@/components/VisibilityIcon";
 import { cn } from "@/lib/utils";
 import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
@@ -7,7 +13,7 @@ import { useTranslate } from "@/utils/i18n";
 import type { VisibilitySelectorProps } from "../types";
 
 const VisibilitySelector = (props: VisibilitySelectorProps) => {
-  const { value, onChange } = props;
+  const { value, onChange, hidden = false, onHiddenChange } = props;
   const compact = props.size === "compact";
   const t = useTranslate();
 
@@ -17,7 +23,7 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
     { value: Visibility.PUBLIC, label: t("memo.visibility.public"), description: t("memo.visibility.public-description") },
   ] as const;
 
-  const currentLabel = visibilityOptions.find((option) => option.value === value)?.label || "";
+  const currentLabel = hidden ? t("memo.hidden.label") : visibilityOptions.find((option) => option.value === value)?.label || "";
 
   return (
     <DropdownMenu onOpenChange={props.onOpenChange}>
@@ -31,21 +37,44 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
           />
         }
       >
-        <VisibilityIcon visibility={value} className={cn("opacity-60 mr-1.5", compact && "w-[13px]")} />
+        {hidden ? (
+          <EyeOffIcon className={cn("opacity-60 mr-1.5", compact ? "size-[13px]" : "size-4")} />
+        ) : (
+          <VisibilityIcon visibility={value} className={cn("opacity-60 mr-1.5", compact && "w-[13px]")} />
+        )}
         <span className="truncate">{currentLabel}</span>
         <ChevronDownIcon className={cn("ml-0.5 opacity-60", compact ? "size-3.5 text-muted-foreground/70" : "w-4 h-4")} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         {visibilityOptions.map((option) => (
-          <DropdownMenuItem key={option.value} onClick={() => onChange(option.value)}>
+          <DropdownMenuItem
+            key={option.value}
+            onClick={() => {
+              onHiddenChange?.(false);
+              onChange(option.value);
+            }}
+          >
             <VisibilityIcon visibility={option.value} />
             <div className="flex flex-col">
               <span>{option.label}</span>
               <span className="text-xs text-muted-foreground">{option.description}</span>
             </div>
-            {value === option.value && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
+            {!hidden && value === option.value && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
           </DropdownMenuItem>
         ))}
+        {onHiddenChange ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onHiddenChange(!hidden)}>
+              <EyeOffIcon />
+              <div className="flex flex-col">
+                <span>{t("memo.hidden.label")}</span>
+                <span className="text-xs text-muted-foreground">{t("memo.hidden.description")}</span>
+              </div>
+              {hidden && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

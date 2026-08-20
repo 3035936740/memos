@@ -1,6 +1,8 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { ViewProvider } from "@/contexts/ViewContext";
 import MemoCategory from "@/pages/MemoCategory";
 
 vi.mock("@tanstack/react-query", async () => {
@@ -22,14 +24,35 @@ vi.mock("@/contexts/InstanceContext", () => ({
 
 vi.mock("@/hooks/useCurrentUser", () => ({ default: () => undefined }));
 
+vi.mock("@/hooks/useMemoQueries", () => ({
+  useMemos: () => ({ data: { memos: [], totalSize: 0 }, isLoading: false }),
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ isUserSettingsInitialized: true }),
+}));
+
+vi.mock("@/contexts/MemoFilterContext", () => ({
+  useMemoFilterContext: () => ({ filters: [] }),
+}));
+
+vi.mock("@/contexts/NewMemoContext", () => ({
+  useNewMemo: () => ({ newMemoName: undefined }),
+}));
+
 describe("MemoCategory layout", () => {
   it("shows the blog sidebar on desktop and mobile placements", () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
-      <MemoryRouter initialEntries={["/categories/music"]}>
-        <Routes>
-          <Route path="/categories/:slug" element={<MemoCategory />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <ViewProvider>
+          <MemoryRouter initialEntries={["/categories/music"]}>
+            <Routes>
+              <Route path="/categories/:slug" element={<MemoCategory />} />
+            </Routes>
+          </MemoryRouter>
+        </ViewProvider>
+      </QueryClientProvider>,
     );
 
     expect(screen.getByRole("heading", { name: "Music" })).toBeInTheDocument();

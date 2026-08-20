@@ -14,6 +14,10 @@ message MemoPayload {
   // Optional. Instance category slug assigned by the memo author.
   string category = 4;
 
+  // Whether the memo is omitted from collection views while remaining
+  // reachable through its direct URL according to its visibility.
+  bool hidden = 5;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;

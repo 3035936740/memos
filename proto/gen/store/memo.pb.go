@@ -27,7 +27,10 @@ type MemoPayload struct {
 	Location *MemoPayload_Location  `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty"`
 	Tags     []string               `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
 	// Optional. Instance category slug assigned by the memo author.
-	Category      string `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
+	Category string `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
+	// Whether the memo is omitted from collection views while remaining
+	// reachable through its direct URL according to its visibility.
+	Hidden        bool `protobuf:"varint,5,opt,name=hidden,proto3" json:"hidden,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -88,6 +91,13 @@ func (x *MemoPayload) GetCategory() string {
 		return x.Category
 	}
 	return ""
+}
+
+func (x *MemoPayload) GetHidden() bool {
+	if x != nil {
+		return x.Hidden
+	}
+	return false
 }
 
 // The calculated properties from the memo content.
@@ -232,12 +242,13 @@ var File_store_memo_proto protoreflect.FileDescriptor
 
 const file_store_memo_proto_rawDesc = "" +
 	"\n" +
-	"\x10store/memo.proto\x12\vmemos.store\"\xd2\x03\n" +
+	"\x10store/memo.proto\x12\vmemos.store\"\xea\x03\n" +
 	"\vMemoPayload\x12=\n" +
 	"\bproperty\x18\x01 \x01(\v2!.memos.store.MemoPayload.PropertyR\bproperty\x12=\n" +
 	"\blocation\x18\x02 \x01(\v2!.memos.store.MemoPayload.LocationR\blocation\x12\x12\n" +
 	"\x04tags\x18\x03 \x03(\tR\x04tags\x12\x1a\n" +
-	"\bcategory\x18\x04 \x01(\tR\bcategory\x1a\xac\x01\n" +
+	"\bcategory\x18\x04 \x01(\tR\bcategory\x12\x16\n" +
+	"\x06hidden\x18\x05 \x01(\bR\x06hidden\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

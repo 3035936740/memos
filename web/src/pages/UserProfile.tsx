@@ -28,7 +28,7 @@ interface User {
 
 const ProfileHeader = ({ user, onCopyProfileLink, shareLabel }: { user: User; onCopyProfileLink: () => void; shareLabel: string }) => (
   <div className="border-b border-border/10 px-4 py-8 sm:px-6">
-    <div className="mx-auto flex max-w-2xl gap-4 sm:gap-6">
+    <div className="mx-auto flex w-full max-w-6xl gap-4 sm:gap-6">
       <UserAvatar className="h-20 w-20 shrink-0 rounded-2xl shadow-sm sm:h-24 sm:w-24" avatarUrl={user.avatarUrl} />
       <div className="flex flex-1 flex-col gap-3">
         <div>
@@ -83,7 +83,7 @@ const UserProfile = () => {
           <ProfileHeader user={user} onCopyProfileLink={handleCopyProfileLink} shareLabel={t("common.share")} />
 
           <div className="mt-4 flex-1">
-            <div className="mx-auto w-full max-w-2xl">
+            <div className="mx-auto w-full">
               {activeTab === "memos" ? (
                 <PagedMemoList
                   renderer={(memo: Memo, { compact, parentPage }) => (

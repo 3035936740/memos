@@ -80,6 +80,89 @@ func memoAccessDecisionError(decision access.MemoReadDecision) error {
 	}
 }
 
+// memoVisibleInCollection omits hidden memos from collection-style responses.
+// Creators can still manage their own hidden memos and admins can audit every
+// hidden memo; direct GetMemo access remains visibility-based.
+//
+// This check intentionally runs after the payload has been decoded. Older
+// memos do not have the hidden JSON field, and database JSON predicates can
+// otherwise treat that missing field as NULL and exclude every legacy memo.
+func memoVisibleInCollection(memo *store.Memo, user *store.User) bool {
+	if memo == nil {
+		return false
+	}
+	if isSuperUser(user) {
+		return true
+	}
+	if memo.Payload == nil || !memo.Payload.Hidden {
+		return true
+	}
+	return user != nil && memo.CreatorID == user.ID
+}
+
+func filterMemosForCollection(memos []*store.Memo, user *store.User) []*store.Memo {
+	visibleMemos := make([]*store.Memo, 0, len(memos))
+	for _, memo := range memos {
+		if memoVisibleInCollection(memo, user) {
+			visibleMemos = append(visibleMemos, memo)
+		}
+	}
+	return visibleMemos
+}
+
+// listMemoCollectionPage scans raw database pages and applies collection
+// visibility before the public offset and limit. This keeps pagination stable
+// even when hidden memos are interleaved with visible ones.
+func (s *APIV1Service) listMemoCollectionPage(
+	ctx context.Context,
+	find *store.FindMemo,
+	user *store.User,
+	visibleOffset int,
+	visibleLimit int,
+) ([]*store.Memo, error) {
+	const chunkSize = 100
+
+	visibleMemos := make([]*store.Memo, 0, visibleLimit)
+	rawOffset := 0
+	skippedVisible := 0
+	for len(visibleMemos) < visibleLimit {
+		batchFind := *find
+		batchLimit := chunkSize
+		batchOffset := rawOffset
+		batchFind.Limit = &batchLimit
+		batchFind.Offset = &batchOffset
+
+		batch, err := s.Store.ListMemos(ctx, &batchFind)
+		if err != nil {
+			return nil, err
+		}
+		if len(batch) == 0 {
+			break
+		}
+
+		for _, memo := range batch {
+			if !memoVisibleInCollection(memo, user) {
+				continue
+			}
+			if skippedVisible < visibleOffset {
+				skippedVisible++
+				continue
+			}
+			visibleMemos = append(visibleMemos, memo)
+			if len(visibleMemos) == visibleLimit {
+				return visibleMemos, nil
+			}
+		}
+
+		rawOffset += len(batch)
+		if len(batch) < chunkSize {
+			break
+		}
+	}
+
+	return visibleMemos, nil
+}
+
 func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoRequest) (*v1pb.Memo, error) {
 	user, err := s.fetchCurrentUser(ctx)
 	if err != nil {
@@ -102,6 +185,9 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 		CreatorID:  user.ID,
 		Content:    request.Memo.Content,
 		Visibility: convertVisibilityToStore(request.Memo.Visibility),
+	}
+	if request.Memo.Hidden && !isSuperUser(user) {
+		return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
 	}
 
 	// Set custom timestamps if provided in the request.
@@ -126,6 +212,10 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	}
 	if err := memopayload.RebuildMemoPayload(ctx, create, s.MarkdownService); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
+	}
+	if request.Memo.Hidden {
+		create.Payload.Hidden = true
+		create.Visibility = store.Public
 	}
 	if request.Memo.Location != nil {
 		create.Payload.Location = convertLocationToStore(request.Memo.Location)
@@ -261,7 +351,6 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 			memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
 		}
 	}
-
 	totalSize := int32(0)
 	if request.ShowTotalSize {
 		countFind := *memoFind
@@ -272,7 +361,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to count memos: %v", err)
 		}
-		totalSize = int32(len(matchingMemos))
+		totalSize = int32(len(filterMemosForCollection(matchingMemos, currentUser)))
 	}
 
 	var limit, offset int
@@ -289,9 +378,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	}
 	limit = min(limit, MaxPageSize)
 	limitPlusOne := limit + 1
-	memoFind.Limit = &limitPlusOne
-	memoFind.Offset = &offset
-	memos, err := s.Store.ListMemos(ctx, memoFind)
+	memos, err := s.listMemoCollectionPage(ctx, memoFind, currentUser, offset, limitPlusOne)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list memos: %v", err)
 	}
@@ -492,6 +579,11 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		nextMemo.Payload = &storepb.MemoPayload{}
 		proto.Merge(nextMemo.Payload, memo.Payload)
 	}
+	for _, path := range request.UpdateMask.Paths {
+		if path == "hidden" && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
+		}
+	}
 
 	for _, path := range request.UpdateMask.Paths {
 		if path == "content" {
@@ -564,11 +656,21 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			}
 			nextMemo.Payload.Category = normalized
 			update.Payload = nextMemo.Payload
+		} else if path == "hidden" {
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.Hidden = request.Memo.Hidden
+			update.Payload = nextMemo.Payload
 		} else if path == "attachments" {
 			attachmentsUpdated = true
 		} else if path == "relations" {
 			relationsUpdated = true
 		}
+	}
+	if nextMemo.Payload != nil && nextMemo.Payload.Hidden {
+		visibility := store.Public
+		update.Visibility = &visibility
 	}
 
 	var preparedAttachments *preparedMemoAttachments

@@ -240,6 +240,17 @@ func NewSchema() Schema {
 				CompareNeq: true,
 			},
 		},
+		"hidden": {
+			Name:     "hidden",
+			Kind:     FieldKindJSONBool,
+			Type:     FieldTypeBool,
+			Column:   Column{Table: "memo", Name: "payload"},
+			JSONPath: []string{"hidden"},
+			AllowedComparisonOps: map[ComparisonOperator]bool{
+				CompareEq:  true,
+				CompareNeq: true,
+			},
+		},
 		"category": {
 			Name:   "category",
 			Kind:   FieldKindScalar,
@@ -272,6 +283,7 @@ func NewSchema() Schema {
 		cel.Variable("has_code", cel.BoolType),
 		cel.Variable("has_incomplete_tasks", cel.BoolType),
 		cel.Variable("has_location", cel.BoolType),
+		cel.Variable("hidden", cel.BoolType),
 		cel.Variable("category", cel.StringType),
 		cel.Variable("now", cel.TimestampType),
 		ext.Sets(),

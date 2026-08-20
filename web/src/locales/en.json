@@ -142,6 +142,7 @@
     "confirm": "Confirm",
     "copy": "Copy",
     "create": "Create",
+    "custom-navigation": "Site navigation",
     "created-at": "Created at",
     "database": "Database",
     "day": "Day",
@@ -468,6 +469,10 @@
     "category": {
       "none": "No category",
       "none-description": "Do not assign a category"
+    },
+    "hidden": {
+      "label": "Hidden link",
+      "description": "Public by direct URL, omitted from site lists"
     }
   },
   "message": {

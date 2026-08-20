@@ -1,4 +1,4 @@
-import { BookmarkIcon, MessageCircleIcon } from "lucide-react";
+import { BookmarkIcon, EyeOffIcon, MessageCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
@@ -99,6 +99,14 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
       </div>
 
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+        {memo.hidden && (
+          <Tooltip>
+            <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-muted-foreground" />}>
+              <EyeOffIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t("memo.hidden.label")}</TooltipContent>
+          </Tooltip>
+        )}
         {currentUser && !isArchived && (
           <Tooltip>
             <TooltipTrigger

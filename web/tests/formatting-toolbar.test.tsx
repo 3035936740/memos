@@ -7,7 +7,10 @@ import type { EditorController } from "@/components/MemoEditor/types/editorContr
 
 // Match the repo convention: t echoes the i18n key (no i18next backend in tests),
 // so accessible names below are the keys themselves.
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
+  useTranslate: () => (key: string) => key,
+}));
 
 // Base UI menus reach for layout/pointer APIs jsdom doesn't implement.
 beforeAll(() => {

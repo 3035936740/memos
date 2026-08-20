@@ -1,15 +1,21 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeAll, describe, expect, test, vi } from "vitest";
-import { createInitialState, EditorProvider } from "@/components/MemoEditor/state";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
+import { createInitialState, EditorProvider, useEditorSelector } from "@/components/MemoEditor/state";
 import { EditorToolbar } from "@/components/MemoEditor/Toolbar/EditorToolbar";
 import InsertMenu from "@/components/MemoEditor/Toolbar/InsertMenu";
+import { User_Role } from "@/types/proto/api/v1/user_service_pb";
+
+const authState = vi.hoisted(() => ({
+  currentUser: undefined as { name: string; role: User_Role } | undefined,
+}));
 
 vi.mock("@/utils/i18n", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
-vi.mock("@/hooks/useCurrentUser", () => ({ default: () => undefined }));
+vi.mock("@/hooks/useCurrentUser", () => ({ default: () => authState.currentUser }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ userGeneralSetting: undefined }) }));
+vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ generalSetting: { memoCategoriesJson: "" } }) }));
 vi.mock("@/components/map/useReverseGeocoding", () => ({ useReverseGeocoding: () => ({ data: undefined }) }));
 
 beforeAll(() => {
@@ -18,6 +24,15 @@ beforeAll(() => {
   Element.prototype.setPointerCapture = vi.fn();
   Element.prototype.releasePointerCapture = vi.fn();
 });
+
+beforeEach(() => {
+  authState.currentUser = undefined;
+});
+
+const HiddenStateProbe = () => {
+  const hidden = useEditorSelector((state) => state.metadata.hidden);
+  return <output aria-label="hidden-state">{String(hidden)}</output>;
+};
 
 const renderMenu = (onInsertImages = vi.fn(), isSaving = false) =>
   render(
@@ -96,5 +111,30 @@ describe("InsertMenu", () => {
 
     expect(screen.getByRole("button", { name: "editor.save" })).toBeDisabled();
     expect(screen.getByLabelText("editor.validation.resolve-image-uploads")).toHaveAttribute("tabindex", "0");
+  });
+
+  test("lets only an administrator enable direct-link-only publishing", () => {
+    authState.currentUser = { name: "users/admin", role: User_Role.ADMIN };
+    const state = createInitialState();
+    state.content = "hidden memo";
+
+    render(
+      <EditorProvider initialEditorState={state}>
+        <EditorToolbar
+          onSave={vi.fn()}
+          onAudioRecorderClick={vi.fn()}
+          isFormattingToolbarVisible={false}
+          onToggleFormattingToolbar={vi.fn()}
+          onInsertImages={vi.fn()}
+        />
+        <HiddenStateProbe />
+      </EditorProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "memo.visibility.private" }));
+    fireEvent.click(screen.getByText("memo.hidden.label"));
+
+    expect(screen.getByLabelText("hidden-state")).toHaveTextContent("true");
+    expect(screen.getByRole("button", { name: "memo.hidden.label" })).toBeInTheDocument();
   });
 });

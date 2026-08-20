@@ -14,6 +14,7 @@ const sidebarState = vi.hoisted(() => ({
 }));
 const instanceState = vi.hoisted(() => ({
   memoCategoriesJson: "",
+  navigationJson: "",
 }));
 
 vi.mock("@/components/MemosLogo", () => ({
@@ -58,7 +59,10 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({
-  useInstance: () => ({ isInitialized: true, generalSetting: { memoCategoriesJson: instanceState.memoCategoriesJson } }),
+  useInstance: () => ({
+    isInitialized: true,
+    generalSetting: { memoCategoriesJson: instanceState.memoCategoriesJson, navigationJson: instanceState.navigationJson },
+  }),
 }));
 
 vi.mock("@/contexts/MemoFilterContext", () => ({
@@ -121,6 +125,7 @@ describe("App sidebar logo", () => {
     authState.memoViews = [];
     sidebarState.memoScope = "home";
     instanceState.memoCategoriesJson = "";
+    instanceState.navigationJson = "";
     localStorage.clear();
   });
 
@@ -221,6 +226,8 @@ describe("App sidebar logo", () => {
     expect(screen.queryByRole("button", { name: "common.all" })).not.toBeInTheDocument();
 
     const scopeTrigger = screen.getByRole("button", { name: "common.home" });
+    expect(scopeTrigger).toHaveClass("shrink-0", "whitespace-nowrap");
+    expect(scopeTrigger).toHaveTextContent("common.home");
     fireEvent.click(scopeTrigger);
     expect(await screen.findByRole("menuitem", { name: "common.home" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "common.explore" })).toBeInTheDocument();
@@ -288,6 +295,8 @@ describe("App sidebar logo", () => {
     const inactiveCategory = screen.getByRole("button", { name: "First category" });
     expect(inactiveCategory).toHaveClass("size-[30px]");
     fireEvent.click(inactiveCategory);
+    expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/inbox");
+    fireEvent.click(await screen.findByRole("menuitem", { name: /First category/ }));
     expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/first");
 
     fireEvent.click(screen.getByRole("button", { name: "First category" }));
@@ -303,6 +312,8 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: "Second category" }));
+    expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/inbox");
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Second category/ }));
     expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/second");
   });
 
@@ -319,6 +330,24 @@ describe("App sidebar logo", () => {
     const explore = screen.getByRole("link", { name: "common.explore" });
     const category = screen.getByRole("button", { name: "Public category" });
     expect(explore.compareDocumentPosition(category) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("groups custom destinations into one navigation menu", async () => {
+    instanceState.navigationJson = JSON.stringify([
+      { id: "friends", label: "Friends", path: "/pages/friends", icon: "link", access: "public" },
+      { id: "about", label: "About site", path: "/pages/about", icon: "info", access: "public" },
+    ]);
+
+    render(
+      <MemoryRouter initialEntries={["/home"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("link", { name: "Friends" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "common.custom-navigation" }));
+    expect(await screen.findByRole("menuitem", { name: "Friends" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "About site" })).toBeInTheDocument();
   });
 
   it.each([

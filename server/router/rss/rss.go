@@ -69,6 +69,48 @@ func (s *RSSService) RegisterRoutes(g *echo.Group) {
 	g.GET("/u/:username/rss.xml", s.GetUserRSS)
 }
 
+// listPublicRSSMemos filters decoded payloads instead of relying on a JSON
+// database predicate. Legacy memos do not contain the hidden field and must be
+// treated as visible.
+func (s *RSSService) listPublicRSSMemos(ctx context.Context, find store.FindMemo) ([]*store.Memo, error) {
+	const chunkSize = 100
+
+	visibleMemos := make([]*store.Memo, 0, maxRSSItemCount)
+	rawOffset := 0
+	for len(visibleMemos) < maxRSSItemCount {
+		batchFind := find
+		batchLimit := chunkSize
+		batchOffset := rawOffset
+		batchFind.Limit = &batchLimit
+		batchFind.Offset = &batchOffset
+
+		batch, err := s.Store.ListMemos(ctx, &batchFind)
+		if err != nil {
+			return nil, err
+		}
+		if len(batch) == 0 {
+			break
+		}
+
+		for _, memo := range batch {
+			if memo.Payload != nil && memo.Payload.Hidden {
+				continue
+			}
+			visibleMemos = append(visibleMemos, memo)
+			if len(visibleMemos) == maxRSSItemCount {
+				return visibleMemos, nil
+			}
+		}
+
+		rawOffset += len(batch)
+		if len(batch) < chunkSize {
+			break
+		}
+	}
+
+	return visibleMemos, nil
+}
+
 func (s *RSSService) GetExploreRSS(c *echo.Context) error {
 	if s.Profile == nil || !s.Profile.AllowAnonymous() {
 		return echo.NewHTTPError(http.StatusNotFound, "RSS is unavailable")
@@ -88,14 +130,12 @@ func (s *RSSService) GetExploreRSS(c *echo.Context) error {
 	}
 
 	normalStatus := store.Normal
-	limit := maxRSSItemCount
 	memoFind := store.FindMemo{
 		RowStatus:       &normalStatus,
 		VisibilityList:  []store.Visibility{store.Public},
 		ExcludeComments: true,
-		Limit:           &limit,
 	}
-	memoList, err := s.Store.ListMemos(ctx, &memoFind)
+	memoList, err := s.listPublicRSSMemos(ctx, memoFind)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to find memo list").Wrap(err)
 	}
@@ -142,15 +182,13 @@ func (s *RSSService) GetUserRSS(c *echo.Context) error {
 	}
 
 	normalStatus := store.Normal
-	limit := maxRSSItemCount
 	memoFind := store.FindMemo{
 		CreatorID:       &user.ID,
 		RowStatus:       &normalStatus,
 		VisibilityList:  []store.Visibility{store.Public},
 		ExcludeComments: true,
-		Limit:           &limit,
 	}
-	memoList, err := s.Store.ListMemos(ctx, &memoFind)
+	memoList, err := s.listPublicRSSMemos(ctx, memoFind)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to find memo list").Wrap(err)
 	}

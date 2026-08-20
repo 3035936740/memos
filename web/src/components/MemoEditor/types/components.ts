@@ -95,6 +95,8 @@ export interface InsertMenuProps {
 export interface VisibilitySelectorProps {
   value: Visibility;
   onChange: (visibility: Visibility) => void;
+  hidden?: boolean;
+  onHiddenChange?: (hidden: boolean) => void;
   onOpenChange?: (open: boolean) => void;
   /** "compact" renders a 13px trigger that blends into dense surfaces like the memo detail rail. */
   size?: "default" | "compact";

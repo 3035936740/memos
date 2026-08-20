@@ -52,6 +52,7 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 			category := memo.Payload.Category
 			memoMessage.Category = &category
 		}
+		memoMessage.Hidden = memo.Payload.Hidden
 	}
 
 	if memo.ParentUID != nil {
@@ -247,6 +248,9 @@ func (s *APIV1Service) batchConvertMemoRelations(ctx context.Context, memos []*s
 			return nil, errors.Wrap(err, "failed to batch fetch related memos")
 		}
 		for _, m := range extraMemos {
+			if !memoVisibleInCollection(m, currentUser) {
+				continue
+			}
 			memoIDToUID[m.ID] = m.UID
 			if includeSnippets {
 				snippet, err := s.getMemoContentSnippet(m.Content)

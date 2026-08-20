@@ -259,7 +259,11 @@ type Memo struct {
 	Location *Location `protobuf:"bytes,18,opt,name=location,proto3,oneof" json:"location,omitempty"`
 	// Optional. Instance category slug assigned by the memo author.
 	// Empty means the memo is not categorized. Must match a configured category slug.
-	Category      *string `protobuf:"bytes,19,opt,name=category,proto3,oneof" json:"category,omitempty"`
+	Category *string `protobuf:"bytes,19,opt,name=category,proto3,oneof" json:"category,omitempty"`
+	// Whether the memo is omitted from feeds, profiles, search, RSS, and stats.
+	// Hidden memos remain readable by direct URL according to visibility. Only
+	// instance administrators may change this field; enabling it forces PUBLIC.
+	Hidden        bool `protobuf:"varint,20,opt,name=hidden,proto3" json:"hidden,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -413,6 +417,13 @@ func (x *Memo) GetCategory() string {
 	return ""
 }
 
+func (x *Memo) GetHidden() bool {
+	if x != nil {
+		return x.Hidden
+	}
+	return false
+}
+
 type Location struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// A placeholder text for the location.
@@ -561,7 +572,8 @@ type ListMemosRequest struct {
 	//   tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
 	//   has_task_list / has_link / has_code / has_incomplete_tasks (bool),
 	//   has_location (bool; true when the memo has a location attached),
-	//   category (string; instance category slug, empty when uncategorized).
+	//   category (string; instance category slug, empty when uncategorized),
+	//   hidden (bool; omitted from collection views unless owned or viewed by an admin).
 	// Note: the time fields here are created_ts / updated_ts, which differ from
 	// the create_time / update_time names used by order_by.
 	// Examples:
@@ -2363,7 +2375,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\rreaction_type\x18\x04 \x01(\tB\x03\xe0A\x02R\freactionType\x12@\n" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
-	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breaction\"\xf1\b\n" +
+	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breaction\"\x8e\t\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -2388,7 +2400,8 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x11memos.api.v1/MemoH\x00R\x06parent\x88\x01\x01\x12\x1d\n" +
 	"\asnippet\x18\x11 \x01(\tB\x03\xe0A\x03R\asnippet\x12<\n" +
 	"\blocation\x18\x12 \x01(\v2\x16.memos.api.v1.LocationB\x03\xe0A\x01H\x01R\blocation\x88\x01\x01\x12$\n" +
-	"\bcategory\x18\x13 \x01(\tB\x03\xe0A\x01H\x02R\bcategory\x88\x01\x01\x1a\xac\x01\n" +
+	"\bcategory\x18\x13 \x01(\tB\x03\xe0A\x01H\x02R\bcategory\x88\x01\x01\x12\x1b\n" +
+	"\x06hidden\x18\x14 \x01(\bB\x03\xe0A\x01R\x06hidden\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +
