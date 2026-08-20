@@ -154,6 +154,10 @@ const (
 	AIProviderType_AI_PROVIDER_TYPE_UNSPECIFIED AIProviderType = 0
 	AIProviderType_OPENAI                       AIProviderType = 1
 	AIProviderType_GEMINI                       AIProviderType = 2
+	AIProviderType_ANTHROPIC                    AIProviderType = 3
+	AIProviderType_DEEPSEEK                     AIProviderType = 4
+	AIProviderType_OPENAI_COMPATIBLE            AIProviderType = 5
+	AIProviderType_OLLAMA                       AIProviderType = 6
 )
 
 // Enum value maps for AIProviderType.
@@ -162,11 +166,19 @@ var (
 		0: "AI_PROVIDER_TYPE_UNSPECIFIED",
 		1: "OPENAI",
 		2: "GEMINI",
+		3: "ANTHROPIC",
+		4: "DEEPSEEK",
+		5: "OPENAI_COMPATIBLE",
+		6: "OLLAMA",
 	}
 	AIProviderType_value = map[string]int32{
 		"AI_PROVIDER_TYPE_UNSPECIFIED": 0,
 		"OPENAI":                       1,
 		"GEMINI":                       2,
+		"ANTHROPIC":                    3,
+		"DEEPSEEK":                     4,
+		"OPENAI_COMPATIBLE":            5,
+		"OLLAMA":                       6,
 	}
 )
 
@@ -1665,13 +1677,18 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x18STORAGE_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15STORAGE_TYPE_DATABASE\x10\x01\x12\x16\n" +
 	"\x12STORAGE_TYPE_LOCAL\x10\x02\x12\x13\n" +
-	"\x0fSTORAGE_TYPE_S3\x10\x03*J\n" +
+	"\x0fSTORAGE_TYPE_S3\x10\x03*\x8a\x01\n" +
 	"\x0eAIProviderType\x12 \n" +
 	"\x1cAI_PROVIDER_TYPE_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
 	"\x06OPENAI\x10\x01\x12\n" +
 	"\n" +
-	"\x06GEMINI\x10\x02B\x9f\x01\n" +
+	"\x06GEMINI\x10\x02\x12\r\n" +
+	"\tANTHROPIC\x10\x03\x12\f\n" +
+	"\bDEEPSEEK\x10\x04\x12\x15\n" +
+	"\x11OPENAI_COMPATIBLE\x10\x05\x12\n" +
+	"\n" +
+	"\x06OLLAMA\x10\x06B\x9f\x01\n" +
 	"\x0fcom.memos.storeB\x14InstanceSettingProtoP\x01Z)github.com/usememos/memos/proto/gen/store\xa2\x02\x03MSX\xaa\x02\vMemos.Store\xca\x02\vMemos\\Store\xe2\x02\x17Memos\\Store\\GPBMetadata\xea\x02\fMemos::Storeb\x06proto3"
 
 var (

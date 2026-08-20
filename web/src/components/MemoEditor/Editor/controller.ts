@@ -40,6 +40,12 @@ export function createController(view: EditorView, formatting: FormattingControl
       view.dispatch({ changes: { from: head, insert }, selection: { anchor: head + insert.length }, scrollIntoView: true });
       view.focus();
     },
+    insertInlineMarkdown: (markdown) => {
+      if (!markdown) return;
+      const { head } = view.state.selection.main;
+      view.dispatch({ changes: { from: head, insert: markdown }, selection: { anchor: head + markdown.length }, scrollIntoView: true });
+      view.focus();
+    },
     createUploadAnchor: (descriptor, position) => createUploadAnchor(view, descriptor, position),
     updateUploadAnchor: (descriptor) => setUploadAnchor(view, descriptor),
     resolveUploadAnchor: (id, markdown) => {

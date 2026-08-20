@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/usememos/memos/internal/markdown"
 	"github.com/usememos/memos/internal/profile"
 	"github.com/usememos/memos/server/auth"
@@ -26,6 +28,9 @@ func NewTestService(t *testing.T) *TestService {
 
 	// Create a test store with SQLite
 	testStore := teststore.NewTestingStore(ctx, t)
+	security := store.DefaultInstanceModerationSecuritySetting()
+	security.PublishCooldownSeconds = 0
+	require.NoError(t, testStore.UpsertInstanceModerationSecuritySetting(ctx, security))
 
 	// Align the profile data directory with the test store so attachment files and
 	// derived caches resolve against the same location as DeleteAttachmentStorage.

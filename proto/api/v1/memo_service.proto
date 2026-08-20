@@ -277,6 +277,18 @@ message Memo {
   // instance administrators may change this field; enabling it forces PUBLIC.
   bool hidden = 20 [(google.api.field_behavior) = OPTIONAL];
 
+  // Whether the memo is an unpublished draft. Drafts are only visible to the
+  // creator and instance administrators until publish_time is reached.
+  bool draft = 21 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional scheduled publication time. Setting a future time also marks the
+  // memo as a draft; once reached, it appears in ordinary collection views.
+  optional google.protobuf.Timestamp publish_time = 22 [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. Whether moderation has moved this memo or comment to the
+  // quarantine. Quarantined content is visible only to administrators.
+  bool quarantined = 23 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;

@@ -473,7 +473,29 @@
     "hidden": {
       "label": "Hidden link",
       "description": "Public by direct URL, omitted from site lists"
+    },
+    "publication": {
+      "published": "Published",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "save-draft": "Save as draft",
+      "draft-description": "Visible only to you and administrators",
+      "publish-time": "Publish automatically at"
+    },
+    "read-later": {
+      "add": "Read later",
+      "remove": "Remove from read later",
+      "saved": "Saved for later",
+      "removed": "Removed from read later",
+      "title": "Read later"
     }
+  },
+  "moderation": {
+    "report": "Report",
+    "report-reason": "Reason for reporting (optional)",
+    "reported": "Report submitted",
+    "report-failed": "Failed to submit report",
+    "quarantined": "In quarantine"
   },
   "message": {
     "archived-successfully": "Archived successfully",
@@ -599,8 +621,9 @@
     "ai": {
       "add-provider": "Add provider",
       "api-key": "API key",
+      "api-key-optional": "optional",
       "api-key-required": "API key is required.",
-      "byok-description": "Connect OpenAI or Gemini with an API key from your own account. Memos calls the provider directly from this server.",
+      "byok-description": "Connect OpenAI, Gemini, Anthropic Claude, DeepSeek, Ollama, or another OpenAI-compatible service. Memos calls providers directly from this server.",
       "byok-key-note": "Use a key from your provider account; Memos does not bundle shared AI credentials.",
       "byok-label": "BYOK",
       "byok-model-note": "Memos selects supported models for features like audio transcription.",
@@ -615,6 +638,7 @@
       "edit-provider": "Edit provider",
       "endpoint": "Endpoint",
       "endpoint-hint": "Leave empty to use the official provider endpoint.",
+      "endpoint-required-hint": "Enter the base URL of the OpenAI-compatible API, including /v1 when the service requires it.",
       "integrations-description": "Provider keys are supplied by the instance owner and used by server-side AI features.",
       "integrations-title": "AI integrations",
       "keep-api-key": "Leave blank to keep the existing key",
@@ -990,6 +1014,9 @@
       "used-count": "{{count}} memos",
       "using-default-color": "Using default color."
     },
+    "security": { "label": "Security center" },
+    "moderation": { "label": "Moderation center" },
+    "quarantine": { "label": "Quarantine" },
     "resource-stats": {
       "label": "Resources",
       "title": "Resource Statistics",

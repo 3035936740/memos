@@ -1,0 +1,24 @@
+CREATE TABLE emoji_group (
+  id SERIAL PRIMARY KEY,
+  created_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  updated_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE emoji (
+  id SERIAL PRIMARY KEY,
+  group_id INTEGER NOT NULL,
+  created_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  updated_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  name TEXT NOT NULL,
+  filename TEXT NOT NULL UNIQUE,
+  type TEXT NOT NULL,
+  size BIGINT NOT NULL DEFAULT 0,
+  storage_type TEXT NOT NULL,
+  reference TEXT NOT NULL DEFAULT '',
+  storage_id TEXT NOT NULL DEFAULT '',
+  storage_key TEXT NOT NULL DEFAULT '',
+  blob BYTEA DEFAULT NULL,
+  UNIQUE(group_id, name)
+);
+CREATE INDEX idx_emoji_group_id ON emoji(group_id, id);

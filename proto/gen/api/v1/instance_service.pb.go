@@ -156,6 +156,10 @@ const (
 	InstanceSetting_AI_PROVIDER_TYPE_UNSPECIFIED InstanceSetting_AIProviderType = 0
 	InstanceSetting_OPENAI                       InstanceSetting_AIProviderType = 1
 	InstanceSetting_GEMINI                       InstanceSetting_AIProviderType = 2
+	InstanceSetting_ANTHROPIC                    InstanceSetting_AIProviderType = 3
+	InstanceSetting_DEEPSEEK                     InstanceSetting_AIProviderType = 4
+	InstanceSetting_OPENAI_COMPATIBLE            InstanceSetting_AIProviderType = 5
+	InstanceSetting_OLLAMA                       InstanceSetting_AIProviderType = 6
 )
 
 // Enum value maps for InstanceSetting_AIProviderType.
@@ -164,11 +168,19 @@ var (
 		0: "AI_PROVIDER_TYPE_UNSPECIFIED",
 		1: "OPENAI",
 		2: "GEMINI",
+		3: "ANTHROPIC",
+		4: "DEEPSEEK",
+		5: "OPENAI_COMPATIBLE",
+		6: "OLLAMA",
 	}
 	InstanceSetting_AIProviderType_value = map[string]int32{
 		"AI_PROVIDER_TYPE_UNSPECIFIED": 0,
 		"OPENAI":                       1,
 		"GEMINI":                       2,
+		"ANTHROPIC":                    3,
+		"DEEPSEEK":                     4,
+		"OPENAI_COMPATIBLE":            5,
+		"OLLAMA":                       6,
 	}
 )
 
@@ -2144,7 +2156,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x06commit\x18\b \x01(\tR\x06commit\x12\x1f\n" +
 	"\vneeds_setup\x18\t \x01(\bR\n" +
 	"needsSetup\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\x80$\n" +
+	"\x19GetInstanceProfileRequest\"\xc1$\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2267,13 +2279,18 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x18STORAGE_TYPE_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bDATABASE\x10\x01\x12\t\n" +
 	"\x05LOCAL\x10\x02\x12\x06\n" +
-	"\x02S3\x10\x03\"J\n" +
+	"\x02S3\x10\x03\"\x8a\x01\n" +
 	"\x0eAIProviderType\x12 \n" +
 	"\x1cAI_PROVIDER_TYPE_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
 	"\x06OPENAI\x10\x01\x12\n" +
 	"\n" +
-	"\x06GEMINI\x10\x02:a\xeaA^\n" +
+	"\x06GEMINI\x10\x02\x12\r\n" +
+	"\tANTHROPIC\x10\x03\x12\f\n" +
+	"\bDEEPSEEK\x10\x04\x12\x15\n" +
+	"\x11OPENAI_COMPATIBLE\x10\x05\x12\n" +
+	"\n" +
+	"\x06OLLAMA\x10\x06:a\xeaA^\n" +
 	"\x1cmemos.api.v1/InstanceSetting\x12\x1binstance/settings/{setting}*\x10instanceSettings2\x0finstanceSettingB\a\n" +
 	"\x05value\"U\n" +
 	"\x19GetInstanceSettingRequest\x128\n" +

@@ -53,6 +53,11 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 			memoMessage.Category = &category
 		}
 		memoMessage.Hidden = memo.Payload.Hidden
+		memoMessage.Draft = memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > time.Now().Unix())
+		memoMessage.Quarantined = memo.Payload.Quarantined
+		if memo.Payload.PublishTs > 0 {
+			memoMessage.PublishTime = timestamppb.New(time.Unix(memo.Payload.PublishTs, 0))
+		}
 	}
 
 	if memo.ParentUID != nil {

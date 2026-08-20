@@ -33,9 +33,10 @@ type Server struct {
 	Profile *profile.Profile
 	Store   *store.Store
 
-	echoServer *echo.Echo
-	httpServer *http.Server
-	sseHub     *apiv1.SSEHub
+	echoServer   *echo.Echo
+	httpServer   *http.Server
+	sseHub       *apiv1.SSEHub
+	apiV1Service *apiv1.APIV1Service
 
 	backgroundRunnerCancels []context.CancelFunc
 	backgroundRunnerWG      sync.WaitGroup
@@ -74,6 +75,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	rootGroup := echoServer.Group("")
 
 	apiV1Service := apiv1.NewAPIV1Service(s.Secret, profile, store)
+	s.apiV1Service = apiV1Service
 	s.sseHub = apiV1Service.SSEHub
 
 	// Register HTTP file server routes BEFORE gRPC-Gateway to ensure proper range request handling for Safari.
@@ -171,6 +173,28 @@ func (s *Server) startBackgroundRunners(ctx context.Context) {
 	}()
 
 	slog.Info("background runners started")
+
+	if s.apiV1Service != nil {
+		scheduledContext, scheduledCancel := context.WithCancel(ctx)
+		s.backgroundRunnerCancels = append(s.backgroundRunnerCancels, scheduledCancel)
+		s.backgroundRunnerWG.Add(1)
+		go func() {
+			defer s.backgroundRunnerWG.Done()
+			ticker := time.NewTicker(15 * time.Second)
+			defer ticker.Stop()
+			s.apiV1Service.PublishScheduledMemos(scheduledContext)
+			s.apiV1Service.ReleaseExpiredUserBans(scheduledContext)
+			for {
+				select {
+				case <-scheduledContext.Done():
+					return
+				case <-ticker.C:
+					s.apiV1Service.PublishScheduledMemos(scheduledContext)
+					s.apiV1Service.ReleaseExpiredUserBans(scheduledContext)
+				}
+			}
+		}()
+	}
 }
 
 func (s *Server) stopBackgroundRunners() {

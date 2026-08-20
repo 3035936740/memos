@@ -2,6 +2,7 @@ import { FallbackLngObjList } from "i18next";
 import { useTranslation } from "react-i18next";
 import i18n, { locales, TLocale } from "@/i18n";
 import enTranslation from "@/locales/en.json";
+import customEnTranslation from "@/locales-custom/en.json";
 
 const LOCALE_STORAGE_KEY = "memos-locale";
 const DEFAULT_LOCALE: Locale = "zh-Hans";
@@ -57,7 +58,7 @@ type NestedKeyOf<T, K = keyof T> = K extends keyof T & (string | number)
   : never;
 
 // Represents the keys of nested translation objects.
-export type Translations = NestedKeyOf<typeof enTranslation>;
+export type Translations = NestedKeyOf<typeof enTranslation> | NestedKeyOf<typeof customEnTranslation>;
 
 // Represents a typed translation function.
 type TypedT = (key: Translations, params?: Record<string, unknown>) => string;
@@ -119,8 +120,59 @@ export const applyLocaleEarly = (): void => {
   loadLocale(locale, { persist: false });
 };
 
-// Get the display name for a locale in its native language
+// Keep picker labels deterministic and native. Some browser/OS combinations
+// silently fall back to the UI locale when Intl.DisplayNames lacks data for a
+// language, which previously produced Chinese names inside non-Chinese UIs.
+const NATIVE_LOCALE_NAMES: Record<string, string> = {
+  ar: "العربية",
+  bg: "Български",
+  ca: "Català",
+  cs: "Čeština",
+  da: "Dansk",
+  de: "Deutsch",
+  el: "Ελληνικά",
+  en: "English",
+  "en-GB": "English (UK)",
+  es: "Español",
+  et: "Eesti",
+  fa: "فارسی",
+  fi: "Suomi",
+  fr: "Français",
+  gl: "Galego",
+  hi: "हिन्दी",
+  hr: "Hrvatski",
+  hu: "Magyar",
+  id: "Bahasa Indonesia",
+  it: "Italiano",
+  ja: "日本語",
+  "ka-GE": "ქართული",
+  ko: "한국어",
+  lt: "Lietuvių",
+  lv: "Latviešu",
+  mr: "मराठी",
+  nb: "Norsk bokmål",
+  nl: "Nederlands",
+  pl: "Polski",
+  "pt-PT": "Português (Portugal)",
+  "pt-BR": "Português (Brasil)",
+  ro: "Română",
+  ru: "Русский",
+  sk: "Slovenčina",
+  sl: "Slovenščina",
+  sr: "Српски",
+  sv: "Svenska",
+  th: "ไทย",
+  tr: "Türkçe",
+  uk: "Українська",
+  vi: "Tiếng Việt",
+  "zh-Hans": "简体中文",
+  "zh-Hant": "繁體中文",
+};
+
+// Get the display name for a locale in its native language.
 export const getLocaleDisplayName = (locale: string): string => {
+  const knownName = NATIVE_LOCALE_NAMES[locale];
+  if (knownName) return knownName;
   try {
     const displayName = new Intl.DisplayNames([locale], { type: "language" }).of(locale);
     if (displayName) {

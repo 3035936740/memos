@@ -555,6 +555,26 @@ func TestRenderHiddenMemoFlagPerDialect(t *testing.T) {
 	}
 }
 
+func TestRenderMemoPublicationFlagsPerDialect(t *testing.T) {
+	t.Parallel()
+
+	engine, err := NewEngine(NewSchema())
+	require.NoError(t, err)
+
+	for _, dialect := range []DialectName{DialectSQLite, DialectMySQL, DialectPostgres} {
+		stmt, err := engine.CompileToStatement(
+			context.Background(),
+			`draft == true && quarantined == false && publish_ts > 0 && publish_ts <= 1234`,
+			RenderOptions{Dialect: dialect},
+		)
+		require.NoError(t, err, dialect)
+		require.Contains(t, stmt.SQL, "draft", dialect)
+		require.Contains(t, stmt.SQL, "quarantined", dialect)
+		require.Contains(t, stmt.SQL, "publishTs", dialect)
+		require.Contains(t, stmt.SQL, "COALESCE", dialect)
+	}
+}
+
 func TestRenderHasLocationNegationAndComparisons(t *testing.T) {
 	t.Parallel()
 

@@ -123,7 +123,7 @@ function patchMemoInCollectionQueries(queryClient: QueryClient, update: MemoPatc
   queryClient.setQueriesData<MemoCollectionQueryData>({ queryKey: memoKeys.all }, (data) => patchMemoListQueryData(data, update));
 }
 
-export function useMemos(request: Partial<ListMemosRequest> = {}, options?: { enabled?: boolean }) {
+export function useMemos(request: Partial<ListMemosRequest> = {}, options?: { enabled?: boolean; refetchInterval?: number }) {
   return useQuery({
     queryKey: memoKeys.list(request),
     queryFn: async () => {
@@ -131,6 +131,7 @@ export function useMemos(request: Partial<ListMemosRequest> = {}, options?: { en
       return response;
     },
     enabled: options?.enabled ?? true,
+    refetchInterval: options?.refetchInterval,
   });
 }
 

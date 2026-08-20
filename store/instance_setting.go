@@ -32,6 +32,69 @@ type DeleteInstanceSetting struct {
 // never be included in the instance settings fetched by ordinary visitors.
 const InstanceBlockedWordsSettingName = "BLOCKED_WORDS"
 
+const InstanceModerationSecuritySettingName = "MODERATION_SECURITY"
+
+type InstanceModerationSecuritySetting struct {
+	CommentReportThreshold int32 `json:"commentReportThreshold"`
+	ArticleReportThreshold int32 `json:"articleReportThreshold"`
+	UserReportThreshold    int32 `json:"userReportThreshold"`
+	UserAutoBanInitialDays int32 `json:"userAutoBanInitialDays"`
+	PublishCooldownSeconds int32 `json:"publishCooldownSeconds"`
+}
+
+func DefaultInstanceModerationSecuritySetting() *InstanceModerationSecuritySetting {
+	return &InstanceModerationSecuritySetting{
+		CommentReportThreshold: 5,
+		ArticleReportThreshold: 10,
+		UserReportThreshold:    50,
+		UserAutoBanInitialDays: 30,
+		PublishCooldownSeconds: 60,
+	}
+}
+
+func (s *Store) GetInstanceModerationSecuritySetting(ctx context.Context) (*InstanceModerationSecuritySetting, error) {
+	rows, err := s.driver.ListInstanceSettings(ctx, &FindInstanceSetting{Name: InstanceModerationSecuritySettingName})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list moderation security setting")
+	}
+	setting := DefaultInstanceModerationSecuritySetting()
+	if len(rows) == 0 {
+		return setting, nil
+	}
+	if err := json.Unmarshal([]byte(rows[0].Value), setting); err != nil {
+		return nil, errors.Wrap(err, "failed to decode moderation security setting")
+	}
+	if setting.CommentReportThreshold <= 0 {
+		setting.CommentReportThreshold = 5
+	}
+	if setting.ArticleReportThreshold <= 0 {
+		setting.ArticleReportThreshold = 10
+	}
+	if setting.UserReportThreshold <= 0 {
+		setting.UserReportThreshold = 50
+	}
+	if setting.UserAutoBanInitialDays <= 0 {
+		setting.UserAutoBanInitialDays = 30
+	}
+	if setting.PublishCooldownSeconds < 0 {
+		setting.PublishCooldownSeconds = 60
+	}
+	return setting, nil
+}
+
+func (s *Store) UpsertInstanceModerationSecuritySetting(ctx context.Context, setting *InstanceModerationSecuritySetting) error {
+	value, err := json.Marshal(setting)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode moderation security setting")
+	}
+	_, err = s.driver.UpsertInstanceSetting(ctx, &InstanceSetting{
+		Name:        InstanceModerationSecuritySettingName,
+		Value:       string(value),
+		Description: "Moderation thresholds and publishing rate limit",
+	})
+	return errors.Wrap(err, "failed to save moderation security setting")
+}
+
 // InstanceBlockedWordsSetting is stored as one JSON value in system_setting.
 // Replacing it overwrites the single row instead of appending import history.
 type InstanceBlockedWordsSetting struct {

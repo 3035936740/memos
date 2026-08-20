@@ -1,4 +1,4 @@
-import { BookmarkIcon, EyeOffIcon, MessageCircleIcon } from "lucide-react";
+import { BanIcon, BookmarkIcon, CalendarClockIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
@@ -99,12 +99,28 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
       </div>
 
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+        {memo.draft && (
+          <Tooltip>
+            <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-amber-600" />}>
+              {memo.publishTime ? <CalendarClockIcon className="size-4" /> : <FilePenLineIcon className="size-4" />}
+            </TooltipTrigger>
+            <TooltipContent>{memo.publishTime ? t("memo.publication.scheduled") : t("memo.publication.draft")}</TooltipContent>
+          </Tooltip>
+        )}
         {memo.hidden && (
           <Tooltip>
             <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-muted-foreground" />}>
               <EyeOffIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{t("memo.hidden.label")}</TooltipContent>
+          </Tooltip>
+        )}
+        {memo.quarantined && (
+          <Tooltip>
+            <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-destructive" />}>
+              <BanIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t("moderation.quarantined")}</TooltipContent>
           </Tooltip>
         )}
         {currentUser && !isArchived && (

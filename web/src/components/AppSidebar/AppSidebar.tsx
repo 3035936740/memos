@@ -3,6 +3,7 @@ import {
   ArchiveIcon,
   ArrowRightIcon,
   BellIcon,
+  BookmarkIcon,
   BookOpenIcon,
   ChevronDownIcon,
   EarthIcon,
@@ -451,6 +452,13 @@ const GlobalNavigation = () => {
   const builtinItems: GlobalNavItem[] = currentUser
     ? [
         {
+          id: "read-later",
+          label: t("memo.read-later.title"),
+          path: ROUTES.READ_LATER,
+          icon: BookmarkIcon,
+          active: location.pathname === ROUTES.READ_LATER,
+        },
+        {
           id: "attachments",
           label: t("common.attachments"),
           path: ROUTES.ATTACHMENTS,
@@ -581,7 +589,7 @@ const GlobalNavigation = () => {
     const Icon = item.icon;
     const alwaysShowLabel = !currentUser && item.id === "explore";
     const itemClassName = cn(
-      "relative flex min-w-0 items-center justify-center gap-2 rounded-md text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+      "relative flex min-w-0 shrink-0 items-center justify-center gap-2 rounded-md text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
       item.active || alwaysShowLabel ? "h-[30px] px-2" : "size-[30px] px-0",
       item.active ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/65 hover:text-foreground",
     );
@@ -641,7 +649,7 @@ const GlobalNavigation = () => {
     <TooltipProvider>
       <nav
         className={cn(
-          "flex h-9 items-center gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+          "flex h-10 items-start gap-1 overflow-x-auto overflow-y-hidden pt-0.5 overscroll-x-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
           SIDEBAR_HORIZONTAL_PADDING,
         )}
         aria-label="Primary"
@@ -699,7 +707,7 @@ const GlobalNavigation = () => {
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" sideOffset={4} className="flex min-w-40 flex-col gap-0.5">
-              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">备忘录分类</div>
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">{t("setting.category.title")}</div>
               {categories.map((category) => {
                 const active = category.slug === activeCategory?.slug;
                 return (

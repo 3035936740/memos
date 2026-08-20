@@ -880,6 +880,61 @@ func TestUpdateInstanceSetting(t *testing.T) {
 		require.Contains(t, err.Error(), "transcription provider_id")
 	})
 
+	t.Run("UpdateInstanceSetting - extended AI providers use protocol defaults", func(t *testing.T) {
+		ts := NewTestService(t)
+		defer ts.Cleanup()
+
+		hostUser, err := ts.CreateHostUser(ctx, "admin")
+		require.NoError(t, err)
+		adminCtx := ts.CreateUserContext(ctx, hostUser.ID)
+
+		_, err = ts.Service.UpdateInstanceSetting(adminCtx, &v1pb.UpdateInstanceSettingRequest{
+			Setting: &v1pb.InstanceSetting{
+				Name: "instance/settings/AI",
+				Value: &v1pb.InstanceSetting_AiSetting{AiSetting: &v1pb.InstanceSetting_AISetting{
+					Providers: []*v1pb.InstanceSetting_AIProviderConfig{
+						{Id: "claude", Title: "Claude", Type: v1pb.InstanceSetting_ANTHROPIC, ApiKey: "anthropic-key"},
+						{Id: "deepseek", Title: "DeepSeek", Type: v1pb.InstanceSetting_DEEPSEEK, ApiKey: "deepseek-key"},
+						{Id: "local-compatible", Title: "Local", Type: v1pb.InstanceSetting_OPENAI_COMPATIBLE, Endpoint: "http://localhost:8000/v1"},
+						{Id: "ollama", Title: "Ollama", Type: v1pb.InstanceSetting_OLLAMA},
+					},
+				}},
+			},
+		})
+		require.NoError(t, err)
+
+		stored, err := ts.Store.GetInstanceAISetting(ctx)
+		require.NoError(t, err)
+		require.Len(t, stored.GetProviders(), 4)
+		require.Equal(t, "https://api.anthropic.com/v1", stored.GetProviders()[0].GetEndpoint())
+		require.Equal(t, "https://api.deepseek.com/v1", stored.GetProviders()[1].GetEndpoint())
+		require.Empty(t, stored.GetProviders()[2].GetApiKey())
+		require.Equal(t, "http://localhost:11434/v1", stored.GetProviders()[3].GetEndpoint())
+	})
+
+	t.Run("UpdateInstanceSetting - transcription rejects a text-only provider", func(t *testing.T) {
+		ts := NewTestService(t)
+		defer ts.Cleanup()
+
+		hostUser, err := ts.CreateHostUser(ctx, "admin")
+		require.NoError(t, err)
+		adminCtx := ts.CreateUserContext(ctx, hostUser.ID)
+
+		_, err = ts.Service.UpdateInstanceSetting(adminCtx, &v1pb.UpdateInstanceSettingRequest{
+			Setting: &v1pb.InstanceSetting{
+				Name: "instance/settings/AI",
+				Value: &v1pb.InstanceSetting_AiSetting{AiSetting: &v1pb.InstanceSetting_AISetting{
+					Providers: []*v1pb.InstanceSetting_AIProviderConfig{
+						{Id: "claude", Title: "Claude", Type: v1pb.InstanceSetting_ANTHROPIC, ApiKey: "anthropic-key"},
+					},
+					Transcription: &v1pb.InstanceSetting_TranscriptionConfig{ProviderId: "claude"},
+				}},
+			},
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "does not support audio transcription")
+	})
+
 	t.Run("UpdateInstanceSetting - transcription strings are length-capped", func(t *testing.T) {
 		ts := NewTestService(t)
 		defer ts.Cleanup()

@@ -14,7 +14,7 @@ interface ModerationErrorResponse {
   error?: string;
 }
 
-const moderationRequest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
+export const moderationRequest = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   const token = await getRequestToken();
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -32,7 +32,7 @@ const moderationRequest = async <T>(path: string, init: RequestInit = {}): Promi
   });
   const payload = (await response.json().catch(() => ({}))) as T & ModerationErrorResponse;
   if (!response.ok) {
-    throw new Error(payload.error || `请求失败（HTTP ${response.status}）`);
+    throw new Error(payload.error || `HTTP ${response.status}`);
   }
   return payload;
 };

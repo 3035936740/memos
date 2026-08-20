@@ -16,6 +16,8 @@ export interface EditorState {
     location?: Location;
     category?: string;
     hidden: boolean;
+    draft: boolean;
+    publishTime?: Date;
   };
   ui: {
     isFocusMode: boolean;
@@ -61,6 +63,8 @@ const defaultState: EditorState = {
     location: undefined,
     category: undefined,
     hidden: false,
+    draft: false,
+    publishTime: undefined,
   },
   ui: {
     isFocusMode: false,

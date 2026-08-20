@@ -123,3 +123,72 @@ CREATE TABLE `user_identity` (
 );
 
 CREATE INDEX `idx_user_identity_user_id` ON `user_identity`(`user_id`);
+
+CREATE TABLE `moderation_report` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `creator_id` INT NOT NULL,
+  `target_type` VARCHAR(32) NOT NULL,
+  `target_id` INT NOT NULL,
+  `reason` TEXT NOT NULL,
+  UNIQUE (`creator_id`, `target_type`, `target_id`),
+  INDEX `idx_moderation_report_target` (`target_type`, `target_id`)
+);
+CREATE TABLE `moderation_quarantine` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `target_type` VARCHAR(32) NOT NULL,
+  `target_id` INT NOT NULL,
+  `report_count` INT NOT NULL DEFAULT 0,
+  `reason` TEXT NOT NULL,
+  UNIQUE (`target_type`, `target_id`),
+  INDEX `idx_moderation_quarantine_created_ts` (`created_ts`)
+);
+CREATE TABLE `memo_bookmark` (
+  `user_id` INT NOT NULL,
+  `memo_id` INT NOT NULL,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  UNIQUE (`user_id`, `memo_id`),
+  INDEX `idx_memo_bookmark_user` (`user_id`, `created_ts`)
+);
+CREATE TABLE `moderation_user_ban` (
+  `user_id` INT NOT NULL PRIMARY KEY,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `updated_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `expires_ts` BIGINT NOT NULL DEFAULT 0,
+  `strike_count` INT NOT NULL DEFAULT 0,
+  `source` VARCHAR(16) NOT NULL DEFAULT 'MANUAL',
+  `active` BOOLEAN NOT NULL DEFAULT TRUE,
+  INDEX `idx_moderation_user_ban_expiry` (`active`, `expires_ts`)
+);
+CREATE TABLE `moderation_report_adjustment` (
+  `target_type` VARCHAR(32) NOT NULL,
+  `target_id` INT NOT NULL,
+  `adjustment` INT NOT NULL DEFAULT 0,
+  `updated_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  UNIQUE (`target_type`, `target_id`)
+);
+
+CREATE TABLE `emoji_group` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `updated_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `name` VARCHAR(128) NOT NULL UNIQUE
+);
+CREATE TABLE `emoji` (
+  `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `group_id` INT NOT NULL,
+  `created_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `updated_ts` BIGINT NOT NULL DEFAULT (UNIX_TIMESTAMP()),
+  `name` VARCHAR(128) NOT NULL,
+  `filename` VARCHAR(320) NOT NULL UNIQUE,
+  `type` VARCHAR(128) NOT NULL,
+  `size` BIGINT NOT NULL DEFAULT 0,
+  `storage_type` VARCHAR(32) NOT NULL,
+  `reference` TEXT NOT NULL,
+  `storage_id` VARCHAR(256) NOT NULL DEFAULT '',
+  `storage_key` TEXT NOT NULL,
+  `blob` MEDIUMBLOB,
+  UNIQUE (`group_id`, `name`),
+  INDEX `idx_emoji_group_id` (`group_id`, `id`)
+);

@@ -55,6 +55,8 @@ func (s *APIV1Service) CreateMemoComment(ctx context.Context, request *v1pb.Crea
 	}
 	comment.Visibility = convertVisibilityFromStore(relatedMemo.Visibility)
 	comment.Hidden = false
+	comment.Draft = false
+	comment.PublishTime = nil
 
 	// Create the memo comment first; suppress the generic memo.created SSE event
 	// since CreateMemoComment broadcasts memo.comment.created for the parent instead.
@@ -152,6 +154,10 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 	}
 	if err := s.checkMemoReadAccess(ctx, memo); err != nil {
 		return nil, err
+	}
+	currentUser, err := s.fetchCurrentUser(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get user")
 	}
 
 	memoRelationComment := store.MemoRelationComment
@@ -266,7 +272,7 @@ func (s *APIV1Service) ListMemoComments(ctx context.Context, request *v1pb.ListM
 	var memosResponse []*v1pb.Memo
 	for _, memoRelation := range memoRelations {
 		m := memoByID[memoRelation.MemoID]
-		if m == nil {
+		if m == nil || !memoVisibleInCollection(m, currentUser) {
 			continue
 		}
 		memoName := memoIDToNameMap[m.ID]

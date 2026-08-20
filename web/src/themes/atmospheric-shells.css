@@ -1,0 +1,57 @@
+html:is(
+    [data-theme="cosmic-dark"],
+    [data-theme="twilight-dark"],
+    [data-theme="aurora-dark"],
+    [data-theme="abyss-dark"],
+    [data-theme="neon-rain-dark"],
+    [data-theme="moonlit-forest-dark"],
+    [data-theme="retro-terminal-dark"],
+    [data-theme="ink-night-dark"],
+    [data-theme="sakura-night-dark"],
+    [data-theme="dawn"],
+    [data-theme="ocean-breeze"],
+    [data-theme="matcha"],
+    [data-theme="lavender"],
+    [data-theme="sakura-day"],
+    [data-theme="desert-sand"],
+    [data-theme="porcelain"],
+    [data-theme="retro-newspaper"],
+    [data-theme="candy-pop"]
+  )
+  body
+  > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html:is(
+    [data-theme="cosmic-dark"],
+    [data-theme="twilight-dark"],
+    [data-theme="aurora-dark"],
+    [data-theme="abyss-dark"],
+    [data-theme="neon-rain-dark"],
+    [data-theme="moonlit-forest-dark"],
+    [data-theme="retro-terminal-dark"],
+    [data-theme="ink-night-dark"],
+    [data-theme="sakura-night-dark"],
+    [data-theme="dawn"],
+    [data-theme="ocean-breeze"],
+    [data-theme="matcha"],
+    [data-theme="lavender"],
+    [data-theme="sakura-day"],
+    [data-theme="desert-sand"],
+    [data-theme="porcelain"],
+    [data-theme="retro-newspaper"],
+    [data-theme="candy-pop"]
+  )
+  :is(
+    [data-app-shell],
+    [data-page-shell],
+    body > #root > .bg-background,
+    main > .bg-background,
+    main > section > .bg-background,
+    main > section > div.min-h-full.bg-background
+  ) {
+  background-color: transparent;
+}

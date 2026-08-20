@@ -1,0 +1,47 @@
+:root {
+  --background: oklch(0.97 0.025 210);
+  --foreground: oklch(0.29 0.07 285);
+  --card: oklch(0.995 0.012 210);
+  --card-foreground: oklch(0.27 0.065 285);
+  --popover: oklch(1 0.008 210);
+  --popover-foreground: oklch(0.27 0.065 285);
+  --primary: oklch(0.64 0.2 335);
+  --primary-foreground: oklch(0.99 0.01 210);
+  --secondary: oklch(0.91 0.07 205);
+  --secondary-foreground: oklch(0.36 0.1 270);
+  --muted: oklch(0.93 0.045 215);
+  --muted-foreground: oklch(0.5 0.07 275);
+  --accent: oklch(0.86 0.12 190);
+  --accent-foreground: oklch(0.32 0.085 270);
+  --destructive: oklch(0.57 0.2 25);
+  --destructive-foreground: oklch(0.99 0.01 210);
+  --success: oklch(0.58 0.16 155);
+  --success-foreground: oklch(0.98 0.01 155);
+  --warning: oklch(0.7 0.16 82);
+  --warning-foreground: oklch(0.27 0.04 72);
+  --border: oklch(0.82 0.08 255);
+  --input: oklch(0.74 0.1 270);
+  --ring: oklch(0.64 0.2 335);
+  --sidebar: oklch(0.95 0.045 205);
+  --sidebar-foreground: oklch(0.39 0.09 275);
+  --sidebar-accent: oklch(0.86 0.11 195);
+  --sidebar-accent-foreground: oklch(0.31 0.085 275);
+  --sidebar-accent-border: oklch(0.7 0.16 325);
+  --shadow-xs: 0 1px 3px rgb(75 62 130 / 7%);
+  --shadow-sm: 0 2px 5px rgb(75 62 130 / 10%), 0 1px 2px rgb(235 82 173 / 5%);
+  --shadow: 0 3px 8px rgb(75 62 130 / 11%), 0 1px 3px rgb(52 196 213 / 5%);
+  --shadow-md: 0 6px 15px rgb(75 62 130 / 13%), 0 2px 5px rgb(235 82 173 / 6%);
+  --shadow-lg: 0 10px 24px rgb(75 62 130 / 15%), 0 3px 8px rgb(52 196 213 / 6%);
+  --shadow-xl: 0 16px 34px rgb(75 62 130 / 17%), 0 4px 12px rgb(235 82 173 / 6%);
+}
+
+html[data-theme="candy-pop"] body {
+  background-color: #f3fbff;
+  background-image:
+    radial-gradient(circle at 12% 16%, rgb(255 121 190 / 22%) 0%, transparent 28%),
+    radial-gradient(circle at 88% 18%, rgb(69 213 222 / 24%) 0%, transparent 29%),
+    radial-gradient(circle at 76% 86%, rgb(255 211 80 / 19%) 0%, transparent 27%),
+    radial-gradient(circle at 22% 90%, rgb(147 120 255 / 18%) 0%, transparent 29%),
+    linear-gradient(145deg, #fff7fd 0%, #f1fbff 54%, #f8f4ff 100%);
+  background-attachment: fixed;
+}

@@ -1,0 +1,61 @@
+:root {
+  --background: oklch(0.145 0.04 285);
+  --foreground: oklch(0.92 0.02 225);
+  --card: oklch(0.2 0.048 286);
+  --card-foreground: oklch(0.95 0.016 225);
+  --popover: oklch(0.225 0.06 288);
+  --popover-foreground: oklch(0.96 0.014 225);
+  --primary: oklch(0.77 0.16 205);
+  --primary-foreground: oklch(0.14 0.04 285);
+  --secondary: oklch(0.27 0.065 286);
+  --secondary-foreground: oklch(0.92 0.02 225);
+  --muted: oklch(0.255 0.048 285);
+  --muted-foreground: oklch(0.72 0.04 235);
+  --accent: oklch(0.39 0.16 325);
+  --accent-foreground: oklch(0.97 0.014 220);
+  --destructive: oklch(0.65 0.21 22);
+  --destructive-foreground: oklch(0.98 0.01 220);
+  --success: oklch(0.74 0.16 165);
+  --success-foreground: oklch(0.15 0.035 165);
+  --warning: oklch(0.8 0.16 85);
+  --warning-foreground: oklch(0.18 0.035 85);
+  --border: oklch(0.37 0.09 292);
+  --input: oklch(0.43 0.105 294);
+  --ring: oklch(0.75 0.17 205);
+  --sidebar: oklch(0.115 0.035 287);
+  --sidebar-foreground: oklch(0.79 0.04 235);
+  --sidebar-accent: oklch(0.285 0.1 310);
+  --sidebar-accent-foreground: oklch(0.96 0.016 220);
+  --sidebar-accent-border: oklch(0.52 0.18 325);
+  --shadow-xs: 0 1px 3px rgb(3 0 15 / 22%);
+  --shadow-sm: 0 3px 7px rgb(3 0 15 / 29%), 0 1px 3px rgb(0 217 255 / 8%);
+  --shadow: 0 5px 12px rgb(3 0 15 / 32%), 0 1px 4px rgb(236 43 190 / 9%);
+  --shadow-md: 0 8px 20px rgb(3 0 15 / 36%), 0 2px 7px rgb(0 205 255 / 10%);
+  --shadow-lg: 0 14px 30px rgb(3 0 15 / 39%), 0 3px 10px rgb(228 48 199 / 10%);
+  --shadow-xl: 0 20px 42px rgb(3 0 15 / 44%), 0 4px 14px rgb(0 210 255 / 10%);
+}
+
+html[data-theme="neon-rain-dark"] body {
+  background-color: #100c20;
+  background-image:
+    radial-gradient(ellipse at 8% 18%, rgb(0 205 255 / 18%) 0%, transparent 44%),
+    radial-gradient(ellipse at 93% 34%, rgb(239 53 194 / 18%) 0%, transparent 47%),
+    radial-gradient(ellipse at 52% 110%, rgb(94 54 225 / 24%) 0%, transparent 56%),
+    linear-gradient(180deg, #090814 0%, #120d25 54%, #1a1030 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="neon-rain-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="neon-rain-dark"] [data-app-shell],
+html[data-theme="neon-rain-dark"] [data-page-shell],
+html[data-theme="neon-rain-dark"] body > #root > .bg-background,
+html[data-theme="neon-rain-dark"] main > .bg-background,
+html[data-theme="neon-rain-dark"] main > section > .bg-background,
+html[data-theme="neon-rain-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

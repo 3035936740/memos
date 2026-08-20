@@ -441,7 +441,29 @@
     "hidden": {
       "label": "隱藏直鏈",
       "description": "僅透過直鏈公開存取，不在網站列表中顯示"
+    },
+    "publication": {
+      "published": "已發佈",
+      "draft": "草稿",
+      "scheduled": "定時發佈",
+      "save-draft": "儲存為草稿",
+      "draft-description": "僅作者與管理員可見",
+      "publish-time": "自動發佈時間"
+    },
+    "read-later": {
+      "add": "稍後閱讀",
+      "remove": "移出稍後閱讀",
+      "saved": "已加入稍後閱讀",
+      "removed": "已移出稍後閱讀",
+      "title": "稍後閱讀"
     }
+  },
+  "moderation": {
+    "report": "檢舉",
+    "report-reason": "請輸入檢舉理由（選填）",
+    "reported": "檢舉已提交",
+    "report-failed": "檢舉提交失敗",
+    "quarantined": "隔離區"
   },
   "message": {
     "archived-successfully": "封存成功",
@@ -570,8 +592,9 @@
     "ai": {
       "add-provider": "新增 provider",
       "api-key": "API key",
+      "api-key-optional": "選填",
       "api-key-required": "API key 不可為空。",
-      "byok-description": "使用你自己的 OpenAI 或 Gemini 帳號 API key。Memos 會從本實例伺服器直接呼叫 provider。",
+      "byok-description": "連接 OpenAI、Gemini、Anthropic Claude、DeepSeek、Ollama 或其他 OpenAI 相容服務；Memos 會從本實例伺服器直接呼叫。",
       "byok-key-note": "使用你在 provider 帳號中建立的 key；Memos 不提供共享 AI 憑證。",
       "byok-label": "BYOK",
       "byok-model-note": "Memos 會為音訊轉寫等功能選擇內建支援的模型。",
@@ -586,6 +609,7 @@
       "edit-provider": "編輯 provider",
       "endpoint": "端點",
       "endpoint-hint": "留空則使用官方 provider 端點。",
+      "endpoint-required-hint": "請輸入 OpenAI 相容 API 的基礎 URL；若服務要求，請包含 /v1。",
       "integrations-description": "Provider key 由實例擁有者提供，並用於伺服器端 AI 功能。",
       "integrations-title": "AI 整合",
       "keep-api-key": "留空以保留已保存的 key",
@@ -936,6 +960,9 @@
       "used-count": "{{count}} 篇備忘錄",
       "using-default-color": "使用預設顏色。"
     },
+    "security": { "label": "安全中心" },
+    "moderation": { "label": "審核中心" },
+    "quarantine": { "label": "小黑屋" },
     "resource-stats": {
       "label": "資源",
       "title": "資源統計",

@@ -7,8 +7,10 @@ import useCurrentUser from "@/hooks/useCurrentUser";
 import { canAccessInstanceContent, parseInstanceCategories } from "@/lib/instance-content";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { useTranslate } from "@/utils/i18n";
 
 const MemoCategory = () => {
+  const t = useTranslate();
   const { slug = "" } = useParams();
   const { generalSetting } = useInstance();
   const currentUser = useCurrentUser();
@@ -19,9 +21,8 @@ const MemoCategory = () => {
     state: State.NORMAL,
   });
 
-  if (!category) return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">Category not found.</div>;
-  if (!allowed)
-    return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">You do not have access to this category.</div>;
+  if (!category) return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">{t("memo.category.not-found")}</div>;
+  if (!allowed) return <div className="mx-auto w-full max-w-3xl px-4 py-10 text-muted-foreground">{t("memo.category.access-denied")}</div>;
 
   const filter = `category == ${JSON.stringify(category.slug)}`;
 

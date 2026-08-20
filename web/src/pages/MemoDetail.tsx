@@ -1,5 +1,5 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ArrowLeftIcon, ArrowUpLeftFromCircleIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpLeftFromCircleIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo as useReactMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import BlogSidebar from "@/components/BlogSidebar";
@@ -11,7 +11,7 @@ import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import useMemoDetailError from "@/hooks/useMemoDetailError";
-import { useInfiniteMemoComments, useMemo } from "@/hooks/useMemoQueries";
+import { useInfiniteMemoComments, useMemo, useMemos } from "@/hooks/useMemoQueries";
 import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQueries";
 import { memoNamePrefix } from "@/lib/resource-names";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
@@ -78,6 +78,13 @@ const MemoDetail = () => {
   const error = isShareMode ? shareError : directError;
   const isLoading = isShareMode ? shareLoading : directLoading;
   const memoName = memo?.name ?? memoNameFromParams;
+  const { data: neighborCollection } = useMemos(
+    { pageSize: 1000, orderBy: "create_time desc" },
+    { enabled: !isShareMode && !!memo && !memo.parent },
+  );
+  const neighborIndex = neighborCollection?.memos.findIndex((item) => item.name === memoName) ?? -1;
+  const previousMemo = neighborIndex > 0 ? neighborCollection?.memos[neighborIndex - 1] : undefined;
+  const nextMemo = neighborIndex >= 0 ? neighborCollection?.memos[neighborIndex + 1] : undefined;
   const displayMemo = useReactMemo(() => {
     if (!memo) return undefined;
     if (!isShareMode) return memo;
@@ -169,6 +176,38 @@ const MemoDetail = () => {
               showPinned
               onShareImageDialogOpenChange={setShareImageDialogOpen}
             />
+            {!isShareMode && !displayMemo.parent && (previousMemo || nextMemo) ? (
+              <nav className="mt-4 grid gap-3 border-y border-border/70 py-4 sm:grid-cols-2" aria-label={t("memo.article-navigation")}>
+                {previousMemo ? (
+                  <Link
+                    to={`/${previousMemo.name}`}
+                    state={{ from: parentPage ?? "/explore" }}
+                    className="group min-w-0 rounded-lg p-3 hover:bg-accent/40"
+                  >
+                    <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                      <ArrowLeftIcon className="size-3.5" />
+                      {t("memo.previous-article")}
+                    </span>
+                    <span className="block truncate font-medium">{previousMemo.property?.title || previousMemo.snippet}</span>
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                {nextMemo ? (
+                  <Link
+                    to={`/${nextMemo.name}`}
+                    state={{ from: parentPage ?? "/explore" }}
+                    className="group min-w-0 rounded-lg p-3 text-right hover:bg-accent/40"
+                  >
+                    <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                      {t("memo.next-article")}
+                      <ArrowRightIcon className="size-3.5" />
+                    </span>
+                    <span className="block truncate font-medium">{nextMemo.property?.title || nextMemo.snippet}</span>
+                  </Link>
+                ) : null}
+              </nav>
+            ) : null}
             {!isShareMode && (
               <MemoCommentSection
                 memo={displayMemo}
@@ -185,7 +224,7 @@ const MemoDetail = () => {
               <BlogSidebar parentPage={detailPage} />
             </div>
           </main>
-          <aside className="sticky top-16 hidden min-w-0 lg:block">
+          <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
             <BlogSidebar parentPage={detailPage} />
           </aside>
         </div>

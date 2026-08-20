@@ -1,0 +1,60 @@
+:root {
+  --background: oklch(0.125 0.018 145);
+  --foreground: oklch(0.84 0.12 140);
+  --card: oklch(0.17 0.025 145);
+  --card-foreground: oklch(0.87 0.12 140);
+  --popover: oklch(0.195 0.032 145);
+  --popover-foreground: oklch(0.9 0.12 140);
+  --primary: oklch(0.75 0.18 140);
+  --primary-foreground: oklch(0.12 0.02 145);
+  --secondary: oklch(0.22 0.04 145);
+  --secondary-foreground: oklch(0.83 0.11 140);
+  --muted: oklch(0.21 0.03 145);
+  --muted-foreground: oklch(0.62 0.08 140);
+  --accent: oklch(0.29 0.09 140);
+  --accent-foreground: oklch(0.91 0.13 140);
+  --destructive: oklch(0.61 0.18 28);
+  --destructive-foreground: oklch(0.97 0.01 140);
+  --success: oklch(0.72 0.18 140);
+  --success-foreground: oklch(0.12 0.02 145);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.16 0.025 85);
+  --border: oklch(0.31 0.065 142);
+  --input: oklch(0.38 0.085 142);
+  --ring: oklch(0.72 0.18 140);
+  --sidebar: oklch(0.095 0.015 145);
+  --sidebar-foreground: oklch(0.7 0.1 140);
+  --sidebar-accent: oklch(0.235 0.065 142);
+  --sidebar-accent-foreground: oklch(0.9 0.13 140);
+  --sidebar-accent-border: oklch(0.43 0.12 140);
+  --shadow-xs: 0 1px 3px rgb(0 0 0 / 22%);
+  --shadow-sm: 0 3px 7px rgb(0 0 0 / 31%), 0 0 3px rgb(73 255 111 / 6%);
+  --shadow: 0 5px 12px rgb(0 0 0 / 34%), 0 0 5px rgb(73 255 111 / 7%);
+  --shadow-md: 0 8px 20px rgb(0 0 0 / 38%), 0 0 7px rgb(73 255 111 / 8%);
+  --shadow-lg: 0 14px 30px rgb(0 0 0 / 42%), 0 0 9px rgb(73 255 111 / 8%);
+  --shadow-xl: 0 20px 42px rgb(0 0 0 / 46%), 0 0 12px rgb(73 255 111 / 8%);
+}
+
+html[data-theme="retro-terminal-dark"] body {
+  background-color: #071009;
+  background-image:
+    repeating-linear-gradient(0deg, rgb(100 255 130 / 2.5%) 0, rgb(100 255 130 / 2.5%) 1px, transparent 1px, transparent 4px),
+    radial-gradient(ellipse at 50% 35%, rgb(40 132 64 / 13%) 0%, transparent 62%),
+    linear-gradient(180deg, #050a06 0%, #08120a 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="retro-terminal-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="retro-terminal-dark"] [data-app-shell],
+html[data-theme="retro-terminal-dark"] [data-page-shell],
+html[data-theme="retro-terminal-dark"] body > #root > .bg-background,
+html[data-theme="retro-terminal-dark"] main > .bg-background,
+html[data-theme="retro-terminal-dark"] main > section > .bg-background,
+html[data-theme="retro-terminal-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

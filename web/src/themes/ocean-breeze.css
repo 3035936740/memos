@@ -1,0 +1,46 @@
+:root {
+  --background: oklch(0.96 0.025 210);
+  --foreground: oklch(0.29 0.055 235);
+  --card: oklch(0.985 0.012 205);
+  --card-foreground: oklch(0.27 0.05 235);
+  --popover: oklch(0.99 0.01 205);
+  --popover-foreground: oklch(0.27 0.05 235);
+  --primary: oklch(0.59 0.14 220);
+  --primary-foreground: oklch(0.99 0.01 205);
+  --secondary: oklch(0.91 0.055 205);
+  --secondary-foreground: oklch(0.38 0.08 225);
+  --muted: oklch(0.92 0.04 210);
+  --muted-foreground: oklch(0.5 0.06 230);
+  --accent: oklch(0.87 0.085 195);
+  --accent-foreground: oklch(0.32 0.07 225);
+  --destructive: oklch(0.56 0.18 25);
+  --destructive-foreground: oklch(0.99 0.01 205);
+  --success: oklch(0.57 0.14 165);
+  --success-foreground: oklch(0.98 0.01 165);
+  --warning: oklch(0.68 0.14 78);
+  --warning-foreground: oklch(0.27 0.035 78);
+  --border: oklch(0.82 0.06 210);
+  --input: oklch(0.75 0.075 215);
+  --ring: oklch(0.59 0.14 220);
+  --sidebar: oklch(0.94 0.035 210);
+  --sidebar-foreground: oklch(0.4 0.07 230);
+  --sidebar-accent: oklch(0.88 0.075 202);
+  --sidebar-accent-foreground: oklch(0.31 0.065 225);
+  --sidebar-accent-border: oklch(0.72 0.11 210);
+  --shadow-xs: 0 1px 3px rgb(26 88 113 / 7%);
+  --shadow-sm: 0 2px 5px rgb(26 88 113 / 10%), 0 1px 2px rgb(35 158 188 / 5%);
+  --shadow: 0 3px 8px rgb(26 88 113 / 11%), 0 1px 3px rgb(35 158 188 / 5%);
+  --shadow-md: 0 6px 15px rgb(26 88 113 / 13%), 0 2px 5px rgb(35 158 188 / 6%);
+  --shadow-lg: 0 10px 24px rgb(26 88 113 / 15%), 0 3px 8px rgb(35 158 188 / 6%);
+  --shadow-xl: 0 16px 34px rgb(26 88 113 / 17%), 0 4px 12px rgb(35 158 188 / 6%);
+}
+
+html[data-theme="ocean-breeze"] body {
+  background-color: #eaf9fb;
+  background-image:
+    radial-gradient(ellipse at 10% 12%, rgb(116 226 222 / 28%) 0%, transparent 50%),
+    radial-gradient(ellipse at 88% 15%, rgb(111 191 239 / 25%) 0%, transparent 48%),
+    radial-gradient(ellipse at 52% 112%, rgb(51 172 204 / 22%) 0%, transparent 58%),
+    linear-gradient(180deg, #f5fdfe 0%, #e8f8fb 58%, #d9f2f6 100%);
+  background-attachment: fixed;
+}

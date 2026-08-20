@@ -23,6 +23,9 @@ func newIntegrationService(t *testing.T) *APIV1Service {
 	ctx := context.Background()
 	st := teststore.NewTestingStore(ctx, t)
 	t.Cleanup(func() { st.Close() })
+	security := store.DefaultInstanceModerationSecuritySetting()
+	security.PublishCooldownSeconds = 0
+	require.NoError(t, st.UpsertInstanceModerationSecuritySetting(ctx, security))
 	p := &profile.Profile{Demo: true, Data: t.TempDir(), Driver: "sqlite", DSN: ":memory:"}
 	return NewAPIV1Service("test-secret", p, st)
 }

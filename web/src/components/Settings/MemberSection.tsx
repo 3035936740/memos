@@ -1,15 +1,13 @@
-import { create } from "@bufbuild/protobuf";
-import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { sortBy } from "lodash-es";
-import { MoreVerticalIcon, PlusIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { MoreVerticalIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import InfoChip from "@/components/Settings/InfoChip";
 import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { userServiceClient } from "@/connect";
+import { Input } from "@/components/ui/input";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useDialog } from "@/hooks/useDialog";
 import { useDeleteUser, useListUsers } from "@/hooks/useUserQueries";
@@ -17,6 +15,7 @@ import { handleError } from "@/lib/error";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { User, User_Role } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { unbanUser } from "@/utils/moderation";
 import CreateUserDialog from "../CreateUserDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import SettingSection from "./SettingSection";
@@ -31,8 +30,23 @@ const MemberSection = () => {
   const editDialog = useDialog();
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const sortedUsers = useMemo(() => sortBy(users, "id"), [users]);
-  const [archiveTarget, setArchiveTarget] = useState<User | undefined>(undefined);
   const [deleteTarget, setDeleteTarget] = useState<User | undefined>(undefined);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+  const filteredUsers = useMemo(() => {
+    const keyword = search.trim().toLocaleLowerCase();
+    return keyword
+      ? sortedUsers.filter(
+          (user) => user.username.toLocaleLowerCase().includes(keyword) || user.displayName.toLocaleLowerCase().includes(keyword),
+        )
+      : sortedUsers;
+  }, [search, sortedUsers]);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const pagedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   const stringifyUserRole = (role: User_Role) => (role === User_Role.ADMIN ? t("setting.member.admin") : t("setting.member.user"));
 
@@ -46,39 +60,10 @@ const MemberSection = () => {
     editDialog.open();
   };
 
-  const handleArchiveUserClick = (user: User) => {
-    setArchiveTarget(user);
-  };
-
-  const confirmArchiveUser = async () => {
-    if (!archiveTarget) return;
-    const username = archiveTarget.username;
-    try {
-      await userServiceClient.updateUser({
-        user: {
-          name: archiveTarget.name,
-          state: State.ARCHIVED,
-        },
-        updateMask: create(FieldMaskSchema, { paths: ["state"] }),
-      });
-      toast.success(t("setting.member.archive-success", { username }));
-      await refetchUsers();
-    } catch (error: unknown) {
-      handleError(error, toast.error, { context: "Archive user" });
-    }
-    setArchiveTarget(undefined);
-  };
-
   const handleRestoreUserClick = async (user: User) => {
     const { username } = user;
     try {
-      await userServiceClient.updateUser({
-        user: {
-          name: user.name,
-          state: State.NORMAL,
-        },
-        updateMask: create(FieldMaskSchema, { paths: ["state"] }),
-      });
+      await unbanUser(user.name);
       toast.success(t("setting.member.restore-success", { username }));
       await refetchUsers();
     } catch (error: unknown) {
@@ -115,6 +100,18 @@ const MemberSection = () => {
         </Button>
       }
     >
+      <div className="relative max-w-md">
+        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          value={search}
+          placeholder={t("setting.member.search-placeholder")}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
       <SettingTable
         variant="info-flow"
         columns={[
@@ -174,7 +171,7 @@ const MemberSection = () => {
                   <DropdownMenuContent align="end" sideOffset={2}>
                     <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("common.update")}</DropdownMenuItem>
                     {user.state === State.NORMAL ? (
-                      <DropdownMenuItem onClick={() => handleArchiveUserClick(user)}>{t("setting.member.archive-member")}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("setting.member.ban-action")}</DropdownMenuItem>
                     ) : (
                       <>
                         <DropdownMenuItem onClick={() => handleRestoreUserClick(user)}>{t("common.restore")}</DropdownMenuItem>
@@ -188,27 +185,30 @@ const MemberSection = () => {
               ),
           },
         ]}
-        data={sortedUsers}
+        data={pagedUsers}
         emptyMessage={t("setting.member.no-members-found")}
         getRowKey={(user) => user.name}
       />
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span>{t("setting.member.total-members", { count: filteredUsers.length })}</span>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
+            {t("memo.pagination-previous")}
+          </Button>
+          <span>
+            {page} / {totalPages}
+          </span>
+          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>
+            {t("memo.pagination-next")}
+          </Button>
+        </div>
+      </div>
 
       {/* Create User Dialog */}
       <CreateUserDialog open={createDialog.isOpen} onOpenChange={createDialog.setOpen} onSuccess={refetchUsers} />
 
       {/* Edit User Dialog */}
       <CreateUserDialog open={editDialog.isOpen} onOpenChange={editDialog.setOpen} user={editingUser} onSuccess={refetchUsers} />
-
-      <ConfirmDialog
-        open={!!archiveTarget}
-        onOpenChange={(open) => !open && setArchiveTarget(undefined)}
-        title={archiveTarget ? t("setting.member.archive-warning", { username: archiveTarget.username }) : ""}
-        description={archiveTarget ? t("setting.member.archive-warning-description") : ""}
-        confirmLabel={t("common.confirm")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={confirmArchiveUser}
-        confirmVariant="default"
-      />
 
       <ConfirmDialog
         open={!!deleteTarget}

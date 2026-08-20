@@ -47,13 +47,76 @@ type LocalTranscription = {
   prompt: string;
 };
 
-const providerTypeOptions = [InstanceSetting_AIProviderType.OPENAI, InstanceSetting_AIProviderType.GEMINI];
+const providerTypeOptions = [
+  InstanceSetting_AIProviderType.OPENAI,
+  InstanceSetting_AIProviderType.GEMINI,
+  InstanceSetting_AIProviderType.ANTHROPIC,
+  InstanceSetting_AIProviderType.DEEPSEEK,
+  InstanceSetting_AIProviderType.OPENAI_COMPATIBLE,
+  InstanceSetting_AIProviderType.OLLAMA,
+];
+
+const providerMetadata: Partial<
+  Record<
+    InstanceSetting_AIProviderType,
+    { label: string; title: string; endpoint: string; transcription: boolean; apiKeyRequired: boolean }
+  >
+> = {
+  [InstanceSetting_AIProviderType.OPENAI]: {
+    label: "OpenAI",
+    title: "OpenAI",
+    endpoint: "https://api.openai.com/v1",
+    transcription: true,
+    apiKeyRequired: true,
+  },
+  [InstanceSetting_AIProviderType.GEMINI]: {
+    label: "Google Gemini",
+    title: "Gemini",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta",
+    transcription: true,
+    apiKeyRequired: true,
+  },
+  [InstanceSetting_AIProviderType.ANTHROPIC]: {
+    label: "Anthropic (Claude)",
+    title: "Anthropic Claude",
+    endpoint: "https://api.anthropic.com/v1",
+    transcription: false,
+    apiKeyRequired: true,
+  },
+  [InstanceSetting_AIProviderType.DEEPSEEK]: {
+    label: "DeepSeek",
+    title: "DeepSeek",
+    endpoint: "https://api.deepseek.com/v1",
+    transcription: false,
+    apiKeyRequired: true,
+  },
+  [InstanceSetting_AIProviderType.OPENAI_COMPATIBLE]: {
+    label: "OpenAI Compatible",
+    title: "OpenAI Compatible",
+    endpoint: "",
+    transcription: true,
+    apiKeyRequired: false,
+  },
+  [InstanceSetting_AIProviderType.OLLAMA]: {
+    label: "Ollama",
+    title: "Ollama",
+    endpoint: "http://localhost:11434/v1",
+    transcription: false,
+    apiKeyRequired: false,
+  },
+};
 
 const byokNotes = ["setting.ai.byok-key-note", "setting.ai.byok-storage-note", "setting.ai.byok-model-note"] as const;
 
 const getProviderTypeLabel = (type: InstanceSetting_AIProviderType) => {
-  return InstanceSetting_AIProviderType[type] ?? "UNKNOWN";
+  return providerMetadata[type as (typeof providerTypeOptions)[number]]?.label ?? InstanceSetting_AIProviderType[type] ?? "UNKNOWN";
 };
+
+const providerSupportsTranscription = (provider: LocalAIProvider) =>
+  providerMetadata[provider.type as (typeof providerTypeOptions)[number]]?.transcription ?? false;
+
+const providerRequiresAPIKey = (provider: LocalAIProvider) =>
+  providerMetadata[provider.type as (typeof providerTypeOptions)[number]]?.apiKeyRequired ?? true;
 
 const providerTypeSelectOptions = providerTypeOptions.map((type) => ({ value: String(type), label: getProviderTypeLabel(type) }));
 
@@ -175,7 +238,7 @@ const AISection = () => {
       toast.error(t("setting.ai.provider-title-required"));
       return;
     }
-    if (!provider.apiKeySet && !provider.apiKey.trim()) {
+    if (providerRequiresAPIKey(provider) && !provider.apiKeySet && !provider.apiKey.trim()) {
       toast.error(t("setting.ai.api-key-required"));
       return;
     }
@@ -356,14 +419,15 @@ interface TranscriptionFormProps {
 
 const TranscriptionForm = ({ providers, transcription, referencedProvider, onChange }: TranscriptionFormProps) => {
   const t = useTranslate();
-  const noProviders = providers.length === 0;
+  const transcriptionProviders = useMemo(() => providers.filter(providerSupportsTranscription), [providers]);
+  const noProviders = transcriptionProviders.length === 0;
 
   const providerOptions = useMemo(
     () => [
       { value: "__none__", label: t("setting.ai.transcription-no-provider") },
-      ...providers.map((provider) => ({ value: provider.id, label: provider.title || provider.id })),
+      ...transcriptionProviders.map((provider) => ({ value: provider.id, label: provider.title || provider.id })),
     ],
-    [providers, t],
+    [transcriptionProviders, t],
   );
 
   const update = (partial: Partial<LocalTranscription>) => {
@@ -463,6 +527,17 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
     setDraft((prev) => ({ ...prev, ...partial }));
   };
 
+  const updateProviderType = (type: InstanceSetting_AIProviderType) => {
+    const previous = providerMetadata[draft.type as (typeof providerTypeOptions)[number]];
+    const next = providerMetadata[type as (typeof providerTypeOptions)[number]];
+    setDraft((current) => ({
+      ...current,
+      type,
+      title: !current.title.trim() || current.title === previous?.title ? (next?.title ?? current.title) : current.title,
+      endpoint: !current.endpoint.trim() || current.endpoint === previous?.endpoint ? (next?.endpoint ?? "") : current.endpoint,
+    }));
+  };
+
   const handleSave = () => {
     onSave(draft);
   };
@@ -486,7 +561,7 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
             <Select
               value={String(draft.type)}
               items={providerTypeSelectOptions}
-              onValueChange={(value) => updateDraft({ type: Number(value) as InstanceSetting_AIProviderType })}
+              onValueChange={(value) => updateProviderType(Number(value) as InstanceSetting_AIProviderType)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -508,11 +583,18 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
               onChange={(e) => updateDraft({ endpoint: e.target.value })}
               placeholder={getDefaultEndpointPlaceholder(draft.type)}
             />
-            <p className="text-xs text-muted-foreground">{t("setting.ai.endpoint-hint")}</p>
+            <p className="text-xs text-muted-foreground">
+              {draft.type === InstanceSetting_AIProviderType.OPENAI_COMPATIBLE
+                ? t("setting.ai.endpoint-required-hint")
+                : t("setting.ai.endpoint-hint")}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5 sm:col-span-2">
-            <Label>{t("setting.ai.api-key")}</Label>
+            <Label>
+              {t("setting.ai.api-key")}
+              {!providerRequiresAPIKey(draft) && <span className="ml-1 text-muted-foreground">({t("setting.ai.api-key-optional")})</span>}
+            </Label>
             <Input
               type="password"
               value={draft.apiKey}
@@ -537,14 +619,7 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
 };
 
 const getDefaultEndpointPlaceholder = (type: InstanceSetting_AIProviderType) => {
-  switch (type) {
-    case InstanceSetting_AIProviderType.OPENAI:
-      return "https://api.openai.com/v1";
-    case InstanceSetting_AIProviderType.GEMINI:
-      return "https://generativelanguage.googleapis.com/v1beta";
-    default:
-      return "";
-  }
+  return providerMetadata[type as (typeof providerTypeOptions)[number]]?.endpoint ?? "";
 };
 
 export default AISection;

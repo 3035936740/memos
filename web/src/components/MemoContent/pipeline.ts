@@ -7,8 +7,10 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { type PluggableList, unified } from "unified";
 import { visit } from "unist-util-visit";
+import type { CustomEmoji } from "@/utils/emoji";
 import { getHeadingText, isHeadingElement, rehypeHeadingId } from "@/utils/rehype-plugins/rehype-heading-id";
 import { remarkDisableSetext } from "@/utils/remark-plugins/remark-disable-setext";
+import { remarkEmoji } from "@/utils/remark-plugins/remark-emoji";
 import { remarkPreserveType } from "@/utils/remark-plugins/remark-preserve-type";
 import { remarkSplitMixedTaskLists } from "@/utils/remark-plugins/remark-split-mixed-task-lists";
 import { remarkMemoSyntax } from "@/utils/remark-plugins/remark-tag";
@@ -19,10 +21,11 @@ import { SANITIZE_SCHEMA } from "./constants";
  * so anything that changes which headings exist or what they read as — disabling setext,
  * unwrapping raw HTML, sanitizing away elements — applies to both or neither.
  */
-export const buildRemarkPlugins = (mathRemarkPlugins: PluggableList = []): PluggableList => [
+export const buildRemarkPlugins = (mathRemarkPlugins: PluggableList = [], emojis: CustomEmoji[] = []): PluggableList => [
   remarkDisableSetext,
   ...mathRemarkPlugins,
   remarkGfm,
+  [remarkEmoji, emojis],
   remarkSplitMixedTaskLists,
   remarkMemoSyntax,
   remarkBreaks,

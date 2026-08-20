@@ -129,7 +129,7 @@ const PagedMemoList = (props: Props) => {
       pageOffset: (currentPage - 1) * pageSize,
       showTotalSize: true,
     },
-    { enabled: props.enabled ?? true },
+    { enabled: props.enabled ?? true, refetchInterval: 30_000 },
   );
 
   // Tag settings decide whether sensitive memo content must be blurred. Keep that
@@ -228,7 +228,7 @@ const PagedMemoList = (props: Props) => {
               {emptyPlaceholder}
               {!isDisplayPending && footer}
             </main>
-            <aside className="sticky top-4 hidden min-w-0 lg:block">
+            <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
               <BlogSidebar state={props.state} orderBy={props.orderBy} filter={props.filter} parentPage={parentPage} />
             </aside>
           </div>

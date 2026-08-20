@@ -1,5 +1,5 @@
 import type { Element } from "hast";
-import { type ComponentProps, memo, type ReactNode, Suspense } from "react";
+import { type ComponentProps, memo, type ReactNode, Suspense, useMemo } from "react";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import { buildRehypePlugins, buildRemarkPlugins } from "@/components/MemoContent/pipeline";
@@ -7,6 +7,7 @@ import { tagStyles } from "@/lib/markdownStyles";
 import { cn } from "@/lib/utils";
 import { isMentionElement, isTagElement, isTaskListItemElement } from "@/types/markdown";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
+import { useEmojiPacks } from "@/utils/emoji";
 import { lazyWithReload } from "@/utils/lazy";
 import { resolveManagedAttachmentImageSource } from "@/utils/managed-attachment";
 import { CodeBlock } from "./CodeBlock";
@@ -71,6 +72,8 @@ export const MemoMarkdownRendererCore = ({
   mathRemarkPlugins = [],
   mathRehypePlugins = [],
 }: MemoMarkdownRendererCoreProps) => {
+  const { data: emojiGroups = [] } = useEmojiPacks();
+  const emojis = useMemo(() => emojiGroups.flatMap((group) => group.emojis), [emojiGroups]);
   const markdownComponents: Components = {
     input: ({ node, ...inputProps }) => {
       if (node && isTaskListItemElement(node)) {
@@ -165,7 +168,12 @@ export const MemoMarkdownRendererCore = ({
     },
     code: ({ children, ...props }) => <InlineCode {...props}>{children}</InlineCode>,
     iframe: TrustedIframe,
-    img: ({ src, ...props }) => <Image {...props} src={resolveManagedAttachmentImageSource(src, attachments)} />,
+    img: ({ src, ...props }) =>
+      typeof src === "string" && src.startsWith("/emoji/") ? (
+        <img {...props} src={src} loading="lazy" className="my-1 inline-block max-h-28 max-w-full object-contain align-text-bottom" />
+      ) : (
+        <Image {...props} src={resolveManagedAttachmentImageSource(src, attachments)} />
+      ),
     pre: CodeBlock,
     table: ({ children, ...props }) => <Table {...props}>{children}</Table>,
     thead: ({ children, ...props }) => <TableHead {...props}>{children}</TableHead>,
@@ -178,7 +186,7 @@ export const MemoMarkdownRendererCore = ({
   return (
     <MarkdownRenderContext.Provider value={rootMarkdownRenderContext}>
       <ReactMarkdown
-        remarkPlugins={buildRemarkPlugins(mathRemarkPlugins)}
+        remarkPlugins={buildRemarkPlugins(mathRemarkPlugins, emojis)}
         rehypePlugins={buildRehypePlugins(mathRehypePlugins)}
         components={markdownComponents}
       >

@@ -12,25 +12,13 @@ import {
   importBlockedWordsFromURL,
   replaceBlockedWords,
 } from "@/utils/content-moderation";
+import { useTranslate } from "@/utils/i18n";
 import { SettingList, SettingListItem, SettingPanel } from "./SettingList";
 
 const MAX_FILE_BYTES = 30 * 1024 * 1024;
 
-const sourceDescription = (setting: BlockedWordsSetting | undefined) => {
-  if (!setting || setting.count === 0) {
-    return "当前未启用屏蔽词审核";
-  }
-  const updatedAt = setting.updatedAt ? new Date(setting.updatedAt).toLocaleString() : "未知时间";
-  if (setting.sourceType === "url") {
-    return `最近来源：${setting.sourceUrl || "URL 导入"} · ${updatedAt}`;
-  }
-  if (setting.sourceType === "file") {
-    return `最近来源：${setting.sourceName || "上传文件"} · ${updatedAt}`;
-  }
-  return `最近来源：手动填写 · ${updatedAt}`;
-};
-
 const BlockedWordsEditor = () => {
+  const t = useTranslate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [setting, setSetting] = useState<BlockedWordsSetting>();
   const [wordsText, setWordsText] = useState("");
@@ -39,6 +27,24 @@ const BlockedWordsEditor = () => {
   const [loading, setLoading] = useState(true);
   const [action, setAction] = useState<"manual" | "file" | "url" | "clear">();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+
+  const sourceDescription = (currentSetting: BlockedWordsSetting | undefined) => {
+    if (!currentSetting || currentSetting.count === 0) return t("setting.blocked-words.disabled");
+    const updatedAt = currentSetting.updatedAt ? new Date(currentSetting.updatedAt).toLocaleString() : t("common.unknown-time");
+    if (currentSetting.sourceType === "url") {
+      return t("setting.blocked-words.latest-source", {
+        source: currentSetting.sourceUrl || t("setting.blocked-words.url-import"),
+        updatedAt,
+      });
+    }
+    if (currentSetting.sourceType === "file") {
+      return t("setting.blocked-words.latest-source", {
+        source: currentSetting.sourceName || t("setting.blocked-words.file-upload"),
+        updatedAt,
+      });
+    }
+    return t("setting.blocked-words.latest-source", { source: t("setting.blocked-words.manual-entry"), updatedAt });
+  };
 
   const applySetting = (nextSetting: BlockedWordsSetting) => {
     setSetting(nextSetting);
@@ -58,7 +64,7 @@ const BlockedWordsEditor = () => {
       })
       .catch((error: unknown) => {
         if (active) {
-          toast.error(error instanceof Error ? error.message : "无法加载屏蔽词");
+          toast.error(error instanceof Error ? error.message : t("setting.blocked-words.load-failed"));
         }
       })
       .finally(() => {
@@ -69,20 +75,20 @@ const BlockedWordsEditor = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t]);
 
   const handleManualReplace = async () => {
     if (!wordsText.trim()) {
-      toast.error("词库不能为空；如需停用请使用“清空屏蔽词”按钮");
+      toast.error(t("setting.blocked-words.empty-error"));
       return;
     }
     setAction("manual");
     try {
       const nextSetting = await replaceBlockedWords(wordsText, "manual");
       applySetting(nextSetting);
-      toast.success(`已整体替换，共 ${nextSetting.count} 个屏蔽词`);
+      toast.success(t("setting.blocked-words.replaced", { count: nextSetting.count }));
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "保存屏蔽词失败");
+      toast.error(error instanceof Error ? error.message : t("setting.blocked-words.save-failed"));
     } finally {
       setAction(undefined);
     }
@@ -95,7 +101,7 @@ const BlockedWordsEditor = () => {
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      toast.error("词库文件不能超过 30 MiB");
+      toast.error(t("setting.blocked-words.file-too-large"));
       return;
     }
 
@@ -104,9 +110,9 @@ const BlockedWordsEditor = () => {
       const content = await file.text();
       const nextSetting = await replaceBlockedWords(content, "file", file.name);
       applySetting(nextSetting);
-      toast.success(`文件已导入并整体替换，共 ${nextSetting.count} 个屏蔽词`);
+      toast.success(t("setting.blocked-words.file-replaced", { count: nextSetting.count }));
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "导入词库文件失败");
+      toast.error(error instanceof Error ? error.message : t("setting.blocked-words.file-import-failed"));
     } finally {
       setAction(undefined);
     }
@@ -115,16 +121,16 @@ const BlockedWordsEditor = () => {
   const handleURLImport = async () => {
     const url = sourceURL.trim();
     if (!url) {
-      toast.error("请输入词库 URL");
+      toast.error(t("setting.blocked-words.url-required"));
       return;
     }
     setAction("url");
     try {
       const nextSetting = await importBlockedWordsFromURL(url);
       applySetting(nextSetting);
-      toast.success(`URL 词库已导入并整体替换，共 ${nextSetting.count} 个屏蔽词`);
+      toast.success(t("setting.blocked-words.url-replaced", { count: nextSetting.count }));
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "从 URL 导入失败");
+      toast.error(error instanceof Error ? error.message : t("setting.blocked-words.url-import-failed"));
     } finally {
       setAction(undefined);
     }
@@ -136,9 +142,9 @@ const BlockedWordsEditor = () => {
       const nextSetting = await clearBlockedWords();
       applySetting(nextSetting);
       setSourceURL("");
-      toast.success("屏蔽词已清空");
+      toast.success(t("setting.blocked-words.cleared"));
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "清空屏蔽词失败");
+      toast.error(error instanceof Error ? error.message : t("setting.blocked-words.clear-failed"));
       throw error;
     } finally {
       setAction(undefined);
@@ -152,12 +158,12 @@ const BlockedWordsEditor = () => {
       <SettingList>
         <SettingListItem
           icon={<ShieldAlertIcon className="size-4" />}
-          label={`当前词库：${setting?.count ?? 0} 个词`}
-          description={`${sourceDescription(setting)}。发布备忘录、编辑内容和发表评论都会由服务端检查。`}
+          label={t("setting.blocked-words.current-count", { count: setting?.count ?? 0 })}
+          description={t("setting.blocked-words.status-description", { source: sourceDescription(setting) })}
         >
           <Button variant="destructive" size="sm" disabled={busy || (setting?.count ?? 0) === 0} onClick={() => setClearDialogOpen(true)}>
             <Trash2Icon className="size-4" />
-            清空屏蔽词
+            {t("setting.blocked-words.clear")}
           </Button>
         </SettingListItem>
       </SettingList>
@@ -167,24 +173,22 @@ const BlockedWordsEditor = () => {
         <SettingPanel
           header={
             <div>
-              <div className="text-sm font-medium text-foreground">手动维护词库</div>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                每行一个词，也支持逗号、分号或 Tab 分隔。保存会整体替换数据库中的旧词库，不会追加历史数据。
-              </p>
+              <div className="text-sm font-medium text-foreground">{t("setting.blocked-words.manual-title")}</div>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("setting.blocked-words.manual-description")}</p>
             </div>
           }
           footer={
             <div className="flex justify-end">
               <Button size="sm" disabled={busy || wordsText === savedWordsText} onClick={handleManualReplace}>
                 <SaveIcon className="size-4" />
-                {action === "manual" ? "替换中…" : "保存并整体替换"}
+                {action === "manual" ? t("setting.blocked-words.replacing") : t("setting.blocked-words.save-replace")}
               </Button>
             </div>
           }
         >
           <Textarea
             className="min-h-40 rounded-none border-0 font-mono shadow-none focus-visible:ring-0"
-            placeholder={"违规词一\n违规词二\n需要屏蔽的短语"}
+            placeholder={t("setting.blocked-words.words-placeholder")}
             value={wordsText}
             disabled={loading}
             onChange={(event) => setWordsText(event.target.value)}
@@ -195,8 +199,8 @@ const BlockedWordsEditor = () => {
       <SettingList>
         <SettingListItem
           icon={<LinkIcon className="size-4" />}
-          label="从 URL 导入"
-          description="仅允许公开的 HTTP/HTTPS 文本资源；内网地址会被拒绝，下载上限为 30 MiB。成功后整体替换当前词库。"
+          label={t("setting.blocked-words.url-title")}
+          description={t("setting.blocked-words.url-description")}
           vertical
           controlClassName="w-full"
         >
@@ -211,20 +215,20 @@ const BlockedWordsEditor = () => {
             />
             <Button variant="outline" disabled={busy || !sourceURL.trim()} onClick={handleURLImport}>
               <LinkIcon className="size-4" />
-              {action === "url" ? "导入中…" : "导入并替换"}
+              {action === "url" ? t("setting.blocked-words.importing") : t("setting.blocked-words.import-replace")}
             </Button>
           </div>
         </SettingListItem>
 
         <SettingListItem
           icon={<FileUpIcon className="size-4" />}
-          label="上传词库文件"
-          description="文件只在浏览器中读取，服务器不会保存原文件；解析后的词条直接整体写入数据库。支持 UTF-8 TXT、CSV，最大 30 MiB。"
+          label={t("setting.blocked-words.file-title")}
+          description={t("setting.blocked-words.file-description")}
         >
           <input ref={fileInputRef} type="file" accept=".txt,.csv,text/plain,text/csv" className="hidden" onChange={handleFileChange} />
           <Button variant="outline" disabled={busy} onClick={() => fileInputRef.current?.click()}>
             <FileUpIcon className="size-4" />
-            {action === "file" ? "导入中…" : "选择文件并替换"}
+            {action === "file" ? t("setting.blocked-words.importing") : t("setting.blocked-words.choose-file-replace")}
           </Button>
         </SettingListItem>
       </SettingList>
@@ -232,10 +236,10 @@ const BlockedWordsEditor = () => {
       <ConfirmDialog
         open={clearDialogOpen}
         onOpenChange={setClearDialogOpen}
-        title="清空全部屏蔽词？"
-        description="这会删除数据库中的当前词库，之后发布内容将不再进行屏蔽词检查。此操作不会删除任何备忘录或评论。"
-        confirmLabel="确认清空"
-        cancelLabel="取消"
+        title={t("setting.blocked-words.clear-title")}
+        description={t("setting.blocked-words.clear-description")}
+        confirmLabel={t("setting.blocked-words.clear-confirm")}
+        cancelLabel={t("common.cancel")}
         confirmVariant="destructive"
         onConfirm={handleClear}
       />

@@ -124,3 +124,74 @@ CREATE TABLE user_identity (
 );
 
 CREATE INDEX idx_user_identity_user_id ON user_identity(user_id);
+
+-- moderation and read-later
+CREATE TABLE moderation_report (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  creator_id INTEGER NOT NULL,
+  target_type TEXT NOT NULL,
+  target_id INTEGER NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  UNIQUE(creator_id, target_type, target_id)
+);
+CREATE INDEX idx_moderation_report_target ON moderation_report(target_type, target_id);
+CREATE TABLE moderation_quarantine (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  target_type TEXT NOT NULL,
+  target_id INTEGER NOT NULL,
+  report_count INTEGER NOT NULL DEFAULT 0,
+  reason TEXT NOT NULL DEFAULT '',
+  UNIQUE(target_type, target_id)
+);
+CREATE INDEX idx_moderation_quarantine_created_ts ON moderation_quarantine(created_ts DESC);
+CREATE TABLE memo_bookmark (
+  user_id INTEGER NOT NULL,
+  memo_id INTEGER NOT NULL,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  UNIQUE(user_id, memo_id)
+);
+CREATE INDEX idx_memo_bookmark_user ON memo_bookmark(user_id, created_ts DESC);
+CREATE TABLE moderation_user_ban (
+  user_id INTEGER PRIMARY KEY,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  updated_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  expires_ts BIGINT NOT NULL DEFAULT 0,
+  strike_count INTEGER NOT NULL DEFAULT 0,
+  source TEXT NOT NULL DEFAULT 'MANUAL',
+  active INTEGER NOT NULL DEFAULT 1
+);
+CREATE INDEX idx_moderation_user_ban_expiry ON moderation_user_ban(active, expires_ts);
+CREATE TABLE moderation_report_adjustment (
+  target_type TEXT NOT NULL,
+  target_id INTEGER NOT NULL,
+  adjustment INTEGER NOT NULL DEFAULT 0,
+  updated_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  UNIQUE(target_type, target_id)
+);
+
+-- custom emoji
+CREATE TABLE emoji_group (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  updated_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  name TEXT NOT NULL UNIQUE
+);
+CREATE TABLE emoji (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  group_id INTEGER NOT NULL,
+  created_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  updated_ts BIGINT NOT NULL DEFAULT (strftime('%s', 'now')),
+  name TEXT NOT NULL,
+  filename TEXT NOT NULL UNIQUE,
+  type TEXT NOT NULL,
+  size BIGINT NOT NULL DEFAULT 0,
+  storage_type TEXT NOT NULL,
+  reference TEXT NOT NULL DEFAULT '',
+  storage_id TEXT NOT NULL DEFAULT '',
+  storage_key TEXT NOT NULL DEFAULT '',
+  blob BLOB DEFAULT NULL,
+  UNIQUE(group_id, name)
+);
+CREATE INDEX idx_emoji_group_id ON emoji(group_id, id);

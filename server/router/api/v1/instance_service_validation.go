@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	colorpb "google.golang.org/genproto/googleapis/type/color"
 
+	"github.com/usememos/memos/internal/ai"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
 )
@@ -62,7 +63,7 @@ func (s *APIV1Service) prepareInstanceAISettingForUpdate(ctx context.Context, se
 		if provider.Title == "" {
 			return errors.New("provider title is required")
 		}
-		if provider.Type != storepb.AIProviderType_OPENAI && provider.Type != storepb.AIProviderType_GEMINI {
+		if !isSupportedAIProviderType(provider.Type) {
 			return errors.Errorf("provider %q has unsupported type", provider.Id)
 		}
 
@@ -73,13 +74,25 @@ func (s *APIV1Service) prepareInstanceAISettingForUpdate(ctx context.Context, se
 		if provider.Type == storepb.AIProviderType_GEMINI && provider.Endpoint == "" {
 			provider.Endpoint = "https://generativelanguage.googleapis.com/v1beta"
 		}
+		if provider.Type == storepb.AIProviderType_ANTHROPIC && provider.Endpoint == "" {
+			provider.Endpoint = "https://api.anthropic.com/v1"
+		}
+		if provider.Type == storepb.AIProviderType_DEEPSEEK && provider.Endpoint == "" {
+			provider.Endpoint = "https://api.deepseek.com/v1"
+		}
+		if provider.Type == storepb.AIProviderType_OPENAI_COMPATIBLE && provider.Endpoint == "" {
+			return errors.Errorf("provider %q endpoint is required for an OpenAI-compatible connection", provider.Id)
+		}
+		if provider.Type == storepb.AIProviderType_OLLAMA && provider.Endpoint == "" {
+			provider.Endpoint = "http://localhost:11434/v1"
+		}
 
 		if provider.ApiKey == "" {
 			if existingProvider, ok := existingProviders[provider.Id]; ok {
 				provider.ApiKey = existingProvider.ApiKey
 			}
 		}
-		if provider.ApiKey == "" {
+		if provider.ApiKey == "" && providerRequiresAPIKey(provider.Type) {
 			return errors.Errorf("provider %q API key is required", provider.Id)
 		}
 	}
@@ -109,15 +122,18 @@ func preparePersistedTranscriptionConfig(setting *storepb.InstanceAISetting, exi
 	cfg.Prompt = strings.TrimSpace(cfg.Prompt)
 
 	if cfg.ProviderId != "" {
-		referenced := false
+		var referencedProvider *storepb.AIProviderConfig
 		for _, provider := range setting.Providers {
 			if provider != nil && provider.Id == cfg.ProviderId {
-				referenced = true
+				referencedProvider = provider
 				break
 			}
 		}
-		if !referenced {
+		if referencedProvider == nil {
 			return errors.Errorf("transcription provider_id %q does not reference any configured provider", cfg.ProviderId)
+		}
+		if !ai.SupportsTranscription(convertAIProviderTypeFromStore(referencedProvider.Type)) {
+			return errors.Errorf("provider %q does not support audio transcription", cfg.ProviderId)
 		}
 	}
 
@@ -131,6 +147,24 @@ func preparePersistedTranscriptionConfig(setting *storepb.InstanceAISetting, exi
 		return errors.Errorf("transcription prompt is too long; maximum length is %d characters", maxTranscriptionConfigPromptLength)
 	}
 	return nil
+}
+
+func isSupportedAIProviderType(providerType storepb.AIProviderType) bool {
+	switch providerType {
+	case storepb.AIProviderType_OPENAI,
+		storepb.AIProviderType_GEMINI,
+		storepb.AIProviderType_ANTHROPIC,
+		storepb.AIProviderType_DEEPSEEK,
+		storepb.AIProviderType_OPENAI_COMPATIBLE,
+		storepb.AIProviderType_OLLAMA:
+		return true
+	default:
+		return false
+	}
+}
+
+func providerRequiresAPIKey(providerType storepb.AIProviderType) bool {
+	return providerType != storepb.AIProviderType_OPENAI_COMPATIBLE && providerType != storepb.AIProviderType_OLLAMA
 }
 
 func maskAPIKey(apiKey string) string {

@@ -30,12 +30,18 @@ func New(cfg ai.ProviderConfig, options stt.Options) (*Transcriber, error) {
 	if err != nil {
 		return nil, err
 	}
-	if cfg.APIKey == "" {
+	if cfg.APIKey == "" && cfg.Type != ai.ProviderOpenAICompatible {
 		return nil, errors.New("OpenAI API key is required")
+	}
+	apiKey := cfg.APIKey
+	if apiKey == "" {
+		// Some self-hosted OpenAI-compatible servers do not authenticate, while
+		// the SDK still requires a non-empty value when constructing the client.
+		apiKey = "not-required"
 	}
 	return &Transcriber{
 		client: openaisdk.NewClient(
-			openaioption.WithAPIKey(cfg.APIKey),
+			openaioption.WithAPIKey(apiKey),
 			openaioption.WithBaseURL(endpoint),
 			openaioption.WithHTTPClient(options.HTTPClient),
 		),

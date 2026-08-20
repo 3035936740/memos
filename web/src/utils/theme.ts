@@ -1,20 +1,60 @@
+import abyssDarkThemeContent from "../themes/abyss-dark.css?raw";
+import auroraDarkThemeContent from "../themes/aurora-dark.css?raw";
+import candyPopThemeContent from "../themes/candy-pop.css?raw";
 import cosmicDarkThemeContent from "../themes/cosmic-dark.css?raw";
+import dawnThemeContent from "../themes/dawn.css?raw";
 import defaultDarkThemeContent from "../themes/default-dark.css?raw";
+import desertSandThemeContent from "../themes/desert-sand.css?raw";
+import inkNightDarkThemeContent from "../themes/ink-night-dark.css?raw";
+import lavenderThemeContent from "../themes/lavender.css?raw";
+import matchaThemeContent from "../themes/matcha.css?raw";
+import moonlitForestDarkThemeContent from "../themes/moonlit-forest-dark.css?raw";
+import neonRainDarkThemeContent from "../themes/neon-rain-dark.css?raw";
+import oceanBreezeThemeContent from "../themes/ocean-breeze.css?raw";
 import paperThemeContent from "../themes/paper.css?raw";
+import porcelainThemeContent from "../themes/porcelain.css?raw";
+import retroNewspaperThemeContent from "../themes/retro-newspaper.css?raw";
+import retroTerminalDarkThemeContent from "../themes/retro-terminal-dark.css?raw";
+import sakuraDayThemeContent from "../themes/sakura-day.css?raw";
+import sakuraNightDarkThemeContent from "../themes/sakura-night-dark.css?raw";
 import twilightDarkThemeContent from "../themes/twilight-dark.css?raw";
+import type { Translations } from "./i18n";
 
 // ============================================================================
 // Types and Constants
 // ============================================================================
 
-const VALID_THEMES = ["system", "default", "default-dark", "paper", "cosmic-dark", "twilight-dark"] as const;
+const VALID_THEMES = [
+  "system",
+  "default",
+  "default-dark",
+  "paper",
+  "cosmic-dark",
+  "twilight-dark",
+  "aurora-dark",
+  "abyss-dark",
+  "neon-rain-dark",
+  "moonlit-forest-dark",
+  "retro-terminal-dark",
+  "ink-night-dark",
+  "sakura-night-dark",
+  "dawn",
+  "ocean-breeze",
+  "matcha",
+  "lavender",
+  "sakura-day",
+  "desert-sand",
+  "porcelain",
+  "retro-newspaper",
+  "candy-pop",
+] as const;
 
 export type Theme = (typeof VALID_THEMES)[number];
 export type ResolvedTheme = Exclude<Theme, "system">;
 
 export interface ThemeOption {
-  value: string;
-  label: string;
+  value: Theme;
+  labelKey: Translations;
 }
 
 const STORAGE_KEY = "memos-theme";
@@ -26,6 +66,22 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
   paper: paperThemeContent,
   "cosmic-dark": cosmicDarkThemeContent,
   "twilight-dark": twilightDarkThemeContent,
+  "aurora-dark": auroraDarkThemeContent,
+  "abyss-dark": abyssDarkThemeContent,
+  "neon-rain-dark": neonRainDarkThemeContent,
+  "moonlit-forest-dark": moonlitForestDarkThemeContent,
+  "retro-terminal-dark": retroTerminalDarkThemeContent,
+  "ink-night-dark": inkNightDarkThemeContent,
+  "sakura-night-dark": sakuraNightDarkThemeContent,
+  dawn: dawnThemeContent,
+  "ocean-breeze": oceanBreezeThemeContent,
+  matcha: matchaThemeContent,
+  lavender: lavenderThemeContent,
+  "sakura-day": sakuraDayThemeContent,
+  "desert-sand": desertSandThemeContent,
+  porcelain: porcelainThemeContent,
+  "retro-newspaper": retroNewspaperThemeContent,
+  "candy-pop": candyPopThemeContent,
 };
 
 const THEME_COLORS: Record<ResolvedTheme, string> = {
@@ -34,15 +90,47 @@ const THEME_COLORS: Record<ResolvedTheme, string> = {
   paper: "#f5ede4",
   "cosmic-dark": "#0c1026",
   "twilight-dark": "#24172d",
+  "aurora-dark": "#071b24",
+  "abyss-dark": "#050d1a",
+  "neon-rain-dark": "#100c20",
+  "moonlit-forest-dark": "#0b1813",
+  "retro-terminal-dark": "#071009",
+  "ink-night-dark": "#151b23",
+  "sakura-night-dark": "#201426",
+  dawn: "#fff3e6",
+  "ocean-breeze": "#eaf9fb",
+  matcha: "#edf5e5",
+  lavender: "#f4effc",
+  "sakura-day": "#fff1f5",
+  "desert-sand": "#f3e3c2",
+  porcelain: "#f5f9fc",
+  "retro-newspaper": "#eee3c8",
+  "candy-pop": "#f3fbff",
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
-  { value: "system", label: "Sync with system" },
-  { value: "default", label: "Light" },
-  { value: "default-dark", label: "Dark" },
-  { value: "paper", label: "Paper" },
-  { value: "cosmic-dark", label: "Cosmic" },
-  { value: "twilight-dark", label: "Twilight" },
+  { value: "system", labelKey: "theme.system" },
+  { value: "default", labelKey: "theme.light" },
+  { value: "default-dark", labelKey: "theme.dark" },
+  { value: "paper", labelKey: "theme.paper" },
+  { value: "cosmic-dark", labelKey: "theme.cosmic" },
+  { value: "twilight-dark", labelKey: "theme.twilight" },
+  { value: "aurora-dark", labelKey: "theme.aurora" },
+  { value: "abyss-dark", labelKey: "theme.abyss" },
+  { value: "neon-rain-dark", labelKey: "theme.neon-rain" },
+  { value: "moonlit-forest-dark", labelKey: "theme.moonlit-forest" },
+  { value: "retro-terminal-dark", labelKey: "theme.retro-terminal" },
+  { value: "ink-night-dark", labelKey: "theme.ink-night" },
+  { value: "sakura-night-dark", labelKey: "theme.sakura-night" },
+  { value: "dawn", labelKey: "theme.dawn" },
+  { value: "ocean-breeze", labelKey: "theme.ocean-breeze" },
+  { value: "matcha", labelKey: "theme.matcha" },
+  { value: "lavender", labelKey: "theme.lavender" },
+  { value: "sakura-day", labelKey: "theme.sakura-day" },
+  { value: "desert-sand", labelKey: "theme.desert-sand" },
+  { value: "porcelain", labelKey: "theme.porcelain" },
+  { value: "retro-newspaper", labelKey: "theme.retro-newspaper" },
+  { value: "candy-pop", labelKey: "theme.candy-pop" },
 ];
 
 // ============================================================================

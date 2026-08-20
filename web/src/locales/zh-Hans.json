@@ -358,6 +358,21 @@
       "label": "隐藏直链",
       "description": "仅通过直链公开访问，不在网站列表中显示"
     },
+    "publication": {
+      "published": "已发布",
+      "draft": "草稿",
+      "scheduled": "定时发布",
+      "save-draft": "保存为草稿",
+      "draft-description": "仅作者和管理员可见",
+      "publish-time": "自动发布时间"
+    },
+    "read-later": {
+      "add": "稍后阅读",
+      "remove": "移出稍后阅读",
+      "saved": "已加入稍后阅读",
+      "removed": "已移出稍后阅读",
+      "title": "稍后阅读"
+    },
     "outline": "概要",
     "share": {
       "active-links": "活跃的分享链接",
@@ -400,6 +415,13 @@
       "uncheck-all": "全部取消完成",
       "updated": "任务已更新"
     }
+  },
+  "moderation": {
+    "report": "举报",
+    "report-reason": "请输入举报理由（可选）",
+    "reported": "举报已提交",
+    "report-failed": "举报提交失败",
+    "quarantined": "小黑屋"
   },
   "message": {
     "archived-successfully": "归档成功",
@@ -497,8 +519,9 @@
     "ai": {
       "add-provider": "添加 provider",
       "api-key": "API 密钥",
+      "api-key-optional": "可选",
       "api-key-required": "API key 不能为空。",
-      "byok-description": "使用你自己的 OpenAI 或 Gemini 账号 API key。Memos 会从本实例服务器直接调用 provider。",
+      "byok-description": "连接 OpenAI、Gemini、Anthropic Claude、DeepSeek、Ollama 或其他 OpenAI 兼容服务；Memos 会从本实例服务器直接调用。",
       "byok-key-note": "使用你在 provider 账号中创建的 key；Memos 不提供共享 AI 凭据。",
       "byok-label": "自带密钥",
       "byok-model-note": "Memos 会为音频转写等功能选择内置支持的模型。",
@@ -513,6 +536,7 @@
       "edit-provider": "编辑 provider",
       "endpoint": "端点",
       "endpoint-hint": "留空则使用官方 provider 端点。",
+      "endpoint-required-hint": "请输入 OpenAI 兼容 API 的基础 URL；如果服务要求，请包含 /v1。",
       "keep-api-key": "留空以保留已保存的 key",
       "label": "AI",
       "no-providers": "尚未配置 AI provider。",
@@ -904,6 +928,9 @@
       "use-tls": "使用 STARTTLS",
       "use-tls-description": "通过 STARTTLS 升级 SMTP 连接。Gmail 使用 587 端口时保持开启。"
     },
+    "security": { "label": "安全中心" },
+    "moderation": { "label": "审核中心" },
+    "quarantine": { "label": "小黑屋" },
     "resource-stats": {
       "database": {
         "driver": "驱动",

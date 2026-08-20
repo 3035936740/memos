@@ -1,0 +1,61 @@
+:root {
+  --background: oklch(0.17 0.038 215);
+  --foreground: oklch(0.93 0.018 185);
+  --card: oklch(0.225 0.04 215);
+  --card-foreground: oklch(0.95 0.014 185);
+  --popover: oklch(0.25 0.052 218);
+  --popover-foreground: oklch(0.96 0.012 185);
+  --primary: oklch(0.78 0.14 168);
+  --primary-foreground: oklch(0.16 0.035 210);
+  --secondary: oklch(0.29 0.055 214);
+  --secondary-foreground: oklch(0.92 0.018 185);
+  --muted: oklch(0.275 0.04 215);
+  --muted-foreground: oklch(0.74 0.035 190);
+  --accent: oklch(0.36 0.095 196);
+  --accent-foreground: oklch(0.97 0.012 180);
+  --destructive: oklch(0.64 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 180);
+  --success: oklch(0.74 0.15 155);
+  --success-foreground: oklch(0.16 0.035 155);
+  --warning: oklch(0.8 0.14 80);
+  --warning-foreground: oklch(0.2 0.035 80);
+  --border: oklch(0.4 0.07 205);
+  --input: oklch(0.45 0.08 205);
+  --ring: oklch(0.76 0.14 168);
+  --sidebar: oklch(0.14 0.035 218);
+  --sidebar-foreground: oklch(0.82 0.035 190);
+  --sidebar-accent: oklch(0.3 0.075 200);
+  --sidebar-accent-foreground: oklch(0.96 0.014 180);
+  --sidebar-accent-border: oklch(0.5 0.11 175);
+  --shadow-xs: 0 1px 3px rgb(0 8 14 / 20%);
+  --shadow-sm: 0 2px 6px rgb(0 8 14 / 25%), 0 1px 3px rgb(69 225 190 / 7%);
+  --shadow: 0 4px 10px rgb(0 8 14 / 28%), 0 1px 4px rgb(90 214 220 / 8%);
+  --shadow-md: 0 7px 18px rgb(0 8 14 / 31%), 0 2px 6px rgb(105 164 240 / 9%);
+  --shadow-lg: 0 12px 28px rgb(0 8 14 / 34%), 0 3px 9px rgb(110 220 205 / 9%);
+  --shadow-xl: 0 18px 38px rgb(0 8 14 / 38%), 0 4px 12px rgb(123 105 235 / 9%);
+}
+
+html[data-theme="aurora-dark"] body {
+  background-color: #071b24;
+  background-image:
+    radial-gradient(ellipse at 18% -8%, rgb(74 255 188 / 24%) 0%, rgb(44 177 164 / 10%) 30%, transparent 57%),
+    radial-gradient(ellipse at 72% 0%, rgb(91 173 255 / 22%) 0%, rgb(78 111 209 / 10%) 32%, transparent 62%),
+    radial-gradient(ellipse at 96% 42%, rgb(184 91 255 / 14%) 0%, transparent 48%),
+    linear-gradient(180deg, #061720 0%, #09232d 54%, #0c2730 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="aurora-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="aurora-dark"] [data-app-shell],
+html[data-theme="aurora-dark"] [data-page-shell],
+html[data-theme="aurora-dark"] body > #root > .bg-background,
+html[data-theme="aurora-dark"] main > .bg-background,
+html[data-theme="aurora-dark"] main > section > .bg-background,
+html[data-theme="aurora-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

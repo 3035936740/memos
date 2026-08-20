@@ -30,7 +30,14 @@ type MemoPayload struct {
 	Category string `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
 	// Whether the memo is omitted from collection views while remaining
 	// reachable through its direct URL according to its visibility.
-	Hidden        bool `protobuf:"varint,5,opt,name=hidden,proto3" json:"hidden,omitempty"`
+	Hidden bool `protobuf:"varint,5,opt,name=hidden,proto3" json:"hidden,omitempty"`
+	// Draft memos are only visible to their creator and instance admins until
+	// publish_ts is reached. A zero publish_ts means the draft is not scheduled.
+	Draft bool `protobuf:"varint,6,opt,name=draft,proto3" json:"draft,omitempty"`
+	// Unix timestamp at which a scheduled draft becomes publicly listable.
+	PublishTs int64 `protobuf:"varint,7,opt,name=publish_ts,json=publishTs,proto3" json:"publish_ts,omitempty"`
+	// Quarantined memos and comments are visible only to instance admins.
+	Quarantined   bool `protobuf:"varint,8,opt,name=quarantined,proto3" json:"quarantined,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -96,6 +103,27 @@ func (x *MemoPayload) GetCategory() string {
 func (x *MemoPayload) GetHidden() bool {
 	if x != nil {
 		return x.Hidden
+	}
+	return false
+}
+
+func (x *MemoPayload) GetDraft() bool {
+	if x != nil {
+		return x.Draft
+	}
+	return false
+}
+
+func (x *MemoPayload) GetPublishTs() int64 {
+	if x != nil {
+		return x.PublishTs
+	}
+	return 0
+}
+
+func (x *MemoPayload) GetQuarantined() bool {
+	if x != nil {
+		return x.Quarantined
 	}
 	return false
 }
@@ -242,13 +270,17 @@ var File_store_memo_proto protoreflect.FileDescriptor
 
 const file_store_memo_proto_rawDesc = "" +
 	"\n" +
-	"\x10store/memo.proto\x12\vmemos.store\"\xea\x03\n" +
+	"\x10store/memo.proto\x12\vmemos.store\"\xc1\x04\n" +
 	"\vMemoPayload\x12=\n" +
 	"\bproperty\x18\x01 \x01(\v2!.memos.store.MemoPayload.PropertyR\bproperty\x12=\n" +
 	"\blocation\x18\x02 \x01(\v2!.memos.store.MemoPayload.LocationR\blocation\x12\x12\n" +
 	"\x04tags\x18\x03 \x03(\tR\x04tags\x12\x1a\n" +
 	"\bcategory\x18\x04 \x01(\tR\bcategory\x12\x16\n" +
-	"\x06hidden\x18\x05 \x01(\bR\x06hidden\x1a\xac\x01\n" +
+	"\x06hidden\x18\x05 \x01(\bR\x06hidden\x12\x14\n" +
+	"\x05draft\x18\x06 \x01(\bR\x05draft\x12\x1d\n" +
+	"\n" +
+	"publish_ts\x18\a \x01(\x03R\tpublishTs\x12 \n" +
+	"\vquarantined\x18\b \x01(\bR\vquarantined\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

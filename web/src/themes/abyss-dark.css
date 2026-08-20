@@ -1,0 +1,61 @@
+:root {
+  --background: oklch(0.135 0.035 250);
+  --foreground: oklch(0.91 0.022 225);
+  --card: oklch(0.19 0.043 248);
+  --card-foreground: oklch(0.93 0.018 225);
+  --popover: oklch(0.215 0.052 245);
+  --popover-foreground: oklch(0.95 0.016 220);
+  --primary: oklch(0.72 0.13 215);
+  --primary-foreground: oklch(0.13 0.035 250);
+  --secondary: oklch(0.245 0.055 247);
+  --secondary-foreground: oklch(0.9 0.022 225);
+  --muted: oklch(0.235 0.042 248);
+  --muted-foreground: oklch(0.69 0.04 225);
+  --accent: oklch(0.3 0.08 227);
+  --accent-foreground: oklch(0.95 0.015 215);
+  --destructive: oklch(0.62 0.19 25);
+  --destructive-foreground: oklch(0.97 0.012 220);
+  --success: oklch(0.7 0.13 175);
+  --success-foreground: oklch(0.14 0.03 175);
+  --warning: oklch(0.76 0.13 78);
+  --warning-foreground: oklch(0.18 0.03 78);
+  --border: oklch(0.32 0.065 238);
+  --input: oklch(0.38 0.075 236);
+  --ring: oklch(0.68 0.13 215);
+  --sidebar: oklch(0.105 0.03 252);
+  --sidebar-foreground: oklch(0.76 0.038 225);
+  --sidebar-accent: oklch(0.235 0.065 238);
+  --sidebar-accent-foreground: oklch(0.94 0.017 215);
+  --sidebar-accent-border: oklch(0.4 0.1 225);
+  --shadow-xs: 0 1px 3px rgb(0 4 12 / 22%);
+  --shadow-sm: 0 3px 7px rgb(0 4 12 / 28%), 0 1px 2px rgb(32 149 211 / 7%);
+  --shadow: 0 5px 12px rgb(0 4 12 / 32%), 0 1px 4px rgb(30 134 195 / 8%);
+  --shadow-md: 0 8px 20px rgb(0 4 12 / 35%), 0 2px 6px rgb(40 155 210 / 8%);
+  --shadow-lg: 0 14px 30px rgb(0 4 12 / 38%), 0 3px 9px rgb(43 167 218 / 8%);
+  --shadow-xl: 0 20px 42px rgb(0 4 12 / 42%), 0 4px 13px rgb(52 178 225 / 8%);
+}
+
+html[data-theme="abyss-dark"] body {
+  background-color: #050d1a;
+  background-image:
+    radial-gradient(ellipse at 48% 112%, rgb(12 123 168 / 28%) 0%, rgb(7 69 115 / 15%) 28%, transparent 62%),
+    radial-gradient(ellipse at 92% 35%, rgb(12 78 145 / 14%) 0%, transparent 48%),
+    radial-gradient(ellipse at 5% 72%, rgb(18 96 124 / 12%) 0%, transparent 42%),
+    linear-gradient(180deg, #040a15 0%, #071426 52%, #082035 100%);
+  background-attachment: fixed;
+}
+
+html[data-theme="abyss-dark"] body > #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+html[data-theme="abyss-dark"] [data-app-shell],
+html[data-theme="abyss-dark"] [data-page-shell],
+html[data-theme="abyss-dark"] body > #root > .bg-background,
+html[data-theme="abyss-dark"] main > .bg-background,
+html[data-theme="abyss-dark"] main > section > .bg-background,
+html[data-theme="abyss-dark"] main > section > div.min-h-full.bg-background {
+  background-color: transparent;
+}

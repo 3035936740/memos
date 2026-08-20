@@ -296,7 +296,7 @@ func validateAndNormalizeDeploymentInstanceSetting(setting *storepb.InstanceSett
 }
 
 func normalizeDeploymentAISetting(setting *storepb.InstanceAISetting) error {
-	providers := map[string]struct{}{}
+	providers := map[string]storepb.AIProviderType{}
 	for i, provider := range setting.Providers {
 		if provider == nil {
 			return errors.Errorf("aiSetting.providers[%d] must not be null", i)
@@ -304,13 +304,16 @@ func normalizeDeploymentAISetting(setting *storepb.InstanceAISetting) error {
 		provider.Id = strings.TrimSpace(provider.Id)
 		provider.Title = strings.TrimSpace(provider.Title)
 		provider.Endpoint = strings.TrimSpace(provider.Endpoint)
-		if provider.Id == "" || provider.Title == "" || provider.ApiKey == "" {
-			return errors.Errorf("aiSetting.providers[%d] requires id, title, and apiKey", i)
+		if provider.Id == "" || provider.Title == "" {
+			return errors.Errorf("aiSetting.providers[%d] requires id and title", i)
+		}
+		if provider.ApiKey == "" && provider.Type != storepb.AIProviderType_OPENAI_COMPATIBLE && provider.Type != storepb.AIProviderType_OLLAMA {
+			return errors.Errorf("aiSetting.providers[%d] requires apiKey", i)
 		}
 		if _, ok := providers[provider.Id]; ok {
 			return errors.Errorf("aiSetting provider ID %q is duplicated", provider.Id)
 		}
-		providers[provider.Id] = struct{}{}
+		providers[provider.Id] = provider.Type
 		switch provider.Type {
 		case storepb.AIProviderType_OPENAI:
 			if provider.Endpoint == "" {
@@ -319,6 +322,22 @@ func normalizeDeploymentAISetting(setting *storepb.InstanceAISetting) error {
 		case storepb.AIProviderType_GEMINI:
 			if provider.Endpoint == "" {
 				provider.Endpoint = "https://generativelanguage.googleapis.com/v1beta"
+			}
+		case storepb.AIProviderType_ANTHROPIC:
+			if provider.Endpoint == "" {
+				provider.Endpoint = "https://api.anthropic.com/v1"
+			}
+		case storepb.AIProviderType_DEEPSEEK:
+			if provider.Endpoint == "" {
+				provider.Endpoint = "https://api.deepseek.com/v1"
+			}
+		case storepb.AIProviderType_OPENAI_COMPATIBLE:
+			if provider.Endpoint == "" {
+				return errors.Errorf("aiSetting provider %q requires an endpoint", provider.Id)
+			}
+		case storepb.AIProviderType_OLLAMA:
+			if provider.Endpoint == "" {
+				provider.Endpoint = "http://localhost:11434/v1"
 			}
 		default:
 			return errors.Errorf("aiSetting provider %q has unsupported type", provider.Id)
@@ -330,8 +349,12 @@ func normalizeDeploymentAISetting(setting *storepb.InstanceAISetting) error {
 		transcription.Language = strings.TrimSpace(transcription.Language)
 		transcription.Prompt = strings.TrimSpace(transcription.Prompt)
 		if transcription.ProviderId != "" {
-			if _, ok := providers[transcription.ProviderId]; !ok {
+			providerType, ok := providers[transcription.ProviderId]
+			if !ok {
 				return errors.Errorf("aiSetting transcription providerId %q does not reference a provider", transcription.ProviderId)
+			}
+			if providerType != storepb.AIProviderType_OPENAI && providerType != storepb.AIProviderType_GEMINI && providerType != storepb.AIProviderType_OPENAI_COMPATIBLE {
+				return errors.Errorf("aiSetting transcription providerId %q does not support audio transcription", transcription.ProviderId)
 			}
 		}
 		if len(transcription.Model) > maxTranscriptionModelLength || len(transcription.Language) > maxTranscriptionLanguageLength || len(transcription.Prompt) > maxTranscriptionPromptLength {

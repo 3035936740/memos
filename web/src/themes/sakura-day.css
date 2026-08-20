@@ -1,0 +1,46 @@
+:root {
+  --background: oklch(0.97 0.025 355);
+  --foreground: oklch(0.31 0.055 345);
+  --card: oklch(0.99 0.012 355);
+  --card-foreground: oklch(0.29 0.052 345);
+  --popover: oklch(0.995 0.01 355);
+  --popover-foreground: oklch(0.29 0.052 345);
+  --primary: oklch(0.65 0.17 350);
+  --primary-foreground: oklch(0.99 0.01 355);
+  --secondary: oklch(0.92 0.055 355);
+  --secondary-foreground: oklch(0.41 0.08 345);
+  --muted: oklch(0.93 0.04 355);
+  --muted-foreground: oklch(0.52 0.065 345);
+  --accent: oklch(0.88 0.09 350);
+  --accent-foreground: oklch(0.35 0.075 345);
+  --destructive: oklch(0.56 0.18 25);
+  --destructive-foreground: oklch(0.99 0.01 355);
+  --success: oklch(0.57 0.13 155);
+  --success-foreground: oklch(0.98 0.01 155);
+  --warning: oklch(0.68 0.14 78);
+  --warning-foreground: oklch(0.27 0.035 78);
+  --border: oklch(0.84 0.065 355);
+  --input: oklch(0.77 0.08 352);
+  --ring: oklch(0.65 0.17 350);
+  --sidebar: oklch(0.95 0.035 355);
+  --sidebar-foreground: oklch(0.43 0.075 345);
+  --sidebar-accent: oklch(0.89 0.08 352);
+  --sidebar-accent-foreground: oklch(0.34 0.075 345);
+  --sidebar-accent-border: oklch(0.75 0.12 350);
+  --shadow-xs: 0 1px 3px rgb(107 55 76 / 7%);
+  --shadow-sm: 0 2px 5px rgb(107 55 76 / 10%), 0 1px 2px rgb(224 111 158 / 5%);
+  --shadow: 0 3px 8px rgb(107 55 76 / 11%), 0 1px 3px rgb(224 111 158 / 5%);
+  --shadow-md: 0 6px 15px rgb(107 55 76 / 13%), 0 2px 5px rgb(224 111 158 / 6%);
+  --shadow-lg: 0 10px 24px rgb(107 55 76 / 15%), 0 3px 8px rgb(224 111 158 / 6%);
+  --shadow-xl: 0 16px 34px rgb(107 55 76 / 17%), 0 4px 12px rgb(224 111 158 / 6%);
+}
+
+html[data-theme="sakura-day"] body {
+  background-color: #fff1f5;
+  background-image:
+    radial-gradient(ellipse at 10% 12%, rgb(255 173 203 / 29%) 0%, transparent 48%),
+    radial-gradient(ellipse at 91% 24%, rgb(233 163 215 / 22%) 0%, transparent 47%),
+    radial-gradient(ellipse at 55% 112%, rgb(255 192 201 / 25%) 0%, transparent 55%),
+    linear-gradient(160deg, #fffafd 0%, #fff0f5 58%, #fde5ef 100%);
+  background-attachment: fixed;
+}

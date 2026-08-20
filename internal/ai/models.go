@@ -12,7 +12,7 @@ const (
 // DefaultTranscriptionModel returns the built-in transcription model for a provider.
 func DefaultTranscriptionModel(providerType ProviderType) (string, error) {
 	switch providerType {
-	case ProviderOpenAI:
+	case ProviderOpenAI, ProviderOpenAICompatible:
 		return DefaultOpenAITranscriptionModel, nil
 	case ProviderGemini:
 		return DefaultGeminiTranscriptionModel, nil

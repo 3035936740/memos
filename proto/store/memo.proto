@@ -18,6 +18,16 @@ message MemoPayload {
   // reachable through its direct URL according to its visibility.
   bool hidden = 5;
 
+  // Draft memos are only visible to their creator and instance admins until
+  // publish_ts is reached. A zero publish_ts means the draft is not scheduled.
+  bool draft = 6;
+
+  // Unix timestamp at which a scheduled draft becomes publicly listable.
+  int64 publish_ts = 7;
+
+  // Quarantined memos and comments are visible only to instance admins.
+  bool quarantined = 8;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;

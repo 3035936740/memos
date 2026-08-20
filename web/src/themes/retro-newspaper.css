@@ -1,0 +1,47 @@
+:root {
+  --background: oklch(0.93 0.03 85);
+  --foreground: oklch(0.25 0.025 65);
+  --card: oklch(0.96 0.022 85);
+  --card-foreground: oklch(0.23 0.024 65);
+  --popover: oklch(0.97 0.02 85);
+  --popover-foreground: oklch(0.23 0.024 65);
+  --primary: oklch(0.46 0.12 30);
+  --primary-foreground: oklch(0.97 0.018 85);
+  --secondary: oklch(0.86 0.045 82);
+  --secondary-foreground: oklch(0.34 0.04 60);
+  --muted: oklch(0.87 0.035 84);
+  --muted-foreground: oklch(0.48 0.035 65);
+  --accent: oklch(0.81 0.075 55);
+  --accent-foreground: oklch(0.28 0.035 55);
+  --destructive: oklch(0.48 0.15 25);
+  --destructive-foreground: oklch(0.97 0.018 85);
+  --success: oklch(0.51 0.11 145);
+  --success-foreground: oklch(0.97 0.01 145);
+  --warning: oklch(0.59 0.12 68);
+  --warning-foreground: oklch(0.24 0.03 65);
+  --border: oklch(0.73 0.045 78);
+  --input: oklch(0.65 0.055 72);
+  --ring: oklch(0.46 0.12 30);
+  --sidebar: oklch(0.89 0.035 84);
+  --sidebar-foreground: oklch(0.37 0.035 62);
+  --sidebar-accent: oklch(0.81 0.065 66);
+  --sidebar-accent-foreground: oklch(0.27 0.03 58);
+  --sidebar-accent-border: oklch(0.61 0.09 45);
+  --font-sans: Georgia, Cambria, "Times New Roman", Times, serif;
+  --shadow-xs: 0 1px 2px rgb(62 44 28 / 8%);
+  --shadow-sm: 0 2px 4px rgb(62 44 28 / 11%);
+  --shadow: 0 3px 7px rgb(62 44 28 / 12%);
+  --shadow-md: 0 6px 13px rgb(62 44 28 / 14%);
+  --shadow-lg: 0 10px 22px rgb(62 44 28 / 16%);
+  --shadow-xl: 0 16px 32px rgb(62 44 28 / 18%);
+}
+
+html[data-theme="retro-newspaper"] body {
+  background-color: #eee3c8;
+  background-image:
+    repeating-linear-gradient(0deg, rgb(72 53 33 / 2%) 0, rgb(72 53 33 / 2%) 1px, transparent 1px, transparent 5px),
+    radial-gradient(ellipse at 15% 18%, rgb(157 110 61 / 12%) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 82%, rgb(126 82 49 / 10%) 0%, transparent 50%),
+    linear-gradient(150deg, #f5ecd8 0%, #eee2c7 62%, #e5d3b2 100%);
+  background-attachment: fixed;
+}

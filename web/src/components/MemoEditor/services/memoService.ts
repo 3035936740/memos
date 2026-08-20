@@ -56,6 +56,15 @@ function buildUpdateMask(
     mask.add("hidden");
     patch.hidden = state.metadata.hidden;
   }
+  if (!isEqual(state.metadata.draft, prevMemo.draft)) {
+    mask.add("draft");
+    patch.draft = state.metadata.draft;
+  }
+  const prevPublishTime = prevMemo.publishTime ? timestampDate(prevMemo.publishTime) : undefined;
+  if (!isEqual(state.metadata.publishTime, prevPublishTime)) {
+    mask.add("publish_time");
+    patch.publishTime = state.metadata.publishTime ? timestampFromDate(state.metadata.publishTime) : undefined;
+  }
 
   // Auto-update timestamp if content changed
   if (["content", "attachments", "relations", "location"].some((key) => mask.has(key))) {
@@ -118,6 +127,8 @@ export const memoService = {
       location: state.metadata.location,
       ...(options.parentMemoName ? {} : { category: state.metadata.category }),
       ...(options.parentMemoName ? {} : { hidden: state.metadata.hidden }),
+      ...(options.parentMemoName ? {} : { draft: state.metadata.draft }),
+      ...(options.parentMemoName || !state.metadata.publishTime ? {} : { publishTime: timestampFromDate(state.metadata.publishTime) }),
       createTime: state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
       updateTime: state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
     });
@@ -147,6 +158,8 @@ export const memoService = {
         location: memo.location,
         category: memo.category || undefined,
         hidden: memo.hidden,
+        draft: memo.draft,
+        publishTime: memo.publishTime ? timestampDate(memo.publishTime) : undefined,
       },
       timestamps: {
         createTime: memo.createTime ? timestampDate(memo.createTime) : undefined,

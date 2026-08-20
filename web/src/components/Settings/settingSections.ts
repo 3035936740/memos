@@ -1,14 +1,18 @@
 import {
+  BanIcon,
   BarChart3Icon,
   CogIcon,
   DatabaseIcon,
   HeartHandshakeIcon,
+  ImagesIcon,
   KeyIcon,
   KeyRoundIcon,
   LibraryIcon,
   type LucideIcon,
   MailIcon,
   Settings2Icon,
+  ShieldCheckIcon,
+  SirenIcon,
   TagsIcon,
   UserIcon,
   UsersIcon,
@@ -17,13 +21,16 @@ import {
 import { type ComponentType } from "react";
 import AccessTokenSection from "@/components/Settings/AccessTokenSection";
 import AISection from "@/components/Settings/AISection";
+import EmojiSection from "@/components/Settings/EmojiSection";
 import InstanceSection from "@/components/Settings/InstanceSection";
 import MemberSection from "@/components/Settings/MemberSection";
 import MemoRelatedSettings from "@/components/Settings/MemoRelatedSettings";
+import { ModerationQuarantineSection, ModerationReportsSection } from "@/components/Settings/ModerationCenter";
 import MyAccountSection from "@/components/Settings/MyAccountSection";
 import NotificationSection from "@/components/Settings/NotificationSection";
 import PreferencesSection from "@/components/Settings/PreferencesSection";
 import ResourceStatsSection from "@/components/Settings/ResourceStatsSection";
+import SecuritySection from "@/components/Settings/SecuritySection";
 import SSOSection from "@/components/Settings/SSOSection";
 import StorageSection from "@/components/Settings/StorageSection";
 import TagsSection from "@/components/Settings/TagsSection";
@@ -37,13 +44,17 @@ export type SettingSectionKey =
   | "webhook"
   | "member"
   | "system"
+  | "emoji"
   | "memo"
   | "storage"
   | "notification"
   | "sso"
   | "tags"
   | "ai"
-  | "resource-stats";
+  | "resource-stats"
+  | "security"
+  | "moderation"
+  | "quarantine";
 
 type SettingSectionScope = "basic" | "admin";
 
@@ -98,6 +109,34 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     labelKey: "setting.system.label",
     icon: Settings2Icon,
     component: InstanceSection,
+  },
+  {
+    key: "emoji",
+    scope: "admin",
+    labelKey: "setting.emoji.label",
+    icon: ImagesIcon,
+    component: EmojiSection,
+  },
+  {
+    key: "security",
+    scope: "admin",
+    labelKey: "setting.security.label",
+    icon: ShieldCheckIcon,
+    component: SecuritySection,
+  },
+  {
+    key: "moderation",
+    scope: "admin",
+    labelKey: "setting.moderation.label",
+    icon: SirenIcon,
+    component: ModerationReportsSection,
+  },
+  {
+    key: "quarantine",
+    scope: "admin",
+    labelKey: "setting.quarantine.label",
+    icon: BanIcon,
+    component: ModerationQuarantineSection,
   },
   {
     key: "memo",

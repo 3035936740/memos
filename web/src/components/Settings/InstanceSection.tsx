@@ -21,7 +21,6 @@ import {
 import { isValidLocale, useTranslate } from "@/utils/i18n";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
-import BlockedWordsEditor from "./BlockedWordsEditor";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
 import SettingGroup from "./SettingGroup";
@@ -64,6 +63,7 @@ const InstanceSection = () => {
   const firstVisitDefaultTheme = isValidTheme(instanceGeneralSetting.firstVisitDefaultTheme)
     ? instanceGeneralSetting.firstVisitDefaultTheme
     : "cosmic-dark";
+  const themeOptions = THEME_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) }));
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
     setInstanceGeneralSetting((currentSetting) =>
@@ -154,7 +154,7 @@ const InstanceSection = () => {
         />
       </SettingGroup>
 
-      <SettingGroup title="页面与导航" description="可视化管理导航按钮、独立 Markdown 页面、外部链接、图标和访问权限。" showSeparator>
+      <SettingGroup title={t("setting.content.title")} description={t("setting.content.description")} showSeparator>
         <InstanceContentEditor
           navigationJson={instanceGeneralSetting.navigationJson}
           pagesJson={instanceGeneralSetting.customPagesJson}
@@ -163,19 +163,11 @@ const InstanceSection = () => {
         />
       </SettingGroup>
 
-      <SettingGroup title="备忘录分类" description="创建分类并设置访问权限。登录用户可在发布或编辑备忘录时选择类目。" showSeparator>
+      <SettingGroup title={t("setting.category.title")} description={t("setting.category.description")} showSeparator>
         <InstanceCategoryEditor
           value={instanceGeneralSetting.memoCategoriesJson}
           onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}
         />
-      </SettingGroup>
-
-      <SettingGroup
-        title="屏蔽词审核"
-        description="使用数据库词库拦截备忘录、编辑内容和评论。支持手动填写、URL 导入和上传文件；每次导入都会整体替换旧词库。"
-        showSeparator
-      >
-        <BlockedWordsEditor />
       </SettingGroup>
 
       <SettingGroup title={t("setting.instance.access-title")} description={t("setting.instance.access-description")} showSeparator>
@@ -197,14 +189,14 @@ const InstanceSection = () => {
           >
             <Select
               value={firstVisitDefaultTheme}
-              items={THEME_OPTIONS}
+              items={themeOptions}
               onValueChange={(firstVisitDefaultTheme) => updatePartialSetting({ firstVisitDefaultTheme })}
             >
               <SelectTrigger className="w-52">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {THEME_OPTIONS.map((option) => (
+                {themeOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

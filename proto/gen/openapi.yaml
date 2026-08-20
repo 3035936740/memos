@@ -2697,6 +2697,10 @@ components:
                         - AI_PROVIDER_TYPE_UNSPECIFIED
                         - OPENAI
                         - GEMINI
+                        - ANTHROPIC
+                        - DEEPSEEK
+                        - OPENAI_COMPATIBLE
+                        - OLLAMA
                     type: string
                     format: enum
                 endpoint:
@@ -3243,6 +3247,23 @@ components:
                         Whether the memo is omitted from feeds, profiles, search, RSS, and stats.
                          Hidden memos remain readable by direct URL according to visibility. Only
                          instance administrators may change this field; enabling it forces PUBLIC.
+                draft:
+                    type: boolean
+                    description: |-
+                        Whether the memo is an unpublished draft. Drafts are only visible to the
+                         creator and instance administrators until publish_time is reached.
+                publishTime:
+                    type: string
+                    description: |-
+                        Optional scheduled publication time. Setting a future time also marks the
+                         memo as a draft; once reached, it appears in ordinary collection views.
+                    format: date-time
+                quarantined:
+                    readOnly: true
+                    type: boolean
+                    description: |-
+                        Output only. Whether moderation has moved this memo or comment to the
+                         quarantine. Quarantined content is visible only to administrators.
         MemoRelation:
             required:
                 - memo

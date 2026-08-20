@@ -55,19 +55,50 @@ const fallbacks = {
   zh: ["zh-Hans", "en"],
 } as FallbackLngObjList;
 
+const customLocaleModules = import.meta.glob("./locales-custom/*.json");
+
+const mergeTranslations = (base: Record<string, unknown>, overlay: Record<string, unknown>): Record<string, unknown> => {
+  const result = { ...base };
+  for (const [key, value] of Object.entries(overlay)) {
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      result[key] &&
+      typeof result[key] === "object" &&
+      !Array.isArray(result[key])
+    ) {
+      result[key] = mergeTranslations(result[key] as Record<string, unknown>, value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+};
+
 const LazyImportPlugin: BackendModule = {
   type: "backend",
   init: function () {},
   read: function (language, _, callback) {
     const matchedLanguage = findNearestMatchedLanguage(language);
     import(`./locales/${matchedLanguage}.json`)
-      .then((translationModule: Record<string, unknown>) => {
-        callback(null, (translationModule.default as Record<string, unknown>) ?? translationModule);
+      .then(async (translationModule: Record<string, unknown>) => {
+        const base = (translationModule.default as Record<string, unknown>) ?? translationModule;
+        const customLoader = customLocaleModules[`./locales-custom/${matchedLanguage}.json`];
+        if (!customLoader) {
+          callback(null, base);
+          return;
+        }
+        const customModule = (await customLoader()) as Record<string, unknown>;
+        const custom = (customModule.default as Record<string, unknown>) ?? customModule;
+        callback(null, mergeTranslations(base, custom));
       })
       .catch(() => {
-        import("./locales/en.json")
-          .then((translationModule: Record<string, unknown>) => {
-            callback(null, (translationModule.default as Record<string, unknown>) ?? translationModule);
+        Promise.all([import("./locales/en.json"), import("./locales-custom/en.json")])
+          .then(([translationModule, customModule]) => {
+            const base = (translationModule.default as Record<string, unknown>) ?? translationModule;
+            const custom = (customModule.default as Record<string, unknown>) ?? customModule;
+            callback(null, mergeTranslations(base, custom));
           })
           .catch((error: unknown) => {
             callback(error as Error, false);
@@ -88,7 +119,7 @@ i18n
     },
     fallbackLng: {
       ...fallbacks,
-      ...{ default: ["zh-Hans"] },
+      ...{ default: ["en"] },
     } as FallbackLng,
   });
 

@@ -28,6 +28,7 @@ import {
   parseInstancePages,
 } from "@/lib/instance-content";
 import { cn } from "@/lib/utils";
+import { useTranslate } from "@/utils/i18n";
 
 interface Props {
   navigationJson: string;
@@ -50,19 +51,13 @@ interface EditorEntry {
 }
 
 const ICON_OPTIONS = [
-  { value: "link", label: "链接" },
-  { value: "book", label: "书本" },
-  { value: "info", label: "信息" },
-  { value: "folder", label: "文件夹" },
-  { value: "earth", label: "地球" },
-  { value: "attachment", label: "附件" },
-];
-
-const ACCESS_OPTIONS: Array<{ value: InstanceContentAccess; label: string }> = [
-  { value: "public", label: "所有人（包括游客）" },
-  { value: "authenticated", label: "仅登录用户" },
-  { value: "admin", label: "仅管理员" },
-];
+  { value: "link", labelKey: "setting.content.icon-link" },
+  { value: "book", labelKey: "setting.content.icon-book" },
+  { value: "info", labelKey: "setting.content.icon-info" },
+  { value: "folder", labelKey: "setting.content.icon-folder" },
+  { value: "earth", labelKey: "setting.content.icon-earth" },
+  { value: "attachment", labelKey: "setting.content.icon-attachment" },
+] as const;
 
 const pagePath = (slug: string) => `/pages/${slug.trim()}`;
 
@@ -152,6 +147,7 @@ const serializeEntries = (entries: EditorEntry[]) => {
 };
 
 const MarkdownField = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => {
+  const t = useTranslate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const insert = (before: string, after: string, placeholder: string) => {
@@ -169,33 +165,53 @@ const MarkdownField = ({ value, onChange }: { value: string; onChange: (value: s
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-1" aria-label="Markdown 工具栏">
-        <MarkdownTool icon={Heading1Icon} label="标题" onClick={() => insert("# ", "", "标题")} />
-        <MarkdownTool icon={BoldIcon} label="粗体" onClick={() => insert("**", "**", "粗体文字")} />
-        <MarkdownTool icon={ItalicIcon} label="斜体" onClick={() => insert("*", "*", "斜体文字")} />
-        <MarkdownTool icon={LinkIcon} label="链接" onClick={() => insert("[", "](https://)", "链接文字")} />
-        <MarkdownTool icon={ListIcon} label="列表" onClick={() => insert("- ", "", "列表项")} />
-        <MarkdownTool icon={QuoteIcon} label="引用" onClick={() => insert("> ", "", "引用内容")} />
+      <div className="flex flex-wrap gap-1" aria-label={t("setting.content.markdown-toolbar")}>
+        <MarkdownTool icon={Heading1Icon} label={t("editor.format.heading")} onClick={() => insert("# ", "", t("editor.format.heading"))} />
+        <MarkdownTool
+          icon={BoldIcon}
+          label={t("editor.format.bold")}
+          onClick={() => insert("**", "**", t("setting.content.bold-placeholder"))}
+        />
+        <MarkdownTool
+          icon={ItalicIcon}
+          label={t("editor.format.italic")}
+          onClick={() => insert("*", "*", t("setting.content.italic-placeholder"))}
+        />
+        <MarkdownTool
+          icon={LinkIcon}
+          label={t("editor.format.link")}
+          onClick={() => insert("[", "](https://)", t("setting.content.link-placeholder"))}
+        />
+        <MarkdownTool
+          icon={ListIcon}
+          label={t("setting.content.list")}
+          onClick={() => insert("- ", "", t("setting.content.list-placeholder"))}
+        />
+        <MarkdownTool
+          icon={QuoteIcon}
+          label={t("setting.content.quote")}
+          onClick={() => insert("> ", "", t("setting.content.quote-placeholder"))}
+        />
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="space-y-1.5">
-          <Label>页面正文</Label>
+          <Label>{t("setting.content.page-body")}</Label>
           <Textarea
             ref={textareaRef}
             value={value}
             onChange={(event) => onChange(event.target.value)}
             rows={14}
-            placeholder="# 页面标题\n\n从这里开始写内容……"
+            placeholder={t("setting.content.page-body-placeholder")}
             className="min-h-64 resize-y font-mono text-sm"
           />
         </div>
         <div className="space-y-1.5">
-          <Label>实时预览</Label>
+          <Label>{t("setting.content.live-preview")}</Label>
           <div className="min-h-64 overflow-auto rounded-md border bg-background/60 p-4 text-sm">
             {value.trim() ? (
               <MemoMarkdownRenderer content={value} resolvedMentionUsernames={new Set()} standalone />
             ) : (
-              <p className="text-muted-foreground">正文预览会显示在这里。</p>
+              <p className="text-muted-foreground">{t("setting.content.preview-placeholder")}</p>
             )}
           </div>
         </div>
@@ -212,7 +228,13 @@ const MarkdownTool = ({ icon: Icon, label, onClick }: { icon: typeof BoldIcon; l
 );
 
 const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, onPagesChange }: Props) => {
+  const t = useTranslate();
   const entries = useMemo(() => buildEntries(navigationJson, pagesJson), [navigationJson, pagesJson]);
+  const accessOptions: Array<{ value: InstanceContentAccess; label: string }> = [
+    { value: "public", label: t("setting.content.access-public") },
+    { value: "authenticated", label: t("setting.content.access-authenticated") },
+    { value: "admin", label: t("setting.content.access-admin") },
+  ];
 
   const commit = (nextEntries: EditorEntry[]) => {
     const serialized = serializeEntries(nextEntries);
@@ -239,10 +261,10 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
       {
         kind: "page",
         id: slug,
-        title: "新页面",
+        title: t("setting.content.new-page"),
         slug,
         path: pagePath(slug),
-        markdown: "# 新页面\n\n在这里填写页面内容。",
+        markdown: t("setting.content.new-page-markdown"),
         icon: "book",
         iconUrl: "",
         access: "public",
@@ -258,7 +280,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
       {
         kind: "link",
         id,
-        title: "新链接",
+        title: t("setting.content.new-link"),
         slug: "",
         path: "https://",
         markdown: "",
@@ -273,22 +295,22 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">在一个地方管理导航按钮和页面正文；修改后点击本页底部的“保存”。</p>
+        <p className="text-sm text-muted-foreground">{t("setting.content.editor-description")}</p>
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={addLink}>
             <ExternalLinkIcon className="size-4" />
-            添加链接
+            {t("setting.content.add-link")}
           </Button>
           <Button type="button" size="sm" onClick={addPage}>
             <PlusIcon className="size-4" />
-            添加页面
+            {t("setting.content.add-page")}
           </Button>
         </div>
       </div>
 
       {entries.length === 0 && (
         <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-          暂无自定义内容。点击“添加页面”创建关于、友链等页面。
+          {t("setting.content.empty")}
         </div>
       )}
 
@@ -301,9 +323,16 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
               <ExternalLinkIcon className="size-4 text-muted-foreground" />
             )}
             <h4 className="min-w-0 flex-1 truncate text-sm font-medium">
-              {entry.title || (entry.kind === "page" ? "未命名页面" : "未命名链接")}
+              {entry.title || (entry.kind === "page" ? t("setting.content.untitled-page") : t("setting.content.untitled-link"))}
             </h4>
-            <Button type="button" variant="ghost" size="icon-sm" disabled={index === 0} onClick={() => move(index, -1)} aria-label="上移">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              disabled={index === 0}
+              onClick={() => move(index, -1)}
+              aria-label={t("common.move-up")}
+            >
               <ArrowUpIcon className="size-4" />
             </Button>
             <Button
@@ -312,7 +341,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
               size="icon-sm"
               disabled={index === entries.length - 1}
               onClick={() => move(index, 1)}
-              aria-label="下移"
+              aria-label={t("common.move-down")}
             >
               <ArrowDownIcon className="size-4" />
             </Button>
@@ -322,7 +351,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
               size="icon-sm"
               className="text-destructive hover:text-destructive"
               onClick={() => commit(entries.filter((_, entryIndex) => entryIndex !== index))}
-              aria-label="删除"
+              aria-label={t("common.delete")}
             >
               <Trash2Icon className="size-4" />
             </Button>
@@ -330,12 +359,16 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>显示名称</Label>
-              <Input value={entry.title} onChange={(event) => update(index, { title: event.target.value })} placeholder="例如：关于" />
+              <Label>{t("setting.content.display-name")}</Label>
+              <Input
+                value={entry.title}
+                onChange={(event) => update(index, { title: event.target.value })}
+                placeholder={t("setting.content.display-name-placeholder")}
+              />
             </div>
             {entry.kind === "page" ? (
               <div className="space-y-1.5">
-                <Label>页面路径</Label>
+                <Label>{t("setting.content.page-path")}</Label>
                 <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
                   <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/pages/</span>
                   <Input
@@ -348,7 +381,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label>跳转地址</Label>
+                <Label>{t("setting.content.destination")}</Label>
                 <Input
                   value={entry.path}
                   onChange={(event) => update(index, { path: event.target.value })}
@@ -358,13 +391,13 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
             )}
 
             <div className="space-y-1.5">
-              <Label>访问权限</Label>
+              <Label>{t("setting.content.access")}</Label>
               <Select value={entry.access} onValueChange={(access) => update(index, { access: access as InstanceContentAccess })}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ACCESS_OPTIONS.map((option) => (
+                  {accessOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -374,7 +407,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
             </div>
 
             <div className="space-y-1.5">
-              <Label>Lucide 图标</Label>
+              <Label>{t("setting.content.lucide-icon")}</Label>
               <Select value={entry.icon} onValueChange={(icon) => update(index, { icon })}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -382,7 +415,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
                 <SelectContent>
                   {ICON_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -390,7 +423,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>自定义图标图片 URL（可选，填写后优先使用）</Label>
+              <Label>{t("setting.content.custom-icon-url")}</Label>
               <Input
                 value={entry.iconUrl}
                 onChange={(event) => update(index, { iconUrl: event.target.value })}
@@ -403,8 +436,8 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
             <>
               <div className="flex items-center justify-between rounded-md border bg-background/40 px-3 py-2">
                 <div>
-                  <Label>显示在主导航栏</Label>
-                  <p className="text-xs text-muted-foreground">关闭后页面仍可通过链接访问。</p>
+                  <Label>{t("setting.content.show-in-navigation")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("setting.content.show-in-navigation-description")}</p>
                 </div>
                 <Switch checked={entry.showInNavigation} onCheckedChange={(showInNavigation) => update(index, { showInNavigation })} />
               </div>
@@ -414,7 +447,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
 
           {entry.kind === "link" && (
             <p className={cn("text-xs text-muted-foreground", !entry.path.trim() && "text-destructive")}>
-              外部链接会在新标签页打开，站内路径会在当前页面跳转。
+              {t("setting.content.link-behavior")}
             </p>
           )}
         </section>

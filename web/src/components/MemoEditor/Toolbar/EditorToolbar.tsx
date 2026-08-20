@@ -10,6 +10,7 @@ import { useEditorContext, useEditorSelector } from "../state";
 import type { EditorToolbarProps } from "../types";
 import CategorySelector from "./CategorySelector";
 import InsertMenu from "./InsertMenu";
+import PublicationSelector from "./PublicationSelector";
 import VisibilitySelector from "./VisibilitySelector";
 
 export const EditorToolbar: FC<EditorToolbarProps> = ({
@@ -21,6 +22,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   isFormattingToolbarVisible,
   onToggleFormattingToolbar,
   onInsertImages,
+  onInsertEmoji,
 }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -37,6 +39,8 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   const visibility = useEditorSelector((s) => s.metadata.visibility);
   const category = useEditorSelector((s) => s.metadata.category);
   const hidden = useEditorSelector((s) => s.metadata.hidden);
+  const draft = useEditorSelector((s) => s.metadata.draft);
+  const publishTime = useEditorSelector((s) => s.metadata.publishTime);
   const blockedMessage = valid
     ? undefined
     : blockedReason
@@ -77,6 +81,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           isFormattingToolbarVisible={isFormattingToolbarVisible}
           onToggleFormattingToolbar={onToggleFormattingToolbar}
           onInsertImages={onInsertImages}
+          onInsertEmoji={onInsertEmoji}
         />
         <VisibilitySelector
           value={visibility}
@@ -85,6 +90,9 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           onHiddenChange={showCategory && isSuperUser(currentUser) ? handleHiddenChange : undefined}
         />
         {showCategory ? <CategorySelector value={category} onChange={handleCategoryChange} /> : null}
+        {showCategory ? (
+          <PublicationSelector draft={draft} publishTime={publishTime} onChange={(next) => dispatch(actions.setMetadata(next))} />
+        ) : null}
       </div>
 
       <div className="flex flex-row justify-end items-center gap-2">

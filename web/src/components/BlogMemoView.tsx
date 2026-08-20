@@ -1,5 +1,5 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { EyeOffIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
+import { BanIcon, CalendarClockIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
@@ -88,10 +88,22 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
         <div className="flex min-w-0 gap-4">
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex min-h-5 flex-wrap items-center gap-1.5">
+              {memo.draft && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                  {memo.publishTime ? <CalendarClockIcon className="size-3" /> : <FilePenLineIcon className="size-3" />}
+                  {memo.publishTime ? t("memo.publication.scheduled") : t("memo.publication.draft")}
+                </span>
+              )}
               {memo.hidden && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
                   <EyeOffIcon className="size-3" />
                   {t("memo.hidden.label")}
+                </span>
+              )}
+              {memo.quarantined && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                  <BanIcon className="size-3" />
+                  {t("moderation.quarantined")}
                 </span>
               )}
               {memo.pinned && (

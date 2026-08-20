@@ -106,7 +106,7 @@ func (s *APIV1Service) Transcribe(ctx context.Context, request *v1pb.TranscribeR
 
 	var text string
 	switch provider.Type {
-	case ai.ProviderOpenAI:
+	case ai.ProviderOpenAI, ai.ProviderOpenAICompatible:
 		text, err = s.transcribeViaSTT(ctx, provider, persisted, model, content, filename, contentType)
 	case ai.ProviderGemini:
 		text, err = s.transcribeViaAudioLLM(ctx, provider, persisted, model, content, contentType)
@@ -225,6 +225,14 @@ func convertAIProviderTypeFromStore(providerType storepb.AIProviderType) ai.Prov
 		return ai.ProviderOpenAI
 	case storepb.AIProviderType_GEMINI:
 		return ai.ProviderGemini
+	case storepb.AIProviderType_ANTHROPIC:
+		return ai.ProviderAnthropic
+	case storepb.AIProviderType_DEEPSEEK:
+		return ai.ProviderDeepSeek
+	case storepb.AIProviderType_OPENAI_COMPATIBLE:
+		return ai.ProviderOpenAICompatible
+	case storepb.AIProviderType_OLLAMA:
+		return ai.ProviderOllama
 	default:
 		return ""
 	}

@@ -6,6 +6,7 @@ export const ROUTES = {
   ARCHIVED: "/archived",
   VIEWS: "/views",
   SETTING: "/setting",
+  READ_LATER: "/read-later",
   EXPLORE: "/explore",
   AUTH: "/auth",
   AUTH_SIGNUP: "/auth/signup",

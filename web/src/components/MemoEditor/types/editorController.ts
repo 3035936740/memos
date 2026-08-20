@@ -17,6 +17,8 @@ export interface EditorController {
   setMarkdown(markdown: string): void;
   /** Insert markdown at the cursor as its own block. */
   insertMarkdown(markdown: string): void;
+  /** Insert inline markdown at the cursor without adding paragraph breaks. */
+  insertInlineMarkdown(markdown: string): void;
   createUploadAnchor(descriptor: UploadAnchorDescriptor, position?: number): void;
   updateUploadAnchor(descriptor: UploadAnchorDescriptor): void;
   resolveUploadAnchor(id: string, markdown: string): void;

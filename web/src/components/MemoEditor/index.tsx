@@ -129,6 +129,10 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     editor.scrollToCursor();
   }, []);
 
+  const handleInsertEmoji = useCallback((token: string) => {
+    editorRef.current?.insertInlineMarkdown(token);
+  }, []);
+
   const handleTranscribeRecordedAudio = useCallback(
     async (localFile: LocalFile) => {
       if (!canTranscribe) {
@@ -342,6 +346,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             isFormattingToolbarVisible={isFormattingToolbarVisible}
             onToggleFormattingToolbar={handleToggleFormattingToolbar}
             onInsertImages={handleInsertImages}
+            onInsertEmoji={handleInsertEmoji}
           />
         </div>
       </div>

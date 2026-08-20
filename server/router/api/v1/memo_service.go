@@ -63,6 +63,22 @@ func (s *APIV1Service) checkMemoReadAccessWithParent(ctx context.Context, memo, 
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to get user")
 	}
+	for _, candidate := range []*store.Memo{parent, memo} {
+		if candidate == nil || candidate.Payload == nil || isSuperUser(user) {
+			continue
+		}
+		if candidate.Payload.Quarantined {
+			return status.Errorf(codes.NotFound, "memo not found")
+		}
+		if candidate.Payload.Draft && (candidate.Payload.PublishTs == 0 || candidate.Payload.PublishTs > time.Now().Unix()) {
+			if user == nil || candidate.CreatorID != user.ID {
+				return status.Errorf(codes.NotFound, "memo not found")
+			}
+		}
+	}
+	if isSuperUser(user) {
+		return nil
+	}
 	allowAnonymous := s.Profile != nil && s.Profile.AllowAnonymous()
 	return memoAccessDecisionError(access.CheckMemoRead(memo, parent, user, allowAnonymous, nil))
 }
@@ -94,10 +110,22 @@ func memoVisibleInCollection(memo *store.Memo, user *store.User) bool {
 	if isSuperUser(user) {
 		return true
 	}
+	if memo.Payload != nil {
+		if memo.Payload.Quarantined {
+			return false
+		}
+		if memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > time.Now().Unix()) {
+			return user != nil && memo.CreatorID == user.ID
+		}
+	}
 	if memo.Payload == nil || !memo.Payload.Hidden {
 		return true
 	}
 	return user != nil && memo.CreatorID == user.ID
+}
+
+func memoIsUnpublished(memo *store.Memo, now int64) bool {
+	return memo != nil && memo.Payload != nil && memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > now)
 }
 
 func filterMemosForCollection(memos []*store.Memo, user *store.User) []*store.Memo {
@@ -174,6 +202,25 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if request.Memo == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "memo is required")
 	}
+	if !isSuperUser(user) {
+		securitySetting, err := s.Store.GetInstanceModerationSecuritySetting(ctx)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to load publishing policy")
+		}
+		if securitySetting.PublishCooldownSeconds > 0 {
+			limit := 1
+			recent, err := s.Store.ListMemos(ctx, &store.FindMemo{CreatorID: &user.ID, Limit: &limit})
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to check publishing rate")
+			}
+			if len(recent) > 0 {
+				remaining := int64(securitySetting.PublishCooldownSeconds) - (time.Now().Unix() - recent[0].CreatedTs)
+				if remaining > 0 {
+					return nil, status.Errorf(codes.ResourceExhausted, "please wait %d seconds before publishing again", remaining)
+				}
+			}
+		}
+	}
 
 	memoUID, err := ValidateAndGenerateUID(request.MemoId)
 	if err != nil {
@@ -212,6 +259,18 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	}
 	if err := memopayload.RebuildMemoPayload(ctx, create, s.MarkdownService); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to rebuild memo payload: %v", err)
+	}
+	if request.Memo.PublishTime != nil {
+		if !request.Memo.PublishTime.IsValid() {
+			return nil, status.Errorf(codes.InvalidArgument, "publish_time is invalid")
+		}
+		create.Payload.PublishTs = request.Memo.PublishTime.AsTime().Unix()
+	}
+	create.Payload.Draft = request.Memo.Draft || create.Payload.PublishTs > time.Now().Unix()
+	// A past timestamp is an immediate publication, not a scheduled draft. This
+	// prevents the background runner from dispatching a second creation event.
+	if create.Payload.Draft && create.Payload.PublishTs > 0 && create.Payload.PublishTs <= time.Now().Unix() {
+		create.Payload.PublishTs = 0
 	}
 	if request.Memo.Hidden {
 		create.Payload.Hidden = true
@@ -279,23 +338,18 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to convert memo")
 	}
-	// Try to dispatch webhook when memo is created.
-	if err := s.DispatchMemoCreatedWebhook(ctx, memoMessage); err != nil {
-		slog.Warn("Failed to dispatch memo created webhook", slog.Any("err", err))
-	}
-
-	// Broadcast live refresh event (skipped when called from CreateMemoComment).
-	if !isSSESuppressed(ctx) {
-		s.SSEHub.Broadcast(&SSEEvent{
-			Type:       SSEEventMemoCreated,
-			Name:       memoMessage.Name,
-			Visibility: memo.Visibility,
-			CreatorID:  resolveSSECreatorID(memo, nil),
-		})
-	}
-
-	if !isMentionNotificationSuppressed(ctx) {
-		s.dispatchMemoMentionNotificationsBestEffort(ctx, memo, nil, "")
+	unpublishedDraft := memoIsUnpublished(memo, time.Now().Unix())
+	if !unpublishedDraft {
+		// Draft content must not leak through webhooks, live events, or mention notifications.
+		if err := s.DispatchMemoCreatedWebhook(ctx, memoMessage); err != nil {
+			slog.Warn("Failed to dispatch memo created webhook", slog.Any("err", err))
+		}
+		if !isSSESuppressed(ctx) {
+			s.SSEHub.Broadcast(&SSEEvent{Type: SSEEventMemoCreated, Name: memoMessage.Name, Visibility: memo.Visibility, CreatorID: resolveSSECreatorID(memo, nil)})
+		}
+		if !isMentionNotificationSuppressed(ctx) {
+			s.dispatchMemoMentionNotificationsBestEffort(ctx, memo, nil, "")
+		}
 	}
 
 	return memoMessage, nil
@@ -343,7 +397,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 
 	if currentUser == nil {
 		memoFind.VisibilityList = []store.Visibility{store.Public}
-	} else {
+	} else if !isSuperUser(currentUser) {
 		if memoFind.CreatorID == nil {
 			filter := fmt.Sprintf(`creator_id == %d || visibility in ["PUBLIC", "PROTECTED"]`, currentUser.ID)
 			memoFind.Filters = append(memoFind.Filters, filter)
@@ -554,6 +608,7 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if memo == nil {
 		return nil, status.Errorf(codes.NotFound, "memo not found")
 	}
+	wasUnpublished := memoIsUnpublished(memo, time.Now().Unix())
 
 	user, err := s.fetchCurrentUser(ctx)
 	if err != nil {
@@ -662,6 +717,34 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 			}
 			nextMemo.Payload.Hidden = request.Memo.Hidden
 			update.Payload = nextMemo.Payload
+		} else if path == "draft" {
+			if memo.ParentUID != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "comments cannot be drafts")
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.Draft = request.Memo.Draft
+			if !request.Memo.Draft {
+				nextMemo.Payload.PublishTs = 0
+			}
+			update.Payload = nextMemo.Payload
+		} else if path == "publish_time" {
+			if memo.ParentUID != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "comments cannot be scheduled")
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.PublishTs = 0
+			if request.Memo.PublishTime != nil {
+				if !request.Memo.PublishTime.IsValid() {
+					return nil, status.Errorf(codes.InvalidArgument, "publish_time is invalid")
+				}
+				nextMemo.Payload.PublishTs = request.Memo.PublishTime.AsTime().Unix()
+				nextMemo.Payload.Draft = nextMemo.Payload.PublishTs > time.Now().Unix()
+			}
+			update.Payload = nextMemo.Payload
 		} else if path == "attachments" {
 			attachmentsUpdated = true
 		} else if path == "relations" {
@@ -671,6 +754,10 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if nextMemo.Payload != nil && nextMemo.Payload.Hidden {
 		visibility := store.Public
 		update.Visibility = &visibility
+	}
+	if nextMemo.Payload != nil && nextMemo.Payload.Draft && nextMemo.Payload.PublishTs > 0 && nextMemo.Payload.PublishTs <= time.Now().Unix() {
+		nextMemo.Payload.PublishTs = 0
+		update.Payload = nextMemo.Payload
 	}
 
 	var preparedAttachments *preparedMemoAttachments
@@ -726,10 +813,32 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build updated memo state")
 	}
-	if contentUpdated {
-		s.dispatchMemoMentionNotificationsBestEffort(ctx, memo, parentMemo, previousContent)
+	isUnpublished := memoIsUnpublished(memo, time.Now().Unix())
+	switch {
+	case isUnpublished:
+		// Never expose draft content through webhooks or public/protected SSE.
+		// If a published memo was moved back to drafts, tell existing clients to
+		// remove their cached collection entry without including its contents.
+		if !wasUnpublished {
+			s.SSEHub.Broadcast(&SSEEvent{
+				Type:       SSEEventMemoDeleted,
+				Name:       memoMessage.Name,
+				Visibility: memo.Visibility,
+				CreatorID:  memo.CreatorID,
+			})
+		}
+	case wasUnpublished:
+		if err := s.DispatchMemoCreatedWebhook(ctx, memoMessage); err != nil {
+			slog.Warn("Failed to dispatch published draft webhook", slog.Any("err", err))
+		}
+		s.SSEHub.Broadcast(&SSEEvent{Type: SSEEventMemoCreated, Name: memoMessage.Name, Visibility: memo.Visibility, CreatorID: memo.CreatorID})
+		s.dispatchMemoMentionNotificationsBestEffort(ctx, memo, parentMemo, "")
+	default:
+		if contentUpdated {
+			s.dispatchMemoMentionNotificationsBestEffort(ctx, memo, parentMemo, previousContent)
+		}
+		s.dispatchMemoUpdatedSideEffects(ctx, memo, parentMemo, memoMessage)
 	}
-	s.dispatchMemoUpdatedSideEffects(ctx, memo, parentMemo, memoMessage)
 
 	return memoMessage, nil
 }

@@ -26,6 +26,14 @@ type Driver interface {
 	DeleteAttachments(ctx context.Context, deletes []*DeleteAttachment) error
 	ApplyMemoMutation(ctx context.Context, mutation *MemoMutation) error
 
+	// Custom emoji model related methods.
+	CreateEmojiGroup(ctx context.Context, group *EmojiGroup) (*EmojiGroup, error)
+	ListEmojiGroups(ctx context.Context, find *FindEmojiGroup) ([]*EmojiGroup, error)
+	DeleteEmojiGroup(ctx context.Context, id int32) error
+	CreateEmoji(ctx context.Context, emoji *Emoji) (*Emoji, error)
+	ListEmojis(ctx context.Context, find *FindEmoji) ([]*Emoji, error)
+	DeleteEmoji(ctx context.Context, id int32) error
+
 	// Memo model related methods.
 	CreateMemo(ctx context.Context, create *Memo) (*Memo, error)
 	ListMemos(ctx context.Context, find *FindMemo) ([]*Memo, error)
@@ -79,6 +87,23 @@ type Driver interface {
 	ListMemoShares(ctx context.Context, find *FindMemoShare) ([]*MemoShare, error)
 	GetMemoShare(ctx context.Context, find *FindMemoShare) (*MemoShare, error)
 	DeleteMemoShare(ctx context.Context, delete *DeleteMemoShare) error
+
+	// Moderation and read-later methods.
+	CreateModerationReport(ctx context.Context, report *ModerationReport) (*ModerationReport, error)
+	CountModerationReports(ctx context.Context, targetType ModerationTargetType, targetID int32) (int32, error)
+	SetModerationReportCount(ctx context.Context, targetType ModerationTargetType, targetID, count int32) error
+	ListModerationReportSummaries(ctx context.Context, find *FindModerationReportSummary) ([]*ModerationReportSummary, int, error)
+	UpsertModerationQuarantine(ctx context.Context, quarantine *ModerationQuarantine) error
+	ListModerationQuarantines(ctx context.Context, find *FindModerationQuarantine) ([]*ModerationQuarantine, int, error)
+	RestoreModerationTarget(ctx context.Context, targetType ModerationTargetType, targetID int32) error
+	GetModerationUserBan(ctx context.Context, userID int32) (*ModerationUserBan, error)
+	UpsertModerationUserBan(ctx context.Context, ban *ModerationUserBan) error
+	ListExpiredModerationUserBanIDs(ctx context.Context, beforeTs int64, limit int) ([]int32, error)
+	DeactivateModerationUserBan(ctx context.Context, userID int32) error
+	UpsertMemoBookmark(ctx context.Context, userID, memoID int32) error
+	ListMemoBookmarkIDs(ctx context.Context, userID int32, limit, offset int) ([]int32, int, error)
+	DeleteMemoBookmark(ctx context.Context, userID, memoID int32) error
+	HasMemoBookmark(ctx context.Context, userID, memoID int32) (bool, error)
 
 	// UserIdentity model related methods.
 	CreateUserIdentity(ctx context.Context, create *UserIdentity) (*UserIdentity, error)

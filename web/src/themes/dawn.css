@@ -1,0 +1,46 @@
+:root {
+  --background: oklch(0.965 0.025 70);
+  --foreground: oklch(0.3 0.045 30);
+  --card: oklch(0.985 0.014 72);
+  --card-foreground: oklch(0.28 0.04 30);
+  --popover: oklch(0.99 0.012 72);
+  --popover-foreground: oklch(0.28 0.04 30);
+  --primary: oklch(0.63 0.17 38);
+  --primary-foreground: oklch(0.99 0.01 75);
+  --secondary: oklch(0.92 0.055 62);
+  --secondary-foreground: oklch(0.4 0.07 34);
+  --muted: oklch(0.925 0.04 70);
+  --muted-foreground: oklch(0.53 0.055 38);
+  --accent: oklch(0.88 0.085 48);
+  --accent-foreground: oklch(0.34 0.06 32);
+  --destructive: oklch(0.56 0.18 25);
+  --destructive-foreground: oklch(0.99 0.01 75);
+  --success: oklch(0.58 0.13 150);
+  --success-foreground: oklch(0.98 0.01 150);
+  --warning: oklch(0.67 0.15 72);
+  --warning-foreground: oklch(0.28 0.04 52);
+  --border: oklch(0.84 0.055 58);
+  --input: oklch(0.77 0.065 55);
+  --ring: oklch(0.63 0.17 38);
+  --sidebar: oklch(0.945 0.035 70);
+  --sidebar-foreground: oklch(0.42 0.06 35);
+  --sidebar-accent: oklch(0.89 0.07 52);
+  --sidebar-accent-foreground: oklch(0.32 0.055 32);
+  --sidebar-accent-border: oklch(0.78 0.1 42);
+  --shadow-xs: 0 1px 3px rgb(105 61 42 / 7%);
+  --shadow-sm: 0 2px 5px rgb(105 61 42 / 10%), 0 1px 2px rgb(221 106 77 / 5%);
+  --shadow: 0 3px 8px rgb(105 61 42 / 11%), 0 1px 3px rgb(221 106 77 / 5%);
+  --shadow-md: 0 6px 15px rgb(105 61 42 / 13%), 0 2px 5px rgb(221 106 77 / 6%);
+  --shadow-lg: 0 10px 24px rgb(105 61 42 / 15%), 0 3px 8px rgb(221 106 77 / 6%);
+  --shadow-xl: 0 16px 34px rgb(105 61 42 / 17%), 0 4px 12px rgb(221 106 77 / 6%);
+}
+
+html[data-theme="dawn"] body {
+  background-color: #fff3e6;
+  background-image:
+    radial-gradient(ellipse at 50% 108%, rgb(255 142 91 / 34%) 0%, rgb(255 190 123 / 18%) 31%, transparent 62%),
+    radial-gradient(ellipse at 8% 9%, rgb(255 211 166 / 34%) 0%, transparent 46%),
+    radial-gradient(ellipse at 90% 16%, rgb(237 170 196 / 21%) 0%, transparent 43%),
+    linear-gradient(180deg, #fff9f2 0%, #fff1e1 62%, #ffe2c4 100%);
+  background-attachment: fixed;
+}
