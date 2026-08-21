@@ -159,6 +159,7 @@
     "version": "版本",
     "visibility": "可见性",
     "views": "视图",
+    "view-count": "访问量",
     "yourself": "您自己"
   },
   "locale-picker": {
@@ -208,12 +209,27 @@
       "image-upload-failed": "部分图片上传失败，请重试或将已上传文件保留为附件。",
       "image-upload-stopped": "图片上传已暂停 {{completed}}/{{total}}",
       "insert-image": "插入图片",
+      "insert-emoji": "插入表情包",
+      "ai-assistant": "AI 写作助手",
       "keep-as-attachments": "保留为附件",
       "link-memo": "链接备忘录",
       "retry-image-upload": "重试",
       "uploading-inline-image": "正在上传到正文",
       "uploading-images": "正在上传图片 {{completed}}/{{total}}",
       "upload-file": "上传文件"
+    },
+    "ai": {
+      "title": "AI 写作助手",
+      "description": "使用已配置的 AI 续写、改写、总结、翻译或起草备忘录内容。",
+      "no-provider": "尚未配置 AI provider，请管理员先在“设置 → AI”中添加。",
+      "default-model": "留空使用 provider 默认模型",
+      "prompt": "要求",
+      "prompt-placeholder": "例如：把当前内容改写得更简洁、幽默一些。",
+      "prompt-required": "请选择 provider 并填写要求。",
+      "context-note": "当前备忘录正文会作为编辑上下文发送；生成的 Markdown 将插入光标位置。",
+      "generate": "生成并插入",
+      "generating": "生成中...",
+      "generated": "AI 内容已插入"
     },
     "audio-recorder": {
       "attachment-label": "录音",
@@ -319,6 +335,7 @@
     "blog-sidebar-last-activity": "最后活动",
     "blog-sidebar-running-days": "运行天数",
     "blog-sidebar-time-machine": "时光机",
+    "blog-sidebar-pinned-articles": "置顶文章",
     "pagination-go": "跳转",
     "pagination-jump-placeholder": "页码",
     "pagination-next": "下一页",
@@ -511,7 +528,13 @@
       "list-title": "成员列表",
       "member-column": "成员",
       "summary-column": "摘要",
-      "no-members-found": "没有找到会员"
+      "no-members-found": "没有找到会员",
+      "avatar-size-limit": "头像图片不能超过 2 MB。",
+      "initialize-preferences": "应用站点默认偏好",
+      "initialize-preferences-success": "已为 {{username}} 应用站点默认偏好。",
+      "initialize-all-preferences": "初始化全部成员偏好",
+      "initialize-all-preferences-description": "确定用当前站点默认值覆盖所有成员的语言、主题、备忘录可见性和媒体元数据偏好吗？",
+      "initialize-all-preferences-success": "已初始化 {{count}} 位成员的偏好。"
     },
     "my-account": {
       "label": "我的账号"
@@ -820,6 +843,10 @@
       "first-visit-default-language": "初次访问默认语言",
       "first-visit-default-theme-description": "仅在当前浏览器尚未保存风格偏好时应用。",
       "first-visit-default-theme": "初次访问默认风格",
+      "default-member-memo-visibility": "新成员默认备忘录可见性",
+      "default-member-memo-visibility-description": "创建账号时写入的默认可见性；公开博客建议使用“公开”。",
+      "default-member-save-media-metadata": "新成员默认保存媒体元数据",
+      "default-member-save-media-metadata-description": "新账号今后上传文件时，是否保留相机、拍摄时间、位置等元数据。",
       "monday": "周一",
       "saturday": "周六",
       "sunday": "周日",

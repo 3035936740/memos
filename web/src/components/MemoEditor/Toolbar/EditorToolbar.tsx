@@ -23,6 +23,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onToggleFormattingToolbar,
   onInsertImages,
   onInsertEmoji,
+  onInsertAIText,
 }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -82,6 +83,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           onToggleFormattingToolbar={onToggleFormattingToolbar}
           onInsertImages={onInsertImages}
           onInsertEmoji={onInsertEmoji}
+          onInsertAIText={onInsertAIText}
         />
         <VisibilitySelector
           value={visibility}

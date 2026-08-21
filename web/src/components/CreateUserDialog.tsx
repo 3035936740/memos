@@ -1,7 +1,9 @@
 import { create } from "@bufbuild/protobuf";
 import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
+import { XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import UserAvatar from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { userServiceClient } from "@/connect";
 import useLoading from "@/hooks/useLoading";
+import { convertFileToBase64 } from "@/lib/browser";
 import { handleError } from "@/lib/error";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { User, User_Role, UserSchema } from "@/types/proto/api/v1/user_service_pb";
@@ -25,7 +28,12 @@ interface Props {
 function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: Props) {
   const t = useTranslate();
   const [user, setUser] = useState(
-    create(UserSchema, initialUser ? { name: initialUser.name, username: initialUser.username, role: initialUser.role } : {}),
+    create(
+      UserSchema,
+      initialUser
+        ? { name: initialUser.name, username: initialUser.username, role: initialUser.role, avatarUrl: initialUser.avatarUrl }
+        : {},
+    ),
   );
   const requestState = useLoading(false);
   const isCreating = !initialUser;
@@ -35,7 +43,14 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
 
   useEffect(() => {
     if (initialUser) {
-      setUser(create(UserSchema, { name: initialUser.name, username: initialUser.username, role: initialUser.role }));
+      setUser(
+        create(UserSchema, {
+          name: initialUser.name,
+          username: initialUser.username,
+          role: initialUser.role,
+          avatarUrl: initialUser.avatarUrl,
+        }),
+      );
     } else {
       setUser(create(UserSchema, {}));
     }
@@ -94,6 +109,22 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
     });
   };
 
+  const handleAvatarChanged = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const image = event.target.files?.[0];
+    if (!image) return;
+    if (image.size > 2 * 1024 * 1024) {
+      toast.error(t("setting.member.avatar-size-limit"));
+      return;
+    }
+    try {
+      setPartialUser({ avatarUrl: await convertFileToBase64(image) });
+    } catch (error) {
+      handleError(error, toast.error, { context: "Update user avatar" });
+    } finally {
+      event.target.value = "";
+    }
+  };
+
   const handleConfirm = async () => {
     if (isCreating && (!user.username || !user.password)) {
       toast.error(t("setting.member.credentials-required"));
@@ -115,6 +146,13 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
         }
         if (user.role !== initialUser?.role) {
           updateMask.push("role");
+        }
+        if (user.avatarUrl !== initialUser?.avatarUrl) {
+          updateMask.push("avatar_url");
+        }
+        if (updateMask.length === 0) {
+          onOpenChange(false);
+          return;
         }
         const userToUpdate = create(UserSchema, { ...user, name: initialUser?.name ?? user.name });
         await userServiceClient.updateUser({ user: userToUpdate, updateMask: create(FieldMaskSchema, { paths: updateMask }) });
@@ -138,6 +176,31 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
           <DialogTitle>{`${isCreating ? t("common.create") : t("common.edit")} ${t("common.user")}`}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
+          {!isCreating ? (
+            <div className="flex items-center gap-3">
+              <Label>{t("common.avatar")}</Label>
+              <label className="relative cursor-pointer hover:opacity-80">
+                <UserAvatar className="size-12 rounded-xl" avatarUrl={user.avatarUrl} />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif,image/webp"
+                  className="absolute inset-0 size-full opacity-0"
+                  onChange={handleAvatarChanged}
+                />
+              </label>
+              {user.avatarUrl ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  aria-label={t("common.delete")}
+                  onClick={() => setPartialUser({ avatarUrl: "" })}
+                >
+                  <XIcon className="size-4" />
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label htmlFor="username">{t("common.username")}</Label>
             <Input

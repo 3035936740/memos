@@ -6,6 +6,31 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /api/v1/ai:generateText:
+        post:
+            tags:
+                - AIService
+            description: GenerateText generates memo-ready text using an instance AI provider.
+            operationId: AIService_GenerateText
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/GenerateTextRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/GenerateTextResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/ai:transcribe:
         post:
             tags:
@@ -1198,6 +1223,38 @@ paths:
                 "200":
                     description: OK
                     content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}:recordView:
+        post:
+            tags:
+                - MemoService
+            description: RecordMemoView records one successful visit to a memo detail page.
+            operationId: MemoService_RecordMemoView
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RecordMemoViewRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/RecordMemoViewResponse'
                 default:
                     description: Default error response
                     content:
@@ -2590,6 +2647,30 @@ components:
                 logoUrl:
                     type: string
             description: Custom profile configuration for instance branding.
+        GenerateTextRequest:
+            required:
+                - providerId
+                - prompt
+            type: object
+            properties:
+                providerId:
+                    type: string
+                    description: Required. Configured provider identifier.
+                model:
+                    type: string
+                    description: Optional. Provider model identifier; uses a provider default when empty.
+                prompt:
+                    type: string
+                    description: Required. Instruction for the model.
+                context:
+                    type: string
+                    description: Optional. Current memo text supplied as editing context.
+        GenerateTextResponse:
+            type: object
+            properties:
+                text:
+                    type: string
+                    description: Generated Markdown-compatible text.
         GetCurrentUserResponse:
             type: object
             properties:
@@ -2781,7 +2862,17 @@ components:
                     description: "first_visit_default_theme is used when a browser has no saved theme preference.\r\n Empty values fall back to Cosmic in the frontend."
                 defaultBackgroundImageUrl:
                     type: string
-                    description: "default_background_image_url overrides the active theme's preset page background.\r\n Empty values keep the preset background provided by the selected theme."
+                    description: |-
+                        default_background_image_url overrides the active theme's preset page background.
+                         Empty values keep the preset background provided by the selected theme.
+                defaultMemberMemoVisibility:
+                    type: string
+                    description: |-
+                        default_member_memo_visibility is assigned to newly created accounts.
+                         Empty values fall back to PUBLIC.
+                defaultMemberSaveMediaMetadata:
+                    type: boolean
+                    description: default_member_save_media_metadata is assigned to newly created accounts.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object
@@ -3264,6 +3355,10 @@ components:
                     description: |-
                         Output only. Whether moderation has moved this memo or comment to the
                          quarantine. Quarantined content is visible only to administrators.
+                viewCount:
+                    readOnly: true
+                    type: string
+                    description: Output only. Total successful visits to the memo detail page.
         MemoRelation:
             required:
                 - memo
@@ -3491,6 +3586,25 @@ components:
                     type: string
                     description: Output only. The creation timestamp.
                     format: date-time
+        RecordMemoViewRequest:
+            required:
+                - name
+            type: object
+            properties:
+                name:
+                    type: string
+                    description: |-
+                        Required. The resource name of the memo being visited.
+                         Format: memos/{memo}
+                shareToken:
+                    type: string
+                    description: Optional. A share token when the memo is opened through a share URL.
+        RecordMemoViewResponse:
+            type: object
+            properties:
+                viewCount:
+                    type: string
+                    description: The total view count after this visit was recorded.
         RefreshTokenRequest:
             type: object
             properties: {}

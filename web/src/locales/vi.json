@@ -113,6 +113,7 @@
     "version": "Phiên bản",
     "visibility": "Quyền xem",
     "views": "Các chế độ xem",
+    "view-count": "Lượt xem",
     "yourself": "Bản thân"
   },
   "locale-picker": {

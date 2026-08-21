@@ -114,6 +114,7 @@
     "version": "Versie",
     "visibility": "Zichtbaarheid",
     "views": "Weergaven",
+    "view-count": "Aantal weergaven",
     "yourself": "Jijzelf",
     "empty-placeholder": "Leeg",
     "unlink": "Ontkoppelen"

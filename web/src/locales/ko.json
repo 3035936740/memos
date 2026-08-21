@@ -113,6 +113,7 @@
     "version": "버전",
     "visibility": "공개 범위",
     "views": "보기",
+    "view-count": "조회수",
     "yourself": "자기 자신"
   },
   "locale-picker": {

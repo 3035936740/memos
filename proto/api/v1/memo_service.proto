@@ -35,6 +35,14 @@ service MemoService {
     option (google.api.http) = {get: "/api/v1/{name=memos/*}"};
     option (google.api.method_signature) = "name";
   }
+  // RecordMemoView records one successful visit to a memo detail page.
+  rpc RecordMemoView(RecordMemoViewRequest) returns (RecordMemoViewResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}:recordView"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name";
+  }
   // UpdateMemo updates a memo.
   rpc UpdateMemo(UpdateMemoRequest) returns (Memo) {
     option (google.api.http) = {
@@ -289,6 +297,9 @@ message Memo {
   // quarantine. Quarantined content is visible only to administrators.
   bool quarantined = 23 [(google.api.field_behavior) = OUTPUT_ONLY];
 
+  // Output only. Total successful visits to the memo detail page.
+  int64 view_count = 24 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;
@@ -393,6 +404,23 @@ message GetMemoRequest {
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
   ];
+}
+
+message RecordMemoViewRequest {
+  // Required. The resource name of the memo being visited.
+  // Format: memos/{memo}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
+  ];
+
+  // Optional. A share token when the memo is opened through a share URL.
+  string share_token = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message RecordMemoViewResponse {
+  // The total view count after this visit was recorded.
+  int64 view_count = 1;
 }
 
 message UpdateMemoRequest {

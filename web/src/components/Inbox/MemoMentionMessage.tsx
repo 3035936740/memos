@@ -1,10 +1,12 @@
 import { create } from "@bufbuild/protobuf";
 import { FieldMaskSchema, timestampDate } from "@bufbuild/protobuf/wkt";
+import { useQueryClient } from "@tanstack/react-query";
 import { AtSignIcon, CheckIcon, MessageSquareIcon, TrashIcon, XIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import UserAvatar from "@/components/UserAvatar";
 import { userServiceClient } from "@/connect";
 import useNavigateTo from "@/hooks/useNavigateTo";
+import { userKeys } from "@/hooks/useUserQueries";
 import { cn } from "@/lib/utils";
 import { UserNotification, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -16,6 +18,7 @@ interface Props {
 function MemoMentionMessage({ notification }: Props) {
   const t = useTranslate();
   const navigateTo = useNavigateTo();
+  const queryClient = useQueryClient();
   const mentionPayload = notification.payload?.case === "memoMention" ? notification.payload.value : undefined;
   const sender = notification.senderUser;
 
@@ -27,6 +30,9 @@ function MemoMentionMessage({ notification }: Props) {
       },
       updateMask: create(FieldMaskSchema, { paths: ["status"] }),
     });
+    queryClient.setQueryData<UserNotification[]>(userKeys.notifications(), (notifications) =>
+      notifications?.map((item) => (item.name === notification.name ? { ...item, status: UserNotification_Status.ARCHIVED } : item)),
+    );
     if (!silence) {
       toast.success(t("message.archived-successfully"));
     }
@@ -36,6 +42,9 @@ function MemoMentionMessage({ notification }: Props) {
     await userServiceClient.deleteUserNotification({
       name: notification.name,
     });
+    queryClient.setQueryData<UserNotification[]>(userKeys.notifications(), (notifications) =>
+      notifications?.filter((item) => item.name !== notification.name),
+    );
     toast.success(t("message.deleted-successfully"));
   };
 

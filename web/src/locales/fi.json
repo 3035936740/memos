@@ -153,6 +153,7 @@
     "version": "Versio",
     "visibility": "Näkyvyys",
     "views": "Näkymät",
+    "view-count": "Katselukerrat",
     "yourself": "itseäsi"
   },
   "locale-picker": {

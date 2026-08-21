@@ -79,6 +79,15 @@ func (s *APIV1Service) checkMemoReadAccessWithParent(ctx context.Context, memo, 
 	if isSuperUser(user) {
 		return nil
 	}
+	deniedCategories, err := s.inaccessibleMemoCategories(ctx, user)
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to load memo category access")
+	}
+	for _, candidate := range []*store.Memo{parent, memo} {
+		if !memoVisibleInCategories(candidate, deniedCategories) {
+			return status.Errorf(codes.NotFound, "memo not found")
+		}
+	}
 	allowAnonymous := s.Profile != nil && s.Profile.AllowAnonymous()
 	return memoAccessDecisionError(access.CheckMemoRead(memo, parent, user, allowAnonymous, nil))
 }
@@ -128,10 +137,10 @@ func memoIsUnpublished(memo *store.Memo, now int64) bool {
 	return memo != nil && memo.Payload != nil && memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > now)
 }
 
-func filterMemosForCollection(memos []*store.Memo, user *store.User) []*store.Memo {
+func filterMemosForCollection(memos []*store.Memo, user *store.User, deniedCategories map[string]struct{}) []*store.Memo {
 	visibleMemos := make([]*store.Memo, 0, len(memos))
 	for _, memo := range memos {
-		if memoVisibleInCollection(memo, user) {
+		if memoVisibleInCollection(memo, user) && memoVisibleInCategories(memo, deniedCategories) {
 			visibleMemos = append(visibleMemos, memo)
 		}
 	}
@@ -145,6 +154,7 @@ func (s *APIV1Service) listMemoCollectionPage(
 	ctx context.Context,
 	find *store.FindMemo,
 	user *store.User,
+	deniedCategories map[string]struct{},
 	visibleOffset int,
 	visibleLimit int,
 ) ([]*store.Memo, error) {
@@ -169,7 +179,7 @@ func (s *APIV1Service) listMemoCollectionPage(
 		}
 
 		for _, memo := range batch {
-			if !memoVisibleInCollection(memo, user) {
+			if !memoVisibleInCollection(memo, user) || !memoVisibleInCategories(memo, deniedCategories) {
 				continue
 			}
 			if skippedVisible < visibleOffset {
@@ -405,6 +415,10 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 			memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
 		}
 	}
+	deniedCategories, err := s.inaccessibleMemoCategories(ctx, currentUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to load memo category access: %v", err)
+	}
 	totalSize := int32(0)
 	if request.ShowTotalSize {
 		countFind := *memoFind
@@ -415,7 +429,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to count memos: %v", err)
 		}
-		totalSize = int32(len(filterMemosForCollection(matchingMemos, currentUser)))
+		totalSize = int32(len(filterMemosForCollection(matchingMemos, currentUser, deniedCategories)))
 	}
 
 	var limit, offset int
@@ -432,7 +446,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	}
 	limit = min(limit, MaxPageSize)
 	limitPlusOne := limit + 1
-	memos, err := s.listMemoCollectionPage(ctx, memoFind, currentUser, offset, limitPlusOne)
+	memos, err := s.listMemoCollectionPage(ctx, memoFind, currentUser, deniedCategories, offset, limitPlusOne)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list memos: %v", err)
 	}
@@ -586,6 +600,39 @@ func (s *APIV1Service) GetMemo(ctx context.Context, request *v1pb.GetMemoRequest
 		memoMessage.Visibility = convertVisibilityFromStore(parent.Visibility)
 	}
 	return memoMessage, nil
+}
+
+// RecordMemoView records one successful visit to a memo detail page.
+func (s *APIV1Service) RecordMemoView(ctx context.Context, request *v1pb.RecordMemoViewRequest) (*v1pb.RecordMemoViewResponse, error) {
+	memoUID, err := ExtractMemoUIDFromName(request.Name)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid memo name: %v", err)
+	}
+	memo, err := s.Store.GetMemo(ctx, &store.FindMemo{UID: &memoUID})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get memo")
+	}
+	if memo == nil {
+		return nil, status.Errorf(codes.NotFound, "memo not found")
+	}
+	if memo.ParentUID != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "comments do not have a view count")
+	}
+
+	if request.ShareToken != "" {
+		memoShare, err := s.getActiveMemoShare(ctx, request.ShareToken)
+		if err != nil || memoShare.MemoID != memo.ID || memo.RowStatus != store.Normal {
+			return nil, status.Errorf(codes.NotFound, "not found")
+		}
+	} else if err := s.checkMemoAndParentReadAccess(ctx, memo); err != nil {
+		return nil, err
+	}
+
+	viewCount, err := s.Store.IncrementMemoViewCount(ctx, memo.ID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to record memo view")
+	}
+	return &v1pb.RecordMemoViewResponse{ViewCount: viewCount}, nil
 }
 
 // UpdateMemo updates an existing memo.

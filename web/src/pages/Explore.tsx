@@ -42,8 +42,16 @@ const Explore = () => {
     <div data-page-shell className="min-h-full w-full bg-background text-foreground">
       <NewMemoProvider>
         <PagedMemoList
-          renderer={(memo: Memo, { compact, parentPage }) => (
-            <MemoView key={getMemoKey(memo)} memo={memo} parentPage={parentPage} showCreator showVisibility compact={compact} />
+          renderer={(memo: Memo, { compact, parentPage, navigationScope }) => (
+            <MemoView
+              key={getMemoKey(memo)}
+              memo={memo}
+              parentPage={parentPage}
+              navigationScope={navigationScope}
+              showCreator
+              showVisibility
+              compact={compact}
+            />
           )}
           listSort={listSort}
           orderBy={orderBy}

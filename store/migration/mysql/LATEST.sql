@@ -39,6 +39,7 @@ CREATE TABLE `memo` (
   `content` TEXT NOT NULL,
   `visibility` VARCHAR(256) NOT NULL DEFAULT 'PRIVATE',
   `pinned` BOOLEAN NOT NULL DEFAULT FALSE,
+  `view_count` BIGINT NOT NULL DEFAULT 0,
   `payload` JSON NOT NULL
 );
 

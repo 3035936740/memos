@@ -17,6 +17,31 @@ service AIService {
     };
     option (google.api.method_signature) = "audio";
   }
+
+  // GenerateText generates memo-ready text using an instance AI provider.
+  rpc GenerateText(GenerateTextRequest) returns (GenerateTextResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/ai:generateText"
+      body: "*"
+    };
+    option (google.api.method_signature) = "provider_id,prompt";
+  }
+}
+
+message GenerateTextRequest {
+  // Required. Configured provider identifier.
+  string provider_id = 1 [(google.api.field_behavior) = REQUIRED];
+  // Optional. Provider model identifier; uses a provider default when empty.
+  string model = 2 [(google.api.field_behavior) = OPTIONAL];
+  // Required. Instruction for the model.
+  string prompt = 3 [(google.api.field_behavior) = REQUIRED];
+  // Optional. Current memo text supplied as editing context.
+  string context = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message GenerateTextResponse {
+  // Generated Markdown-compatible text.
+  string text = 1;
 }
 
 message TranscribeRequest {

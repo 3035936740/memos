@@ -114,6 +114,7 @@
     "version": "Versjon",
     "visibility": "Synlighet",
     "views": "Visninger",
+    "view-count": "Antall visninger",
     "yourself": "Deg selv",
     "empty-placeholder": "Tømme",
     "unlink": "Fjern tilknytningen"

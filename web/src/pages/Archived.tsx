@@ -22,8 +22,15 @@ const Archived = () => {
 
   return (
     <PagedMemoList
-      renderer={(memo: Memo, { compact, parentPage }) => (
-        <MemoView key={getMemoKey(memo)} memo={memo} parentPage={parentPage} showVisibility compact={compact} />
+      renderer={(memo: Memo, { compact, parentPage, navigationScope }) => (
+        <MemoView
+          key={getMemoKey(memo)}
+          memo={memo}
+          parentPage={parentPage}
+          navigationScope={navigationScope}
+          showVisibility
+          compact={compact}
+        />
       )}
       listSort={listSort}
       state={State.ARCHIVED}

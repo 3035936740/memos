@@ -114,6 +114,7 @@
     "version": "Версия",
     "visibility": "Видимость",
     "views": "Представления",
+    "view-count": "Количество просмотров",
     "yourself": "Вы",
     "empty-placeholder": "Пустой",
     "unlink": "Отсоединить"

@@ -153,6 +153,7 @@
     "version": "Version",
     "visibility": "Sigtbarhed",
     "views": "Visninger",
+    "view-count": "Antal visninger",
     "yourself": "Dig selv"
   },
   "locale-picker": {

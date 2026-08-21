@@ -504,7 +504,12 @@ const GlobalNavigation = () => {
   const categories = parseInstanceCategories(generalSetting?.memoCategoriesJson ?? "").filter(
     (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
   );
-  const activeCategory = categories.find((category) => location.pathname === `/categories/${category.slug}`);
+  const memoDetailFromPath = memoDetail?.from?.split(/[?#]/, 1)[0] ?? "";
+  const activeCategory = categories.find(
+    (category) =>
+      location.pathname === `/categories/${category.slug}` ||
+      (routeKind === "memo" && memoDetailFromPath === `/categories/${category.slug}`),
+  );
   const activeCustomItem = customItems.find((item) => item.active);
   const CustomNavigationIcon = activeCustomItem?.icon ?? LinkIcon;
   const [rememberedCategorySlug, setRememberedCategorySlug] = useState(() => {

@@ -85,6 +85,46 @@ func categorySlugSet(categories []instanceMemoCategory) map[string]struct{} {
 	return set
 }
 
+func memoCategoryAllowsUser(category instanceMemoCategory, user *store.User) bool {
+	switch strings.ToLower(strings.TrimSpace(category.Access)) {
+	case "admin":
+		return isSuperUser(user)
+	case "authenticated":
+		return user != nil
+	default:
+		return true
+	}
+}
+
+func (s *APIV1Service) inaccessibleMemoCategories(ctx context.Context, user *store.User) (map[string]struct{}, error) {
+	denied := map[string]struct{}{}
+	if isSuperUser(user) {
+		return denied, nil
+	}
+	general, err := s.Store.GetInstanceGeneralSetting(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get general setting")
+	}
+	categories, err := parseInstanceMemoCategories(general.GetMemoCategoriesJson())
+	if err != nil {
+		return nil, err
+	}
+	for _, category := range categories {
+		if category.Slug != "" && !memoCategoryAllowsUser(category, user) {
+			denied[category.Slug] = struct{}{}
+		}
+	}
+	return denied, nil
+}
+
+func memoVisibleInCategories(memo *store.Memo, denied map[string]struct{}) bool {
+	if memo == nil || memo.Payload == nil || memo.Payload.Category == "" {
+		return true
+	}
+	_, blocked := denied[memo.Payload.Category]
+	return !blocked
+}
+
 func (s *APIV1Service) normalizeMemoCategory(ctx context.Context, category string) (string, error) {
 	category = strings.TrimSpace(category)
 	if category == "" {
@@ -100,6 +140,13 @@ func (s *APIV1Service) normalizeMemoCategory(ctx context.Context, category strin
 	}
 	for _, item := range categories {
 		if item.Slug == category {
+			user, err := s.fetchCurrentUser(ctx)
+			if err != nil {
+				return "", status.Errorf(codes.Internal, "failed to get current user")
+			}
+			if !memoCategoryAllowsUser(item, user) {
+				return "", status.Errorf(codes.PermissionDenied, "memo category is not available")
+			}
 			return category, nil
 		}
 	}

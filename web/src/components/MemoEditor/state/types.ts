@@ -57,7 +57,7 @@ const defaultState: EditorState = {
   content: "",
   contentSource: "external",
   metadata: {
-    visibility: Visibility.PRIVATE,
+    visibility: Visibility.PUBLIC,
     attachments: [],
     relations: [],
     location: undefined,

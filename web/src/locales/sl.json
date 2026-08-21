@@ -114,6 +114,7 @@
     "version": "Verzija",
     "visibility": "Vidnost",
     "views": "Pogledi",
+    "view-count": "Število ogledov",
     "yourself": "Ti",
     "empty-placeholder": "prazno",
     "unlink": "Prekini povezavo"

@@ -84,8 +84,8 @@ const PreferencesSection = () => {
   const setting: UserSetting_GeneralSetting =
     generalSetting ||
     create(UserSetting_GeneralSettingSchema, {
-      locale: "en",
-      memoVisibility: "PRIVATE",
+      locale: "zh-Hans",
+      memoVisibility: "PUBLIC",
       theme: "system",
       saveMediaMetadata: false,
     });
@@ -114,11 +114,7 @@ const PreferencesSection = () => {
             label={t("setting.preference.default-memo-visibility")}
             description={t("setting.preference.default-memo-visibility-description")}
           >
-            <Select
-              value={setting.memoVisibility || "PRIVATE"}
-              items={visibilityOptions}
-              onValueChange={handleDefaultMemoVisibilityChanged}
-            >
+            <Select value={setting.memoVisibility || "PUBLIC"} items={visibilityOptions} onValueChange={handleDefaultMemoVisibilityChanged}>
               <SelectTrigger className="min-w-fit">
                 <div className="flex items-center gap-2">
                   <VisibilityIcon visibility={convertVisibilityFromString(setting.memoVisibility)} />

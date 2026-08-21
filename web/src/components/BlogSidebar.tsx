@@ -1,16 +1,18 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { ActivityIcon, CalendarDaysIcon, HistoryIcon, MessageCircleIcon, NotebookTextIcon } from "lucide-react";
+import { ActivityIcon, CalendarDaysIcon, HistoryIcon, MessageCircleIcon, NotebookTextIcon, PinIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import RelativeTime from "@/components/RelativeTime";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { useAllUserStats } from "@/hooks/useUserQueries";
+import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { UserStats } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 const TIME_MACHINE_SIZE = 4;
+const PINNED_ARTICLE_SIZE = 5;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 export const deriveBlogSidebarStats = (stats: UserStats[], now = new Date()) => {
@@ -39,8 +41,11 @@ interface Props {
 const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filter, parentPage, className }: Props) => {
   const t = useTranslate();
   const { data: recentData } = useMemos({ state, orderBy, filter, pageSize: TIME_MACHINE_SIZE });
+  const pinnedFilter = filter ? `(${filter}) && pinned` : "pinned";
+  const { data: pinnedData } = useMemos({ state, orderBy, filter: pinnedFilter, pageSize: PINNED_ARTICLE_SIZE });
   const { data: userStats = [] } = useAllUserStats({ state, filter });
   const stats = deriveBlogSidebarStats(userStats);
+  const navigationScope: MemoNavigationScope = { state, orderBy, filter };
 
   const statRows = [
     { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(), icon: NotebookTextIcon },
@@ -84,7 +89,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
                 )}
                 <Link
                   to={`/${memo.name}`}
-                  state={{ from: parentPage }}
+                  state={{ from: parentPage, navigationScope }}
                   className="line-clamp-3 text-sm leading-5 text-foreground/85 transition-colors hover:text-primary"
                 >
                   {title || t("memo.blog-untitled")}
@@ -94,6 +99,31 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
           })}
         </div>
       </section>
+
+      {(pinnedData?.memos.length ?? 0) > 0 ? (
+        <section className="border-t border-border p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <PinIcon className="size-4" />
+            {t("memo.blog-sidebar-pinned-articles")}
+          </h2>
+          <div className="mt-3 space-y-2">
+            {pinnedData?.memos.map((memo) => {
+              const { title } = deriveBlogMemoText(memo.content, memo.property?.title);
+              return (
+                <Link
+                  key={memo.name}
+                  to={`/${memo.name}`}
+                  state={{ from: parentPage, navigationScope }}
+                  className="flex items-start gap-2 rounded-md px-2 py-1.5 text-sm text-foreground/85 transition-colors hover:bg-muted hover:text-primary"
+                >
+                  <PinIcon className="mt-0.5 size-3.5 shrink-0" />
+                  <span className="line-clamp-2">{title || t("memo.blog-untitled")}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-t border-border bg-muted/20 p-4">
         <h2 className="mb-3 text-sm font-semibold text-foreground">{t("memo.blog-sidebar-info")}</h2>

@@ -947,8 +947,13 @@ type InstanceSetting_GeneralSetting struct {
 	// default_background_image_url overrides the active theme's preset page background.
 	// Empty values keep the preset background provided by the selected theme.
 	DefaultBackgroundImageUrl string `protobuf:"bytes,16,opt,name=default_background_image_url,json=defaultBackgroundImageUrl,proto3" json:"default_background_image_url,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
+	// default_member_memo_visibility is assigned to newly created accounts.
+	// Empty values fall back to PUBLIC.
+	DefaultMemberMemoVisibility string `protobuf:"bytes,17,opt,name=default_member_memo_visibility,json=defaultMemberMemoVisibility,proto3" json:"default_member_memo_visibility,omitempty"`
+	// default_member_save_media_metadata is assigned to newly created accounts.
+	DefaultMemberSaveMediaMetadata bool `protobuf:"varint,18,opt,name=default_member_save_media_metadata,json=defaultMemberSaveMediaMetadata,proto3" json:"default_member_save_media_metadata,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1084,6 +1089,20 @@ func (x *InstanceSetting_GeneralSetting) GetDefaultBackgroundImageUrl() string {
 		return x.DefaultBackgroundImageUrl
 	}
 	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDefaultMemberMemoVisibility() string {
+	if x != nil {
+		return x.DefaultMemberMemoVisibility
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDefaultMemberSaveMediaMetadata() bool {
+	if x != nil {
+		return x.DefaultMemberSaveMediaMetadata
+	}
+	return false
 }
 
 // Storage is a configured attachment storage instance.
@@ -2156,7 +2175,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x06commit\x18\b \x01(\tR\x06commit\x12\x1f\n" +
 	"\vneeds_setup\x18\t \x01(\bR\n" +
 	"needsSetup\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\xc1$\n" +
+	"\x19GetInstanceProfileRequest\"\xd2%\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2165,7 +2184,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\ftags_setting\x18\x05 \x01(\v2).memos.api.v1.InstanceSetting.TagsSettingH\x00R\vtagsSetting\x12f\n" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
-	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xb0\a\n" +
+	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x1a\xc1\b\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -2182,7 +2201,9 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x0ememo_page_size\x18\r \x01(\x05R\fmemoPageSize\x12;\n" +
 	"\x1afirst_visit_default_locale\x18\x0e \x01(\tR\x17firstVisitDefaultLocale\x129\n" +
 	"\x19first_visit_default_theme\x18\x0f \x01(\tR\x16firstVisitDefaultTheme\x12?\n" +
-	"\x1cdefault_background_image_url\x18\x10 \x01(\tR\x19defaultBackgroundImageUrl\x1ab\n" +
+	"\x1cdefault_background_image_url\x18\x10 \x01(\tR\x19defaultBackgroundImageUrl\x12C\n" +
+	"\x1edefault_member_memo_visibility\x18\x11 \x01(\tR\x1bdefaultMemberMemoVisibility\x12J\n" +
+	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

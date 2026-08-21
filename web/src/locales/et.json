@@ -153,6 +153,7 @@
     "version": "Versioon",
     "visibility": "Nähtavus",
     "views": "Vaated",
+    "view-count": "Vaatamiste arv",
     "yourself": "iseennast"
   },
   "locale-picker": {

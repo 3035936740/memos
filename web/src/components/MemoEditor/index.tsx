@@ -133,6 +133,13 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     editorRef.current?.insertInlineMarkdown(token);
   }, []);
 
+  const handleInsertAIText = useCallback((text: string) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.insertMarkdown(text);
+    editor.scrollToCursor();
+  }, []);
+
   const handleTranscribeRecordedAudio = useCallback(
     async (localFile: LocalFile) => {
       if (!canTranscribe) {
@@ -347,6 +354,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             onToggleFormattingToolbar={handleToggleFormattingToolbar}
             onInsertImages={handleInsertImages}
             onInsertEmoji={handleInsertEmoji}
+            onInsertAIText={handleInsertAIText}
           />
         </div>
       </div>

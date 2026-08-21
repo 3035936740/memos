@@ -40,6 +40,9 @@ const (
 	MemoServiceListMemosProcedure = "/memos.api.v1.MemoService/ListMemos"
 	// MemoServiceGetMemoProcedure is the fully-qualified name of the MemoService's GetMemo RPC.
 	MemoServiceGetMemoProcedure = "/memos.api.v1.MemoService/GetMemo"
+	// MemoServiceRecordMemoViewProcedure is the fully-qualified name of the MemoService's
+	// RecordMemoView RPC.
+	MemoServiceRecordMemoViewProcedure = "/memos.api.v1.MemoService/RecordMemoView"
 	// MemoServiceUpdateMemoProcedure is the fully-qualified name of the MemoService's UpdateMemo RPC.
 	MemoServiceUpdateMemoProcedure = "/memos.api.v1.MemoService/UpdateMemo"
 	// MemoServiceDeleteMemoProcedure is the fully-qualified name of the MemoService's DeleteMemo RPC.
@@ -101,6 +104,8 @@ type MemoServiceClient interface {
 	ListMemos(context.Context, *connect.Request[v1.ListMemosRequest]) (*connect.Response[v1.ListMemosResponse], error)
 	// GetMemo gets a memo.
 	GetMemo(context.Context, *connect.Request[v1.GetMemoRequest]) (*connect.Response[v1.Memo], error)
+	// RecordMemoView records one successful visit to a memo detail page.
+	RecordMemoView(context.Context, *connect.Request[v1.RecordMemoViewRequest]) (*connect.Response[v1.RecordMemoViewResponse], error)
 	// UpdateMemo updates a memo.
 	UpdateMemo(context.Context, *connect.Request[v1.UpdateMemoRequest]) (*connect.Response[v1.Memo], error)
 	// DeleteMemo deletes a memo.
@@ -170,6 +175,12 @@ func NewMemoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			httpClient,
 			baseURL+MemoServiceGetMemoProcedure,
 			connect.WithSchema(memoServiceMethods.ByName("GetMemo")),
+			connect.WithClientOptions(opts...),
+		),
+		recordMemoView: connect.NewClient[v1.RecordMemoViewRequest, v1.RecordMemoViewResponse](
+			httpClient,
+			baseURL+MemoServiceRecordMemoViewProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("RecordMemoView")),
 			connect.WithClientOptions(opts...),
 		),
 		updateMemo: connect.NewClient[v1.UpdateMemoRequest, v1.Memo](
@@ -282,6 +293,7 @@ type memoServiceClient struct {
 	createMemo           *connect.Client[v1.CreateMemoRequest, v1.Memo]
 	listMemos            *connect.Client[v1.ListMemosRequest, v1.ListMemosResponse]
 	getMemo              *connect.Client[v1.GetMemoRequest, v1.Memo]
+	recordMemoView       *connect.Client[v1.RecordMemoViewRequest, v1.RecordMemoViewResponse]
 	updateMemo           *connect.Client[v1.UpdateMemoRequest, v1.Memo]
 	deleteMemo           *connect.Client[v1.DeleteMemoRequest, emptypb.Empty]
 	setMemoAttachments   *connect.Client[v1.SetMemoAttachmentsRequest, emptypb.Empty]
@@ -314,6 +326,11 @@ func (c *memoServiceClient) ListMemos(ctx context.Context, req *connect.Request[
 // GetMemo calls memos.api.v1.MemoService.GetMemo.
 func (c *memoServiceClient) GetMemo(ctx context.Context, req *connect.Request[v1.GetMemoRequest]) (*connect.Response[v1.Memo], error) {
 	return c.getMemo.CallUnary(ctx, req)
+}
+
+// RecordMemoView calls memos.api.v1.MemoService.RecordMemoView.
+func (c *memoServiceClient) RecordMemoView(ctx context.Context, req *connect.Request[v1.RecordMemoViewRequest]) (*connect.Response[v1.RecordMemoViewResponse], error) {
+	return c.recordMemoView.CallUnary(ctx, req)
 }
 
 // UpdateMemo calls memos.api.v1.MemoService.UpdateMemo.
@@ -411,6 +428,8 @@ type MemoServiceHandler interface {
 	ListMemos(context.Context, *connect.Request[v1.ListMemosRequest]) (*connect.Response[v1.ListMemosResponse], error)
 	// GetMemo gets a memo.
 	GetMemo(context.Context, *connect.Request[v1.GetMemoRequest]) (*connect.Response[v1.Memo], error)
+	// RecordMemoView records one successful visit to a memo detail page.
+	RecordMemoView(context.Context, *connect.Request[v1.RecordMemoViewRequest]) (*connect.Response[v1.RecordMemoViewResponse], error)
 	// UpdateMemo updates a memo.
 	UpdateMemo(context.Context, *connect.Request[v1.UpdateMemoRequest]) (*connect.Response[v1.Memo], error)
 	// DeleteMemo deletes a memo.
@@ -476,6 +495,12 @@ func NewMemoServiceHandler(svc MemoServiceHandler, opts ...connect.HandlerOption
 		MemoServiceGetMemoProcedure,
 		svc.GetMemo,
 		connect.WithSchema(memoServiceMethods.ByName("GetMemo")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceRecordMemoViewHandler := connect.NewUnaryHandler(
+		MemoServiceRecordMemoViewProcedure,
+		svc.RecordMemoView,
+		connect.WithSchema(memoServiceMethods.ByName("RecordMemoView")),
 		connect.WithHandlerOptions(opts...),
 	)
 	memoServiceUpdateMemoHandler := connect.NewUnaryHandler(
@@ -588,6 +613,8 @@ func NewMemoServiceHandler(svc MemoServiceHandler, opts ...connect.HandlerOption
 			memoServiceListMemosHandler.ServeHTTP(w, r)
 		case MemoServiceGetMemoProcedure:
 			memoServiceGetMemoHandler.ServeHTTP(w, r)
+		case MemoServiceRecordMemoViewProcedure:
+			memoServiceRecordMemoViewHandler.ServeHTTP(w, r)
 		case MemoServiceUpdateMemoProcedure:
 			memoServiceUpdateMemoHandler.ServeHTTP(w, r)
 		case MemoServiceDeleteMemoProcedure:
@@ -641,6 +668,10 @@ func (UnimplementedMemoServiceHandler) ListMemos(context.Context, *connect.Reque
 
 func (UnimplementedMemoServiceHandler) GetMemo(context.Context, *connect.Request[v1.GetMemoRequest]) (*connect.Response[v1.Memo], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.GetMemo is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) RecordMemoView(context.Context, *connect.Request[v1.RecordMemoViewRequest]) (*connect.Response[v1.RecordMemoViewResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.RecordMemoView is not implemented"))
 }
 
 func (UnimplementedMemoServiceHandler) UpdateMemo(context.Context, *connect.Request[v1.UpdateMemoRequest]) (*connect.Response[v1.Memo], error) {

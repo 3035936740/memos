@@ -114,6 +114,7 @@
     "version": "Version",
     "visibility": "Visibility",
     "views": "Views",
+    "view-count": "View count",
     "yourself": "Yourself",
     "empty-placeholder": "Empty",
     "unlink": "Unlink"

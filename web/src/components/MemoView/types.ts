@@ -1,3 +1,4 @@
+import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 export interface MemoViewProps {
@@ -9,6 +10,7 @@ export interface MemoViewProps {
   hideCommentPreview?: boolean;
   className?: string;
   parentPage?: string;
+  navigationScope?: MemoNavigationScope;
   shareImageDialogOpen?: boolean;
   onShareImageDialogOpenChange?: (open: boolean) => void;
 }

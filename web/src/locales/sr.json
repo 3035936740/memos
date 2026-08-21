@@ -153,6 +153,7 @@
     "version": "Версион",
     "visibility": "Видљивост",
     "views": "Прикази",
+    "view-count": "Број прегледа",
     "yourself": "Себе"
   },
   "locale-picker": {

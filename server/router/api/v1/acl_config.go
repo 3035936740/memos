@@ -31,6 +31,7 @@ var PublicMethods = map[string]struct{}{
 
 	// Memo Service - public memos (visibility filtering done in service layer)
 	"/memos.api.v1.MemoService/GetMemo":              {},
+	"/memos.api.v1.MemoService/RecordMemoView":       {},
 	"/memos.api.v1.MemoService/ListMemos":            {},
 	"/memos.api.v1.MemoService/ListMemoComments":     {},
 	"/memos.api.v1.MemoService/ListMemoAttachments":  {},
@@ -74,7 +75,8 @@ var AuthBootstrapMethods = map[string]struct{}{
 	"/memos.api.v1.UserService/CreateUser": {},
 
 	// Memo sharing - share-token access stays public even on a private instance.
-	"/memos.api.v1.MemoService/GetSharedMemo": {},
+	"/memos.api.v1.MemoService/GetSharedMemo":  {},
+	"/memos.api.v1.MemoService/RecordMemoView": {},
 }
 
 // IsAuthBootstrapMethod reports whether an anonymous request to procedure is one

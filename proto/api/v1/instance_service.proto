@@ -165,6 +165,11 @@ message InstanceSetting {
     // default_background_image_url overrides the active theme's preset page background.
     // Empty values keep the preset background provided by the selected theme.
     string default_background_image_url = 16;
+    // default_member_memo_visibility is assigned to newly created accounts.
+    // Empty values fall back to PUBLIC.
+    string default_member_memo_visibility = 17;
+    // default_member_save_media_metadata is assigned to newly created accounts.
+    bool default_member_save_media_metadata = 18;
 
     // Custom profile configuration for instance branding.
     message CustomProfile {

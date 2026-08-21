@@ -1,5 +1,7 @@
+import { create } from "@bufbuild/protobuf";
+import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
 import { sortBy } from "lodash-es";
-import { MoreVerticalIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { MoreVerticalIcon, PlusIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -8,12 +10,15 @@ import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { userServiceClient } from "@/connect";
+import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useDialog } from "@/hooks/useDialog";
 import { useDeleteUser, useListUsers } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
+import { buildUserSettingName } from "@/lib/resource-names";
 import { State } from "@/types/proto/api/v1/common_pb";
-import { User, User_Role } from "@/types/proto/api/v1/user_service_pb";
+import { User, User_Role, UserSetting_Key, UserSettingSchema } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { unbanUser } from "@/utils/moderation";
 import CreateUserDialog from "../CreateUserDialog";
@@ -24,6 +29,7 @@ import SettingTable from "./SettingTable";
 const MemberSection = () => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
+  const { generalSetting } = useInstance();
   const { data: users = [], refetch: refetchUsers } = useListUsers();
   const deleteUserMutation = useDeleteUser();
   const createDialog = useDialog();
@@ -31,6 +37,8 @@ const MemberSection = () => {
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const sortedUsers = useMemo(() => sortBy(users, "id"), [users]);
   const [deleteTarget, setDeleteTarget] = useState<User | undefined>(undefined);
+  const [confirmInitializeAll, setConfirmInitializeAll] = useState(false);
+  const [initializingPreferences, setInitializingPreferences] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -90,14 +98,74 @@ const MemberSection = () => {
     });
   };
 
+  const initializePreferences = async (target: User) => {
+    const memoVisibility = ["PRIVATE", "PROTECTED", "PUBLIC"].includes(generalSetting.defaultMemberMemoVisibility)
+      ? generalSetting.defaultMemberMemoVisibility
+      : "PUBLIC";
+    await userServiceClient.updateUserSetting({
+      setting: create(UserSettingSchema, {
+        name: buildUserSettingName(target.name, UserSetting_Key.GENERAL),
+        value: {
+          case: "generalSetting",
+          value: {
+            locale: generalSetting.firstVisitDefaultLocale || "zh-Hans",
+            theme: generalSetting.firstVisitDefaultTheme || "cosmic-dark",
+            memoVisibility,
+            saveMediaMetadata: generalSetting.defaultMemberSaveMediaMetadata,
+          },
+        },
+      }),
+      updateMask: create(FieldMaskSchema, {
+        paths: ["locale", "theme", "memo_visibility", "save_media_metadata"],
+      }),
+    });
+  };
+
+  const handleInitializeOne = async (target: User) => {
+    try {
+      setInitializingPreferences(true);
+      await initializePreferences(target);
+      toast.success(t("setting.member.initialize-preferences-success", { username: target.username }));
+    } catch (error) {
+      handleError(error, toast.error, { context: "Initialize member preferences" });
+    } finally {
+      setInitializingPreferences(false);
+    }
+  };
+
+  const handleInitializeAll = async () => {
+    try {
+      setInitializingPreferences(true);
+      for (const target of sortedUsers) {
+        await initializePreferences(target);
+      }
+      toast.success(t("setting.member.initialize-all-preferences-success", { count: sortedUsers.length }));
+    } catch (error) {
+      handleError(error, toast.error, { context: "Initialize all member preferences" });
+    } finally {
+      setInitializingPreferences(false);
+      setConfirmInitializeAll(false);
+    }
+  };
+
   return (
     <SettingSection
       title={t("setting.member.list-title")}
       actions={
-        <Button onClick={handleCreateUser}>
-          <PlusIcon className="w-4 h-4 mr-2" />
-          {t("common.create")}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            disabled={initializingPreferences || sortedUsers.length === 0}
+            onClick={() => setConfirmInitializeAll(true)}
+          >
+            <RefreshCwIcon className="mr-2 size-4" />
+            {t("setting.member.initialize-all-preferences")}
+          </Button>
+          <Button onClick={handleCreateUser}>
+            <PlusIcon className="w-4 h-4 mr-2" />
+            {t("common.create")}
+          </Button>
+        </div>
       }
     >
       <div className="relative max-w-md">
@@ -170,6 +238,9 @@ const MemberSection = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" sideOffset={2}>
                     <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("common.update")}</DropdownMenuItem>
+                    <DropdownMenuItem disabled={initializingPreferences} onClick={() => void handleInitializeOne(user)}>
+                      {t("setting.member.initialize-preferences")}
+                    </DropdownMenuItem>
                     {user.state === State.NORMAL ? (
                       <DropdownMenuItem onClick={() => handleEditUser(user)}>{t("setting.member.ban-action")}</DropdownMenuItem>
                     ) : (
@@ -219,6 +290,16 @@ const MemberSection = () => {
         cancelLabel={t("common.cancel")}
         onConfirm={confirmDeleteUser}
         confirmVariant="destructive"
+      />
+
+      <ConfirmDialog
+        open={confirmInitializeAll}
+        onOpenChange={setConfirmInitializeAll}
+        title={t("setting.member.initialize-all-preferences")}
+        description={t("setting.member.initialize-all-preferences-description")}
+        confirmLabel={t("common.confirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => void handleInitializeAll()}
       />
     </SettingSection>
   );

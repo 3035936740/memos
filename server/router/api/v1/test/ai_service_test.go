@@ -282,3 +282,42 @@ func TestTranscribe(t *testing.T) {
 		require.Contains(t, err.Error(), "transcription is not configured")
 	})
 }
+
+func TestGenerateTextWithDeepSeek(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "writer")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	providerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/v1/chat/completions", r.URL.Path)
+		require.Equal(t, "Bearer sk-deepseek", r.Header.Get("Authorization"))
+		var request map[string]any
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+		require.Equal(t, "deepseek-chat", request["model"])
+		w.Header().Set("Content-Type", "application/json")
+		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
+			"choices": []map[string]any{{"message": map[string]string{"content": "## Generated text"}}},
+		}))
+	}))
+	defer providerServer.Close()
+
+	_, err = ts.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
+		Key: storepb.InstanceSettingKey_AI,
+		Value: &storepb.InstanceSetting_AiSetting{AiSetting: &storepb.InstanceAISetting{Providers: []*storepb.AIProviderConfig{
+			{Id: "deepseek-main", Title: "DeepSeek", Type: storepb.AIProviderType_DEEPSEEK, Endpoint: providerServer.URL + "/v1", ApiKey: "sk-deepseek"},
+		}}},
+	})
+	require.NoError(t, err)
+
+	response, err := ts.Service.GenerateText(userCtx, &v1pb.GenerateTextRequest{
+		ProviderId: "deepseek-main",
+		Prompt:     "Continue this memo",
+		Context:    "Existing text",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "## Generated text", response.Text)
+}

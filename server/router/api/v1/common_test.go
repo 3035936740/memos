@@ -46,6 +46,26 @@ func TestDraftScheduleAndQuarantineCollectionVisibility(t *testing.T) {
 	require.True(t, memoVisibleInCollection(quarantined, admin))
 }
 
+func TestMemoCategoryAccess(t *testing.T) {
+	t.Parallel()
+
+	member := &store.User{ID: 1, Role: store.RoleUser}
+	admin := &store.User{ID: 2, Role: store.RoleAdmin}
+	publicCategory := instanceMemoCategory{Slug: "public", Access: "public"}
+	authenticatedCategory := instanceMemoCategory{Slug: "members", Access: "authenticated"}
+	adminCategory := instanceMemoCategory{Slug: "admin", Access: "admin"}
+
+	require.True(t, memoCategoryAllowsUser(publicCategory, nil))
+	require.False(t, memoCategoryAllowsUser(authenticatedCategory, nil))
+	require.True(t, memoCategoryAllowsUser(authenticatedCategory, member))
+	require.False(t, memoCategoryAllowsUser(adminCategory, member))
+	require.True(t, memoCategoryAllowsUser(adminCategory, admin))
+
+	denied := map[string]struct{}{"admin": {}}
+	require.False(t, memoVisibleInCategories(&store.Memo{Payload: &storepb.MemoPayload{Category: "admin"}}, denied))
+	require.True(t, memoVisibleInCategories(&store.Memo{Payload: &storepb.MemoPayload{Category: "public"}}, denied))
+}
+
 func TestNormalizePageSize(t *testing.T) {
 	t.Parallel()
 

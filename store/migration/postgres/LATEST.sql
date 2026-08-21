@@ -39,6 +39,7 @@ CREATE TABLE memo (
   content TEXT NOT NULL,
   visibility TEXT NOT NULL DEFAULT 'PRIVATE',
   pinned BOOLEAN NOT NULL DEFAULT FALSE,
+  view_count BIGINT NOT NULL DEFAULT 0,
   payload JSONB NOT NULL DEFAULT '{}'
 );
 

@@ -48,6 +48,7 @@ type Memo struct {
 	Content    string
 	Visibility Visibility
 	Pinned     bool
+	ViewCount  int64
 	Payload    *storepb.MemoPayload
 
 	// Composed fields
@@ -135,6 +136,11 @@ func (s *Store) UpdateMemo(ctx context.Context, update *UpdateMemo) error {
 		return errors.New("invalid uid")
 	}
 	return s.driver.UpdateMemo(ctx, update)
+}
+
+// IncrementMemoViewCount atomically increments and returns a memo's view count.
+func (s *Store) IncrementMemoViewCount(ctx context.Context, memoID int32) (int64, error) {
+	return s.driver.IncrementMemoViewCount(ctx, memoID)
 }
 
 func (s *Store) DeleteMemo(ctx context.Context, delete *DeleteMemo) error {

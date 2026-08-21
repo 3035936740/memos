@@ -1,10 +1,12 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { BanIcon, CalendarClockIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
+import { BanIcon, CalendarClockIcon, EyeIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
+import i18n from "@/i18n";
+import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
@@ -64,9 +66,10 @@ interface Props {
   memo: Memo;
   showCreator?: boolean;
   parentPage?: string;
+  navigationScope?: MemoNavigationScope;
 }
 
-const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
+const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }: Props) => {
   const t = useTranslate();
   const creator = useResolvedUser(memo.creator, { enabled: showCreator });
   const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
@@ -124,7 +127,7 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
 
             <Link
               to={detailPath}
-              state={{ from: parentPage }}
+              state={{ from: parentPage, navigationScope }}
               className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <h2 className="line-clamp-2 text-lg font-semibold leading-7 tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-xl">
@@ -137,7 +140,7 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
           {cover && (
             <Link
               to={detailPath}
-              state={{ from: parentPage }}
+              state={{ from: parentPage, navigationScope }}
               aria-label={title || t("memo.blog-untitled")}
               className="h-24 w-28 shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-36"
             >
@@ -162,6 +165,10 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage }: Props) => {
             </Link>
           )}
           {createTime && <RelativeTime date={createTime} />}
+          <span className="inline-flex items-center gap-1" title={t("common.view-count")}>
+            <EyeIcon className="size-3.5" />
+            {memo.viewCount.toLocaleString(i18n.language)}
+          </span>
           <span className="inline-flex items-center gap-1">
             <MessageCircleIcon className="size-3.5" />
             {t("memo.blog-comments", { n: commentAmount })}

@@ -114,6 +114,7 @@
     "version": "Version",
     "visibility": "Synlighet",
     "views": "Vyer",
+    "view-count": "Antal visningar",
     "yourself": "Själv",
     "empty-placeholder": "Tömma",
     "unlink": "Ta bort länken"

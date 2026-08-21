@@ -137,6 +137,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		"`memo`.`row_status` AS `row_status`",
 		"`memo`.`visibility` AS `visibility`",
 		"`memo`.`pinned` AS `pinned`",
+		"`memo`.`view_count` AS `view_count`",
 		"`memo`.`payload` AS `payload`",
 		"CASE WHEN `parent_memo`.`uid` IS NOT NULL THEN `parent_memo`.`uid` ELSE NULL END AS `parent_uid`",
 	}
@@ -177,6 +178,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			&memo.RowStatus,
 			&memo.Visibility,
 			&memo.Pinned,
+			&memo.ViewCount,
 			&payloadBytes,
 			&memo.ParentUID,
 		}
@@ -216,6 +218,17 @@ func (d *DB) GetMemo(ctx context.Context, find *store.FindMemo) (*store.Memo, er
 
 func (d *DB) UpdateMemo(ctx context.Context, update *store.UpdateMemo) error {
 	return applyMemoUpdate(ctx, d.db, update)
+}
+
+func (d *DB) IncrementMemoViewCount(ctx context.Context, memoID int32) (int64, error) {
+	if _, err := d.db.ExecContext(ctx, "UPDATE `memo` SET `view_count` = `view_count` + 1 WHERE `id` = ?", memoID); err != nil {
+		return 0, err
+	}
+	var viewCount int64
+	if err := d.db.QueryRowContext(ctx, "SELECT `view_count` FROM `memo` WHERE `id` = ?", memoID).Scan(&viewCount); err != nil {
+		return 0, err
+	}
+	return viewCount, nil
 }
 
 func (d *DB) DeleteMemo(ctx context.Context, delete *store.DeleteMemo) error {

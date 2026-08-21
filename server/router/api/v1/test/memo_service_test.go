@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	apiv1 "github.com/usememos/memos/proto/gen/api/v1"
+	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/store"
 )
 
@@ -36,6 +37,45 @@ func TestCreateMemoAcceptsUUID(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, "memos/"+memoID, memo.Name)
+}
+
+func TestRecordMemoViewCountsEverySuccessfulVisit(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	owner, err := ts.CreateRegularUser(ctx, "view-count-owner")
+	require.NoError(t, err)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+
+	publicMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "count every detail visit", Visibility: apiv1.Visibility_PUBLIC},
+	})
+	require.NoError(t, err)
+	require.Zero(t, publicMemo.ViewCount)
+
+	first, err := ts.Service.RecordMemoView(ctx, &apiv1.RecordMemoViewRequest{Name: publicMemo.Name})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), first.ViewCount)
+
+	second, err := ts.Service.RecordMemoView(ctx, &apiv1.RecordMemoViewRequest{Name: publicMemo.Name})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), second.ViewCount)
+
+	fetched, err := ts.Service.GetMemo(ctx, &apiv1.GetMemoRequest{Name: publicMemo.Name})
+	require.NoError(t, err)
+	require.Equal(t, int64(2), fetched.ViewCount)
+
+	privateMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "private memo", Visibility: apiv1.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	_, err = ts.Service.RecordMemoView(ctx, &apiv1.RecordMemoViewRequest{Name: privateMemo.Name})
+	require.Error(t, err)
+	privateMemo, err = ts.Service.GetMemo(ownerCtx, &apiv1.GetMemoRequest{Name: privateMemo.Name})
+	require.NoError(t, err)
+	require.Zero(t, privateMemo.ViewCount)
 }
 
 func TestHiddenMemoIsDirectLinkPublicButOmittedFromCollections(t *testing.T) {
@@ -102,6 +142,62 @@ func TestHiddenMemoIsDirectLinkPublicButOmittedFromCollections(t *testing.T) {
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"hidden"}},
 	})
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
+}
+
+func TestMemoCategoryAccessIsEnforcedByAPI(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	admin, err := ts.CreateHostUser(ctx, "category-admin")
+	require.NoError(t, err)
+	member, err := ts.CreateRegularUser(ctx, "category-member")
+	require.NoError(t, err)
+	adminCtx := ts.CreateUserContext(ctx, admin.ID)
+	memberCtx := ts.CreateUserContext(ctx, member.ID)
+
+	_, err = ts.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
+		Key: storepb.InstanceSettingKey_GENERAL,
+		Value: &storepb.InstanceSetting_GeneralSetting{
+			GeneralSetting: &storepb.InstanceGeneralSetting{
+				MemoCategoriesJson: `[{"slug":"public","title":"Public","access":"public"},{"slug":"secret","title":"Secret","access":"admin"}]`,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	publicCategory := "public"
+	publicMemo, err := ts.Service.CreateMemo(adminCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "public category", Visibility: apiv1.Visibility_PUBLIC, Category: &publicCategory},
+	})
+	require.NoError(t, err)
+
+	secretCategory := "secret"
+	secretMemo, err := ts.Service.CreateMemo(adminCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "admin category", Visibility: apiv1.Visibility_PUBLIC, Category: &secretCategory},
+	})
+	require.NoError(t, err)
+
+	_, err = ts.Service.CreateMemo(memberCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "category bypass", Visibility: apiv1.Visibility_PUBLIC, Category: &secretCategory},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	for _, visitorCtx := range []context.Context{ctx, memberCtx} {
+		listed, err := ts.Service.ListMemos(visitorCtx, &apiv1.ListMemosRequest{PageSize: 10, ShowTotalSize: true})
+		require.NoError(t, err)
+		require.Equal(t, int32(1), listed.TotalSize)
+		require.Len(t, listed.Memos, 1)
+		require.Equal(t, publicMemo.Name, listed.Memos[0].Name)
+
+		_, err = ts.Service.GetMemo(visitorCtx, &apiv1.GetMemoRequest{Name: secretMemo.Name})
+		require.Equal(t, codes.NotFound, status.Code(err))
+	}
+
+	adminList, err := ts.Service.ListMemos(adminCtx, &apiv1.ListMemosRequest{PageSize: 10, ShowTotalSize: true})
+	require.NoError(t, err)
+	require.Equal(t, int32(2), adminList.TotalSize)
+	require.Len(t, adminList.Memos, 2)
 }
 
 func TestRegularUserCannotCreateHiddenMemo(t *testing.T) {

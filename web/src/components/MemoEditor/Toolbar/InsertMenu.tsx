@@ -10,6 +10,7 @@ import {
   PaperclipIcon,
   PlusIcon,
   SmilePlusIcon,
+  SparklesIcon,
   TypeIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,6 +28,7 @@ import {
 import { useDebouncedEffect } from "@/hooks";
 import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import AIGenerateDialog from "../components/AIGenerateDialog";
 import EmojiPickerDialog from "../components/EmojiPickerDialog";
 import { useFileUpload, useLinkMemo, useLocation } from "../hooks";
 import { useEditorContext, useEditorSelector } from "../state";
@@ -49,6 +51,8 @@ const InsertMenu = (props: InsertMenuProps) => {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [emojiDialogOpen, setEmojiDialogOpen] = useState(false);
+  const [aiDialogOpen, setAIDialogOpen] = useState(false);
+  const [aiContext, setAIContext] = useState("");
   const inlineImageInputRef = useRef<HTMLInputElement>(null);
 
   const { fileInputRef, selectingFlag, handleFileInputChange, handleUploadClick } = useFileUpload((newFiles: LocalFile[]) => {
@@ -155,6 +159,15 @@ const InsertMenu = (props: InsertMenuProps) => {
     { key: "attachment", label: t("editor.insert-menu.add-attachment"), icon: PaperclipIcon, onClick: handleAttachmentUploadClick },
     { key: "inline-image", label: t("editor.insert-menu.insert-image"), icon: ImageIcon, onClick: handleInlineImageUploadClick },
     { key: "emoji", label: t("editor.insert-menu.insert-emoji"), icon: SmilePlusIcon, onClick: () => setEmojiDialogOpen(true) },
+    {
+      key: "ai",
+      label: t("editor.insert-menu.ai-assistant"),
+      icon: SparklesIcon,
+      onClick: () => {
+        setAIContext(getState().content);
+        setAIDialogOpen(true);
+      },
+    },
     { key: "audio", label: t("editor.audio-recorder.trigger"), icon: MicIcon, onClick: props.onAudioRecorderClick },
     { key: "link", label: t("editor.insert-menu.link-memo"), icon: LinkIcon, onClick: handleOpenLinkDialog },
     { key: "location", label: t("editor.insert-menu.add-location"), icon: MapPinIcon, onClick: handleLocationClick },
@@ -231,6 +244,7 @@ const InsertMenu = (props: InsertMenuProps) => {
       />
 
       <EmojiPickerDialog open={emojiDialogOpen} onOpenChange={setEmojiDialogOpen} onSelect={props.onInsertEmoji} />
+      <AIGenerateDialog open={aiDialogOpen} onOpenChange={setAIDialogOpen} context={aiContext} onInsert={props.onInsertAIText} />
     </>
   );
 };

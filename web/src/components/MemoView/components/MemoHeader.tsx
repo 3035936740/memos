@@ -1,4 +1,4 @@
-import { BanIcon, BookmarkIcon, CalendarClockIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon } from "lucide-react";
+import { BanIcon, BookmarkIcon, CalendarClockIcon, EyeIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
@@ -22,14 +22,14 @@ import type { MemoHeaderProps } from "../types";
 const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, showPinned }) => {
   const t = useTranslate();
 
-  const { memo, creator, currentUser, parentPage, isArchived, readonly, openEditor } = useMemoViewContext();
+  const { memo, creator, currentUser, parentPage, navigationScope, isArchived, readonly, openEditor } = useMemoViewContext();
   const { createTime, updateTime, displayTime: memoDisplayTime, isDisplayingUpdatedTime, relativeTimeFormat } = useMemoViewDerived();
   const { newMemoName } = useNewMemo();
 
   const navigateTo = useNavigateTo();
   const handleGotoMemoDetailPage = useCallback(() => {
-    navigateTo(`/${memo.name}`, { state: { from: parentPage } });
-  }, [memo.name, parentPage, navigateTo]);
+    navigateTo(`/${memo.name}`, { state: { from: parentPage, navigationScope } });
+  }, [memo.name, navigationScope, parentPage, navigateTo]);
   const handleQuickReply = useCallback(async () => {
     let replyParentName = memo.name;
     if (memo.parent) {
@@ -53,13 +53,14 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
     navigateTo(`/${replyParentName}#comments`, {
       state: {
         from: parentPage,
+        navigationScope,
         quickReplyMemo: replyParentName,
         replyToMemo: memo.parent ? memo.name : undefined,
         quickReplyContent: memo.parent && creator?.username ? `@${creator.username} ` : undefined,
         quickReplyRequest: Date.now(),
       },
     });
-  }, [creator?.username, memo.name, memo.parent, navigateTo, parentPage]);
+  }, [creator?.username, memo.name, memo.parent, navigateTo, navigationScope, parentPage]);
 
   const { unpinMemo } = useMemoActions(memo);
 
@@ -99,6 +100,15 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
       </div>
 
       <div className="flex flex-row justify-end items-center select-none shrink-0 gap-2">
+        {!memo.parent && (
+          <Tooltip>
+            <TooltipTrigger render={<span className="inline-flex items-center gap-1 text-xs text-muted-foreground" />}>
+              <EyeIcon className="size-4" />
+              <span>{memo.viewCount.toLocaleString(i18n.language)}</span>
+            </TooltipTrigger>
+            <TooltipContent>{t("common.view-count")}</TooltipContent>
+          </Tooltip>
+        )}
         {memo.draft && (
           <Tooltip>
             <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-amber-600" />}>

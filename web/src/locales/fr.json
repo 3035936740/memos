@@ -114,6 +114,7 @@
     "version": "Version",
     "visibility": "Visibilité",
     "views": "Vues",
+    "view-count": "Nombre de vues",
     "yourself": "Vous-même",
     "empty-placeholder": "Vide",
     "unlink": "Dissocier"

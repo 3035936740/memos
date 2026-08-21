@@ -153,6 +153,7 @@
     "version": "Versija",
     "visibility": "Redzamība",
     "views": "Skati",
+    "view-count": "Skatījumu skaits",
     "yourself": "sevi"
   },
   "locale-picker": {

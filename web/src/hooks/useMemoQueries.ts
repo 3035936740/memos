@@ -162,6 +162,20 @@ export function useMemo(name: string, options?: { enabled?: boolean }) {
   });
 }
 
+export function useRecordMemoView() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ name, shareToken = "" }: { name: string; shareToken?: string }) =>
+      memoServiceClient.recordMemoView({ name, shareToken }),
+    onSuccess: ({ viewCount }, { name }) => {
+      const update: MemoPatch = { name, viewCount };
+      queryClient.setQueryData<Memo>(memoKeys.detail(name), (memo) => (memo ? { ...memo, viewCount } : memo));
+      patchMemoInCollectionQueries(queryClient, update);
+    },
+  });
+}
+
 function isHTTPURL(url: string): boolean {
   try {
     const parsed = new URL(url);

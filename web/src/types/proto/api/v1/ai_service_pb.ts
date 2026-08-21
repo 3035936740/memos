@@ -13,7 +13,66 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file api/v1/ai_service.proto.
  */
 export const file_api_v1_ai_service: GenFile = /*@__PURE__*/
-  fileDesc("ChdhcGkvdjEvYWlfc2VydmljZS5wcm90bxIMbWVtb3MuYXBpLnYxIkkKEVRyYW5zY3JpYmVSZXF1ZXN0EjQKBWF1ZGlvGAEgASgLMiAubWVtb3MuYXBpLnYxLlRyYW5zY3JpcHRpb25BdWRpb0ID4EECIncKElRyYW5zY3JpcHRpb25BdWRpbxIWCgdjb250ZW50GAEgASgMQgPgQQRIABINCgN1cmkYAiABKAlIABIVCghmaWxlbmFtZRgDIAEoCUID4EEBEhkKDGNvbnRlbnRfdHlwZRgEIAEoCUID4EEBQggKBnNvdXJjZSIiChJUcmFuc2NyaWJlUmVzcG9uc2USDAoEdGV4dBgBIAEoCTKGAQoJQUlTZXJ2aWNlEnkKClRyYW5zY3JpYmUSHy5tZW1vcy5hcGkudjEuVHJhbnNjcmliZVJlcXVlc3QaIC5tZW1vcy5hcGkudjEuVHJhbnNjcmliZVJlc3BvbnNlIijaQQVhdWRpb4LT5JMCGjoBKiIVL2FwaS92MS9haTp0cmFuc2NyaWJlQqYBChBjb20ubWVtb3MuYXBpLnYxQg5BaVNlcnZpY2VQcm90b1ABWjBnaXRodWIuY29tL3VzZW1lbW9zL21lbW9zL3Byb3RvL2dlbi9hcGkvdjE7YXBpdjGiAgNNQViqAgxNZW1vcy5BcGkuVjHKAgxNZW1vc1xBcGlcVjHiAhhNZW1vc1xBcGlcVjFcR1BCTWV0YWRhdGHqAg5NZW1vczo6QXBpOjpWMWIGcHJvdG8z", [file_google_api_annotations, file_google_api_client, file_google_api_field_behavior]);
+  fileDesc("ChdhcGkvdjEvYWlfc2VydmljZS5wcm90bxIMbWVtb3MuYXBpLnYxIm4KE0dlbmVyYXRlVGV4dFJlcXVlc3QSGAoLcHJvdmlkZXJfaWQYASABKAlCA+BBAhISCgVtb2RlbBgCIAEoCUID4EEBEhMKBnByb21wdBgDIAEoCUID4EECEhQKB2NvbnRleHQYBCABKAlCA+BBASIkChRHZW5lcmF0ZVRleHRSZXNwb25zZRIMCgR0ZXh0GAEgASgJIkkKEVRyYW5zY3JpYmVSZXF1ZXN0EjQKBWF1ZGlvGAEgASgLMiAubWVtb3MuYXBpLnYxLlRyYW5zY3JpcHRpb25BdWRpb0ID4EECIncKElRyYW5zY3JpcHRpb25BdWRpbxIWCgdjb250ZW50GAEgASgMQgPgQQRIABINCgN1cmkYAiABKAlIABIVCghmaWxlbmFtZRgDIAEoCUID4EEBEhkKDGNvbnRlbnRfdHlwZRgEIAEoCUID4EEBQggKBnNvdXJjZSIiChJUcmFuc2NyaWJlUmVzcG9uc2USDAoEdGV4dBgBIAEoCTKXAgoJQUlTZXJ2aWNlEnkKClRyYW5zY3JpYmUSHy5tZW1vcy5hcGkudjEuVHJhbnNjcmliZVJlcXVlc3QaIC5tZW1vcy5hcGkudjEuVHJhbnNjcmliZVJlc3BvbnNlIijaQQVhdWRpb4LT5JMCGjoBKiIVL2FwaS92MS9haTp0cmFuc2NyaWJlEo4BCgxHZW5lcmF0ZVRleHQSIS5tZW1vcy5hcGkudjEuR2VuZXJhdGVUZXh0UmVxdWVzdBoiLm1lbW9zLmFwaS52MS5HZW5lcmF0ZVRleHRSZXNwb25zZSI32kEScHJvdmlkZXJfaWQscHJvbXB0gtPkkwIcOgEqIhcvYXBpL3YxL2FpOmdlbmVyYXRlVGV4dEKmAQoQY29tLm1lbW9zLmFwaS52MUIOQWlTZXJ2aWNlUHJvdG9QAVowZ2l0aHViLmNvbS91c2VtZW1vcy9tZW1vcy9wcm90by9nZW4vYXBpL3YxO2FwaXYxogIDTUFYqgIMTWVtb3MuQXBpLlYxygIMTWVtb3NcQXBpXFYx4gIYTWVtb3NcQXBpXFYxXEdQQk1ldGFkYXRh6gIOTWVtb3M6OkFwaTo6VjFiBnByb3RvMw", [file_google_api_annotations, file_google_api_client, file_google_api_field_behavior]);
+
+/**
+ * @generated from message memos.api.v1.GenerateTextRequest
+ */
+export type GenerateTextRequest = Message<"memos.api.v1.GenerateTextRequest"> & {
+  /**
+   * Required. Configured provider identifier.
+   *
+   * @generated from field: string provider_id = 1;
+   */
+  providerId: string;
+
+  /**
+   * Optional. Provider model identifier; uses a provider default when empty.
+   *
+   * @generated from field: string model = 2;
+   */
+  model: string;
+
+  /**
+   * Required. Instruction for the model.
+   *
+   * @generated from field: string prompt = 3;
+   */
+  prompt: string;
+
+  /**
+   * Optional. Current memo text supplied as editing context.
+   *
+   * @generated from field: string context = 4;
+   */
+  context: string;
+};
+
+/**
+ * Describes the message memos.api.v1.GenerateTextRequest.
+ * Use `create(GenerateTextRequestSchema)` to create a new message.
+ */
+export const GenerateTextRequestSchema: GenMessage<GenerateTextRequest> = /*@__PURE__*/
+  messageDesc(file_api_v1_ai_service, 0);
+
+/**
+ * @generated from message memos.api.v1.GenerateTextResponse
+ */
+export type GenerateTextResponse = Message<"memos.api.v1.GenerateTextResponse"> & {
+  /**
+   * Generated Markdown-compatible text.
+   *
+   * @generated from field: string text = 1;
+   */
+  text: string;
+};
+
+/**
+ * Describes the message memos.api.v1.GenerateTextResponse.
+ * Use `create(GenerateTextResponseSchema)` to create a new message.
+ */
+export const GenerateTextResponseSchema: GenMessage<GenerateTextResponse> = /*@__PURE__*/
+  messageDesc(file_api_v1_ai_service, 1);
 
 /**
  * @generated from message memos.api.v1.TranscribeRequest
@@ -32,7 +91,7 @@ export type TranscribeRequest = Message<"memos.api.v1.TranscribeRequest"> & {
  * Use `create(TranscribeRequestSchema)` to create a new message.
  */
 export const TranscribeRequestSchema: GenMessage<TranscribeRequest> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 0);
+  messageDesc(file_api_v1_ai_service, 2);
 
 /**
  * @generated from message memos.api.v1.TranscriptionAudio
@@ -79,7 +138,7 @@ export type TranscriptionAudio = Message<"memos.api.v1.TranscriptionAudio"> & {
  * Use `create(TranscriptionAudioSchema)` to create a new message.
  */
 export const TranscriptionAudioSchema: GenMessage<TranscriptionAudio> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 1);
+  messageDesc(file_api_v1_ai_service, 3);
 
 /**
  * @generated from message memos.api.v1.TranscribeResponse
@@ -98,7 +157,7 @@ export type TranscribeResponse = Message<"memos.api.v1.TranscribeResponse"> & {
  * Use `create(TranscribeResponseSchema)` to create a new message.
  */
 export const TranscribeResponseSchema: GenMessage<TranscribeResponse> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 2);
+  messageDesc(file_api_v1_ai_service, 4);
 
 /**
  * @generated from service memos.api.v1.AIService
@@ -113,6 +172,16 @@ export const AIService: GenService<{
     methodKind: "unary";
     input: typeof TranscribeRequestSchema;
     output: typeof TranscribeResponseSchema;
+  },
+  /**
+   * GenerateText generates memo-ready text using an instance AI provider.
+   *
+   * @generated from rpc memos.api.v1.AIService.GenerateText
+   */
+  generateText: {
+    methodKind: "unary";
+    input: typeof GenerateTextRequestSchema;
+    output: typeof GenerateTextResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_api_v1_ai_service, 0);

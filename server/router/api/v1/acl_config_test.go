@@ -27,6 +27,7 @@ func TestPublicMethodsArePublic(t *testing.T) {
 		"/memos.api.v1.IdentityProviderService/ListIdentityProviders",
 		// Memo Service
 		"/memos.api.v1.MemoService/GetMemo",
+		"/memos.api.v1.MemoService/RecordMemoView",
 		"/memos.api.v1.MemoService/ListMemos",
 		"/memos.api.v1.MemoService/ListMemoComments",
 		"/memos.api.v1.MemoService/ListMemoAttachments",
@@ -118,6 +119,7 @@ func TestAuthBootstrapClassification(t *testing.T) {
 		"/memos.api.v1.InstanceService/BatchGetInstanceSettings",
 		"/memos.api.v1.IdentityProviderService/ListIdentityProviders",
 		"/memos.api.v1.MemoService/GetSharedMemo",
+		"/memos.api.v1.MemoService/RecordMemoView",
 	}
 	for _, method := range bootstrap {
 		t.Run("bootstrap/"+method, func(t *testing.T) {

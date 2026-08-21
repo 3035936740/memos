@@ -66,6 +66,10 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
+	deniedCategories, err := s.inaccessibleMemoCategories(ctx, currentUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to load memo category access: %v", err)
+	}
 
 	if request.Filter != "" {
 		if err := s.validateFilter(ctx, request.Filter); err != nil {
@@ -106,7 +110,7 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 			break
 		}
 
-		for _, memo := range filterMemosForCollection(memos, currentUser) {
+		for _, memo := range filterMemosForCollection(memos, currentUser, deniedCategories) {
 			// Initialize user stats if not exists
 			if _, exists := userMemoStatMap[memo.CreatorID]; !exists {
 				userMemoStatMap[memo.CreatorID] = &v1pb.UserStats{
@@ -205,6 +209,10 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
 	}
+	deniedCategories, err := s.inaccessibleMemoCategories(ctx, currentUser)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to load memo category access: %v", err)
+	}
 
 	normalStatus := store.Normal
 	memoFind := &store.FindMemo{
@@ -245,7 +253,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 			break
 		}
 
-		for _, memo := range filterMemosForCollection(memos, currentUser) {
+		for _, memo := range filterMemosForCollection(memos, currentUser, deniedCategories) {
 			if memo.ParentUID != nil {
 				totalCommentCount++
 				continue

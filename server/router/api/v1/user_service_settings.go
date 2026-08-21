@@ -28,8 +28,8 @@ func (s *APIV1Service) GetUserSetting(ctx context.Context, request *v1pb.GetUser
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	// Only allow user to get their own settings
-	if currentUser.ID != userID {
+	// Users manage their own settings; administrators may inspect and initialize members.
+	if currentUser.ID != userID && currentUser.Role != store.RoleAdmin {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 
@@ -66,8 +66,8 @@ func (s *APIV1Service) UpdateUserSetting(ctx context.Context, request *v1pb.Upda
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	// Only allow user to update their own settings
-	if currentUser.ID != userID {
+	// Users manage their own settings; administrators may initialize member defaults.
+	if currentUser.ID != userID && currentUser.Role != store.RoleAdmin {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 
@@ -181,8 +181,8 @@ func (s *APIV1Service) ListUserSettings(ctx context.Context, request *v1pb.ListU
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
 
-	// Only allow user to list their own settings
-	if currentUser.ID != userID {
+	// Users list their own settings; administrators may inspect member preferences.
+	if currentUser.ID != userID && currentUser.Role != store.RoleAdmin {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 

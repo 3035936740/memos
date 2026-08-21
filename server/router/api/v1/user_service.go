@@ -226,6 +226,9 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 					return nil, status.Errorf(codes.Internal, "failed to create first user: %v", err)
 				}
 				if created {
+					if err := s.initializeUserGeneralSetting(ctx, user.ID); err != nil {
+						return nil, status.Errorf(codes.Internal, "failed to initialize first user preferences: %v", err)
+					}
 					return convertUserFromStore(user, user), nil
 				}
 				roleToAssign = store.RoleUser
@@ -272,6 +275,9 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create user: %v", err)
+	}
+	if err := s.initializeUserGeneralSetting(ctx, user.ID); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to initialize user preferences: %v", err)
 	}
 
 	return convertUserFromStore(user, user), nil
@@ -472,9 +478,49 @@ func getDeleteUserAttachmentStorageSetting(ctx context.Context, stores *store.St
 func getDefaultUserGeneralSetting() *v1pb.UserSetting_GeneralSetting {
 	return &v1pb.UserSetting_GeneralSetting{
 		Locale:         "zh-Hans",
-		MemoVisibility: "PRIVATE",
+		MemoVisibility: "PUBLIC",
 		Theme:          "",
 	}
+}
+
+func (s *APIV1Service) getConfiguredDefaultUserGeneralSetting(ctx context.Context) (*v1pb.UserSetting_GeneralSetting, error) {
+	setting := getDefaultUserGeneralSetting()
+	instanceSetting, err := s.Store.GetInstanceGeneralSetting(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if instanceSetting == nil {
+		return setting, nil
+	}
+	if instanceSetting.FirstVisitDefaultLocale != "" {
+		setting.Locale = instanceSetting.FirstVisitDefaultLocale
+	}
+	if instanceSetting.FirstVisitDefaultTheme != "" {
+		setting.Theme = instanceSetting.FirstVisitDefaultTheme
+	}
+	if visibility := instanceSetting.DefaultMemberMemoVisibility; visibility == "PRIVATE" || visibility == "PROTECTED" || visibility == "PUBLIC" {
+		setting.MemoVisibility = visibility
+	}
+	setting.SaveMediaMetadata = instanceSetting.DefaultMemberSaveMediaMetadata
+	return setting, nil
+}
+
+func (s *APIV1Service) initializeUserGeneralSetting(ctx context.Context, userID int32) error {
+	setting, err := s.getConfiguredDefaultUserGeneralSetting(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = s.Store.UpsertUserSetting(ctx, &storepb.UserSetting{
+		UserId: userID,
+		Key:    storepb.UserSetting_GENERAL,
+		Value: &storepb.UserSetting_General{General: &storepb.GeneralUserSetting{
+			Locale:            setting.Locale,
+			MemoVisibility:    setting.MemoVisibility,
+			Theme:             setting.Theme,
+			SaveMediaMetadata: setting.SaveMediaMetadata,
+		}},
+	})
+	return err
 }
 
 func (s *APIV1Service) resolveUserFromName(ctx context.Context, name string) (*store.User, error) {

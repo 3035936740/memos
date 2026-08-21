@@ -2,6 +2,7 @@ import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { createContext, useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { useView } from "@/contexts/ViewContext";
+import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { MemoRelation_Type } from "@/types/proto/api/v1/memo_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
@@ -13,6 +14,7 @@ export interface MemoViewContextValue {
   creator: User | undefined;
   currentUser: User | undefined;
   parentPage: string;
+  navigationScope?: MemoNavigationScope;
   cardWidth: number;
   isArchived: boolean;
   readonly: boolean;

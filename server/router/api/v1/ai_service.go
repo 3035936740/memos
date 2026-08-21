@@ -3,9 +3,14 @@ package v1
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -23,7 +28,12 @@ import (
 const (
 	maxTranscriptionAudioSizeBytes = 25 * MebiByte
 	maxTranscriptionFilenameLength = 255
+	maxAITextPromptLength          = 16000
+	maxAITextContextLength         = 64000
+	maxAITextResponseBytes         = 2 << 20
 )
+
+var aiTextHTTPClient = &http.Client{Timeout: 90 * time.Second}
 
 var supportedTranscriptionContentTypes = map[string]bool{
 	"audio/aac":    true,
@@ -118,6 +128,201 @@ func (s *APIV1Service) Transcribe(ctx context.Context, request *v1pb.TranscribeR
 		return nil, status.Errorf(codes.Internal, "failed to transcribe audio: %v", err)
 	}
 	return &v1pb.TranscribeResponse{Text: text}, nil
+}
+
+// GenerateText makes text-only providers useful from the memo composer.
+func (s *APIV1Service) GenerateText(ctx context.Context, request *v1pb.GenerateTextRequest) (*v1pb.GenerateTextResponse, error) {
+	user, err := s.fetchCurrentUser(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
+	}
+	if user == nil {
+		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
+	}
+	prompt := strings.TrimSpace(request.GetPrompt())
+	if prompt == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "prompt is required")
+	}
+	if len(prompt) > maxAITextPromptLength || len(request.GetContext()) > maxAITextContextLength {
+		return nil, status.Errorf(codes.InvalidArgument, "AI prompt or memo context is too long")
+	}
+
+	aiSetting, err := s.Store.GetInstanceAISetting(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get AI setting: %v", err)
+	}
+	provider, err := s.resolveAIProvider(aiSetting, request.GetProviderId())
+	if err != nil {
+		return nil, err
+	}
+	model := strings.TrimSpace(request.GetModel())
+	if model == "" {
+		model = defaultAITextModel(provider.Type)
+	}
+	if model == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "model is required for provider type %q", provider.Type)
+	}
+
+	text, err := generateAIText(ctx, provider, model, prompt, request.GetContext())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "AI text generation failed: %v", err)
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return nil, status.Errorf(codes.Internal, "AI provider returned empty text")
+	}
+	return &v1pb.GenerateTextResponse{Text: text}, nil
+}
+
+func defaultAITextModel(providerType ai.ProviderType) string {
+	switch providerType {
+	case ai.ProviderOpenAI, ai.ProviderOpenAICompatible:
+		return "gpt-4o-mini"
+	case ai.ProviderGemini:
+		return "gemini-2.5-flash"
+	case ai.ProviderAnthropic:
+		return "claude-3-5-haiku-latest"
+	case ai.ProviderDeepSeek:
+		return "deepseek-chat"
+	case ai.ProviderOllama:
+		return "llama3.2"
+	default:
+		return ""
+	}
+}
+
+func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prompt, memoContext string) (string, error) {
+	userText := prompt
+	if memoContext = strings.TrimSpace(memoContext); memoContext != "" {
+		userText += "\n\nCurrent memo for context:\n---\n" + memoContext + "\n---"
+	}
+	systemText := "You assist with writing a personal memo or blog post. Return only the requested text in valid Markdown; do not add a preface."
+
+	switch provider.Type {
+	case ai.ProviderOpenAI, ai.ProviderDeepSeek, ai.ProviderOpenAICompatible, ai.ProviderOllama:
+		endpoint := strings.TrimRight(provider.Endpoint, "/") + "/chat/completions"
+		payload := map[string]any{
+			"model": model,
+			"messages": []map[string]string{
+				{"role": "system", "content": systemText},
+				{"role": "user", "content": userText},
+			},
+		}
+		headers := map[string]string{}
+		if provider.APIKey != "" {
+			headers["Authorization"] = "Bearer " + provider.APIKey
+		}
+		var response struct {
+			Choices []struct {
+				Message struct {
+					Content string `json:"content"`
+				} `json:"message"`
+			} `json:"choices"`
+		}
+		if err := postAIJSON(ctx, endpoint, headers, payload, &response); err != nil {
+			return "", err
+		}
+		if len(response.Choices) == 0 {
+			return "", errors.New("provider response did not include choices")
+		}
+		return response.Choices[0].Message.Content, nil
+
+	case ai.ProviderAnthropic:
+		endpoint := strings.TrimRight(provider.Endpoint, "/") + "/messages"
+		payload := map[string]any{
+			"model": model, "max_tokens": 4096, "system": systemText,
+			"messages": []map[string]string{{"role": "user", "content": userText}},
+		}
+		headers := map[string]string{"x-api-key": provider.APIKey, "anthropic-version": "2023-06-01"}
+		var response struct {
+			Content []struct {
+				Type string `json:"type"`
+				Text string `json:"text"`
+			} `json:"content"`
+		}
+		if err := postAIJSON(ctx, endpoint, headers, payload, &response); err != nil {
+			return "", err
+		}
+		parts := make([]string, 0, len(response.Content))
+		for _, block := range response.Content {
+			if block.Type == "text" && block.Text != "" {
+				parts = append(parts, block.Text)
+			}
+		}
+		return strings.Join(parts, "\n"), nil
+
+	case ai.ProviderGemini:
+		endpoint := fmt.Sprintf("%s/models/%s:generateContent?key=%s", strings.TrimRight(provider.Endpoint, "/"), url.PathEscape(model), url.QueryEscape(provider.APIKey))
+		payload := map[string]any{
+			"systemInstruction": map[string]any{"parts": []map[string]string{{"text": systemText}}},
+			"contents":          []map[string]any{{"role": "user", "parts": []map[string]string{{"text": userText}}}},
+		}
+		var response struct {
+			Candidates []struct {
+				Content struct {
+					Parts []struct {
+						Text string `json:"text"`
+					} `json:"parts"`
+				} `json:"content"`
+			} `json:"candidates"`
+		}
+		if err := postAIJSON(ctx, endpoint, nil, payload, &response); err != nil {
+			return "", err
+		}
+		if len(response.Candidates) == 0 {
+			return "", errors.New("provider response did not include candidates")
+		}
+		parts := make([]string, 0, len(response.Candidates[0].Content.Parts))
+		for _, part := range response.Candidates[0].Content.Parts {
+			if part.Text != "" {
+				parts = append(parts, part.Text)
+			}
+		}
+		return strings.Join(parts, "\n"), nil
+	default:
+		return "", errors.Errorf("provider type %q is not supported for text generation", provider.Type)
+	}
+}
+
+func postAIJSON(ctx context.Context, endpoint string, headers map[string]string, payload any, target any) error {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return errors.Wrap(err, "failed to encode provider request")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
+	if err != nil {
+		return errors.Wrap(err, "failed to create provider request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	for key, value := range headers {
+		if value != "" {
+			req.Header.Set(key, value)
+		}
+	}
+	resp, err := aiTextHTTPClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "provider request failed")
+	}
+	defer resp.Body.Close()
+	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, maxAITextResponseBytes))
+	if err != nil {
+		return errors.Wrap(err, "failed to read provider response")
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		detail := strings.TrimSpace(string(responseBody))
+		// Provider errors can contain large HTML pages or verbose upstream traces.
+		// Keep the diagnostic useful without reflecting an unbounded response into
+		// the API error and frontend toast.
+		const maxProviderErrorLength = 4096
+		if len(detail) > maxProviderErrorLength {
+			detail = detail[:maxProviderErrorLength] + "..."
+		}
+		return errors.Errorf("provider returned HTTP %d: %s", resp.StatusCode, detail)
+	}
+	if err := json.Unmarshal(responseBody, target); err != nil {
+		return errors.Wrap(err, "failed to decode provider response")
+	}
+	return nil
 }
 
 func (*APIV1Service) transcribeViaSTT(

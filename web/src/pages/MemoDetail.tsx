@@ -1,5 +1,5 @@
 import { Code, ConnectError } from "@connectrpc/connect";
-import { ArrowLeftIcon, ArrowRightIcon, ArrowUpLeftFromCircleIcon } from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpLeftFromCircleIcon, FolderIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo as useReactMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import BlogSidebar from "@/components/BlogSidebar";
@@ -10,11 +10,15 @@ import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import useMemoDetailError from "@/hooks/useMemoDetailError";
-import { useInfiniteMemoComments, useMemo, useMemos } from "@/hooks/useMemoQueries";
+import { useInfiniteMemoComments, useMemo, useMemos, useRecordMemoView } from "@/hooks/useMemoQueries";
 import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQueries";
+import { canAccessInstanceContent, parseInstanceCategories } from "@/lib/instance-content";
+import { isMemoNavigationScope, type MemoNavigationScope } from "@/lib/memo-navigation";
 import { memoNamePrefix } from "@/lib/resource-names";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
+import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { findMemoAnchorTarget } from "@/utils/markdown-manipulation";
@@ -45,7 +49,8 @@ const MemoDetail = () => {
   const t = useTranslate();
   const navigate = useNavigate();
   const { isInitialized: authInitialized } = useAuth();
-  const { isInitialized: instanceInitialized } = useInstance();
+  const { isInitialized: instanceInitialized, generalSetting } = useInstance();
+  const currentUser = useCurrentUser();
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
   const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
@@ -53,13 +58,6 @@ const MemoDetail = () => {
   const { state: locationState, hash } = location;
   const parentPage = typeof locationState?.from === "string" ? locationState.from : undefined;
   const handleShareImageOpen = useCallback(() => setShareImageDialogOpen(true), []);
-  const handleBack = useCallback(() => {
-    if (parentPage) {
-      navigate(parentPage);
-      return;
-    }
-    navigate("/explore");
-  }, [navigate, parentPage]);
 
   // Detect share mode from the route parameter.
   const shareToken = params.token;
@@ -78,8 +76,39 @@ const MemoDetail = () => {
   const error = isShareMode ? shareError : directError;
   const isLoading = isShareMode ? shareLoading : directLoading;
   const memoName = memo?.name ?? memoNameFromParams;
+  const { mutate: recordMemoView } = useRecordMemoView();
+  const recordedMemoViewRef = useRef("");
+  const [recordedView, setRecordedView] = useState<{ name: string; viewCount: bigint }>();
+  useEffect(() => {
+    if (!memo || memo.parent || recordedMemoViewRef.current === memo.name) return;
+
+    recordedMemoViewRef.current = memo.name;
+    recordMemoView(
+      { name: memo.name, shareToken },
+      {
+        onSuccess: ({ viewCount }) => setRecordedView({ name: memo.name, viewCount }),
+      },
+    );
+  }, [memo, recordMemoView, shareToken]);
+  const currentCategory = memo?.category
+    ? parseInstanceCategories(generalSetting.memoCategoriesJson).find(
+        (category) => category.slug === memo.category && canAccessInstanceContent(category.access, currentUser),
+      )
+    : undefined;
+  const resolvedParentPage = parentPage ?? "/explore";
+  const fallbackNavigationScope: MemoNavigationScope = {
+    state: memo?.state === State.ARCHIVED ? State.ARCHIVED : State.NORMAL,
+    orderBy: "create_time desc",
+  };
+  const navigationScope = isMemoNavigationScope(locationState?.navigationScope) ? locationState.navigationScope : fallbackNavigationScope;
+  const handleBack = useCallback(() => navigate(resolvedParentPage), [navigate, resolvedParentPage]);
   const { data: neighborCollection } = useMemos(
-    { pageSize: 1000, orderBy: "create_time desc" },
+    {
+      state: navigationScope.state,
+      pageSize: 1000,
+      orderBy: navigationScope.orderBy,
+      filter: navigationScope.filter,
+    },
     { enabled: !isShareMode && !!memo && !memo.parent },
   );
   const neighborIndex = neighborCollection?.memos.findIndex((item) => item.name === memoName) ?? -1;
@@ -87,9 +116,13 @@ const MemoDetail = () => {
   const nextMemo = neighborIndex >= 0 ? neighborCollection?.memos[neighborIndex + 1] : undefined;
   const displayMemo = useReactMemo(() => {
     if (!memo) return undefined;
-    if (!isShareMode) return memo;
-    return { ...memo, attachments: withShareAttachmentLinks(memo.attachments as Attachment[], shareToken!) };
-  }, [isShareMode, memo, shareToken]);
+    const memoWithViewCount = recordedView?.name === memo.name ? { ...memo, viewCount: recordedView.viewCount } : memo;
+    if (!isShareMode) return memoWithViewCount;
+    return {
+      ...memoWithViewCount,
+      attachments: withShareAttachmentLinks(memo.attachments as Attachment[], shareToken!),
+    };
+  }, [isShareMode, memo, recordedView, shareToken]);
 
   useMemoDetailError({
     error: error as Error | null,
@@ -139,18 +172,32 @@ const MemoDetail = () => {
   const userResolutionNames = Array.from(
     new Set([displayMemo, ...comments].flatMap((item) => [item.creator, ...(item.reactions ?? []).map((reaction) => reaction.creator)])),
   );
-  const detailPage = `${location.pathname}${location.search}`;
   return (
     <section className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4">
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
-        <MemoSidebarRegistration memo={displayMemo} from={parentPage} readonly={isShareMode} onShareImageOpen={handleShareImageOpen} />
+        <MemoSidebarRegistration
+          memo={displayMemo}
+          from={resolvedParentPage}
+          readonly={isShareMode}
+          onShareImageOpen={handleShareImageOpen}
+        />
         <div className="w-full max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,48rem)_15rem] lg:items-start lg:gap-4">
           <main className="min-w-0">
-            <div className="mb-3 flex items-center">
+            <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
               <Button variant="ghost" className="-ml-2 text-muted-foreground" onClick={handleBack}>
                 <ArrowLeftIcon />
                 {t("memo.back-to-list")}
               </Button>
+              {!isShareMode && currentCategory ? (
+                <Button
+                  render={<Link to={`/categories/${currentCategory.slug}`} />}
+                  variant="ghost"
+                  className="min-w-0 text-muted-foreground"
+                >
+                  <FolderIcon className="shrink-0" />
+                  <span className="max-w-40 truncate">{currentCategory.title}</span>
+                </Button>
+              ) : null}
             </div>
             {!isShareMode && parentMemo && (
               <div className="w-auto inline-block mb-2">
@@ -169,7 +216,8 @@ const MemoDetail = () => {
               key={displayMemo.name}
               memo={displayMemo}
               compact={false}
-              parentPage={parentPage}
+              parentPage={resolvedParentPage}
+              navigationScope={navigationScope}
               shareImageDialogOpen={shareImageDialogOpen}
               showCreator
               showVisibility
@@ -181,7 +229,7 @@ const MemoDetail = () => {
                 {previousMemo ? (
                   <Link
                     to={`/${previousMemo.name}`}
-                    state={{ from: parentPage ?? "/explore" }}
+                    state={{ from: resolvedParentPage, navigationScope }}
                     className="group min-w-0 rounded-lg p-3 hover:bg-accent/40"
                   >
                     <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -196,7 +244,7 @@ const MemoDetail = () => {
                 {nextMemo ? (
                   <Link
                     to={`/${nextMemo.name}`}
-                    state={{ from: parentPage ?? "/explore" }}
+                    state={{ from: resolvedParentPage, navigationScope }}
                     className="group min-w-0 rounded-lg p-3 text-right hover:bg-accent/40"
                   >
                     <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
@@ -212,7 +260,7 @@ const MemoDetail = () => {
               <MemoCommentSection
                 memo={displayMemo}
                 comments={comments}
-                parentPage={parentPage}
+                parentPage={resolvedParentPage}
                 hasMoreComments={hasNextComments}
                 isFetchingMoreComments={isFetchingNextComments}
                 onLoadMoreComments={fetchNextComments}
@@ -221,11 +269,21 @@ const MemoDetail = () => {
               />
             )}
             <div className="mt-4 lg:hidden">
-              <BlogSidebar parentPage={detailPage} />
+              <BlogSidebar
+                state={navigationScope.state}
+                orderBy={navigationScope.orderBy}
+                filter={navigationScope.filter}
+                parentPage={resolvedParentPage}
+              />
             </div>
           </main>
           <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
-            <BlogSidebar parentPage={detailPage} />
+            <BlogSidebar
+              state={navigationScope.state}
+              orderBy={navigationScope.orderBy}
+              filter={navigationScope.filter}
+              parentPage={resolvedParentPage}
+            />
           </aside>
         </div>
       </MentionResolutionProvider>

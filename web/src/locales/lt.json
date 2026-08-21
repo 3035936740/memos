@@ -153,6 +153,7 @@
     "version": "Versija",
     "visibility": "Matomumas",
     "views": "Rodiniai",
+    "view-count": "Peržiūrų skaičius",
     "yourself": "save"
   },
   "locale-picker": {

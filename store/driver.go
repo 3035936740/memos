@@ -38,6 +38,7 @@ type Driver interface {
 	CreateMemo(ctx context.Context, create *Memo) (*Memo, error)
 	ListMemos(ctx context.Context, find *FindMemo) ([]*Memo, error)
 	UpdateMemo(ctx context.Context, update *UpdateMemo) error
+	IncrementMemoViewCount(ctx context.Context, memoID int32) (int64, error)
 	DeleteMemo(ctx context.Context, delete *DeleteMemo) error
 
 	// MemoRelation model related methods.

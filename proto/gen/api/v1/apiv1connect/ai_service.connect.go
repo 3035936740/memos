@@ -35,12 +35,16 @@ const (
 const (
 	// AIServiceTranscribeProcedure is the fully-qualified name of the AIService's Transcribe RPC.
 	AIServiceTranscribeProcedure = "/memos.api.v1.AIService/Transcribe"
+	// AIServiceGenerateTextProcedure is the fully-qualified name of the AIService's GenerateText RPC.
+	AIServiceGenerateTextProcedure = "/memos.api.v1.AIService/GenerateText"
 )
 
 // AIServiceClient is a client for the memos.api.v1.AIService service.
 type AIServiceClient interface {
 	// Transcribe transcribes an audio file using an instance AI provider.
 	Transcribe(context.Context, *connect.Request[v1.TranscribeRequest]) (*connect.Response[v1.TranscribeResponse], error)
+	// GenerateText generates memo-ready text using an instance AI provider.
+	GenerateText(context.Context, *connect.Request[v1.GenerateTextRequest]) (*connect.Response[v1.GenerateTextResponse], error)
 }
 
 // NewAIServiceClient constructs a client for the memos.api.v1.AIService service. By default, it
@@ -60,12 +64,19 @@ func NewAIServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(aIServiceMethods.ByName("Transcribe")),
 			connect.WithClientOptions(opts...),
 		),
+		generateText: connect.NewClient[v1.GenerateTextRequest, v1.GenerateTextResponse](
+			httpClient,
+			baseURL+AIServiceGenerateTextProcedure,
+			connect.WithSchema(aIServiceMethods.ByName("GenerateText")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // aIServiceClient implements AIServiceClient.
 type aIServiceClient struct {
-	transcribe *connect.Client[v1.TranscribeRequest, v1.TranscribeResponse]
+	transcribe   *connect.Client[v1.TranscribeRequest, v1.TranscribeResponse]
+	generateText *connect.Client[v1.GenerateTextRequest, v1.GenerateTextResponse]
 }
 
 // Transcribe calls memos.api.v1.AIService.Transcribe.
@@ -73,10 +84,17 @@ func (c *aIServiceClient) Transcribe(ctx context.Context, req *connect.Request[v
 	return c.transcribe.CallUnary(ctx, req)
 }
 
+// GenerateText calls memos.api.v1.AIService.GenerateText.
+func (c *aIServiceClient) GenerateText(ctx context.Context, req *connect.Request[v1.GenerateTextRequest]) (*connect.Response[v1.GenerateTextResponse], error) {
+	return c.generateText.CallUnary(ctx, req)
+}
+
 // AIServiceHandler is an implementation of the memos.api.v1.AIService service.
 type AIServiceHandler interface {
 	// Transcribe transcribes an audio file using an instance AI provider.
 	Transcribe(context.Context, *connect.Request[v1.TranscribeRequest]) (*connect.Response[v1.TranscribeResponse], error)
+	// GenerateText generates memo-ready text using an instance AI provider.
+	GenerateText(context.Context, *connect.Request[v1.GenerateTextRequest]) (*connect.Response[v1.GenerateTextResponse], error)
 }
 
 // NewAIServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -92,10 +110,18 @@ func NewAIServiceHandler(svc AIServiceHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(aIServiceMethods.ByName("Transcribe")),
 		connect.WithHandlerOptions(opts...),
 	)
+	aIServiceGenerateTextHandler := connect.NewUnaryHandler(
+		AIServiceGenerateTextProcedure,
+		svc.GenerateText,
+		connect.WithSchema(aIServiceMethods.ByName("GenerateText")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/memos.api.v1.AIService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AIServiceTranscribeProcedure:
 			aIServiceTranscribeHandler.ServeHTTP(w, r)
+		case AIServiceGenerateTextProcedure:
+			aIServiceGenerateTextHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -107,4 +133,8 @@ type UnimplementedAIServiceHandler struct{}
 
 func (UnimplementedAIServiceHandler) Transcribe(context.Context, *connect.Request[v1.TranscribeRequest]) (*connect.Response[v1.TranscribeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.Transcribe is not implemented"))
+}
+
+func (UnimplementedAIServiceHandler) GenerateText(context.Context, *connect.Request[v1.GenerateTextRequest]) (*connect.Response[v1.GenerateTextResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.GenerateText is not implemented"))
 }

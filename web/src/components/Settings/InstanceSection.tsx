@@ -63,6 +63,9 @@ const InstanceSection = () => {
   const firstVisitDefaultTheme = isValidTheme(instanceGeneralSetting.firstVisitDefaultTheme)
     ? instanceGeneralSetting.firstVisitDefaultTheme
     : "cosmic-dark";
+  const defaultMemberMemoVisibility = ["PRIVATE", "PROTECTED", "PUBLIC"].includes(instanceGeneralSetting.defaultMemberMemoVisibility)
+    ? instanceGeneralSetting.defaultMemberMemoVisibility
+    : "PUBLIC";
   const themeOptions = THEME_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) }));
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
@@ -203,6 +206,37 @@ const InstanceSection = () => {
                 ))}
               </SelectContent>
             </Select>
+          </SettingListItem>
+
+          <SettingListItem
+            label={t("setting.instance.default-member-memo-visibility")}
+            description={t("setting.instance.default-member-memo-visibility-description")}
+          >
+            <Select
+              value={defaultMemberMemoVisibility}
+              onValueChange={(defaultMemberMemoVisibility) => updatePartialSetting({ defaultMemberMemoVisibility })}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(["PUBLIC", "PROTECTED", "PRIVATE"] as const).map((visibility) => (
+                  <SelectItem key={visibility} value={visibility}>
+                    {t(`memo.visibility.${visibility.toLowerCase() as "public" | "protected" | "private"}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingListItem>
+
+          <SettingListItem
+            label={t("setting.instance.default-member-save-media-metadata")}
+            description={t("setting.instance.default-member-save-media-metadata-description")}
+          >
+            <Switch
+              checked={instanceGeneralSetting.defaultMemberSaveMediaMetadata}
+              onCheckedChange={(defaultMemberSaveMediaMetadata) => updatePartialSetting({ defaultMemberSaveMediaMetadata })}
+            />
           </SettingListItem>
 
           <SettingListItem

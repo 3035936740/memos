@@ -327,6 +327,14 @@ func (s *ConnectServiceHandler) GetMemo(ctx context.Context, req *connect.Reques
 	return connect.NewResponse(resp), nil
 }
 
+func (s *ConnectServiceHandler) RecordMemoView(ctx context.Context, req *connect.Request[v1pb.RecordMemoViewRequest]) (*connect.Response[v1pb.RecordMemoViewResponse], error) {
+	resp, err := s.APIV1Service.RecordMemoView(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (s *ConnectServiceHandler) UpdateMemo(ctx context.Context, req *connect.Request[v1pb.UpdateMemoRequest]) (*connect.Response[v1pb.Memo], error) {
 	resp, err := s.APIV1Service.UpdateMemo(ctx, req.Msg)
 	if err != nil {
@@ -514,6 +522,14 @@ func (s *ConnectServiceHandler) BatchDeleteAttachments(ctx context.Context, req 
 }
 
 // AIService
+
+func (s *ConnectServiceHandler) GenerateText(ctx context.Context, req *connect.Request[v1pb.GenerateTextRequest]) (*connect.Response[v1pb.GenerateTextResponse], error) {
+	resp, err := s.APIV1Service.GenerateText(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
 
 func (s *ConnectServiceHandler) Transcribe(ctx context.Context, req *connect.Request[v1pb.TranscribeRequest]) (*connect.Response[v1pb.TranscribeResponse], error) {
 	resp, err := s.APIV1Service.Transcribe(ctx, req.Msg)

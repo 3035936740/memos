@@ -14,6 +14,7 @@ import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { hoistMemoToFront } from "@/hooks/useMemoSorting";
 import { LOADING_INDICATOR_DELAY_MS, normalizeMemoFeedPageSize } from "@/lib/constants";
+import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
@@ -40,7 +41,7 @@ const Loader = () => (
 );
 
 interface Props {
-  renderer: (memo: Memo, options: { compact: boolean; parentPage: string }) => ReactElement;
+  renderer: (memo: Memo, options: { compact: boolean; parentPage: string; navigationScope: MemoNavigationScope }) => ReactElement;
   listSort?: (list: Memo[]) => Memo[];
   state?: State;
   orderBy?: string;
@@ -64,6 +65,14 @@ const PagedMemoList = (props: Props) => {
   const parsedPage = Number.parseInt(searchParams.get("page") ?? "1", 10);
   const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   const parentPage = `${location.pathname}${location.search}`;
+  const navigationScope = useMemo<MemoNavigationScope>(
+    () => ({
+      state: props.state ?? State.NORMAL,
+      orderBy: props.orderBy ?? "create_time desc",
+      filter: props.filter,
+    }),
+    [props.filter, props.orderBy, props.state],
+  );
 
   const goToPage = useCallback(
     (page: number, options?: { replace?: boolean; scroll?: boolean }) => {
@@ -113,9 +122,9 @@ const PagedMemoList = (props: Props) => {
   const renderMemo = (memo: Memo) => (
     <Fragment key={getMemoKey(memo)}>
       {feedLayout === "blog" ? (
-        <BlogMemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} />
+        <BlogMemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
       ) : (
-        props.renderer(memo, { compact: effectiveCompact, parentPage })
+        props.renderer(memo, { compact: effectiveCompact, parentPage, navigationScope })
       )}
     </Fragment>
   );

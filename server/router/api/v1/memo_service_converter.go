@@ -43,6 +43,7 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 		Content:    memo.Content,
 		Visibility: convertVisibilityFromStore(memo.Visibility),
 		Pinned:     memo.Pinned,
+		ViewCount:  memo.ViewCount,
 	}
 	if memo.Payload != nil {
 		memoMessage.Tags = memo.Payload.Tags

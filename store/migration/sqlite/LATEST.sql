@@ -40,6 +40,7 @@ CREATE TABLE memo (
   content TEXT NOT NULL DEFAULT '',
   visibility TEXT NOT NULL CHECK (visibility IN ('PUBLIC', 'PROTECTED', 'PRIVATE')) DEFAULT 'PRIVATE',
   pinned INTEGER NOT NULL CHECK (pinned IN (0, 1)) DEFAULT 0,
+  view_count BIGINT NOT NULL DEFAULT 0,
   payload TEXT NOT NULL DEFAULT '{}'
 );
 
