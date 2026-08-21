@@ -685,6 +685,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		if path == "hidden" && !isSuperUser(user) {
 			return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
 		}
+		if path == "pinned" && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can pin memos")
+		}
 	}
 
 	for _, path := range request.UpdateMask.Paths {

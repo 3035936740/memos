@@ -33,6 +33,7 @@ import useCurrentUser from "@/hooks/useCurrentUser";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { useTranslate } from "@/utils/i18n";
 import { deleteBookmark, getBookmark, reportTarget, saveBookmark } from "@/utils/moderation";
+import { isSuperUser } from "@/utils/user";
 import { useMemoActionHandlers } from "./hooks";
 import type { MemoActionMenuProps } from "./types";
 
@@ -110,7 +111,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
         {/* Edit actions (non-readonly, non-archived) */}
         {!readonly && !isArchived && (
           <>
-            {!isComment && (
+            {!isComment && isSuperUser(currentUser) && (
               <DropdownMenuItem onClick={handleTogglePinMemoBtnClick}>
                 {memo.pinned ? <BookmarkMinusIcon className="w-4 h-auto" /> : <BookmarkPlusIcon className="w-4 h-auto" />}
                 {memo.pinned ? t("common.unpin") : t("common.pin")}

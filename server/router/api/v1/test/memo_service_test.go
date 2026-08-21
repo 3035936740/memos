@@ -213,6 +213,26 @@ func TestRegularUserCannotCreateHiddenMemo(t *testing.T) {
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
 }
 
+func TestRegularUserCannotPinMemo(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "pin-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+	memo, err := ts.Service.CreateMemo(userCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "not pinnable", Visibility: apiv1.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	_, err = ts.Service.UpdateMemo(userCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, Pinned: true},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"pinned"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+}
+
 func TestCreateAndUpdateMemoRebuildsTagPayload(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestService(t)
