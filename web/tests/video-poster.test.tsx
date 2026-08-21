@@ -10,6 +10,7 @@ describe("<VideoPoster>", () => {
       readonly root = null;
       readonly rootMargin = "200px 0px";
       readonly thresholds = [0];
+      readonly scrollMargin = "";
 
       constructor(callback: IntersectionObserverCallback) {
         intersectionCallback = callback;

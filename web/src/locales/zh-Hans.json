@@ -214,6 +214,7 @@
       "font-size-invalid": "请输入 8 到 96 之间的整数，留空则恢复默认字号。",
       "spoiler": "隐藏文本"
     },
+    "new-memo": "新建备忘录",
     "no-changes-detected": "未检测到更改",
     "save": "保存",
     "saving": "保存中...",

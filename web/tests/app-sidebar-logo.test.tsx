@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, screen, render as testingLibraryRender } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import AppSidebar, { MobileAppHeader } from "@/components/AppSidebar";
+import AppSidebar, { MobileAppHeader, MobileAppSidebar } from "@/components/AppSidebar";
 import { SIDEBAR_SECTION_ACTION_BUTTON_CLASSES, SIDEBAR_SECTION_ACTION_ICON_CLASSES } from "@/components/AppSidebar/SidebarSection";
 
 const authState = vi.hoisted(() => ({
@@ -11,6 +11,11 @@ const authState = vi.hoisted(() => ({
 }));
 const sidebarState = vi.hoisted(() => ({
   memoScope: "home" as "home" | "explore" | "archived",
+  mobileOpen: false,
+}));
+const globalEditorState = vi.hoisted(() => ({
+  canOpen: true,
+  openEditor: vi.fn(),
 }));
 const instanceState = vi.hoisted(() => ({
   memoCategoriesJson: "",
@@ -45,7 +50,7 @@ vi.mock("@/contexts/AppSidebarContext", () => ({
     setInboxFilter: vi.fn(),
     memoDetail: undefined,
     setMemoDetail: vi.fn(),
-    mobileOpen: false,
+    mobileOpen: sidebarState.mobileOpen,
     setMobileOpen: vi.fn(),
     quickFindOpen: false,
     setQuickFindOpen: vi.fn(),
@@ -56,6 +61,10 @@ vi.mock("@/contexts/AppSidebarContext", () => ({
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ isInitialized: true, userGeneralSetting: undefined, refetchSettings: vi.fn() }),
+}));
+
+vi.mock("@/contexts/GlobalMemoEditorContext", () => ({
+  useGlobalMemoEditor: () => globalEditorState,
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({
@@ -140,23 +149,40 @@ describe("App sidebar logo", () => {
     instanceState.memoCategoriesJson = "";
     instanceState.navigationJson = "";
     localStorage.clear();
+    sidebarState.mobileOpen = false;
+    globalEditorState.canOpen = true;
+    globalEditorState.openEditor.mockClear();
   });
 
-  it("navigates home instead of opening a global editor", () => {
+  it("keeps logo navigation unchanged and opens the global memo editor", () => {
     render(
-      <MemoryRouter initialEntries={["/home"]}>
+      <MemoryRouter initialEntries={["/attachments"]}>
         <AppSidebar />
       </MemoryRouter>,
     );
 
     const logo = screen.getByRole("link", { name: "Memos logo" });
     expect(logo).toHaveAttribute("href", "/home");
-    expect(screen.queryByRole("button", { name: /create.*memos/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "editor.new-memo" }));
+    expect(globalEditorState.openEditor).toHaveBeenCalledOnce();
     expect(screen.queryByText("common.calendar")).not.toBeInTheDocument();
+  });
+
+  it("hides Compose when the composer reports it is not available", () => {
+    globalEditorState.canOpen = false;
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByRole("button", { name: "editor.new-memo" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "common.search" })).toBeInTheDocument();
   });
 
   it("shows the compact public navigation for a guest", () => {
     authState.currentUser = undefined;
+    globalEditorState.canOpen = false;
     render(
       <MemoryRouter initialEntries={["/explore"]}>
         <AppSidebar />
@@ -166,6 +192,7 @@ describe("App sidebar logo", () => {
     expect(screen.getByRole("link", { name: "common.explore" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "editor.new-memo" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
   });
 
@@ -393,9 +420,9 @@ describe("App sidebar logo", () => {
     expectActiveNavPill(await screen.findByRole("button", { name: label, current: "page" }), label);
   });
 
-  it("keeps the mobile brand beside navigation without a duplicate search action", () => {
+  it("keeps the mobile header limited to navigation and brand", () => {
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/about"]}>
         <MobileAppHeader />
       </MemoryRouter>,
     );
@@ -405,6 +432,21 @@ describe("App sidebar logo", () => {
     expect(screen.getByRole("combobox", { name: /Theme:/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Language:/ })).toBeInTheDocument();
     expect(screen.getByLabelText("Current time")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open navigation" })).toHaveAttribute("data-mobile-navigation-trigger");
     expect(screen.queryByRole("button", { name: "common.search" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "editor.new-memo" })).not.toBeInTheDocument();
+  });
+
+  it("exposes Compose in the mobile navigation drawer", () => {
+    sidebarState.mobileOpen = true;
+    render(
+      <MemoryRouter initialEntries={["/about"]}>
+        <MobileAppSidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("button", { name: "common.search" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "editor.new-memo" }));
+    expect(globalEditorState.openEditor).toHaveBeenCalledOnce();
   });
 });

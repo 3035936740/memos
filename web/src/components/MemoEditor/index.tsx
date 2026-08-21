@@ -47,6 +47,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   defaultCreateTime,
   onConfirm,
   onCancel,
+  onSavingChange,
 }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -56,6 +57,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   // typing (which changes content) does not re-render the editor shell and its
   // toolbar/metadata children.
   const isFocusMode = useEditorSelector((s) => s.ui.isFocusMode);
+  const isSaving = useEditorSelector((s) => s.ui.isLoading.saving);
   const hasTimestamp = useEditorSelector((s) => Boolean(s.timestamps.createTime));
   const { userGeneralSetting } = useAuth();
   const { aiSetting, fetchSetting } = useInstance();
@@ -93,6 +95,10 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     initialContent,
   });
   const isDraftCacheEnabled = !memo;
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
 
   // Auto-save content to localStorage (subscribes to the store internally).
   const { discardDraft } = useAutoSave(currentUser?.name ?? "", cacheKey, isInitialized && isDraftCacheEnabled);
