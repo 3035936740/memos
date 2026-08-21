@@ -557,7 +557,6 @@ func TestListMemos(t *testing.T) {
 	reactionOne, err := ts.Service.UpsertMemoReaction(userOneCtx, &apiv1.UpsertMemoReactionRequest{
 		Name: memoThree.Name,
 		Reaction: &apiv1.Reaction{
-			ContentId:    memoThree.Name,
 			ReactionType: "❤️",
 		},
 	})
@@ -569,7 +568,6 @@ func TestListMemos(t *testing.T) {
 	reactionTwo, err := ts.Service.UpsertMemoReaction(userTwoCtx, &apiv1.UpsertMemoReactionRequest{
 		Name: memoThree.Name,
 		Reaction: &apiv1.Reaction{
-			ContentId:    memoThree.Name,
 			ReactionType: "👍",
 		},
 	})
@@ -868,7 +866,6 @@ func TestListMemosSkipsReactionsWithMissingCreators(t *testing.T) {
 	_, err = ts.Service.UpsertMemoReaction(reactorCtx, &apiv1.UpsertMemoReactionRequest{
 		Name: memo.Name,
 		Reaction: &apiv1.Reaction{
-			ContentId:    memo.Name,
 			ReactionType: "👍",
 		},
 	})

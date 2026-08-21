@@ -636,7 +636,7 @@ paths:
                     type: string
                 - name: filter
                   in: query
-                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized),\n   hidden (bool; omitted from collection views unless owned or viewed by an admin).\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
+                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized),\r\n   hidden (bool; omitted from collection views unless owned or viewed by an admin).\r\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
                   schema:
                     type: string
                 - name: showDeleted
@@ -1021,7 +1021,7 @@ paths:
         post:
             tags:
                 - MemoService
-            description: "UpsertMemoReaction adds or updates the authenticated user's reaction on a\r\n memo. The reaction's content_id is the memo's resource name (memos/{memo})."
+            description: UpsertMemoReaction adds or updates the authenticated user's reaction on a memo.
             operationId: MemoService_UpsertMemoReaction
             parameters:
                 - name: memo
@@ -3325,53 +3325,35 @@ components:
                     description: Optional. The location of the memo.
                 category:
                     type: string
-                    description: |-
-                        Optional. Instance category slug assigned by the memo author.
-                         Empty means the memo is not categorized. Must match a configured category slug.
+                    description: "Optional. Instance category slug assigned by the memo author.\r\n Empty means the memo is not categorized. Must match a configured category slug."
                 hidden:
                     type: boolean
-                    description: |-
-                        Whether the memo is omitted from feeds, profiles, search, RSS, and stats.
-                         Hidden memos remain readable by direct URL according to visibility. Only
-                         instance administrators may change this field; enabling it forces PUBLIC.
+                    description: "Whether the memo is omitted from feeds, profiles, search, RSS, and stats.\r\n Hidden memos remain readable by direct URL according to visibility. Only\r\n instance administrators may change this field; enabling it forces PUBLIC."
                 draft:
                     type: boolean
-                    description: |-
-                        Whether the memo is an unpublished draft. Drafts are only visible to the
-                         creator and instance administrators until publish_time is reached.
+                    description: "Whether the memo is an unpublished draft. Drafts are only visible to the\r\n creator and instance administrators until publish_time is reached."
                 publishTime:
                     type: string
-                    description: |-
-                        Optional scheduled publication time. Setting a future time also marks the
-                         memo as a draft; once reached, it appears in ordinary collection views.
+                    description: "Optional scheduled publication time. Setting a future time also marks the\r\n memo as a draft; once reached, it appears in ordinary collection views."
                     format: date-time
                 quarantined:
                     readOnly: true
                     type: boolean
-                    description: |-
-                        Output only. Whether moderation has moved this memo or comment to the
-                         quarantine. Quarantined content is visible only to administrators.
+                    description: "Output only. Whether moderation has moved this memo or comment to the\r\n quarantine. Quarantined content is visible only to administrators."
                 viewCount:
                     readOnly: true
                     type: string
                     description: Output only. Total successful visits to the memo detail page.
                 anonymous:
                     type: boolean
-                    description: |-
-                        Optional. Hide the creator name and avatar from everyone except instance
-                         administrators. The server retains the creator for permissions and
-                         moderation.
+                    description: "Optional. Hide the creator name and avatar from everyone except instance\r\n administrators. The server retains the creator for permissions and\r\n moderation."
                 adminScript:
                     type: string
-                    description: |-
-                        Optional administrator-authored JavaScript for this memo or comment.
-                         Only instance administrators may create or update this field.
+                    description: "Optional administrator-authored JavaScript for this memo or comment.\r\n Only instance administrators may create or update this field."
                 creatorIsViewer:
                     readOnly: true
                     type: boolean
-                    description: |-
-                        Output only. True when the authenticated viewer is the memo creator. This
-                         preserves owner controls for anonymous memos without exposing identity.
+                    description: "Output only. True when the authenticated viewer is the memo creator. This\r\n preserves owner controls for anonymous memos without exposing identity."
         MemoRelation:
             required:
                 - memo
@@ -3576,7 +3558,6 @@ components:
                     format: double
         Reaction:
             required:
-                - contentId
                 - reactionType
             type: object
             properties:
@@ -3588,9 +3569,6 @@ components:
                     readOnly: true
                     type: string
                     description: "The resource name of the creator.\r\n Format: users/{user}"
-                contentId:
-                    type: string
-                    description: "The resource name of the content.\r\n For memo reactions, this should be the memo's resource name.\r\n Format: memos/{memo}"
                 reactionType:
                     type: string
                     description: "Required. The type of reaction (e.g., \"\U0001F44D\", \"❤️\", \"\U0001F604\")."
@@ -3599,6 +3577,7 @@ components:
                     type: string
                     description: Output only. The creation timestamp.
                     format: date-time
+            description: Reaction is a reaction attached to a memo.
         RecordMemoViewRequest:
             required:
                 - name
@@ -3606,9 +3585,7 @@ components:
             properties:
                 name:
                     type: string
-                    description: |-
-                        Required. The resource name of the memo being visited.
-                         Format: memos/{memo}
+                    description: "Required. The resource name of the memo being visited.\r\n Format: memos/{memo}"
                 shareToken:
                     type: string
                     description: Optional. A share token when the memo is opened through a share URL.
