@@ -11,6 +11,7 @@ import (
 const (
 	sseDataPrefix            = "data: "
 	sseClientEventBufferSize = 32
+	memoChangedSSEFrame      = "data: {\"type\":\"memo.changed\"}\n\n"
 )
 
 // SSEEventType represents the type of change event.
@@ -25,34 +26,20 @@ const (
 	SSEEventReactionDeleted    SSEEventType = "reaction.deleted"
 )
 
-// SSEEvent represents a change event sent to SSE clients.
+// SSEEvent represents a subject-specific change event sent to authorized clients.
 type SSEEvent struct {
-	Type SSEEventType `json:"type"`
-	// Name is the affected resource name (e.g., "memos/xxxx").
-	// For reaction events, this is the memo resource name that the reaction belongs to.
-	Name string `json:"name"`
-	// Parent is the parent memo resource name when the affected resource is a comment.
-	Parent string `json:"parent,omitempty"`
-	// Visibility and CreatorID are used only for server-side delivery filtering.
+	Type       SSEEventType     `json:"type"`
+	Name       string           `json:"name"`
+	Parent     string           `json:"parent,omitempty"`
 	Visibility store.Visibility `json:"-"`
 	CreatorID  int32            `json:"-"`
 }
 
-// JSON returns the JSON representation of the event.
-// Returns nil if marshaling fails (error is logged).
-func (e *SSEEvent) JSON() []byte {
+// Frame returns the event encoded as a complete SSE data frame.
+func (e *SSEEvent) Frame() []byte {
 	data, err := json.Marshal(e)
 	if err != nil {
 		slog.Error("failed to marshal SSE event", "err", err, "event", e)
-		return nil
-	}
-	return data
-}
-
-// Frame returns the event encoded as a complete SSE data frame.
-func (e *SSEEvent) Frame() []byte {
-	data := e.JSON()
-	if len(data) == 0 {
 		return nil
 	}
 	frame := make([]byte, 0, len(sseDataPrefix)+len(data)+2)
@@ -87,7 +74,16 @@ func NewSSEHub() *SSEHub {
 
 // Subscribe registers a new client and returns it.
 // The caller must call Unsubscribe when done.
-func (h *SSEHub) Subscribe(userID int32, role store.Role) *SSEClient {
+func (h *SSEHub) Subscribe() *SSEClient {
+	return h.subscribe(0, store.RoleUser)
+}
+
+// SubscribeForUser registers a client with identity-aware event filtering.
+func (h *SSEHub) SubscribeForUser(userID int32, role store.Role) *SSEClient {
+	return h.subscribe(userID, role)
+}
+
+func (h *SSEHub) subscribe(userID int32, role store.Role) *SSEClient {
 	c := &SSEClient{
 		// Buffer a few events so a slow client doesn't block broadcasting.
 		events: make(chan []byte, sseClientEventBufferSize),
@@ -104,6 +100,27 @@ func (h *SSEHub) Subscribe(userID int32, role store.Role) *SSEClient {
 	}
 	h.mu.Unlock()
 	return c
+}
+
+// Broadcast sends a subject-specific event only to clients allowed to see it.
+func (h *SSEHub) Broadcast(event *SSEEvent) {
+	if event == nil {
+		return
+	}
+	if event.Visibility == store.SpaceAudience {
+		// Space membership is not held by the hub. Send the subject-free refresh
+		// signal to authenticated clients instead of leaking the memo name.
+		h.publishFrame([]byte(memoChangedSSEFrame), func(client *SSEClient) bool { return client.userID != 0 })
+		return
+	}
+	if !event.hasKnownVisibility() {
+		return
+	}
+	frame := event.Frame()
+	if len(frame) == 0 {
+		return
+	}
+	h.publishFrame(frame, func(client *SSEClient) bool { return client.userID != 0 && client.canReceive(event) })
 }
 
 // Unsubscribe removes a client and closes its channels.
@@ -132,22 +149,21 @@ func (h *SSEHub) Close() {
 	}
 }
 
-// Broadcast sends an event to all connected clients.
+// publishMemoChanged tells connected clients to refresh memo-backed caches.
+// The event deliberately carries no subject or authorization-sensitive data.
 // Slow clients with a full buffer are disconnected so they can reconnect and
 // resynchronize instead of silently missing an event.
-func (h *SSEHub) Broadcast(event *SSEEvent) {
-	if event == nil || !event.hasKnownVisibility() {
-		return
-	}
-	frame := event.Frame()
-	if len(frame) == 0 {
-		return
-	}
+func (h *SSEHub) publishMemoChanged() {
+	// Identity-free subscribers use the official subject-free refresh protocol.
+	// Authenticated subscribers receive one precise event from Broadcast instead.
+	h.publishFrame([]byte(memoChangedSSEFrame), func(client *SSEClient) bool { return client.userID == 0 })
+}
 
+func (h *SSEHub) publishFrame(frame []byte, allow func(*SSEClient) bool) {
 	var slowClients []*SSEClient
 	h.mu.RLock()
 	for c := range h.clients {
-		if !c.canReceive(event) {
+		if allow != nil && !allow(c) {
 			continue
 		}
 		select {
@@ -168,7 +184,7 @@ func (e *SSEEvent) hasKnownVisibility() bool {
 	case store.Private, store.Public, store.Protected, "":
 		return true
 	default:
-		slog.Warn("SSE event has unknown visibility; denying broadcast", "visibility", string(e.Visibility))
+		slog.Warn("SSE event has unsupported visibility; denying broadcast", "visibility", string(e.Visibility))
 		return false
 	}
 }

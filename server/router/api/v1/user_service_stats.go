@@ -62,9 +62,9 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 		RowStatus:       &rowStatus,
 	}
 
-	currentUser, err := s.fetchCurrentUser(ctx)
+	accessScope, currentUser, err := s.resolveMemoAccessScope(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
+		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 	deniedCategories, err := s.inaccessibleMemoCategories(ctx, currentUser)
 	if err != nil {
@@ -84,16 +84,8 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 			return &v1pb.ListAllUserStatsResponse{}, nil
 		}
 		memoFind.CreatorID = &currentUser.ID
-	} else if currentUser == nil {
-		memoFind.VisibilityList = []store.Visibility{store.Public}
-	} else {
-		if memoFind.CreatorID == nil {
-			filter := fmt.Sprintf(`creator_id == %d || visibility in ["PUBLIC", "PROTECTED"]`, currentUser.ID)
-			memoFind.Filters = append(memoFind.Filters, filter)
-		} else if *memoFind.CreatorID != currentUser.ID {
-			memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
-		}
 	}
+	memoFind.Access = accessScope
 	userMemoStatMap := make(map[int32]*v1pb.UserStats)
 	pinnedMemoUIDsByUserID := make(map[int32][]string)
 	limit := 1000
@@ -205,9 +197,9 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	}
 	userID := user.ID
 
-	currentUser, err := s.fetchCurrentUser(ctx)
+	accessScope, currentUser, err := s.resolveMemoAccessScope(ctx)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get user: %v", err)
+		return nil, status.Errorf(codes.Internal, "%v", err)
 	}
 	deniedCategories, err := s.inaccessibleMemoCategories(ctx, currentUser)
 	if err != nil {
@@ -228,6 +220,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	} else if currentUser.ID != userID {
 		memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
 	}
+	memoFind.Access = accessScope
 	createdTimestamps := []*timestamppb.Timestamp{}
 	updatedTimestamps := []*timestamppb.Timestamp{}
 	tagCount := make(map[string]int32)

@@ -203,7 +203,7 @@ func (s *APIV1Service) deleteEmojiContent(ctx context.Context, emoji *store.Emoj
 		if err != nil {
 			return errors.Wrap(err, "failed to load attachment storage setting")
 		}
-		driver, err := store.ResolveStorageDriver(ctx, setting, emoji.StorageID, nil)
+		driver, err := s.Store.ResolveStorageDriver(ctx, setting, emoji.StorageID, nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to resolve emoji storage")
 		}
@@ -225,7 +225,7 @@ func (s *APIV1Service) readEmojiContent(ctx context.Context, emoji *store.Emoji)
 		if err != nil {
 			return nil, err
 		}
-		driver, err := store.ResolveStorageDriver(ctx, setting, emoji.StorageID, nil)
+		driver, err := s.Store.ResolveStorageDriver(ctx, setting, emoji.StorageID, nil)
 		if err != nil {
 			return nil, err
 		}

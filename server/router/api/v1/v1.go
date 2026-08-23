@@ -31,6 +31,7 @@ type APIV1Service struct {
 	v1pb.UnimplementedAuthServiceServer
 	v1pb.UnimplementedUserServiceServer
 	v1pb.UnimplementedMemoServiceServer
+	v1pb.UnimplementedSpaceServiceServer
 	v1pb.UnimplementedAttachmentServiceServer
 	v1pb.UnimplementedAIServiceServer
 	v1pb.UnimplementedMemoViewServiceServer
@@ -113,6 +114,10 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 
 	gatewayAuthMiddleware := func(next runtime.HandlerFunc) runtime.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
+			// grpc-gateway does not pass through the Connect metadata interceptor.
+			// Apply the same no-store policy here so a memo that later loses access
+			// cannot remain readable from a browser or intermediary response cache.
+			setAPIResponseNoStoreHeaders(w.Header())
 			ctx := r.Context()
 
 			authHeader := r.Header.Get("Authorization")
@@ -152,6 +157,9 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 		return err
 	}
 	if err := v1pb.RegisterMemoServiceHandlerServer(ctx, gwMux, s); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterSpaceServiceHandlerServer(ctx, gwMux, s); err != nil {
 		return err
 	}
 	if err := v1pb.RegisterAttachmentServiceHandlerServer(ctx, gwMux, s); err != nil {
@@ -194,6 +202,12 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	connectGroup.Any("/memos.api.v1.*", echo.WrapHandler(http.MaxBytesHandler(connectMux, MaxAPIRequestBytes)))
 
 	return nil
+}
+
+func setAPIResponseNoStoreHeaders(header http.Header) {
+	header.Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	header.Set("Pragma", "no-cache")
+	header.Set("Expires", "0")
 }
 
 func writeGatewayAuthorizationError(w http.ResponseWriter, err error) {

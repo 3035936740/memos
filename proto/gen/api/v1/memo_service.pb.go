@@ -34,8 +34,11 @@ const (
 	Visibility_PRIVATE Visibility = 1
 	// PROTECTED: signed-in users of the instance can read the memo.
 	Visibility_PROTECTED Visibility = 2
-	// PUBLIC: anyone, including anonymous visitors, can read the memo.
+	// PUBLIC: signed-in users can read the memo; anonymous visitors can read it
+	// when instance policy permits.
 	Visibility_PUBLIC Visibility = 3
+	// SPACE: active members of the memo's space can read it.
+	Visibility_SPACE Visibility = 4
 )
 
 // Enum value maps for Visibility.
@@ -45,12 +48,14 @@ var (
 		1: "PRIVATE",
 		2: "PROTECTED",
 		3: "PUBLIC",
+		4: "SPACE",
 	}
 	Visibility_value = map[string]int32{
 		"VISIBILITY_UNSPECIFIED": 0,
 		"PRIVATE":                1,
 		"PROTECTED":              2,
 		"PUBLIC":                 3,
+		"SPACE":                  4,
 	}
 )
 
@@ -225,8 +230,9 @@ type Memo struct {
 	// Required. The content of the memo in Markdown format.
 	Content string `protobuf:"bytes,7,opt,name=content,proto3" json:"content,omitempty"`
 	// The visibility of the memo.
-	// One of PRIVATE (creator only), PROTECTED (signed-in users), or
-	// PUBLIC (anyone). Defaults to PRIVATE on creation when unspecified.
+	// One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC
+	// (anonymous-eligible), or SPACE (active space members). Defaults to
+	// PRIVATE on creation when unspecified.
 	Visibility Visibility `protobuf:"varint,9,opt,name=visibility,proto3,enum=memos.api.v1.Visibility" json:"visibility,omitempty"`
 	// Output only. The tags extracted from the content.
 	Tags []string `protobuf:"bytes,10,rep,name=tags,proto3" json:"tags,omitempty"`
@@ -240,7 +246,8 @@ type Memo struct {
 	Reactions []*Reaction `protobuf:"bytes,14,rep,name=reactions,proto3" json:"reactions,omitempty"`
 	// Output only. The computed properties of the memo.
 	Property *Memo_Property `protobuf:"bytes,15,opt,name=property,proto3" json:"property,omitempty"`
-	// Output only. The name of the parent memo.
+	// Output only. The readable context memo of this COMMENT relation, if any.
+	// This is omitted unless the caller may independently read both memos.
 	// Format: memos/{memo}
 	Parent *string `protobuf:"bytes,16,opt,name=parent,proto3,oneof" json:"parent,omitempty"`
 	// Output only. The snippet of the memo content. Plain text only.
@@ -275,8 +282,11 @@ type Memo struct {
 	// Output only. True when the authenticated viewer is the memo creator. This
 	// preserves owner controls for anonymous memos without exposing identity.
 	CreatorIsViewer bool `protobuf:"varint,28,opt,name=creator_is_viewer,json=creatorIsViewer,proto3" json:"creator_is_viewer,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Optional. The space in which this memo is placed. Format: spaces/{space}.
+	// Every memo, including a comment, owns its placement independently.
+	Space         *string `protobuf:"bytes,29,opt,name=space,proto3,oneof" json:"space,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Memo) Reset() {
@@ -484,6 +494,13 @@ func (x *Memo) GetCreatorIsViewer() bool {
 	return false
 }
 
+func (x *Memo) GetSpace() string {
+	if x != nil && x.Space != nil {
+		return *x.Space
+	}
+	return ""
+}
+
 type Location struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// A placeholder text for the location.
@@ -628,7 +645,7 @@ type ListMemosRequest struct {
 	// Available fields:
 	//   content (string), creator (string, e.g. "users/1"),
 	//   created_ts / updated_ts (timestamp), pinned (bool),
-	//   visibility (string: PRIVATE | PROTECTED | PUBLIC),
+	//   visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),
 	//   tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
 	//   has_task_list / has_link / has_code / has_incomplete_tasks (bool),
 	//   has_location (bool; true when the memo has a location attached),
@@ -648,6 +665,11 @@ type ListMemosRequest struct {
 	PageOffset int32 `protobuf:"varint,7,opt,name=page_offset,json=pageOffset,proto3" json:"page_offset,omitempty"`
 	// Optional. If true, calculate the total number of memos matching this request.
 	ShowTotalSize bool `protobuf:"varint,8,opt,name=show_total_size,json=showTotalSize,proto3" json:"show_total_size,omitempty"`
+	// Types that are valid to be assigned to Scope:
+	//
+	//	*ListMemosRequest_Space
+	//	*ListMemosRequest_Unassigned
+	Scope         isListMemosRequest_Scope `protobuf_oneof:"scope"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -737,6 +759,50 @@ func (x *ListMemosRequest) GetShowTotalSize() bool {
 	}
 	return false
 }
+
+func (x *ListMemosRequest) GetScope() isListMemosRequest_Scope {
+	if x != nil {
+		return x.Scope
+	}
+	return nil
+}
+
+func (x *ListMemosRequest) GetSpace() string {
+	if x != nil {
+		if x, ok := x.Scope.(*ListMemosRequest_Space); ok {
+			return x.Space
+		}
+	}
+	return ""
+}
+
+func (x *ListMemosRequest) GetUnassigned() bool {
+	if x != nil {
+		if x, ok := x.Scope.(*ListMemosRequest_Unassigned); ok {
+			return x.Unassigned
+		}
+	}
+	return false
+}
+
+type isListMemosRequest_Scope interface {
+	isListMemosRequest_Scope()
+}
+
+type ListMemosRequest_Space struct {
+	// Optional. Limit results to readable non-comment memos in a space of
+	// which the caller is an active member.
+	Space string `protobuf:"bytes,9,opt,name=space,proto3,oneof"`
+}
+
+type ListMemosRequest_Unassigned struct {
+	// Optional. Limit results to memos with no space. Must be true when set.
+	Unassigned bool `protobuf:"varint,10,opt,name=unassigned,proto3,oneof"`
+}
+
+func (*ListMemosRequest_Space) isListMemosRequest_Scope() {}
+
+func (*ListMemosRequest_Unassigned) isListMemosRequest_Scope() {}
 
 type ListMemosResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1298,7 +1364,7 @@ type SetMemoRelationsRequest struct {
 	// Required. The resource name of the memo.
 	// Format: memos/{memo}
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// Required. The relations to set for the memo.
+	// Required. The REFERENCE relations to set for the memo. COMMENT is invalid.
 	Relations     []*MemoRelation `protobuf:"bytes,2,rep,name=relations,proto3" json:"relations,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2533,7 +2599,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
 	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breactionJ\x04\b\x03\x10\x04R\n" +
-	"content_id\"\xca\v\n" +
+	"content_id\"\x8b\f\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -2567,7 +2633,9 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"view_count\x18\x18 \x01(\x03B\x03\xe0A\x03R\tviewCount\x12!\n" +
 	"\tanonymous\x18\x19 \x01(\bB\x03\xe0A\x01R\tanonymous\x12&\n" +
 	"\fadmin_script\x18\x1b \x01(\tB\x03\xe0A\x01R\vadminScript\x12/\n" +
-	"\x11creator_is_viewer\x18\x1c \x01(\bB\x03\xe0A\x03R\x0fcreatorIsViewer\x1a\xac\x01\n" +
+	"\x11creator_is_viewer\x18\x1c \x01(\bB\x03\xe0A\x03R\x0fcreatorIsViewer\x125\n" +
+	"\x05space\x18\x1d \x01(\tB\x1a\xe0A\x01\xfaA\x14\n" +
+	"\x12memos.api.v1/SpaceH\x04R\x05space\x88\x01\x01\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +
@@ -2578,14 +2646,15 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\a_parentB\v\n" +
 	"\t_locationB\v\n" +
 	"\t_categoryB\x0f\n" +
-	"\r_publish_timeJ\x04\b\x06\x10\aR\fdisplay_time\"u\n" +
+	"\r_publish_timeB\b\n" +
+	"\x06_spaceJ\x04\b\x06\x10\aR\fdisplay_time\"u\n" +
 	"\bLocation\x12%\n" +
 	"\vplaceholder\x18\x01 \x01(\tB\x03\xe0A\x01R\vplaceholder\x12\x1f\n" +
 	"\blatitude\x18\x02 \x01(\x01B\x03\xe0A\x01R\blatitude\x12!\n" +
 	"\tlongitude\x18\x03 \x01(\x01B\x03\xe0A\x01R\tlongitude\"^\n" +
 	"\x11CreateMemoRequest\x12+\n" +
 	"\x04memo\x18\x01 \x01(\v2\x12.memos.api.v1.MemoB\x03\xe0A\x02R\x04memo\x12\x1c\n" +
-	"\amemo_id\x18\x02 \x01(\tB\x03\xe0A\x01R\x06memoId\"\xc0\x02\n" +
+	"\amemo_id\x18\x02 \x01(\tB\x03\xe0A\x01R\x06memoId\"\x9c\x03\n" +
 	"\x10ListMemosRequest\x12 \n" +
 	"\tpage_size\x18\x01 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
 	"\n" +
@@ -2596,7 +2665,14 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\fshow_deleted\x18\x06 \x01(\bB\x03\xe0A\x01R\vshowDeleted\x12$\n" +
 	"\vpage_offset\x18\a \x01(\x05B\x03\xe0A\x01R\n" +
 	"pageOffset\x12+\n" +
-	"\x0fshow_total_size\x18\b \x01(\bB\x03\xe0A\x01R\rshowTotalSize\"\x84\x01\n" +
+	"\x0fshow_total_size\x18\b \x01(\bB\x03\xe0A\x01R\rshowTotalSize\x12/\n" +
+	"\x05space\x18\t \x01(\tB\x17\xfaA\x14\n" +
+	"\x12memos.api.v1/SpaceH\x00R\x05space\x12 \n" +
+	"\n" +
+	"unassigned\x18\n" +
+	" \x01(\bH\x00R\n" +
+	"unassignedB\a\n" +
+	"\x05scope\"\x84\x01\n" +
 	"\x11ListMemosResponse\x12(\n" +
 	"\x05memos\x18\x01 \x03(\v2\x12.memos.api.v1.MemoR\x05memos\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
@@ -2726,14 +2802,15 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
-	"\x05image\x18\x04 \x01(\tR\x05image*P\n" +
+	"\x05image\x18\x04 \x01(\tR\x05image*[\n" +
 	"\n" +
 	"Visibility\x12\x1a\n" +
 	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\v\n" +
 	"\aPRIVATE\x10\x01\x12\r\n" +
 	"\tPROTECTED\x10\x02\x12\n" +
 	"\n" +
-	"\x06PUBLIC\x10\x032\xa4\x16\n" +
+	"\x06PUBLIC\x10\x03\x12\t\n" +
+	"\x05SPACE\x10\x042\xa4\x16\n" +
 	"\vMemoService\x12e\n" +
 	"\n" +
 	"CreateMemo\x12\x1f.memos.api.v1.CreateMemoRequest\x1a\x12.memos.api.v1.Memo\"\"\xdaA\x04memo\x82\xd3\xe4\x93\x02\x15:\x04memo\"\r/api/v1/memos\x12f\n" +
@@ -2912,6 +2989,10 @@ func file_api_v1_memo_service_proto_init() {
 	file_api_v1_attachment_service_proto_init()
 	file_api_v1_common_proto_init()
 	file_api_v1_memo_service_proto_msgTypes[1].OneofWrappers = []any{}
+	file_api_v1_memo_service_proto_msgTypes[4].OneofWrappers = []any{
+		(*ListMemosRequest_Space)(nil),
+		(*ListMemosRequest_Unassigned)(nil),
+	}
 	file_api_v1_memo_service_proto_msgTypes[25].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

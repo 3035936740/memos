@@ -37,6 +37,9 @@ var (
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
 	}).DialContext
+	// GetText keeps a package-level client so tests can replace the transport,
+	// while link-preview fetchers use their own isolated client and cache.
+	httpClient = newHTTPClient()
 )
 
 func newHTTPClient() *http.Client {

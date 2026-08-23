@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -106,7 +107,7 @@ func parseModerationTargetType(raw string) (store.ModerationTargetType, bool) {
 	}
 }
 
-func moderationMemoReadable(memo, parent *store.Memo, user *store.User) bool {
+func (s *APIV1Service) moderationMemoReadable(ctx context.Context, memo, parent *store.Memo, user *store.User) bool {
 	if memo == nil {
 		return false
 	}
@@ -124,7 +125,16 @@ func moderationMemoReadable(memo, parent *store.Memo, user *store.User) bool {
 			return false
 		}
 	}
-	return access.CheckMemoRead(memo, parent, user, false, nil).Denial == access.MemoReadDenialNone
+	for _, candidate := range []*store.Memo{parent, memo} {
+		if candidate == nil {
+			continue
+		}
+		readContext, err := access.ResolveMemoReadContext(ctx, s.Store, candidate, user, false, nil)
+		if err != nil || !access.CheckMemoReadContext(readContext).Allowed() {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *APIV1Service) resolveModerationTarget(c *echo.Context, targetType store.ModerationTargetType, name string) (int32, *store.Memo, *store.User, error) {
@@ -304,7 +314,7 @@ func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authori
 			if memo.ParentUID != nil {
 				parent, _ = service.Store.GetMemo(c.Request().Context(), &store.FindMemo{UID: memo.ParentUID})
 			}
-			if !moderationMemoReadable(memo, parent, user) {
+			if !service.moderationMemoReadable(c.Request().Context(), memo, parent, user) {
 				return moderationError(c, http.StatusNotFound, errors.New("target not found"))
 			}
 			if memo.CreatorID == user.ID {
@@ -558,7 +568,7 @@ func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authori
 			if memo != nil && memo.ParentUID != nil {
 				parent, _ = service.Store.GetMemo(c.Request().Context(), &store.FindMemo{UID: memo.ParentUID})
 			}
-			if memo == nil || memo.ParentUID != nil || !moderationMemoReadable(memo, parent, user) || !memoVisibleInCollection(memo, user) {
+			if memo == nil || memo.ParentUID != nil || !service.moderationMemoReadable(c.Request().Context(), memo, parent, user) || !memoVisibleInCollection(memo, user) {
 				continue
 			}
 			items = append(items, service.moderationItem(c, store.ModerationTargetArticle, id, 0, "", time.Now().Unix()))
@@ -579,7 +589,7 @@ func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authori
 		if memo.ParentUID != nil {
 			parent, _ = service.Store.GetMemo(c.Request().Context(), &store.FindMemo{UID: memo.ParentUID})
 		}
-		if memo.ParentUID != nil || !moderationMemoReadable(memo, parent, user) {
+		if memo.ParentUID != nil || !service.moderationMemoReadable(c.Request().Context(), memo, parent, user) {
 			return moderationError(c, http.StatusNotFound, errors.New("memo not found"))
 		}
 		saved, err := service.Store.HasMemoBookmark(c.Request().Context(), user.ID, memo.ID)
@@ -602,7 +612,7 @@ func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authori
 		if memo.ParentUID != nil {
 			parent, _ = service.Store.GetMemo(c.Request().Context(), &store.FindMemo{UID: memo.ParentUID})
 		}
-		if memo.ParentUID != nil || !moderationMemoReadable(memo, parent, user) {
+		if memo.ParentUID != nil || !service.moderationMemoReadable(c.Request().Context(), memo, parent, user) {
 			return moderationError(c, http.StatusForbidden, errors.New("permission denied"))
 		}
 		if err := service.Store.UpsertMemoBookmark(c.Request().Context(), user.ID, memo.ID); err != nil {

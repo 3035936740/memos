@@ -24,6 +24,7 @@ type Driver interface {
 	UpdateAttachment(ctx context.Context, update *UpdateAttachment) error
 	DeleteAttachment(ctx context.Context, delete *DeleteAttachment) error
 	DeleteAttachments(ctx context.Context, deletes []*DeleteAttachment) error
+	DeleteAttachmentsWithPolicy(ctx context.Context, policy *AttachmentDeletionPolicy, attachmentIDs []int32) error
 	ApplyMemoMutation(ctx context.Context, mutation *MemoMutation) error
 
 	// Custom emoji model related methods.
@@ -40,6 +41,17 @@ type Driver interface {
 	UpdateMemo(ctx context.Context, update *UpdateMemo) error
 	IncrementMemoViewCount(ctx context.Context, memoID int32) (int64, error)
 	DeleteMemo(ctx context.Context, delete *DeleteMemo) error
+	DeleteMemoWithPolicy(ctx context.Context, delete *DeleteMemoWithPolicy) (*DeleteMemoWithPolicyResult, error)
+
+	// Space model related methods.
+	CreateSpace(ctx context.Context, create *Space, creatorID int32) (*Space, error)
+	ListSpaces(ctx context.Context, find *FindSpace) ([]*Space, error)
+	UpdateSpace(ctx context.Context, update *UpdateSpace, actorUserID int32) (*Space, error)
+	DeleteSpace(ctx context.Context, delete *DeleteSpace) (*DeleteSpaceResult, error)
+	CreateSpaceMember(ctx context.Context, create *SpaceMember, actorUserID int32) (*SpaceMember, error)
+	ListSpaceMembers(ctx context.Context, find *FindSpaceMember) ([]*SpaceMember, error)
+	UpdateSpaceMember(ctx context.Context, update *UpdateSpaceMember, actorUserID int32) (*SpaceMember, error)
+	DeleteSpaceMember(ctx context.Context, delete *DeleteSpaceMember, actorUserID int32) error
 
 	// MemoRelation model related methods.
 	UpsertMemoRelation(ctx context.Context, create *MemoRelation) (*MemoRelation, error)
