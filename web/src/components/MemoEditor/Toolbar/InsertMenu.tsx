@@ -45,9 +45,7 @@ const InsertMenu = (props: InsertMenuProps) => {
   const {
     location: initialLocation,
     onLocationChange,
-    onToggleFocusMode,
-    onToggleFormattingToolbar,
-    isFormattingToolbarVisible,
+    viewToggles,
     isUploading: isUploadingProp,
     adminScript = "",
     onAdminScriptChange,
@@ -225,17 +223,22 @@ const InsertMenu = (props: InsertMenuProps) => {
               {item.label}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuSeparator />
-          {/* View toggles: focus mode + formatting-toolbar visibility. */}
-          <DropdownMenuItem onClick={onToggleFocusMode}>
-            <Maximize2Icon className="w-4 h-4" />
-            {t("editor.focus-mode")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onToggleFormattingToolbar}>
-            <TypeIcon className="w-4 h-4" />
-            {t("editor.formatting-toolbar")}
-            {isFormattingToolbarVisible && <CheckIcon className="w-4 h-4 ml-auto" />}
-          </DropdownMenuItem>
+          {/* View toggles: focus mode + formatting-toolbar visibility. Absent
+              when a host owns the editor's presentation — neither applies there. */}
+          {viewToggles && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={viewToggles.onToggleFocusMode}>
+                <Maximize2Icon className="w-4 h-4" />
+                {t("editor.focus-mode")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={viewToggles.onToggleFormattingToolbar}>
+                <TypeIcon className="w-4 h-4" />
+                {t("editor.formatting-toolbar")}
+                {viewToggles.isFormattingToolbarVisible && <CheckIcon className="w-4 h-4 ml-auto" />}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

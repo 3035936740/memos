@@ -19,8 +19,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   memoName,
   showCategory = true,
   onAudioRecorderClick,
-  isFormattingToolbarVisible,
-  onToggleFormattingToolbar,
+  viewToggles,
   onInsertImages,
   onInsertVideos,
   onInsertEmoji,
@@ -57,10 +56,6 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
     dispatch(actions.setMetadata({ location: next }));
   };
 
-  const handleToggleFocusMode = () => {
-    dispatch(actions.toggleFocusMode());
-  };
-
   const handleVisibilityChange = (next: Visibility) => {
     dispatch(actions.setMetadata({ visibility: next }));
   };
@@ -81,11 +76,9 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           isSaving={isSaving}
           location={location}
           onLocationChange={handleLocationChange}
-          onToggleFocusMode={handleToggleFocusMode}
           memoName={memoName}
           onAudioRecorderClick={onAudioRecorderClick}
-          isFormattingToolbarVisible={isFormattingToolbarVisible}
-          onToggleFormattingToolbar={onToggleFormattingToolbar}
+          viewToggles={viewToggles}
           onInsertImages={onInsertImages}
           onInsertVideos={onInsertVideos}
           onInsertEmoji={onInsertEmoji}

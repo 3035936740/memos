@@ -25,12 +25,14 @@ import {
 import { cacheService, errorService, transcriptionService } from "./services";
 import { EditorProvider, useEditorContext, useEditorSelector } from "./state";
 import { EditorToolbar, FormattingToolbar } from "./Toolbar";
-import type { MemoEditorProps } from "./types";
+import type { EditorViewToggles, MemoEditorProps } from "./types";
 import type { LocalFile } from "./types/attachment";
 import type { EditorController } from "./types/editorController";
 
+// A host that presents the editor full-screen supplies `onFocusModeExit`; its
+// presence is what makes an instance hosted, so focus mode starts on and stays on.
 const MemoEditor = (props: MemoEditorProps) => (
-  <EditorProvider initialFocusMode={props.initialFocusMode}>
+  <EditorProvider initialFocusMode={Boolean(props.onFocusModeExit)}>
     <MemoEditorImpl {...props} />
   </EditorProvider>
 );
@@ -231,8 +233,10 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     }
   }, [editorCacheKey]);
 
+  // Hosted: focus mode is the host's frame, so leaving it dismisses the host.
+  // Inline: focus mode is a view this editor owns and toggles in place.
   const handleToggleFocusMode = () => {
-    if (isFocusMode && onFocusModeExit) {
+    if (onFocusModeExit) {
       rememberCursor();
       onFocusModeExit();
       return;
@@ -311,6 +315,17 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     }
   };
 
+  // The ＋ menu's view toggles only describe how an inline editor presents
+  // itself, so a hosted editor offers neither: its host owns the frame, and
+  // focus mode already forces the formatting toolbar on.
+  const viewToggles: EditorViewToggles | undefined = onFocusModeExit
+    ? undefined
+    : {
+        onToggleFocusMode: handleToggleFocusMode,
+        isFormattingToolbarVisible,
+        onToggleFormattingToolbar: handleToggleFormattingToolbar,
+      };
+
   const handleSave = useMemoSave({
     memoName,
     parentMemoName,
@@ -346,11 +361,15 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           !isFocusMode && className,
         )}
       >
-        {/* Formatting toolbar. Always shown in focus mode (with an exit button);
+        {/* Formatting toolbar. Always shown in focus mode (trailing the button
+            that leaves the current frame — minimize inline, close when hosted);
             in normal mode it appears only when the user toggled it on via the
             insert menu. */}
         {(isFocusMode || isFormattingToolbarVisible) && (
-          <FormattingToolbar controllerRef={editorRef} onExit={isFocusMode ? handleToggleFocusMode : undefined} />
+          <FormattingToolbar
+            controllerRef={editorRef}
+            exit={isFocusMode ? { action: onFocusModeExit ? "close" : "minimize", onExit: handleToggleFocusMode } : undefined}
+          />
         )}
 
         {canCustomizeTimestamps && (memoName || (!memo && hasTimestamp)) && (
@@ -388,8 +407,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             memoName={memoName}
             showCategory={!parentMemoName}
             onAudioRecorderClick={handleAudioRecorderClick}
-            isFormattingToolbarVisible={isFormattingToolbarVisible}
-            onToggleFormattingToolbar={handleToggleFormattingToolbar}
+            viewToggles={viewToggles}
             onInsertImages={handleInsertImages}
             onInsertVideos={handleInsertVideos}
             onInsertEmoji={handleInsertEmoji}
