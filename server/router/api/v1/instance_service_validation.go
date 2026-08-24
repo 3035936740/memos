@@ -13,7 +13,16 @@ import (
 	"github.com/usememos/memos/internal/ai"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
+	"github.com/usememos/memos/store"
 )
+
+func applyInstanceSettingDefaults(setting *v1pb.InstanceSetting) {
+	memoRelatedSetting := setting.GetMemoRelatedSetting()
+	if memoRelatedSetting == nil || memoRelatedSetting.ContentLengthLimit != 0 {
+		return
+	}
+	memoRelatedSetting.ContentLengthLimit = store.DefaultContentLengthLimit
+}
 
 func validateInstanceSetting(setting *v1pb.InstanceSetting) error {
 	key, err := ExtractInstanceSettingKeyFromName(setting.Name)
@@ -21,6 +30,8 @@ func validateInstanceSetting(setting *v1pb.InstanceSetting) error {
 		return err
 	}
 	switch key {
+	case storepb.InstanceSettingKey_MEMO_RELATED.String():
+		return validateInstanceMemoRelatedSetting(setting.GetMemoRelatedSetting())
 	case storepb.InstanceSettingKey_TAGS.String():
 		return validateInstanceTagsSetting(setting.GetTagsSetting())
 	case storepb.InstanceSettingKey_ACCESS.String():
@@ -28,6 +39,16 @@ func validateInstanceSetting(setting *v1pb.InstanceSetting) error {
 	default:
 		return nil
 	}
+}
+
+func validateInstanceMemoRelatedSetting(setting *v1pb.InstanceSetting_MemoRelatedSetting) error {
+	if setting == nil {
+		return errors.New("memo related setting is required")
+	}
+	if setting.ContentLengthLimit < store.DefaultContentLengthLimit {
+		return errors.Errorf("content_length_limit must be at least %d bytes", store.DefaultContentLengthLimit)
+	}
+	return nil
 }
 
 func validateInstanceAccessSetting(setting *v1pb.InstanceSetting_AccessSetting) error {
