@@ -43,6 +43,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   memo,
   parentMemoName,
   initialContent,
+  defaultSpace,
   autoFocus,
   onFocusModeExit,
   placeholder,
@@ -329,6 +330,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const handleSave = useMemoSave({
     memoName,
     parentMemoName,
+    defaultSpace,
     defaultVisibility,
     defaultCreateTime: editableDefaultCreateTime,
     canCustomizeTimestamps,

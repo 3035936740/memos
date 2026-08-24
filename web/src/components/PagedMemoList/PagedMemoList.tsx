@@ -14,6 +14,7 @@ import { useView } from "@/contexts/ViewContext";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { hoistMemoToFront } from "@/hooks/useMemoSorting";
+import { combineCELFilters } from "@/lib/cel-filter";
 import { LOADING_INDICATOR_DELAY_MS, normalizeMemoFeedPageSize } from "@/lib/constants";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ interface Props {
   state?: State;
   orderBy?: string;
   filter?: string;
+  contextFilter?: string;
   pageSize?: number;
   showCreator?: boolean;
   enabled?: boolean;
@@ -137,7 +139,7 @@ const PagedMemoList = (props: Props) => {
     {
       state: props.state || State.NORMAL,
       orderBy: props.orderBy || "create_time desc",
-      filter: props.filter,
+      filter: combineCELFilters(props.contextFilter, props.filter),
       pageSize,
       pageOffset: (currentPage - 1) * pageSize,
       showTotalSize: true,

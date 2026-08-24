@@ -48,6 +48,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useGlobalMemoEditor } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { stringifyFilters, useMemoFilterContext } from "@/contexts/MemoFilterContext";
+import { useSpaceContext } from "@/contexts/SpaceContext";
 import { useAttachmentLibraryStats } from "@/hooks/useAttachmentLibrary";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { type MemoStatsContext, useFilteredMemoStats } from "@/hooks/useFilteredMemoStats";
@@ -77,6 +78,7 @@ import SidebarSection, {
   SIDEBAR_SECTION_ACTION_ICON_CLASSES,
   SIDEBAR_SECTION_STACK_CLASSES,
 } from "./SidebarSection";
+import SpaceSwitcher from "./SpaceSwitcher";
 import TagsSection from "./TagsSection";
 
 const SIDEBAR_HORIZONTAL_PADDING = "px-3";
@@ -257,6 +259,7 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
   const t = useTranslate();
   const location = useLocation();
   const currentUser = useCurrentUser();
+  const { memoFilter, selectedSpaceName } = useSpaceContext();
   const md = useMediaQuery("md");
   const { mobileOpen, setMobileOpen } = useAppSidebar();
   const { isInitialized: authInitialized } = useAuth();
@@ -266,9 +269,13 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
     enabled: context === "profile" && !!profileMatch?.params.username,
   });
   const statsUserName = context === "home" ? currentUser?.name : context === "profile" ? profileUser?.name : undefined;
+  // Profile remains instance-level, so its calendar must stay aligned with the unscoped profile feed.
+  const statsFilter = context === "profile" ? undefined : memoFilter;
   const { statistics, tags } = useFilteredMemoStats({
     context,
     userName: statsUserName,
+    filter: statsFilter,
+    includeSpaceVisibility: !!selectedSpaceName,
     enabled: authInitialized && instanceInitialized && (md || mobileOpen),
   });
 
@@ -280,6 +287,7 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
   // clicks must land somewhere that renders the filtered feed.
   const onCollectionRoute = isMemoScopeRoute(location.pathname) || !!profileMatch;
   const filterTarget = onCollectionRoute ? undefined : context === "explore" ? ROUTES.EXPLORE : ROUTES.HOME;
+  const tagStateScope = `${statsUserName ?? context}${selectedSpaceName ? `:${selectedSpaceName}` : ""}`;
 
   return (
     <div className={SIDEBAR_SECTION_STACK_CLASSES}>
@@ -288,15 +296,16 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
         <StatisticsView statisticsData={statistics} navigationTarget={filterTarget} onDateSelect={() => setMobileOpen(false)} />
       </SidebarSection>
       {showViews && <ViewsSection />}
-      <TagsSection tagCount={tags} navigationTarget={filterTarget} scope={statsUserName ?? context} onSelect={() => setMobileOpen(false)} />
+      <TagsSection tagCount={tags} navigationTarget={filterTarget} scope={tagStateScope} onSelect={() => setMobileOpen(false)} />
     </div>
   );
 };
 
 const AttachmentsSidebarContent = () => {
   const t = useTranslate();
+  const { memoFilter, selectedSpaceName } = useSpaceContext();
   const { attachmentSection, setAttachmentSection, setMobileOpen } = useAppSidebar();
-  const { isComplete, stats } = useAttachmentLibraryStats();
+  const { isComplete, stats } = useAttachmentLibraryStats(memoFilter);
   const total = stats.media + stats.documents + stats.audio;
   const rows: Array<{ value: AttachmentSection; icon: LucideIcon; label: string; count?: number }> = [
     { value: "all", icon: ListIcon, label: t("common.all"), count: isComplete ? total : undefined },
@@ -308,8 +317,16 @@ const AttachmentsSidebarContent = () => {
       label: t("attachment-library.tabs.documents"),
       count: isComplete ? stats.documents : undefined,
     },
-    { value: "unused", icon: Trash2Icon, label: t("attachment-library.labels.unused"), count: isComplete ? stats.unused : undefined },
   ];
+  // Unlinked uploads do not belong to any Space, so "Unused" is only a Memos-level collection.
+  if (!selectedSpaceName) {
+    rows.push({
+      value: "unused",
+      icon: Trash2Icon,
+      label: t("attachment-library.labels.unused"),
+      count: isComplete ? stats.unused : undefined,
+    });
+  }
   return (
     <SidebarSection label={t("common.attachments")}>
       {rows.map((row) => (
@@ -833,6 +850,21 @@ const GlobalNavigation = () => {
   );
 };
 
+/** The sidebar/header brand slot: the Space switcher when signed in, the plain logo otherwise. */
+const SidebarBrand = ({ className }: { className?: string }) => {
+  const currentUser = useCurrentUser();
+
+  if (currentUser) {
+    return <SpaceSwitcher className={className} />;
+  }
+
+  return (
+    <Link to={ROUTES.EXPLORE} className={cn("min-w-0 rounded-md focus-visible:outline-none", className)}>
+      <MemosLogo compact />
+    </Link>
+  );
+};
+
 const AppSidebar = ({ className }: { className?: string }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -841,12 +873,7 @@ const AppSidebar = ({ className }: { className?: string }) => {
   return (
     <aside className={cn("flex h-full w-full select-none flex-col bg-sidebar text-sidebar-foreground", className)}>
       <div className={cn("flex h-13 shrink-0 items-center justify-between gap-2", SIDEBAR_HORIZONTAL_PADDING)}>
-        <Link
-          to={currentUser ? ROUTES.HOME : ROUTES.EXPLORE}
-          className="min-w-0 flex-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-        >
-          <MemosLogo compact />
-        </Link>
+        <SidebarBrand className="w-full flex-1" />
         <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="ghost"
@@ -893,7 +920,6 @@ const AppSidebar = ({ className }: { className?: string }) => {
 };
 
 export const MobileAppHeader = () => {
-  const currentUser = useCurrentUser();
   const { setMobileOpen } = useAppSidebar();
   return (
     <header className="sticky top-0 z-20 flex h-12 w-full items-center justify-start gap-1 border-b border-border/70 bg-background/90 px-2 backdrop-blur-md md:hidden">
@@ -907,12 +933,7 @@ export const MobileAppHeader = () => {
       >
         <MenuIcon className="size-[18px]" />
       </Button>
-      <Link
-        to={currentUser ? ROUTES.HOME : ROUTES.EXPLORE}
-        className="min-w-0 max-w-[12rem] rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-      >
-        <MemosLogo compact />
-      </Link>
+      <SidebarBrand className="max-w-[12rem]" />
       <div className="ml-auto flex shrink-0 items-center gap-0.5">
         <ToolbarPreferences />
         <ToolbarClock compact />

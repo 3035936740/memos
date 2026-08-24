@@ -172,6 +172,20 @@ func NewSchema() Schema {
 				CompareNeq: true,
 			},
 		},
+		"space": {
+			Name:   "space",
+			Kind:   FieldKindScalar,
+			Type:   FieldTypeString,
+			Column: Column{Table: "memo_space", Name: "uid"},
+			Expressions: map[DialectName]string{
+				DialectSQLite:   "CASE WHEN `memo`.`space_id` IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE ('spaces/' || %[1]s) END",
+				DialectMySQL:    "CASE WHEN `memo`.`space_id` IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE CONCAT('spaces/', %[1]s) END",
+				DialectPostgres: "CASE WHEN memo.space_id IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE ('spaces/' || %[1]s) END",
+			},
+			AllowedComparisonOps: map[ComparisonOperator]bool{
+				CompareEq: true,
+			},
+		},
 		"tags": {
 			Name:     "tags",
 			Kind:     FieldKindJSONList,
@@ -319,6 +333,8 @@ func NewSchema() Schema {
 		cel.Variable("tag", cel.StringType),
 		cel.Variable("tags", cel.ListType(cel.StringType)),
 		cel.Variable("visibility", cel.StringType),
+		// Dyn permits the explicit null comparison used for memos without a space.
+		cel.Variable("space", cel.DynType),
 		cel.Variable("has_task_list", cel.BoolType),
 		cel.Variable("has_link", cel.BoolType),
 		cel.Variable("has_code", cel.BoolType),
@@ -384,6 +400,20 @@ func NewAttachmentSchema() Schema {
 				CompareNeq: true,
 			},
 		},
+		"space": {
+			Name:   "space",
+			Kind:   FieldKindScalar,
+			Type:   FieldTypeString,
+			Column: Column{Table: "attachment_space", Name: "uid"},
+			Expressions: map[DialectName]string{
+				DialectSQLite:   "CASE WHEN `attachment`.`memo_id` IS NULL OR `memo`.`space_id` IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE ('spaces/' || %[1]s) END",
+				DialectMySQL:    "CASE WHEN `attachment`.`memo_id` IS NULL OR `memo`.`space_id` IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE CONCAT('spaces/', %[1]s) END",
+				DialectPostgres: "CASE WHEN attachment.memo_id IS NULL OR memo.space_id IS NULL THEN NULL WHEN %[1]s IS NULL THEN '' ELSE ('spaces/' || %[1]s) END",
+			},
+			AllowedComparisonOps: map[ComparisonOperator]bool{
+				CompareEq: true,
+			},
+		},
 	}
 
 	envOptions := []cel.EnvOption{
@@ -391,6 +421,7 @@ func NewAttachmentSchema() Schema {
 		cel.Variable("mime_type", cel.StringType),
 		cel.Variable("create_time", cel.TimestampType),
 		cel.Variable("memo_id", cel.AnyType),
+		cel.Variable("space", cel.DynType),
 		cel.Variable("now", cel.TimestampType),
 		cel.ASTValidators(cel.ValidateRegexLiterals()),
 	}

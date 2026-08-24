@@ -7,23 +7,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import VisibilityIcon from "@/components/VisibilityIcon";
+import { useSpaceContext } from "@/contexts/SpaceContext";
 import { cn } from "@/lib/utils";
-import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { getAssignableVisibilityOptions, getVisibilityOption } from "@/utils/memo";
 import type { VisibilitySelectorProps } from "../types";
 
 const VisibilitySelector = (props: VisibilitySelectorProps) => {
   const { value, onChange, hidden = false, onHiddenChange, anonymous = false, onAnonymousChange } = props;
   const compact = props.size === "compact";
   const t = useTranslate();
+  const { selectedSpaceName } = useSpaceContext();
 
-  const visibilityOptions = [
-    { value: Visibility.PRIVATE, label: t("memo.visibility.private"), description: t("memo.visibility.private-description") },
-    { value: Visibility.PROTECTED, label: t("memo.visibility.protected"), description: t("memo.visibility.protected-description") },
-    { value: Visibility.PUBLIC, label: t("memo.visibility.public"), description: t("memo.visibility.public-description") },
-  ] as const;
-
-  const currentLabel = hidden ? t("memo.hidden.label") : visibilityOptions.find((option) => option.value === value)?.label || "";
+  const visibilityOptions = getAssignableVisibilityOptions({ spaceSelected: Boolean(selectedSpaceName), current: value });
+  // Resolved from the full catalog, so the trigger names the memo's audience even
+  // when that audience is not currently on offer.
+  const currentOption = getVisibilityOption(value);
+  const currentLabel = hidden ? t("memo.hidden.label") : currentOption ? t(currentOption.labelKey) : "";
 
   return (
     <DropdownMenu onOpenChange={props.onOpenChange}>
@@ -56,8 +56,8 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
           >
             <VisibilityIcon visibility={option.value} />
             <div className="flex flex-col">
-              <span>{option.label}</span>
-              <span className="text-xs text-muted-foreground">{option.description}</span>
+              <span>{t(option.labelKey)}</span>
+              <span className="text-xs text-muted-foreground">{t(option.descriptionKey)}</span>
             </div>
             {!hidden && value === option.value && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
           </DropdownMenuItem>

@@ -12,6 +12,8 @@ export interface MemoEditorProps {
   parentMemoName?: string;
   /** Initial text for a newly-created memo/comment when no cached draft exists. */
   initialContent?: string;
+  /** Assigns a newly created top-level memo to this Space. Ignored for edits and comments. */
+  defaultSpace?: string;
   autoFocus?: boolean;
   /**
    * Marks the instance as *hosted*: a host (the global composer dialog) presents

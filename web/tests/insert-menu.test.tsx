@@ -16,6 +16,7 @@ vi.mock("@/utils/i18n", async (importOriginal) => ({
 vi.mock("@/hooks/useCurrentUser", () => ({ default: () => authState.currentUser }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ userGeneralSetting: undefined }) }));
 vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ generalSetting: { memoCategoriesJson: "" } }) }));
+vi.mock("@/contexts/SpaceContext", () => ({ useSpaceContext: () => ({ selectedSpaceName: undefined }) }));
 vi.mock("@/components/map/useReverseGeocoding", () => ({ useReverseGeocoding: () => ({ data: undefined }) }));
 vi.mock("@/components/MemoEditor/components/EmojiPickerDialog", () => ({ default: () => null }));
 vi.mock("@/components/MemoEditor/components/AIGenerateDialog", () => ({ default: () => null }));

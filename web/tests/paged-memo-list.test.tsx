@@ -168,6 +168,20 @@ describe("<PagedMemoList>", () => {
     expect(screen.getByTestId("placeholder-sprite")).toBeInTheDocument();
   });
 
+  it("combines the selected Space filter with the memo list filter", () => {
+    render(
+      <MemoryRouter>
+        <QueryClientProvider client={new QueryClient()}>
+          <PagedMemoList renderer={() => <div />} contextFilter={'space == "spaces/product"'} filter="pinned == true" />
+        </QueryClientProvider>
+      </MemoryRouter>,
+    );
+
+    expect(feed.request).toMatchObject({
+      filter: '(space == "spaces/product") && (pinned == true)',
+    });
+  });
+
   it("shows the empty state below route-owned leading content", () => {
     renderList(undefined, { leading: <div data-testid="leading-content" /> });
 

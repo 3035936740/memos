@@ -72,8 +72,8 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 	}
 
 	if request.Filter != "" {
-		if err := s.validateFilter(ctx, request.Filter); err != nil {
-			return nil, status.Errorf(codes.InvalidArgument, "invalid filter: %v", err)
+		if err := s.validateMemoFilterForUser(ctx, request.Filter, currentUser); err != nil {
+			return nil, err
 		}
 		memoFind.Filters = append(memoFind.Filters, request.Filter)
 	}
@@ -219,6 +219,12 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 		memoFind.VisibilityList = []store.Visibility{store.Public}
 	} else if currentUser.ID != userID {
 		memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
+	}
+	if request.Filter != "" {
+		if err := s.validateMemoFilterForUser(ctx, request.Filter, currentUser); err != nil {
+			return nil, err
+		}
+		memoFind.Filters = append(memoFind.Filters, request.Filter)
 	}
 	memoFind.Access = accessScope
 	createdTimestamps := []*timestamppb.Timestamp{}

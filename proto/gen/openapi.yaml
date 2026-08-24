@@ -76,7 +76,7 @@ paths:
                     type: string
                 - name: filter
                   in: query
-                  description: "Optional. Filter to apply to the list results.\r\n Example: \"mime_type==\\\"image/png\\\"\" or \"filename.contains(\\\"test\\\")\"\r\n Supported operators: =, !=, <, <=, >, >=, : (contains), in\r\n Supported fields: filename, mime_type, create_time, memo"
+                  description: "Optional. Filter to apply to the list results.\r\n Example: \"mime_type==\\\"image/png\\\"\" or \"filename.contains(\\\"test\\\")\"\r\n Supported operators: =, !=, <, <=, >, >=, : (contains), in\r\n Supported fields: filename, mime_type, create_time, memo_id, space.\r\n `space` only supports a non-negated `==` comparison with a Space resource\r\n name or null.\r\n `space` is the linked memo's space resource name, or null when the\r\n attachment is unlinked or its linked memo has no space."
                   schema:
                     type: string
                 - name: orderBy
@@ -636,7 +636,7 @@ paths:
                     type: string
                 - name: filter
                   in: query
-                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized),\r\n   hidden (bool; omitted from collection views unless owned or viewed by an admin).\r\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
+                  description: "Optional. A CEL expression to filter memos. Combine terms with && and ||.\r\n Available fields:\r\n   content (string), creator (string, e.g. \"users/1\"),\r\n   created_ts / updated_ts (timestamp), pinned (bool),\r\n   visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),\r\n   space (string resource name or null when the memo has no space),\r\n   tags (list<string>; match with `\"work\" in tags`, not `tag == \"work\"`),\r\n   has_task_list / has_link / has_code / has_incomplete_tasks (bool),\r\n   has_location (bool; true when the memo has a location attached),\r\n   category (string; instance category slug, empty when uncategorized),\r\n   hidden (bool; omitted from collection views unless owned or viewed by an admin).\r\n Note: the time fields here are created_ts / updated_ts, which differ from\r\n the create_time / update_time names used by order_by.\r\n Examples:\r\n   pinned == true && visibility == \"PUBLIC\"\r\n   space == \"spaces/team\" or space == null\r\n   tags.exists(t, t == \"urgent\")\r\n   content.contains(\"roadmap\") && created_ts > now - duration(\"168h\")\r\n   category == \"design\""
                   schema:
                     type: string
                 - name: showDeleted
@@ -2571,6 +2571,11 @@ paths:
                   required: true
                   schema:
                     type: string
+                - name: filter
+                  in: query
+                  description: "Optional. CEL expression selecting the readable non-comment memos to\r\n include. Supports the same fields as ListMemos, including `space`."
+                  schema:
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -3692,9 +3697,7 @@ components:
                     description: Optional. The location of the memo.
                 category:
                     type: string
-                    description: |-
-                        Optional. Instance category slug assigned by the memo author.
-                         Empty means the memo is not categorized. Must match a configured category slug.
+                    description: "Optional. Instance category slug assigned by the memo author.\r\n Empty means the memo is not categorized. Must match a configured category slug."
                 hidden:
                     type: boolean
                     description: "Whether the memo is omitted from feeds, profiles, search, RSS, and stats.\r\n Hidden memos remain readable by direct URL according to visibility. Only\r\n instance administrators may change this field; enabling it forces PUBLIC."
@@ -3725,9 +3728,7 @@ components:
                     description: "Output only. True when the authenticated viewer is the memo creator. This\r\n preserves owner controls for anonymous memos without exposing identity."
                 space:
                     type: string
-                    description: |-
-                        Optional. The space in which this memo is placed. Format: spaces/{space}.
-                         Every memo, including a comment, owns its placement independently.
+                    description: "Optional. The space in which this memo is placed. Format: spaces/{space}.\r\n Every memo, including a comment, owns its placement independently."
         MemoRelation:
             required:
                 - memo

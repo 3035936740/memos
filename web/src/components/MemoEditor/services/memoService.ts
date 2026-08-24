@@ -113,6 +113,7 @@ export const memoService = {
       memoName?: string;
       parentMemoName?: string;
       canCustomizeTimestamps?: boolean;
+      space?: string;
     },
   ): Promise<{ memoName: string; hasChanges: boolean }> {
     // 1. Upload local files first
@@ -152,6 +153,7 @@ export const memoService = {
         options.canCustomizeTimestamps && state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
       updateTime:
         options.canCustomizeTimestamps && state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
+      space: options.parentMemoName ? undefined : options.space,
     });
 
     const memo = options.parentMemoName

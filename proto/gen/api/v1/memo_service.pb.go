@@ -646,6 +646,7 @@ type ListMemosRequest struct {
 	//   content (string), creator (string, e.g. "users/1"),
 	//   created_ts / updated_ts (timestamp), pinned (bool),
 	//   visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),
+	//   space (string resource name or null when the memo has no space),
 	//   tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
 	//   has_task_list / has_link / has_code / has_incomplete_tasks (bool),
 	//   has_location (bool; true when the memo has a location attached),
@@ -655,6 +656,7 @@ type ListMemosRequest struct {
 	// the create_time / update_time names used by order_by.
 	// Examples:
 	//   pinned == true && visibility == "PUBLIC"
+	//   space == "spaces/team" or space == null
 	//   tags.exists(t, t == "urgent")
 	//   content.contains("roadmap") && created_ts > now - duration("168h")
 	//   category == "design"
