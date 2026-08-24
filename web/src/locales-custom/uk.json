@@ -21,7 +21,9 @@
     "desert-sand": "Пісок Пустелі",
     "porcelain": "Фарфор",
     "retro-newspaper": "Ретро Газета",
-    "candy-pop": "Кенді Поп"
+    "candy-pop": "Кенді Поп",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Завантаження…",

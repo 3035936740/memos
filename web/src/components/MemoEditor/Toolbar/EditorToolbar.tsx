@@ -107,14 +107,18 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
         {!valid && !isSaving && blockedMessage ? (
           <Tooltip>
             <TooltipTrigger render={<span className="inline-flex" tabIndex={0} aria-label={blockedMessage} />}>
-              <Button onClick={onSave} disabled>
+              <Button className="border-0 shadow-none outline-none ring-0 hover:shadow-xs focus-visible:ring-0" onClick={onSave} disabled>
                 {t("editor.save")}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="top">{blockedMessage}</TooltipContent>
           </Tooltip>
         ) : (
-          <Button onClick={onSave} disabled={isSaving}>
+          <Button
+            className="border-0 shadow-none outline-none ring-0 hover:shadow-xs focus-visible:ring-0"
+            onClick={onSave}
+            disabled={isSaving}
+          >
             {isSaving ? t("editor.saving") : t("editor.save")}
           </Button>
         )}

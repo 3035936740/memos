@@ -3,6 +3,39 @@
 @import "./themes/default.css";
 @import "./themes/atmospheric-shells.css";
 
+/* Blog 2 uses depth instead of card outlines. Keep these structural rules
+   theme-neutral so every palette gets the same clean layout. */
+[data-feed-layout="blog2"] [data-memo-editor],
+[data-feed-layout="blog2"] [data-blog-composer],
+[data-feed-layout="blog2"] [data-blog-sidebar] {
+  border-width: 0;
+  box-shadow: var(--shadow-xs);
+}
+
+[data-feed-layout="blog2"] [data-blog-sidebar] > section {
+  border-top-width: 0;
+}
+
+[data-feed-layout="blog2"][data-memo-detail] [data-memo-view],
+[data-feed-layout="blog2"][data-memo-detail] [data-comment-section-header],
+[data-feed-layout="blog2"][data-memo-detail] [data-comment-sort-control] {
+  border-width: 0;
+}
+
+[data-feed-layout="blog2"][data-memo-detail] [data-memo-view] {
+  box-shadow: var(--shadow-xs);
+}
+
+[data-feed-layout="blog2"][data-memo-detail] [data-comment-login-prompt] {
+  background-color: color-mix(in oklch, var(--muted) 45%, transparent);
+}
+
+[data-feed-layout="blog2"] [data-memo-pagination] button,
+[data-feed-layout="blog2"] [data-memo-pagination] input {
+  border-width: 0;
+  box-shadow: var(--shadow-xs);
+}
+
 @layer base {
   * {
     @apply border-border outline-none ring-0;

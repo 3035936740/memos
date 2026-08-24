@@ -54,7 +54,7 @@ describe("MemoDisplaySettingMenu", () => {
     const compactMode = screen.getByRole("switch", { name: "Compact mode" });
     expect(compactMode).toBeChecked();
     expect(compactMode).toHaveAttribute("aria-disabled", "true");
-    expect(screen.getByRole("radio", { name: "Blog" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "memo.layout-blog-2" })).toHaveAttribute("aria-checked", "true");
 
     fireEvent.click(screen.getByRole("radio", { name: "List" }));
     expect(compactMode).toBeEnabled();
@@ -80,6 +80,6 @@ describe("MemoDisplaySettingMenu", () => {
     expect(screen.getByRole("radio", { name: "Blog" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("switch", { name: "Compact mode" })).toHaveAttribute("aria-disabled", "true");
     expect(screen.getByText("Blog layout already uses article previews.")).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem("memos-view-setting") ?? "{}").feedLayout).toBe("blog");
+    expect(JSON.parse(localStorage.getItem("memos-view-setting") ?? "{}").feedLayout).toBe("blog-classic");
   });
 });

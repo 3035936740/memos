@@ -59,7 +59,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
   ];
 
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border bg-card text-card-foreground", className)}>
+    <div data-blog-sidebar="" className={cn("overflow-hidden rounded-lg border border-border bg-card text-card-foreground", className)}>
       <section className="p-4">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <HistoryIcon className="size-4" />

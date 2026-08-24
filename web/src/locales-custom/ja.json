@@ -21,7 +21,9 @@
     "desert-sand": "砂漠の砂",
     "porcelain": "磁器",
     "retro-newspaper": "レトロ新聞",
-    "candy-pop": "キャンディポップ"
+    "candy-pop": "キャンディポップ",
+    "editorial": "エディトリアル",
+    "editorial-dark": "エディトリアル・ナイト"
   },
   "common": {
     "loading": "読み込み中...",

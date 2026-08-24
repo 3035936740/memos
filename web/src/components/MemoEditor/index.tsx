@@ -300,6 +300,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
       )}
 
       <div
+        data-memo-editor=""
         ref={editorContainerRef}
         className={cn(
           "group relative w-full flex flex-col justify-between items-start bg-card px-4 pt-3 pb-1 rounded-lg border border-border gap-2",

@@ -5,6 +5,8 @@ import cosmicDarkThemeContent from "../themes/cosmic-dark.css?raw";
 import dawnThemeContent from "../themes/dawn.css?raw";
 import defaultDarkThemeContent from "../themes/default-dark.css?raw";
 import desertSandThemeContent from "../themes/desert-sand.css?raw";
+import editorialThemeContent from "../themes/editorial.css?raw";
+import editorialDarkThemeContent from "../themes/editorial-dark.css?raw";
 import inkNightDarkThemeContent from "../themes/ink-night-dark.css?raw";
 import lavenderThemeContent from "../themes/lavender.css?raw";
 import matchaThemeContent from "../themes/matcha.css?raw";
@@ -47,6 +49,8 @@ const VALID_THEMES = [
   "porcelain",
   "retro-newspaper",
   "candy-pop",
+  "editorial",
+  "editorial-dark",
 ] as const;
 
 export type Theme = (typeof VALID_THEMES)[number];
@@ -82,6 +86,8 @@ const THEME_CONTENT: Record<ResolvedTheme, string | null> = {
   porcelain: porcelainThemeContent,
   "retro-newspaper": retroNewspaperThemeContent,
   "candy-pop": candyPopThemeContent,
+  editorial: editorialThemeContent,
+  "editorial-dark": editorialDarkThemeContent,
 };
 
 const THEME_COLORS: Record<ResolvedTheme, string> = {
@@ -106,6 +112,8 @@ const THEME_COLORS: Record<ResolvedTheme, string> = {
   porcelain: "#f5f9fc",
   "retro-newspaper": "#eee3c8",
   "candy-pop": "#f3fbff",
+  editorial: "#edf3ee",
+  "editorial-dark": "#14151b",
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -131,6 +139,8 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { value: "porcelain", labelKey: "theme.porcelain" },
   { value: "retro-newspaper", labelKey: "theme.retro-newspaper" },
   { value: "candy-pop", labelKey: "theme.candy-pop" },
+  { value: "editorial", labelKey: "theme.editorial" },
+  { value: "editorial-dark", labelKey: "theme.editorial-dark" },
 ];
 
 // ============================================================================

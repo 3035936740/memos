@@ -16,7 +16,9 @@ html:is(
     [data-theme="desert-sand"],
     [data-theme="porcelain"],
     [data-theme="retro-newspaper"],
-    [data-theme="candy-pop"]
+    [data-theme="candy-pop"],
+    [data-theme="editorial"],
+    [data-theme="editorial-dark"]
   )
   body
   > #root {
@@ -43,7 +45,9 @@ html:is(
     [data-theme="desert-sand"],
     [data-theme="porcelain"],
     [data-theme="retro-newspaper"],
-    [data-theme="candy-pop"]
+    [data-theme="candy-pop"],
+    [data-theme="editorial"],
+    [data-theme="editorial-dark"]
   )
   :is(
     [data-app-shell],

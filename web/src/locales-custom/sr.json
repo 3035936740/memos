@@ -21,7 +21,9 @@
     "desert-sand": "Песак пустиње",
     "porcelain": "Порцелан",
     "retro-newspaper": "Ретро Новости",
-    "candy-pop": "Бомбона Поп"
+    "candy-pop": "Бомбона Поп",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Учитавање…",

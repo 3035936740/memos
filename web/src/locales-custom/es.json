@@ -21,7 +21,9 @@
     "desert-sand": "arena del desierto",
     "porcelain": "Porcelana",
     "retro-newspaper": "periódico retro",
-    "candy-pop": "caramelo pop"
+    "candy-pop": "caramelo pop",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Cargando…",

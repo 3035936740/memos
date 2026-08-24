@@ -21,7 +21,9 @@
     "desert-sand": "Pustynny Piasek",
     "porcelain": "Porcelana",
     "retro-newspaper": "Retro Gazeta",
-    "candy-pop": "Candy Pop"
+    "candy-pop": "Candy Pop",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Ładowanie…",

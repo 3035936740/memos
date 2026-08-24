@@ -21,7 +21,9 @@
     "desert-sand": "Ökensand",
     "porcelain": "Porslin",
     "retro-newspaper": "Retro Tidning",
-    "candy-pop": "Godis Pop"
+    "candy-pop": "Godis Pop",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Laddar…",

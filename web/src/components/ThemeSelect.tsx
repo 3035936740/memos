@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Brush,
   Candy,
   Cherry,
@@ -58,6 +59,8 @@ const THEME_ICONS: Record<string, ReactElement> = {
   porcelain: <Gem className="w-4 h-4" />,
   "retro-newspaper": <Newspaper className="w-4 h-4" />,
   "candy-pop": <Candy className="w-4 h-4" />,
+  editorial: <BookOpen className="w-4 h-4" />,
+  "editorial-dark": <BookOpen className="w-4 h-4" />,
 };
 
 const ThemeSelect = ({ value, onValueChange, className, compact = false, iconOnly = false }: ThemeSelectProps = {}) => {

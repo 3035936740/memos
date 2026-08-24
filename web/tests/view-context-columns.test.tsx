@@ -14,10 +14,27 @@ describe("ViewContext maxColumns setting", () => {
     localStorage.clear();
   });
 
-  it("defaults to the single-column blog layout", () => {
+  it("defaults to the Blog 2 layout", () => {
     const { result } = renderHook(() => useView(), { wrapper });
     expect(result.current.maxColumns).toBe(1);
-    expect(result.current.feedLayout).toBe("blog");
+    expect(result.current.feedLayout).toBe("blog2");
+  });
+
+  it("migrates the former blog storage value to Blog 2", () => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ feedLayout: "blog" }));
+
+    const { result } = renderHook(() => useView(), { wrapper });
+
+    expect(result.current.feedLayout).toBe("blog2");
+    expect(persisted().feedLayout).toBe("blog2");
+  });
+
+  it("keeps the classic blog layout under its new storage value", () => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ feedLayout: "blog-classic" }));
+
+    const { result } = renderHook(() => useView(), { wrapper });
+
+    expect(result.current.feedLayout).toBe("blog-classic");
   });
 
   it("defaults to compact cards with link previews enabled", () => {

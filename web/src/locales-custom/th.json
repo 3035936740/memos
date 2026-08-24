@@ -21,7 +21,9 @@
     "desert-sand": "ทรายทะเลทราย",
     "porcelain": "พอร์ซเลน",
     "retro-newspaper": "หนังสือพิมพ์เรโทร",
-    "candy-pop": "ขนมลูกกวาด"
+    "candy-pop": "ขนมลูกกวาด",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "กำลังโหลด…",

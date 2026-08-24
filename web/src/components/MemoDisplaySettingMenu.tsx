@@ -1,4 +1,13 @@
-import { Columns2Icon, Columns3Icon, InfinityIcon, type LucideIcon, NewspaperIcon, Rows3Icon, SlidersHorizontalIcon } from "lucide-react";
+import {
+  Columns2Icon,
+  Columns3Icon,
+  InfinityIcon,
+  LayoutTemplateIcon,
+  type LucideIcon,
+  NewspaperIcon,
+  Rows3Icon,
+  SlidersHorizontalIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { SIDEBAR_SECTION_ACTION_BUTTON_CLASSES, SIDEBAR_SECTION_ACTION_ICON_CLASSES } from "@/components/AppSidebar/SidebarSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,7 +38,7 @@ const LAYOUT_OPTIONS: Record<MemoMaxColumns, { icon: LucideIcon; key: "layout-li
   0: { icon: InfinityIcon, key: "layout-auto" },
 };
 
-const LAYOUT_CHOICES = [...MAX_COLUMNS_VALUES, "blog"] as const;
+const LAYOUT_CHOICES = [...MAX_COLUMNS_VALUES, "blog-classic", "blog2"] as const;
 type LayoutChoice = (typeof LAYOUT_CHOICES)[number];
 
 const SettingRow = ({ label, description, children }: SettingRowProps) => (
@@ -60,11 +69,11 @@ function MemoDisplaySettingsContent() {
   } = useView();
   // Multi-column grids always render compact tiles, so the toggle is shown as on and locked
   // there; it only becomes a real choice at a single column.
-  const compactLocked = feedLayout === "blog" || maxColumns !== 1;
+  const compactLocked = feedLayout !== "memo" || maxColumns !== 1;
 
   const selectLayout = (choice: LayoutChoice) => {
-    if (choice === "blog") {
-      setFeedLayout("blog");
+    if (choice === "blog-classic" || choice === "blog2") {
+      setFeedLayout(choice);
       return;
     }
     setFeedLayout("memo");
@@ -87,13 +96,13 @@ function MemoDisplaySettingsContent() {
         <div
           role="radiogroup"
           aria-label={t("memo.layout")}
-          className="grid grid-cols-5 gap-0.5 rounded-lg bg-muted/55 p-0.5"
+          className="grid grid-cols-3 gap-0.5 rounded-lg bg-muted/55 p-0.5"
           onKeyDown={(event) => {
             const delta =
               event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowUp" ? -1 : 0;
             if (delta === 0) return;
             event.preventDefault();
-            const currentChoice: LayoutChoice = feedLayout === "blog" ? "blog" : maxColumns;
+            const currentChoice: LayoutChoice = feedLayout === "memo" ? maxColumns : feedLayout;
             const index = LAYOUT_CHOICES.indexOf(currentChoice);
             const next = LAYOUT_CHOICES[(index + delta + LAYOUT_CHOICES.length) % LAYOUT_CHOICES.length];
             selectLayout(next);
@@ -130,21 +139,40 @@ function MemoDisplaySettingsContent() {
           <button
             type="button"
             role="radio"
-            aria-checked={feedLayout === "blog"}
+            aria-checked={feedLayout === "blog-classic"}
             aria-label={t("memo.layout-blog")}
             title={t("memo.layout-blog-description")}
-            tabIndex={feedLayout === "blog" ? 0 : -1}
-            data-value="blog"
-            onClick={() => selectLayout("blog")}
+            tabIndex={feedLayout === "blog-classic" ? 0 : -1}
+            data-value="blog-classic"
+            onClick={() => selectLayout("blog-classic")}
             className={cn(
               "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[11px] transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-              feedLayout === "blog"
+              feedLayout === "blog-classic"
                 ? "bg-background text-foreground shadow-xs"
                 : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
             )}
           >
             <NewspaperIcon className="size-3.5 shrink-0" strokeWidth={1.8} />
             <span className="truncate">{t("memo.layout-blog")}</span>
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={feedLayout === "blog2"}
+            aria-label={t("memo.layout-blog-2")}
+            title={t("memo.layout-blog-2-description")}
+            tabIndex={feedLayout === "blog2" ? 0 : -1}
+            data-value="blog2"
+            onClick={() => selectLayout("blog2")}
+            className={cn(
+              "flex h-8 min-w-0 items-center justify-center gap-1 rounded-md px-1 text-[11px] transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+              feedLayout === "blog2"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:bg-background/60 hover:text-foreground",
+            )}
+          >
+            <LayoutTemplateIcon className="size-3.5 shrink-0" strokeWidth={1.8} />
+            <span className="truncate">{t("memo.layout-blog-2")}</span>
           </button>
         </div>
       </section>
@@ -192,7 +220,7 @@ function MemoDisplaySettingsContent() {
       <section className="space-y-2 border-t border-border/60 px-3 py-2.5">
         <SettingRow
           label={t("memo.compact-mode")}
-          description={feedLayout === "blog" ? t("memo.blog-compact-hint") : compactLocked ? t("memo.grid-compact-hint") : undefined}
+          description={feedLayout !== "memo" ? t("memo.blog-compact-hint") : compactLocked ? t("memo.grid-compact-hint") : undefined}
         >
           <Switch
             aria-label={t("memo.compact-mode")}

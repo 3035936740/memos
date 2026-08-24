@@ -209,15 +209,23 @@ const MemoCommentSection = ({
     ) : null;
 
   return (
-    <div className="mt-5 w-full pb-12">
-      <div className="flex min-h-11 w-full flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+    <div data-memo-comment-section="" className="mt-5 w-full pb-12">
+      <div
+        data-comment-section-header=""
+        className="flex min-h-11 w-full flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
+      >
         <h2 id="comments" className="flex items-baseline gap-1.5 text-base font-medium text-foreground">
           {t("memo.comment.self")}
           <span className="text-xs font-normal text-muted-foreground">{totalCommentCount}</span>
         </h2>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="flex items-center rounded-md border border-border p-0.5" role="group" aria-label={t("memo.comment.sort-order")}>
+          <div
+            data-comment-sort-control=""
+            className="flex items-center rounded-md border border-border p-0.5"
+            role="group"
+            aria-label={t("memo.comment.sort-order")}
+          >
             <Button
               type="button"
               size="sm"
@@ -244,6 +252,7 @@ const MemoCommentSection = ({
           {showCreateButton && (
             <Button
               size="sm"
+              className="border-0 shadow-none outline-none ring-0 hover:shadow-xs focus-visible:ring-0"
               onPointerEnter={preloadEditor}
               onFocus={preloadEditor}
               onClick={openCommentComposer}
@@ -257,7 +266,10 @@ const MemoCommentSection = ({
       </div>
 
       {!currentUser && (
-        <div className="mt-3 flex min-h-14 w-full items-center justify-center gap-1 rounded-lg bg-muted/70 px-4 text-sm text-muted-foreground">
+        <div
+          data-comment-login-prompt=""
+          className="mt-3 flex min-h-14 w-full items-center justify-center gap-1 rounded-lg bg-muted/70 px-4 text-sm text-muted-foreground"
+        >
           <LogInIcon className="mr-1 size-4 opacity-60" />
           <span>{t("memo.comment.guest-prefix")}</span>
           <Button variant="link" className="h-auto px-1 py-0 font-semibold" onClick={openCommentComposer}>

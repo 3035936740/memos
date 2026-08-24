@@ -399,6 +399,8 @@
     "layout-list-description": "A single reading-width column",
     "layout-blog": "Blog",
     "layout-blog-description": "Article titles, summaries, cover images, and metadata",
+    "layout-blog-2": "Blog 2",
+    "layout-blog-2-description": "A polished editorial grid with featured stories and richer visual hierarchy",
     "blog-untitled": "Untitled memo",
     "blog-dynamic": "Update",
     "blog-comments": "{{n}} comments",

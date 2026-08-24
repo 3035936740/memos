@@ -1,6 +1,7 @@
 import { ArrowUpIcon, LoaderCircleIcon } from "lucide-react";
 import { Fragment, type ReactElement, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import Blog2MemoView from "@/components/Blog2MemoView";
 import BlogMemoView from "@/components/BlogMemoView";
 import BlogSidebar from "@/components/BlogSidebar";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
@@ -118,11 +119,14 @@ const PagedMemoList = (props: Props) => {
   // maxColumns = 1, so it respects the user's own compact setting. Centralized here so the
   // pages don't each repeat the policy.
   const effectiveCompact = compactMode || useGrid;
+  const isBlogFeed = feedLayout === "blog-classic" || feedLayout === "blog2";
 
   const renderMemo = (memo: Memo) => (
     <Fragment key={getMemoKey(memo)}>
-      {feedLayout === "blog" ? (
+      {feedLayout === "blog-classic" ? (
         <BlogMemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
+      ) : feedLayout === "blog2" ? (
+        <Blog2MemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
       ) : (
         props.renderer(memo, { compact: effectiveCompact, parentPage, navigationScope })
       )}
@@ -168,6 +172,13 @@ const PagedMemoList = (props: Props) => {
   // A freshly created memo is hoisted to the front; pin it to the top of column one so it
   // appears right under the composer instead of dropping into a random (shortest) column.
   const displayMemoList = isDisplayPending ? [] : sortedMemoList;
+  const blog2FeaturedMemo = displayMemoList[0];
+  const blog2SecondaryMemos = displayMemoList.slice(1);
+  const blog2DesktopRows: Memo[][] = [];
+  for (let offset = 0, rowSize = 2; offset < blog2SecondaryMemos.length; rowSize = rowSize === 2 ? 1 : 2) {
+    blog2DesktopRows.push(blog2SecondaryMemos.slice(offset, offset + rowSize));
+    offset += rowSize;
+  }
   const firstMemo = displayMemoList[0];
   const priorityKey = newMemoName && firstMemo?.name === newMemoName ? getMemoKey(firstMemo) : undefined;
 
@@ -211,7 +222,7 @@ const PagedMemoList = (props: Props) => {
   const footer = (
     <>
       <MemoPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
-      {feedLayout === "blog" && (
+      {isBlogFeed && (
         <div className="mt-4 lg:hidden">
           <BlogSidebar state={props.state} orderBy={props.orderBy} filter={props.filter} parentPage={parentPage} />
         </div>
@@ -227,13 +238,71 @@ const PagedMemoList = (props: Props) => {
   const children = (
     <MentionResolutionProvider contents={contents} userNames={userNames}>
       <div ref={layoutMeasureRef} className="w-full">
-        {feedLayout === "blog" && !useGrid ? (
-          <div className="mx-auto w-full max-w-6xl lg:grid lg:grid-cols-[minmax(0,48rem)_15rem] lg:items-start lg:gap-4">
+        {isBlogFeed && !useGrid ? (
+          <div
+            data-feed-layout={feedLayout}
+            className={cn(
+              "mx-auto w-full lg:grid lg:items-start lg:gap-5",
+              feedLayout === "blog2" ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]" : "max-w-6xl lg:grid-cols-[minmax(0,1fr)_15rem]",
+            )}
+          >
             <main className="flex min-w-0 flex-col justify-start">
               {leadingContent}
               <MemoFilters className="mb-2" />
               {initialLoader}
-              {displayMemoList.map(renderMemo)}
+              {feedLayout === "blog2" ? (
+                <div>
+                  {blog2FeaturedMemo && (
+                    <Blog2MemoView
+                      key={getMemoKey(blog2FeaturedMemo)}
+                      memo={blog2FeaturedMemo}
+                      featured
+                      showCreator={props.showCreator}
+                      parentPage={parentPage}
+                      navigationScope={navigationScope}
+                    />
+                  )}
+                  <div className="mt-4 flex flex-col gap-4 sm:hidden">
+                    {blog2SecondaryMemos.map((memo) => (
+                      <Blog2MemoView
+                        key={getMemoKey(memo)}
+                        memo={memo}
+                        showCreator={props.showCreator}
+                        parentPage={parentPage}
+                        navigationScope={navigationScope}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-4 hidden flex-col gap-4 sm:flex">
+                    {blog2DesktopRows.map((row) =>
+                      row.length === 1 ? (
+                        <Blog2MemoView
+                          key={getMemoKey(row[0]!)}
+                          memo={row[0]!}
+                          featured
+                          showCreator={props.showCreator}
+                          parentPage={parentPage}
+                          navigationScope={navigationScope}
+                        />
+                      ) : (
+                        <div key={row.map(getMemoKey).join("|")} className="grid grid-cols-2 items-stretch gap-4">
+                          {row.map((memo) => (
+                            <Blog2MemoView
+                              key={getMemoKey(memo)}
+                              memo={memo}
+                              showCreator={props.showCreator}
+                              parentPage={parentPage}
+                              navigationScope={navigationScope}
+                            />
+                          ))}
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              ) : (
+                displayMemoList.map(renderMemo)
+              )}
               {emptyPlaceholder}
               {!isDisplayPending && footer}
             </main>

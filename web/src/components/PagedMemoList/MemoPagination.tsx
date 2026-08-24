@@ -43,6 +43,7 @@ const MemoPagination = ({ currentPage, totalPages, onPageChange }: Props) => {
 
   return (
     <nav
+      data-memo-pagination=""
       aria-label={t("memo.pagination-summary", { current: currentPage, total: totalPages })}
       className="flex w-full flex-wrap items-center justify-center gap-2 py-4"
     >

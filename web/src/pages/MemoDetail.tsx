@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
+import { useView } from "@/contexts/ViewContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMemoDetailError from "@/hooks/useMemoDetailError";
 import { useInfiniteMemoComments, useMemo, useMemos, useRecordMemoView } from "@/hooks/useMemoQueries";
@@ -17,6 +18,7 @@ import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQue
 import { canAccessInstanceContent, parseInstanceCategories } from "@/lib/instance-content";
 import { isMemoNavigationScope, type MemoNavigationScope } from "@/lib/memo-navigation";
 import { memoNamePrefix } from "@/lib/resource-names";
+import { cn } from "@/lib/utils";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
@@ -51,6 +53,9 @@ const MemoDetail = () => {
   const { isInitialized: authInitialized } = useAuth();
   const { isInitialized: instanceInitialized, generalSetting } = useInstance();
   const currentUser = useCurrentUser();
+  const { feedLayout } = useView();
+  const isBlog2 = feedLayout === "blog2";
+  const isBlog = feedLayout === "blog-classic";
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
   const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
@@ -173,7 +178,11 @@ const MemoDetail = () => {
     new Set([displayMemo, ...comments].flatMap((item) => [item.creator, ...(item.reactions ?? []).map((reaction) => reaction.creator)])),
   );
   return (
-    <section className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4">
+    <section
+      data-feed-layout={isBlog2 ? "blog2" : undefined}
+      data-memo-detail=""
+      className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4"
+    >
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
         <MemoSidebarRegistration
           memo={displayMemo}
@@ -181,7 +190,17 @@ const MemoDetail = () => {
           readonly={isShareMode}
           onShareImageOpen={handleShareImageOpen}
         />
-        <div className="w-full max-w-6xl px-4 sm:px-6 lg:grid lg:grid-cols-[minmax(0,48rem)_15rem] lg:items-start lg:gap-4">
+        <div
+          className={cn(
+            "w-full lg:grid lg:items-start",
+            isBlog2 ? "px-2 sm:px-3" : "px-4 sm:px-6",
+            isBlog2
+              ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
+              : isBlog
+                ? "max-w-6xl lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-4"
+                : "max-w-6xl lg:grid-cols-[minmax(0,48rem)_15rem] lg:gap-4",
+          )}
+        >
           <main className="min-w-0">
             <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
               <Button variant="ghost" className="-ml-2 text-muted-foreground" onClick={handleBack}>
@@ -222,21 +241,45 @@ const MemoDetail = () => {
               showCreator
               showVisibility
               showPinned
+              className={
+                isBlog2
+                  ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                  : undefined
+              }
               onShareImageDialogOpenChange={setShareImageDialogOpen}
             />
             {!isShareMode && !displayMemo.parent && (previousMemo || nextMemo) ? (
-              <nav className="mt-4 grid gap-3 border-y border-border/70 py-4 sm:grid-cols-2" aria-label={t("memo.article-navigation")}>
+              <nav
+                className={cn(
+                  "mt-4 gap-3",
+                  isBlog2 ? "flex items-center justify-between py-2" : "grid border-y border-border/70 py-4 sm:grid-cols-2",
+                )}
+                aria-label={t("memo.article-navigation")}
+              >
                 {previousMemo ? (
                   <Link
                     to={`/${previousMemo.name}`}
                     state={{ from: resolvedParentPage, navigationScope }}
-                    className="group min-w-0 rounded-lg p-3 hover:bg-accent/40"
+                    className={cn(
+                      isBlog2
+                        ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
+                        : "group min-w-0 rounded-lg p-3 transition-colors hover:bg-accent/40",
+                    )}
                   >
-                    <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
-                      <ArrowLeftIcon className="size-3.5" />
-                      {t("memo.previous-article")}
-                    </span>
-                    <span className="block truncate font-medium">{previousMemo.property?.title || previousMemo.snippet}</span>
+                    {isBlog2 ? (
+                      <>
+                        <ArrowLeftIcon className="size-3.5" />
+                        {t("memo.previous-article")}
+                      </>
+                    ) : (
+                      <>
+                        <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <ArrowLeftIcon className="size-3.5" />
+                          {t("memo.previous-article")}
+                        </span>
+                        <span className="block truncate font-medium">{previousMemo.property?.title || previousMemo.snippet}</span>
+                      </>
+                    )}
                   </Link>
                 ) : (
                   <span />
@@ -245,13 +288,26 @@ const MemoDetail = () => {
                   <Link
                     to={`/${nextMemo.name}`}
                     state={{ from: resolvedParentPage, navigationScope }}
-                    className="group min-w-0 rounded-lg p-3 text-right hover:bg-accent/40"
+                    className={cn(
+                      isBlog2
+                        ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
+                        : "group min-w-0 rounded-lg p-3 text-right transition-colors hover:bg-accent/40",
+                    )}
                   >
-                    <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
-                      {t("memo.next-article")}
-                      <ArrowRightIcon className="size-3.5" />
-                    </span>
-                    <span className="block truncate font-medium">{nextMemo.property?.title || nextMemo.snippet}</span>
+                    {isBlog2 ? (
+                      <>
+                        {t("memo.next-article")}
+                        <ArrowRightIcon className="size-3.5" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                          {t("memo.next-article")}
+                          <ArrowRightIcon className="size-3.5" />
+                        </span>
+                        <span className="block truncate font-medium">{nextMemo.property?.title || nextMemo.snippet}</span>
+                      </>
+                    )}
                   </Link>
                 ) : null}
               </nav>

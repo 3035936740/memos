@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import PagedMemoList from "@/components/PagedMemoList";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
-const view = vi.hoisted(() => ({ maxColumns: 1 as 0 | 1 | 2 | 3, compactMode: false, feedLayout: "memo" as "memo" | "blog" }));
+const view = vi.hoisted(() => ({
+  maxColumns: 1 as 0 | 1 | 2 | 3,
+  compactMode: false,
+  feedLayout: "memo" as "memo" | "blog-classic" | "blog2",
+}));
 const feed = vi.hoisted(() => ({
   memos: [] as unknown[],
   totalSize: 0,
@@ -169,7 +173,7 @@ describe("<PagedMemoList>", () => {
   });
 
   it("places the blog sidebar beside the feed on desktop and after pagination on narrow screens", () => {
-    view.feedLayout = "blog";
+    view.feedLayout = "blog-classic";
     feed.memos = [memo];
     feed.totalSize = 20;
 

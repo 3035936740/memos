@@ -20,4 +20,6 @@ type Theme =
   | "desert-sand"
   | "porcelain"
   | "retro-newspaper"
-  | "candy-pop";
+  | "candy-pop"
+  | "editorial"
+  | "editorial-dark";

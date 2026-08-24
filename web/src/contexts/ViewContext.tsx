@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 export type MemoTimeBasis = "create_time" | "update_time";
-export type MemoFeedLayout = "memo" | "blog";
+export type MemoFeedLayout = "memo" | "blog-classic" | "blog2";
 
 /** Upper bound on feed columns, in display order. 1 = single reading column; 0 = as many as fit. */
 export const MAX_COLUMNS_VALUES = [1, 2, 3, 0] as const;
@@ -41,7 +41,7 @@ const DEFAULT_VIEW_STATE: ViewState = {
   compactMode: true,
   linkPreview: true,
   maxColumns: 1,
-  feedLayout: "blog",
+  feedLayout: "blog2",
 };
 
 export function ViewProvider({ children }: { children: ReactNode }) {
@@ -49,20 +49,33 @@ export function ViewProvider({ children }: { children: ReactNode }) {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (cached) {
-        const data = JSON.parse(cached) as Partial<ViewState>;
+        const data = JSON.parse(cached) as Omit<Partial<ViewState>, "feedLayout"> & { feedLayout?: string };
         const cachedTimeBasis = data.timeBasis ?? data.sortTimeField;
         const timeBasis = cachedTimeBasis === "create_time" || cachedTimeBasis === "update_time" ? cachedTimeBasis : undefined;
         const maxColumns = MAX_COLUMNS_VALUES.includes(data.maxColumns as MemoMaxColumns)
           ? (data.maxColumns as MemoMaxColumns)
           : DEFAULT_VIEW_STATE.maxColumns;
-        return {
+        const feedLayout: MemoFeedLayout =
+          // `blog` was the original storage value. Blog 2 is now the main blog
+          // experience, so existing installations transparently move to it. The
+          // original blog renderer remains available under its new canonical id.
+          data.feedLayout === "blog"
+            ? "blog2"
+            : data.feedLayout === "memo" || data.feedLayout === "blog-classic" || data.feedLayout === "blog2"
+              ? data.feedLayout
+              : DEFAULT_VIEW_STATE.feedLayout;
+        const normalizedState: ViewState = {
           orderByTimeAsc: Boolean(data.orderByTimeAsc ?? DEFAULT_VIEW_STATE.orderByTimeAsc),
           timeBasis,
           compactMode: Boolean(data.compactMode ?? DEFAULT_VIEW_STATE.compactMode),
           linkPreview: Boolean(data.linkPreview ?? DEFAULT_VIEW_STATE.linkPreview),
           maxColumns,
-          feedLayout: data.feedLayout === "memo" || data.feedLayout === "blog" ? data.feedLayout : DEFAULT_VIEW_STATE.feedLayout,
+          feedLayout,
         };
+        if (data.feedLayout === "blog") {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedState));
+        }
+        return normalizedState;
       }
     } catch (error) {
       console.warn("Failed to load view settings from localStorage:", error);

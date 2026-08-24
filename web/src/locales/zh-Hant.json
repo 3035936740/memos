@@ -372,6 +372,8 @@
     "layout-columns-description": "寬度允許時最多顯示 {{n}} 欄",
     "layout-list": "清單",
     "layout-list-description": "單欄顯示，寬度適合閱讀",
+    "layout-blog-2": "部落格 2",
+    "layout-blog-2-description": "精緻的雜誌式網格，突出重點文章並改善內容層級",
     "link-preview": "連結預覽",
     "links": "連結",
     "load-more": "載入更多",

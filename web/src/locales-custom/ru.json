@@ -21,7 +21,9 @@
     "desert-sand": "Пустынный Песок",
     "porcelain": "Фарфор",
     "retro-newspaper": "Ретро Газета",
-    "candy-pop": "Конфетный Поп"
+    "candy-pop": "Конфетный Поп",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Загрузка…",

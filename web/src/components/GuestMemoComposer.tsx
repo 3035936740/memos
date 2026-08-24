@@ -25,6 +25,7 @@ const GuestMemoComposer = ({ className }: Props) => {
   return (
     <button
       type="button"
+      data-blog-composer=""
       data-testid="guest-memo-composer"
       className={cn(
         "group flex w-full flex-col items-start justify-between gap-3 rounded-lg border border-border bg-card px-4 pb-3 pt-4 text-left text-card-foreground transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",

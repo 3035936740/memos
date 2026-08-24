@@ -21,7 +21,9 @@
     "desert-sand": "Areia do Deserto",
     "porcelain": "Porcelana",
     "retro-newspaper": "Jornal Retrô",
-    "candy-pop": "Doce Pop"
+    "candy-pop": "Doce Pop",
+    "editorial": "Editorial",
+    "editorial-dark": "Editorial Dark"
   },
   "common": {
     "loading": "Carregando…",
