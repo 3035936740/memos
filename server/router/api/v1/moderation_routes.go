@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -28,6 +29,14 @@ type moderationUserBanRequest struct {
 
 type moderationReportCountRequest struct {
 	Count int32 `json:"count"`
+}
+
+type adminCommentItem struct {
+	Name      string  `json:"name"`
+	Parent    *string `json:"parent,omitempty"`
+	Creator   string  `json:"creator"`
+	Content   string  `json:"content"`
+	CreatedTs int64   `json:"createdTs"`
 }
 
 type moderationUserBanResponse struct {
@@ -227,6 +236,52 @@ func moderationPage(c *echo.Context) (int, int) {
 }
 
 func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authorizer *Authorizer) {
+	router.GET("/api/v1/admin/comments", func(c *echo.Context) error {
+		if _, code, err := service.authenticateModerationAdmin(c, authorizer); err != nil {
+			return moderationError(c, code, err)
+		}
+		page, size := moderationPage(c)
+		search := strings.TrimSpace(c.QueryParam("search"))
+		offset := (page - 1) * size
+		find := &store.FindMemo{OnlyComments: true, Limit: &size, Offset: &offset}
+		if search != "" {
+			find.Filters = []string{fmt.Sprintf("content.contains(%s)", strconv.Quote(search))}
+		}
+		countFind := *find
+		countFind.Limit = nil
+		countFind.Offset = nil
+		all, err := service.Store.ListMemos(c.Request().Context(), &countFind)
+		if err != nil {
+			return moderationError(c, http.StatusInternalServerError, errors.New("failed to count comments"))
+		}
+		memos, err := service.Store.ListMemos(c.Request().Context(), find)
+		if err != nil {
+			return moderationError(c, http.StatusInternalServerError, errors.New("failed to list comments"))
+		}
+		creatorIDs := make([]int32, 0, len(memos))
+		for _, memo := range memos {
+			creatorIDs = append(creatorIDs, memo.CreatorID)
+		}
+		users, err := service.Store.ListUsers(c.Request().Context(), &store.FindUser{IDList: creatorIDs})
+		if err != nil {
+			return moderationError(c, http.StatusInternalServerError, errors.New("failed to list comment authors"))
+		}
+		userNames := make(map[int32]string, len(users))
+		for _, user := range users {
+			userNames[user.ID] = user.Username
+		}
+		items := make([]adminCommentItem, 0, len(memos))
+		for _, memo := range memos {
+			item := adminCommentItem{Name: MemoNamePrefix + memo.UID, Creator: userNames[memo.CreatorID], Content: memo.Content, CreatedTs: memo.CreatedTs}
+			if memo.ParentUID != nil {
+				parent := MemoNamePrefix + *memo.ParentUID
+				item.Parent = &parent
+			}
+			items = append(items, item)
+		}
+		return c.JSON(http.StatusOK, map[string]any{"items": items, "total": len(all), "page": page, "pageSize": size})
+	})
+
 	router.POST("/api/v1/moderation/reports", func(c *echo.Context) error {
 		user, code, err := service.authenticateModerationUser(c, authorizer)
 		if err != nil {

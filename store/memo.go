@@ -70,6 +70,7 @@ type FindMemo struct {
 	VisibilityList  []Visibility
 	ExcludeContent  bool
 	ExcludeComments bool
+	OnlyComments    bool
 	Filters         []string
 
 	// Pagination

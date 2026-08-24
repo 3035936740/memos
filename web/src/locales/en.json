@@ -1044,6 +1044,16 @@
     "security": { "label": "Security center" },
     "moderation": { "label": "Moderation center" },
     "quarantine": { "label": "Quarantine" },
+    "comments": {
+      "label": "Comments",
+      "description": "Review every comment posted on this instance.",
+      "search-placeholder": "Search comment content",
+      "author": "{{author}}",
+      "view-memo": "View parent memo",
+      "total": "{{count}} comments",
+      "empty": "No comments found.",
+      "load-failed": "Failed to load comments."
+    },
     "resource-stats": {
       "label": "Resources",
       "title": "Resource Statistics",

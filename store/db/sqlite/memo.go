@@ -104,6 +104,9 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	if find.ExcludeComments {
 		where = append(where, "`parent_uid` IS NULL")
 	}
+	if find.OnlyComments {
+		where = append(where, "`memo_relation`.`related_memo_id` IS NOT NULL")
+	}
 
 	order := "DESC"
 	if find.OrderByTimeAsc {

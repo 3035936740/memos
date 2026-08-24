@@ -10,6 +10,7 @@ import {
   LibraryIcon,
   type LucideIcon,
   MailIcon,
+  MessageCircleIcon,
   Settings2Icon,
   ShieldCheckIcon,
   SirenIcon,
@@ -21,6 +22,7 @@ import {
 import { type ComponentType } from "react";
 import AccessTokenSection from "@/components/Settings/AccessTokenSection";
 import AISection from "@/components/Settings/AISection";
+import CommentsSection from "@/components/Settings/CommentsSection";
 import EmojiSection from "@/components/Settings/EmojiSection";
 import InstanceSection from "@/components/Settings/InstanceSection";
 import MemberSection from "@/components/Settings/MemberSection";
@@ -54,7 +56,8 @@ export type SettingSectionKey =
   | "resource-stats"
   | "security"
   | "moderation"
-  | "quarantine";
+  | "quarantine"
+  | "comments";
 
 type SettingSectionScope = "basic" | "admin";
 
@@ -137,6 +140,13 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     labelKey: "setting.quarantine.label",
     icon: BanIcon,
     component: ModerationQuarantineSection,
+  },
+  {
+    key: "comments",
+    scope: "admin",
+    labelKey: "setting.comments.label",
+    icon: MessageCircleIcon,
+    component: CommentsSection,
   },
   {
     key: "memo",

@@ -958,6 +958,16 @@
     "security": { "label": "安全中心" },
     "moderation": { "label": "审核中心" },
     "quarantine": { "label": "小黑屋" },
+    "comments": {
+      "label": "评论管理",
+      "description": "查看此实例中的全部评论。",
+      "search-placeholder": "搜索评论内容",
+      "author": "{{author}}",
+      "view-memo": "查看所属备忘录",
+      "total": "共 {{count}} 条评论",
+      "empty": "没有找到评论。",
+      "load-failed": "加载评论失败。"
+    },
     "resource-stats": {
       "database": {
         "driver": "驱动",
