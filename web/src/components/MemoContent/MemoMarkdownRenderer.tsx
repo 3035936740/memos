@@ -1,5 +1,5 @@
 import type { Element } from "hast";
-import { type ComponentProps, memo, type ReactNode, Suspense, useMemo } from "react";
+import { type ComponentProps, memo, type ReactNode, Suspense, useMemo, useState } from "react";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import { buildRehypePlugins, buildRemarkPlugins } from "@/components/MemoContent/pipeline";
@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 import { isMentionElement, isTagElement, isTaskListItemElement } from "@/types/markdown";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { useEmojiPacks } from "@/utils/emoji";
+import { useTranslate } from "@/utils/i18n";
 import { lazyWithReload } from "@/utils/lazy";
-import { resolveManagedAttachmentImageSource } from "@/utils/managed-attachment";
+import { resolveManagedAttachmentImageSource, resolveManagedAttachmentVideoSource } from "@/utils/managed-attachment";
+import { isMemoTextAlignment, normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
 import { CodeBlock } from "./CodeBlock";
 import { MarkdownRenderContext, rootMarkdownRenderContext } from "./MarkdownRenderContext";
 import { Mention } from "./Mention";
@@ -62,6 +64,52 @@ function getMentionUsername(node: Element, children?: ReactNode): string {
   return "";
 }
 
+function elementDataAttribute(node: Element | undefined, dashedName: string, camelName: string): string | undefined {
+  const properties = node?.properties as Record<string, unknown> | undefined;
+  const value = properties?.[dashedName] ?? properties?.[camelName];
+  return typeof value === "string" ? value : undefined;
+}
+
+interface MemoSpoilerProps extends ComponentProps<"span"> {
+  color?: string;
+}
+
+const MemoSpoiler = ({ children, className, color, style, ...props }: MemoSpoilerProps) => {
+  const t = useTranslate();
+  const [revealed, setRevealed] = useState(false);
+  const toggle = () => setRevealed((current) => !current);
+  return (
+    <span
+      {...props}
+      role="button"
+      tabIndex={0}
+      aria-expanded={revealed}
+      aria-label={t(revealed ? "memo.spoiler.hide" : "memo.spoiler.reveal")}
+      title={t(revealed ? "memo.spoiler.hide" : "memo.spoiler.reveal")}
+      className={cn(
+        "inline cursor-pointer rounded-sm px-0.5 box-decoration-clone transition-colors",
+        revealed
+          ? "bg-muted/60"
+          : "select-none bg-foreground/85 text-transparent hover:bg-muted/60 hover:text-inherit focus-visible:bg-muted/60 focus-visible:text-inherit",
+        className,
+      )}
+      style={{ ...style, color: revealed ? color : undefined }}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggle();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        toggle();
+      }}
+    >
+      {children}
+    </span>
+  );
+};
+
 export const MemoMarkdownRendererCore = ({
   content,
   attachments = [],
@@ -75,6 +123,17 @@ export const MemoMarkdownRendererCore = ({
   const { data: emojiGroups = [] } = useEmojiPacks();
   const emojis = useMemo(() => emojiGroups.flatMap((group) => group.emojis), [emojiGroups]);
   const markdownComponents: Components = {
+    div: ({ node, className, ...divProps }) => {
+      const alignment = elementDataAttribute(node, "data-memo-align", "dataMemoAlign");
+      if (!isMemoTextAlignment(alignment) || alignment === "left") return <div {...divProps} className={className} />;
+      return (
+        <div
+          {...divProps}
+          data-memo-align={alignment}
+          className={cn("w-full", alignment === "center" ? "text-center" : "text-right", className)}
+        />
+      );
+    },
     input: ({ node, ...inputProps }) => {
       if (node && isTaskListItemElement(node)) {
         if (standalone) {
@@ -108,7 +167,24 @@ export const MemoMarkdownRendererCore = ({
         }
         return <Tag {...spanProps} node={node} />;
       }
-      return <span {...spanProps} />;
+      const color = normalizeMemoTextColor(elementDataAttribute(node, "data-memo-color", "dataMemoColor"));
+      const fontSize = normalizeMemoTextSize(elementDataAttribute(node, "data-memo-size", "dataMemoSize"));
+      const spoiler = elementDataAttribute(node, "data-memo-spoiler", "dataMemoSpoiler") === "true";
+      if (spoiler) return <MemoSpoiler {...spanProps} color={color} />;
+      return (
+        <span
+          {...spanProps}
+          style={{
+            ...spanProps.style,
+            color,
+            fontSize,
+            // A custom size must expand its own line box. Without this, very
+            // large glyphs (for example 96px) paint over the author/header row.
+            lineHeight: fontSize ? 1.2 : spanProps.style?.lineHeight,
+            overflowWrap: fontSize ? "anywhere" : spanProps.style?.overflowWrap,
+          }}
+        />
+      );
     },
     h1: ({ children, ...props }) => (
       <Heading level={1} {...props}>
@@ -151,6 +227,25 @@ export const MemoMarkdownRendererCore = ({
     ),
     li: ({ children, ...props }) => <ListItem {...props}>{children}</ListItem>,
     a: ({ children, href, ...props }) => {
+      const videoLabel =
+        typeof children === "string"
+          ? children
+          : Array.isArray(children)
+            ? children.filter((child): child is string | number => typeof child === "string" || typeof child === "number").join("")
+            : "";
+      const managedVideo = videoLabel.startsWith("video:") ? resolveManagedAttachmentVideoSource(href, attachments) : undefined;
+      if (managedVideo) {
+        return (
+          <video
+            src={managedVideo.sourceUrl}
+            aria-label={managedVideo.filename}
+            className="my-3 inline-block max-h-[32rem] max-w-full rounded-md bg-black align-middle"
+            controls
+            playsInline
+            preload="metadata"
+          />
+        );
+      }
       // In-page anchors (footnote refs/backrefs, heading links) navigate within the memo rather
       // than opening a new tab; everything else is treated as an external link.
       if (typeof href === "string" && href.startsWith("#")) {
@@ -172,7 +267,7 @@ export const MemoMarkdownRendererCore = ({
       typeof src === "string" && src.startsWith("/emoji/") ? (
         <img {...props} src={src} loading="lazy" className="my-1 inline-block max-h-28 max-w-full object-contain align-text-bottom" />
       ) : (
-        <Image {...props} src={resolveManagedAttachmentImageSource(src, attachments)} />
+        <Image {...props} data-memo-image="" src={resolveManagedAttachmentImageSource(src, attachments)} />
       ),
     pre: CodeBlock,
     table: ({ children, ...props }) => <Table {...props}>{children}</Table>,

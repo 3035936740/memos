@@ -2,6 +2,18 @@ import { syntaxTree } from "@codemirror/language";
 import type { EditorState } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import {
+  MEMO_ALIGNMENT_CLOSE_MARKER,
+  MEMO_COLOR_CLOSE_MARKER,
+  MEMO_SIZE_CLOSE_MARKER,
+  MEMO_SPOILER_MARKER,
+  type MemoTextAlignment,
+  memoAlignmentOpenMarker,
+  memoColorOpenMarker,
+  memoSizeOpenMarker,
+  normalizeMemoTextColor,
+  normalizeMemoTextSize,
+} from "@/utils/memo-rich-text";
+import {
   type ActiveFormatState,
   type EditorCommandContext,
   type EditorCommandId,
@@ -316,6 +328,186 @@ function unwrapLink(view: EditorView): boolean {
   return false;
 }
 
+interface MarkerWrapperRange {
+  openFrom: number;
+  openTo: number;
+  closeFrom: number;
+  closeTo: number;
+  openMarker: string;
+}
+
+const findAlignmentWrapper = (
+  doc: string,
+  pos: number,
+): (MarkerWrapperRange & { alignment: Exclude<MemoTextAlignment, "left"> }) | null => {
+  const candidates: (MarkerWrapperRange & { alignment: Exclude<MemoTextAlignment, "left"> })[] = [];
+  for (const match of doc.matchAll(/^:::align[ \t]+(center|right)[ \t]*$/gimu)) {
+    const openFrom = match.index;
+    const openTo = openFrom + match[0].length;
+    if (openFrom > pos) continue;
+    const closing = /^:::[ \t]*$/gmu;
+    closing.lastIndex = openTo;
+    const close = closing.exec(doc);
+    if (!close || pos > close.index) continue;
+    candidates.push({
+      openFrom,
+      openTo,
+      closeFrom: close.index,
+      closeTo: close.index + close[0].length,
+      openMarker: match[0],
+      alignment: match[1].toLowerCase() as Exclude<MemoTextAlignment, "left">,
+    });
+  }
+  return candidates.sort((left, right) => right.openFrom - left.openFrom)[0] ?? null;
+};
+
+const findColorWrapper = (doc: string, pos: number): (MarkerWrapperRange & { color: string }) | null => {
+  const candidates: (MarkerWrapperRange & { color: string })[] = [];
+  for (const match of doc.matchAll(/\[color=([^\]\r\n]{1,96})\]/giu)) {
+    const color = normalizeMemoTextColor(match[1]);
+    if (!color || match.index > pos) continue;
+    const openTo = match.index + match[0].length;
+    const closeFrom = doc.indexOf(MEMO_COLOR_CLOSE_MARKER, openTo);
+    if (closeFrom < 0 || pos > closeFrom) continue;
+    candidates.push({
+      openFrom: match.index,
+      openTo,
+      closeFrom,
+      closeTo: closeFrom + MEMO_COLOR_CLOSE_MARKER.length,
+      openMarker: match[0],
+      color,
+    });
+  }
+  return candidates.sort((left, right) => right.openFrom - left.openFrom)[0] ?? null;
+};
+
+const findSizeWrapper = (doc: string, pos: number): (MarkerWrapperRange & { size: string }) | null => {
+  const candidates: (MarkerWrapperRange & { size: string })[] = [];
+  for (const match of doc.matchAll(/\[size=([^\]\r\n]{1,24})\]/giu)) {
+    const size = normalizeMemoTextSize(match[1]);
+    if (!size || match.index > pos) continue;
+    const openTo = match.index + match[0].length;
+    const closeFrom = doc.indexOf(MEMO_SIZE_CLOSE_MARKER, openTo);
+    if (closeFrom < 0 || pos > closeFrom) continue;
+    candidates.push({
+      openFrom: match.index,
+      openTo,
+      closeFrom,
+      closeTo: closeFrom + MEMO_SIZE_CLOSE_MARKER.length,
+      openMarker: match[0],
+      size,
+    });
+  }
+  return candidates.sort((left, right) => right.openFrom - left.openFrom)[0] ?? null;
+};
+
+function findSpoilerWrapper(doc: string, pos: number): MarkerWrapperRange | null {
+  const positions = Array.from(doc.matchAll(/\|\|/gu), (match) => match.index);
+  for (let index = 0; index + 1 < positions.length; index += 2) {
+    const openFrom = positions[index];
+    const closeFrom = positions[index + 1];
+    if (pos >= openFrom + MEMO_SPOILER_MARKER.length && pos <= closeFrom) {
+      return {
+        openFrom,
+        openTo: openFrom + MEMO_SPOILER_MARKER.length,
+        closeFrom,
+        closeTo: closeFrom + MEMO_SPOILER_MARKER.length,
+        openMarker: MEMO_SPOILER_MARKER,
+      };
+    }
+  }
+  return null;
+}
+
+function removeWrapper(view: EditorView, wrapper: MarkerWrapperRange) {
+  const changes = view.state.changes([
+    { from: wrapper.openFrom, to: wrapper.openTo, insert: "" },
+    { from: wrapper.closeFrom, to: wrapper.closeTo, insert: "" },
+  ]);
+  view.dispatch({ changes, selection: view.state.selection.map(changes, 1) });
+}
+
+function removeAlignmentWrapper(view: EditorView, wrapper: MarkerWrapperRange) {
+  const doc = view.state.doc.toString();
+  const openingPadding = doc.slice(wrapper.openTo, wrapper.openTo + 2) === "\n\n" ? 2 : 0;
+  const closingPadding = doc.slice(Math.max(wrapper.openTo, wrapper.closeFrom - 2), wrapper.closeFrom) === "\n\n" ? 2 : 0;
+  const changes = view.state.changes([
+    { from: wrapper.openFrom, to: wrapper.openTo + openingPadding, insert: "" },
+    { from: wrapper.closeFrom - closingPadding, to: wrapper.closeTo, insert: "" },
+  ]);
+  view.dispatch({ changes, selection: view.state.selection.map(changes, 1) });
+}
+
+function replaceOpeningMarker(view: EditorView, wrapper: MarkerWrapperRange, openingMarker: string) {
+  const changes = view.state.changes({ from: wrapper.openFrom, to: wrapper.openTo, insert: openingMarker });
+  view.dispatch({ changes, selection: view.state.selection.map(changes, 1) });
+}
+
+function wrapInlineSelection(view: EditorView, openingMarker: string, closingMarker: string) {
+  const { from, to } = view.state.selection.main;
+  const selected = view.state.sliceDoc(from, to);
+  const insert = `${openingMarker}${selected}${closingMarker}`;
+  view.dispatch({
+    changes: { from, to, insert },
+    selection: { anchor: from + openingMarker.length, head: from + openingMarker.length + selected.length },
+  });
+}
+
+function setAlignment(view: EditorView, alignment: MemoTextAlignment) {
+  const doc = view.state.doc.toString();
+  const existing = findAlignmentWrapper(doc, view.state.selection.main.head);
+  if (existing) {
+    if (alignment === "left") return removeAlignmentWrapper(view, existing);
+    if (existing.alignment !== alignment) return replaceOpeningMarker(view, existing, memoAlignmentOpenMarker(alignment));
+    return;
+  }
+  if (alignment === "left") return;
+
+  const { from, to } = view.state.selection.main;
+  const firstLine = view.state.doc.lineAt(from);
+  const lastProbe = to > from ? Math.max(from, to - 1) : to;
+  const lastLine = view.state.doc.lineAt(lastProbe);
+  const blockFrom = firstLine.from;
+  const blockTo = lastLine.to;
+  const content = view.state.sliceDoc(blockFrom, blockTo);
+  const opening = `${memoAlignmentOpenMarker(alignment)}\n\n`;
+  const closing = `\n\n${MEMO_ALIGNMENT_CLOSE_MARKER}`;
+  view.dispatch({
+    changes: { from: blockFrom, to: blockTo, insert: `${opening}${content}${closing}` },
+    selection: { anchor: blockFrom + opening.length, head: blockFrom + opening.length + content.length },
+  });
+}
+
+function setTextColor(view: EditorView, value: string | undefined) {
+  const color = normalizeMemoTextColor(value);
+  const doc = view.state.doc.toString();
+  const existing = findColorWrapper(doc, view.state.selection.main.head);
+  if (existing) {
+    if (!color) return removeWrapper(view, existing);
+    if (existing.color !== color) return replaceOpeningMarker(view, existing, memoColorOpenMarker(color));
+    return;
+  }
+  if (color) wrapInlineSelection(view, memoColorOpenMarker(color), MEMO_COLOR_CLOSE_MARKER);
+}
+
+function setFontSize(view: EditorView, value: string | undefined) {
+  const size = normalizeMemoTextSize(value);
+  const doc = view.state.doc.toString();
+  const existing = findSizeWrapper(doc, view.state.selection.main.head);
+  if (existing) {
+    if (!size) return removeWrapper(view, existing);
+    if (existing.size !== size) return replaceOpeningMarker(view, existing, memoSizeOpenMarker(size));
+    return;
+  }
+  if (size) wrapInlineSelection(view, memoSizeOpenMarker(size), MEMO_SIZE_CLOSE_MARKER);
+}
+
+function toggleSpoiler(view: EditorView) {
+  const existing = findSpoilerWrapper(view.state.doc.toString(), view.state.selection.main.head);
+  if (existing) return removeWrapper(view, existing);
+  wrapInlineSelection(view, MEMO_SPOILER_MARKER, MEMO_SPOILER_MARKER);
+}
+
 export function createFormattingController(view: EditorView, listeners: Set<() => void>): FormattingController {
   return {
     run(command: EditorCommandId, ctx?: EditorCommandContext) {
@@ -328,6 +520,12 @@ export function createFormattingController(view: EditorView, listeners: Set<() =
       if (command === "heading2") return setHeading(view, 2);
       if (command === "heading3") return setHeading(view, 3);
       if (command === "paragraph") return setHeading(view, 0);
+      if (command === "alignLeft") return setAlignment(view, "left");
+      if (command === "alignCenter") return setAlignment(view, "center");
+      if (command === "alignRight") return setAlignment(view, "right");
+      if (command === "textColor") return setTextColor(view, ctx?.color);
+      if (command === "fontSize") return setFontSize(view, ctx?.fontSize);
+      if (command === "spoiler") return toggleSpoiler(view);
       if (command === "link") {
         // Toggle: inside an existing link, unwrap it to its label.
         if (unwrapLink(view)) return;
@@ -343,6 +541,14 @@ export function createFormattingController(view: EditorView, listeners: Set<() =
       const pos = view.state.selection.main.head;
       const tree = syntaxTree(view.state);
       const active: ActiveFormatState = { ...EMPTY_ACTIVE_FORMATS };
+      const doc = view.state.doc.toString();
+      const alignmentWrapper = findAlignmentWrapper(doc, pos);
+      if (alignmentWrapper) active.alignment = alignmentWrapper.alignment;
+      const colorWrapper = findColorWrapper(doc, pos);
+      if (colorWrapper) active.textColor = colorWrapper.color;
+      const sizeWrapper = findSizeWrapper(doc, pos);
+      if (sizeWrapper) active.fontSize = sizeWrapper.size;
+      active.spoiler = findSpoilerWrapper(doc, pos) !== null;
       // Inline marks come from the syntax tree around the cursor.
       for (const n of ancestors(tree, pos, -1)) {
         const mark = WRAPPER_TO_MARK[n.name];

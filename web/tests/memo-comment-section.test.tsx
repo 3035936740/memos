@@ -30,6 +30,7 @@ vi.mock("@/utils/i18n", () => ({
   useTranslate: () => (key: string, params?: Record<string, unknown>) => {
     const labels: Record<string, string> = {
       "memo.comment.self": "Comments",
+      "memo.comment.empty": "No comments yet.",
       "memo.comment.guest-description": "Please sign in to comment.",
       "memo.comment.guest-prefix": "Please",
       "memo.comment.guest-suffix": "to comment",
@@ -80,6 +81,20 @@ describe("MemoCommentSection", () => {
 
     expect(navigateTo).toHaveBeenCalledWith("/auth?redirect=%2Fmemos%2Fabc");
     expect(screen.queryByTestId("comment-editor")).not.toBeInTheDocument();
+  });
+
+  it("shows a compact empty state when the memo has no comments", () => {
+    const { container } = renderSection();
+
+    expect(screen.getByText("No comments yet.")).toBeInTheDocument();
+    expect(container.querySelector("[data-comment-empty-state]"))?.toHaveClass(
+      "text-xs",
+      "min-h-12",
+      "items-center",
+      "justify-center",
+      "pt-4",
+      "lg:min-h-24",
+    );
   });
 
   it("renders a reply directly under its parent comment", () => {

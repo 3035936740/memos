@@ -1,11 +1,11 @@
-import type { Definition, Html, Image, ImageReference, Root } from "mdast";
+import type { Definition, Html, Image, ImageReference, Link, LinkReference, Root } from "mdast";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmFromMarkdown } from "mdast-util-gfm";
 import { gfm } from "micromark-extension-gfm";
 import { normalizeIdentifier } from "micromark-util-normalize-identifier";
 import { visit } from "unist-util-visit";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import { getAttachmentMotionGroupId, getAttachmentUrl, isImage } from "@/utils/attachment";
+import { getAttachmentMotionGroupId, getAttachmentType, getAttachmentUrl, isImage } from "@/utils/attachment";
 
 const ATTACHMENT_NAME_PREFIX = "attachments/";
 const MANAGED_ATTACHMENT_PATH_PREFIX = "/file/attachments/";
@@ -13,6 +13,7 @@ const UID_PATTERN = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,34}[a-zA-Z0-9])?$/;
 
 interface ManagedImageNode {
   uid: string;
+  kind: "image" | "video";
   start?: number;
   end?: number;
 }
@@ -149,20 +150,37 @@ const buildManagedImageIndex = (source: string): ManagedImageIndex => {
     }
 
     let destination: string | undefined;
+    let kind: ManagedImageNode["kind"] | undefined;
     if (node.type === "image") {
       destination = (node as Image).url;
+      kind = "image";
     } else if (node.type === "imageReference") {
       destination = definitions.get(normalizeIdentifier((node as ImageReference).identifier));
+      kind = "image";
+    } else if (node.type === "link") {
+      const link = node as Link;
+      const label = link.children.map((child) => (child.type === "text" ? child.value : "")).join("");
+      if (label.startsWith("video:")) {
+        destination = link.url;
+        kind = "video";
+      }
+    } else if (node.type === "linkReference") {
+      const link = node as LinkReference;
+      const label = link.children.map((child) => (child.type === "text" ? child.value : "")).join("");
+      if (label.startsWith("video:")) {
+        destination = definitions.get(normalizeIdentifier(link.identifier));
+        kind = "video";
+      }
     }
-    if (!destination) return;
+    if (!destination || !kind) return;
 
     const classified = classifyManagedAttachmentImageURL(destination);
-    if (classified.kind === "invalid") {
+    if (classified.kind === "invalid" && kind === "image") {
       invalidReferences.push(destination);
       return;
     }
     if (classified.kind !== "managed") return;
-    nodes.push({ uid: classified.uid, start: node.position?.start.offset, end: node.position?.end.offset });
+    nodes.push({ uid: classified.uid, kind, start: node.position?.start.offset, end: node.position?.end.offset });
   });
   return { nodes, uids: new Set(nodes.map((node) => node.uid)), invalidReferences };
 };
@@ -180,6 +198,18 @@ const managedImageIndex = (source: string): ManagedImageIndex => {
 };
 
 export const extractManagedAttachmentUIDs = (source: string): ReadonlySet<string> => managedImageIndex(source).uids;
+
+export interface ManagedAttachmentReference {
+  uid: string;
+  kind: "image" | "video";
+  position: number;
+}
+
+/** Ordered, parsed body references; code spans/fences and unrelated links are excluded. */
+export const extractManagedAttachmentReferences = (source: string): ManagedAttachmentReference[] =>
+  managedImageIndex(source)
+    .nodes.filter((node) => node.start !== undefined)
+    .map((node) => ({ uid: node.uid, kind: node.kind, position: node.start! }));
 
 /**
  * Managed image URLs the API will reject (`InvalidArgument`) if this content is
@@ -202,8 +232,19 @@ export const buildManagedAttachmentMarkdown = (attachment: Attachment): string =
   return `![${escapeMarkdownAlt(filenameStem(attachment.filename))}](${MANAGED_ATTACHMENT_PATH_PREFIX}${uid})`;
 };
 
+/** Videos use a normal Markdown link so the server never mistakes them for managed image nodes. */
+export const buildManagedVideoMarkdown = (attachment: Attachment): string => {
+  const uid = extractAttachmentUIDFromName(attachment.name);
+  if (!uid) throw new Error(`Invalid attachment resource name: ${attachment.name}`);
+  return `[video:${escapeMarkdownAlt(filenameStem(attachment.filename))}](${MANAGED_ATTACHMENT_PATH_PREFIX}${uid})`;
+};
+
 /** Whether an attachment can be referenced inline; mirrors the server-side rule for managed images. */
 export const canInlineAttachment = (attachment: Attachment): boolean => isImage(attachment.type) && !attachment.externalLink;
+
+/** Images and videos that the editor can place into the Markdown body. */
+export const canInlineMediaAttachment = (attachment: Attachment): boolean =>
+  (isImage(attachment.type) || getAttachmentType(attachment) === "video/*") && !attachment.externalLink;
 
 export const removeManagedAttachmentReferences = (source: string, uids: ReadonlySet<string>): string => {
   const ranges = managedImageIndex(source)
@@ -252,4 +293,24 @@ export const resolveManagedAttachmentImageSource = (source: string | undefined, 
   if (!uid) return source;
   const attachment = attachments.find((candidate) => extractAttachmentUIDFromName(candidate.name) === uid);
   return attachment ? getAttachmentUrl(attachment) : source;
+};
+
+export interface ManagedVideoAttachmentSource {
+  sourceUrl: string;
+  filename: string;
+  mimeType: string;
+}
+
+/** Resolves an editor-generated `[video:…]` link to its bound video attachment. */
+export const resolveManagedAttachmentVideoSource = (
+  source: string | undefined,
+  attachments: Attachment[],
+): ManagedVideoAttachmentSource | undefined => {
+  if (!source) return undefined;
+  const uid = parseManagedAttachmentImageURL(source);
+  if (!uid) return undefined;
+  const attachment = attachments.find(
+    (candidate) => extractAttachmentUIDFromName(candidate.name) === uid && getAttachmentType(candidate) === "video/*",
+  );
+  return attachment ? { sourceUrl: getAttachmentUrl(attachment), filename: attachment.filename, mimeType: attachment.type } : undefined;
 };

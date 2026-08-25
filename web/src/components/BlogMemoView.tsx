@@ -5,13 +5,14 @@ import { Link } from "react-router-dom";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
+import VideoPoster from "@/components/VideoPoster";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractUsernameFromName } from "@/lib/resource-names";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
-import { buildAttachmentVisualItems } from "@/utils/media-item";
+import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
 import { computeCommentAmount } from "./MemoView/MemoViewContext";
 
 const TITLE_LIMIT = 72;
@@ -25,6 +26,7 @@ const truncateText = (value: string, limit: number) => {
 const markdownToPlainText = (value: string) =>
   value
     .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[video:[^\]]*\]\([^)]*\)/gi, " ")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/<[^>]+>/g, " ")
@@ -80,8 +82,8 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
       const type = getAttachmentType(attachment);
       return type === "image/*" || type === "video/*" || isMotionAttachment(attachment);
     });
-    return buildAttachmentVisualItems(visualAttachments).find((item) => item.kind !== "video");
-  }, [memo.attachments]);
+    return selectBlogCoverMedia(memo.content, buildAttachmentVisualItems(visualAttachments));
+  }, [memo.attachments, memo.content]);
   const createTime = memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
@@ -147,12 +149,21 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
               aria-label={title || t("memo.blog-untitled")}
               className="h-24 w-28 shrink-0 overflow-hidden rounded-md bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:w-36"
             >
-              <img
-                src={cover.posterUrl}
-                alt=""
-                className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                loading="lazy"
-              />
+              {cover.kind === "video" ? (
+                <VideoPoster
+                  sourceUrl={cover.sourceUrl}
+                  posterUrl={cover.posterUrl}
+                  alt={cover.filename}
+                  className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              ) : (
+                <img
+                  src={cover.posterUrl}
+                  alt=""
+                  className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+              )}
             </Link>
           )}
         </div>

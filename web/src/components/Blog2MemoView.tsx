@@ -6,6 +6,7 @@ import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
+import VideoPoster from "@/components/VideoPoster";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractUsernameFromName } from "@/lib/resource-names";
@@ -13,7 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
-import { buildAttachmentVisualItems } from "@/utils/media-item";
+import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
 import { computeCommentAmount } from "./MemoView/MemoViewContext";
 
 interface Props {
@@ -35,8 +36,8 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       const type = getAttachmentType(attachment);
       return type === "image/*" || type === "video/*" || isMotionAttachment(attachment);
     });
-    return buildAttachmentVisualItems(visualAttachments).find((item) => item.kind !== "video");
-  }, [memo.attachments]);
+    return selectBlogCoverMedia(memo.content, buildAttachmentVisualItems(visualAttachments));
+  }, [memo.attachments, memo.content]);
   const createTime = memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
@@ -94,13 +95,22 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       aria-label={title || t("memo.blog-untitled")}
       className="relative order-2 my-3 block aspect-[4/3] w-full self-start overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:my-4"
     >
-      <img
-        src={visibleCover.posterUrl}
-        alt=""
-        className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-        loading="lazy"
-        onError={() => setCoverFailed(true)}
-      />
+      {visibleCover.kind === "video" ? (
+        <VideoPoster
+          sourceUrl={visibleCover.sourceUrl}
+          posterUrl={visibleCover.posterUrl}
+          alt={visibleCover.filename}
+          className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+        />
+      ) : (
+        <img
+          src={visibleCover.posterUrl}
+          alt=""
+          className="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+          loading="lazy"
+          onError={() => setCoverFailed(true)}
+        />
+      )}
       <span className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-70" />
     </Link>
   ) : null;

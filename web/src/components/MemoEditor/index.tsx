@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityFromString } from "@/utils/memo";
+import { isSuperUser } from "@/utils/user";
 import { AudioRecorderPanel, EditorContent, EditorMetadata, FocusModeOverlay, TimestampPopover } from "./components";
 import { FOCUS_MODE_STYLES, FORMATTING_TOOLBAR_STORAGE_KEY } from "./constants";
 import {
@@ -68,6 +69,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const [isFormattingToolbarVisible, setFormattingToolbarVisible] = useLocalStorage(FORMATTING_TOOLBAR_STORAGE_KEY, false);
 
   const memoName = memo?.name;
+  const canCustomizeTimestamps = Boolean(isSuperUser(currentUser));
+  const editableDefaultCreateTime = canCustomizeTimestamps ? defaultCreateTime : undefined;
   const canTranscribe = useMemo(() => {
     const providerId = aiSetting.transcription?.providerId ?? "";
     if (!providerId) return false;
@@ -86,7 +89,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     username: currentUser?.name ?? "",
     autoFocus,
     defaultVisibility,
-    defaultCreateTime,
+    defaultCreateTime: editableDefaultCreateTime,
     initialContent,
   });
   const isDraftCacheEnabled = !memo;
@@ -102,15 +105,16 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   // the prop changes — e.g., when the user picks a different calendar date
   // while the editor is open.
   useEffect(() => {
+    if (!canCustomizeTimestamps) return;
     if (memo) return;
     if (!isInitialized) return;
     dispatch(
       actions.setTimestamps({
-        createTime: defaultCreateTime,
-        updateTime: defaultCreateTime,
+        createTime: editableDefaultCreateTime,
+        updateTime: editableDefaultCreateTime,
       }),
     );
-  }, [defaultCreateTime, memo, isInitialized, actions, dispatch]);
+  }, [canCustomizeTimestamps, editableDefaultCreateTime, memo, isInitialized, actions, dispatch]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -257,6 +261,26 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     [actions, createBlobUrl, dispatch, getState, inlineImageUpload.insertLocalImages, saveMediaMetadata],
   );
 
+  const handleInsertVideos = useCallback(
+    (files: File[], position?: number) => {
+      if (getState().ui.isLoading.saving) return;
+      inlineImageUpload.insertLocalVideos(toLocalFiles(files, { createBlobUrl, saveMediaMetadata }), position);
+    },
+    [createBlobUrl, getState, inlineImageUpload.insertLocalVideos, saveMediaMetadata],
+  );
+
+  const handleInsertLocalMedia = useCallback(
+    (localFiles: LocalFile[]) => {
+      const videos = localFiles.filter((localFile) => localFile.file.type.startsWith("video/"));
+      if (videos.length === localFiles.length) {
+        inlineImageUpload.insertLocalVideos(videos);
+        return;
+      }
+      inlineImageUpload.insertLocalImages(localFiles);
+    },
+    [inlineImageUpload.insertLocalImages, inlineImageUpload.insertLocalVideos],
+  );
+
   const handleCancelAudioRecording = () => {
     setIsTranscribingAudio(false);
     audioRecorder.resetRecording();
@@ -279,7 +303,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     memoName,
     parentMemoName,
     defaultVisibility,
-    defaultCreateTime,
+    defaultCreateTime: editableDefaultCreateTime,
+    canCustomizeTimestamps,
     discardDraft,
     onConfirm,
     onCancel: onCancel ? handleCancel : undefined,
@@ -316,7 +341,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           <FormattingToolbar controllerRef={editorRef} onExit={isFocusMode ? handleToggleFocusMode : undefined} />
         )}
 
-        {(memoName || (!memo && hasTimestamp)) && (
+        {canCustomizeTimestamps && (memoName || (!memo && hasTimestamp)) && (
           <div className="w-full -mb-1">
             <TimestampPopover />
           </div>
@@ -342,8 +367,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           <EditorMetadata
             memoName={memoName}
             uploadingLocalFileURLs={inlineImageUpload.uploadingLocalFileURLs}
-            onInsertAttachments={inlineImageUpload.insertRemoteImages}
-            onInsertLocalFiles={inlineImageUpload.insertLocalImages}
+            onInsertAttachments={inlineImageUpload.insertRemoteMedia}
+            onInsertLocalFiles={handleInsertLocalMedia}
           />
           <EditorToolbar
             onSave={handleSave}
@@ -354,6 +379,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             isFormattingToolbarVisible={isFormattingToolbarVisible}
             onToggleFormattingToolbar={handleToggleFormattingToolbar}
             onInsertImages={handleInsertImages}
+            onInsertVideos={handleInsertVideos}
             onInsertEmoji={handleInsertEmoji}
             onInsertAIText={handleInsertAIText}
           />

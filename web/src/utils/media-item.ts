@@ -10,6 +10,7 @@ import {
   isAppleLivePhotoVideo,
   isMotionAttachment,
 } from "./attachment";
+import { extractAttachmentUIDFromName, extractManagedAttachmentReferences } from "./managed-attachment";
 
 interface PreviewMediaItemBase {
   id: string;
@@ -110,6 +111,27 @@ export function countLogicalAttachmentItems(attachments: Attachment[]): number {
   const visualCount = buildAttachmentVisualItems(visualAttachments).length;
   const nonVisualCount = attachments.filter((attachment) => !visualNames.has(attachment.name)).length;
   return visualCount + nonVisualCount;
+}
+
+/**
+ * Picks the blog cover by where bound media actually appears in the Markdown.
+ * Unreferenced attachments live after the article body, so attachment order is
+ * only the fallback when the body contains no managed image/video at all.
+ */
+export function selectBlogCoverMedia(content: string, items: AttachmentVisualItem[]): AttachmentVisualItem | undefined {
+  const itemsByUID = new Map<string, AttachmentVisualItem>();
+  for (const item of items) {
+    for (const name of item.attachmentNames) {
+      const uid = extractAttachmentUIDFromName(name);
+      if (uid) itemsByUID.set(uid, item);
+    }
+  }
+
+  for (const reference of extractManagedAttachmentReferences(content)) {
+    const item = itemsByUID.get(reference.uid);
+    if (item) return item;
+  }
+  return items[0];
 }
 
 function buildSingleAttachmentItem(attachment: Attachment): AttachmentVisualItem {

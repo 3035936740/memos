@@ -1081,7 +1081,7 @@ func TestMemoCommentUsesCurrentParentVisibility(t *testing.T) {
 	require.Equal(t, comment.Name, comments.Memos[0].Name)
 }
 
-// TestCreateMemoWithCustomTimestamps tests that custom timestamps can be set when creating memos and comments.
+// TestCreateMemoWithCustomTimestamps tests that administrators can set custom timestamps when creating memos and comments.
 // This addresses issue #5483: https://github.com/usememos/memos/issues/5483
 func TestCreateMemoWithCustomTimestamps(t *testing.T) {
 	ctx := context.Background()
@@ -1089,8 +1089,8 @@ func TestCreateMemoWithCustomTimestamps(t *testing.T) {
 	ts := NewTestService(t)
 	defer ts.Cleanup()
 
-	// Create a test user
-	user, err := ts.CreateRegularUser(ctx, "test-user-timestamps")
+	// Timestamp overrides are restricted to administrators.
+	user, err := ts.CreateHostUser(ctx, "test-admin-timestamps")
 	require.NoError(t, err)
 	require.NotNil(t, user)
 
@@ -1173,4 +1173,44 @@ func TestCreateMemoWithCustomTimestamps(t *testing.T) {
 	require.NotNil(t, memoWithoutTimestamps.CreateTime, "create_time should be auto-generated")
 	require.NotNil(t, memoWithoutTimestamps.UpdateTime, "update_time should be auto-generated")
 	require.True(t, time.Now().Unix()-memoWithoutTimestamps.CreateTime.AsTime().Unix() < 5, "create_time should be recent (within 5 seconds)")
+}
+
+func TestRegularUserCannotCustomizeMemoTimestamps(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "test-user-no-timestamp-overrides")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+	customTime := timestamppb.New(time.Date(2020, 1, 1, 12, 0, 0, 0, time.UTC))
+
+	_, err = ts.Service.CreateMemo(userCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "forbidden timestamp", Visibility: apiv1.Visibility_PRIVATE, CreateTime: customTime},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	memo, err := ts.Service.CreateMemo(userCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{Content: "ordinary memo", Visibility: apiv1.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	_, err = ts.Service.UpdateMemo(userCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, CreateTime: customTime},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"create_time"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	_, err = ts.Service.UpdateMemo(userCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, UpdateTime: customTime},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"update_time"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	// The automatic update timestamp used by ordinary content edits remains valid.
+	_, err = ts.Service.UpdateMemo(userCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, Content: "ordinary edit"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content", "update_time"}},
+	})
+	require.NoError(t, err)
 }

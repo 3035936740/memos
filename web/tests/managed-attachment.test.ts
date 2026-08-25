@@ -3,12 +3,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import { AttachmentSchema, MotionMediaFamily, MotionMediaRole, MotionMediaSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import {
   buildManagedAttachmentMarkdown,
+  buildManagedVideoMarkdown,
   extractManagedAttachmentUIDs,
   filterInlineManagedAttachments,
   findInvalidManagedAttachmentReferences,
   parseManagedAttachmentImageURL,
   removeManagedAttachmentReferences,
   resolveManagedAttachmentImageSource,
+  resolveManagedAttachmentVideoSource,
   setManagedAttachmentInstanceUrl,
 } from "@/utils/managed-attachment";
 
@@ -22,6 +24,25 @@ describe("managed attachment Markdown", () => {
     expect(buildManagedAttachmentMarkdown(attachment("attachments/image-one", "garden[west]\\view.png"))).toBe(
       "![garden\\[west\\]\\\\view](/file/attachments/image-one)",
     );
+  });
+
+  it("builds and extracts a managed video link without treating it as an image", () => {
+    const video = create(AttachmentSchema, {
+      name: "attachments/video-one",
+      filename: "intro[final].mp4",
+      type: "video/mp4",
+    });
+    const markdown = buildManagedVideoMarkdown(video);
+
+    expect(markdown).toBe("[video:intro\\[final\\]](/file/attachments/video-one)");
+    expect(Array.from(extractManagedAttachmentUIDs(markdown))).toEqual(["video-one"]);
+    expect(findInvalidManagedAttachmentReferences(markdown)).toEqual([]);
+    expect(resolveManagedAttachmentVideoSource("/file/attachments/video-one", [video])).toEqual({
+      sourceUrl: `${window.location.origin}/file/attachments/video-one/intro[final].mp4`,
+      filename: "intro[final].mp4",
+      mimeType: "video/mp4",
+    });
+    expect(filterInlineManagedAttachments(markdown, [video])).toEqual([]);
   });
 
   it("extracts canonical, legacy, and reference-style images", () => {
@@ -39,11 +60,7 @@ describe("managed attachment Markdown", () => {
   });
 
   it("uses the first duplicate reference definition like Goldmark", () => {
-    const content = [
-      "![photo][asset]",
-      "[asset]: /file/attachments/first-image",
-      "[asset]: /file/attachments/second-image",
-    ].join("\n\n");
+    const content = ["![photo][asset]", "[asset]: /file/attachments/first-image", "[asset]: /file/attachments/second-image"].join("\n\n");
 
     expect(Array.from(extractManagedAttachmentUIDs(content))).toEqual(["first-image"]);
   });

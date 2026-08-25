@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { formatFileSize, getFileTypeLabel } from "@/utils/format";
 import { useTranslate } from "@/utils/i18n";
-import { canInlineAttachment, extractAttachmentUIDFromName } from "@/utils/managed-attachment";
+import { canInlineMediaAttachment, extractAttachmentUIDFromName } from "@/utils/managed-attachment";
 import type { PreviewMediaItem } from "@/utils/media-item";
 import { formatAudioTime, toggleAudioPlayback } from "./attachmentHelpers";
 
@@ -398,12 +398,15 @@ const AttachmentListEditor: FC<AttachmentListEditorProps> = ({
           const itemLocalFiles = collectMembers(localFilesByPreviewUrl, item.memberIds);
           const isUploadingInline = item.isLocal && item.memberIds.some((memberID) => uploadingLocalFileURLs.has(memberID));
           const canInsert =
-            (item.category === "image" || item.category === "motion") && (item.isLocal || itemAttachments.some(canInlineAttachment));
+            (item.category === "image" || item.category === "video" || item.category === "motion") &&
+            (item.isLocal || itemAttachments.some(canInlineMediaAttachment));
           const placementAction = canInsert
             ? {
-                label: t("editor.insert-menu.insert-image"),
+                label: t(item.category === "video" ? "editor.insert-menu.insert-video" : "editor.insert-menu.insert-image"),
                 onClick: () =>
-                  item.isLocal ? onInsertLocalFiles?.(itemLocalFiles) : onInsertAttachments?.(itemAttachments.filter(canInlineAttachment)),
+                  item.isLocal
+                    ? onInsertLocalFiles?.(itemLocalFiles)
+                    : onInsertAttachments?.(itemAttachments.filter(canInlineMediaAttachment)),
                 disabled: placementActionsDisabled,
               }
             : undefined;

@@ -21,6 +21,7 @@ function buildUpdateMask(
   prevMemo: Memo,
   state: EditorState,
   allAttachments: typeof state.metadata.attachments,
+  canCustomizeTimestamps: boolean,
 ): { mask: Set<string>; patch: Partial<Memo> } {
   const mask = new Set<string>();
   const patch: Partial<Memo> = {
@@ -71,19 +72,23 @@ function buildUpdateMask(
     mask.add("update_time");
   }
 
-  // Handle custom timestamps
-  if (state.timestamps.createTime) {
-    const prevCreateTime = prevMemo.createTime ? timestampDate(prevMemo.createTime) : undefined;
-    if (!isEqual(state.timestamps.createTime, prevCreateTime)) {
-      mask.add("create_time");
-      patch.createTime = timestampFromDate(state.timestamps.createTime);
+  // Timestamp overrides are an administrative operation. update_time without
+  // a value is still added above so the server can stamp ordinary edits with
+  // the current time.
+  if (canCustomizeTimestamps) {
+    if (state.timestamps.createTime) {
+      const prevCreateTime = prevMemo.createTime ? timestampDate(prevMemo.createTime) : undefined;
+      if (!isEqual(state.timestamps.createTime, prevCreateTime)) {
+        mask.add("create_time");
+        patch.createTime = timestampFromDate(state.timestamps.createTime);
+      }
     }
-  }
-  if (state.timestamps.updateTime) {
-    const prevUpdateTime = prevMemo.updateTime ? timestampDate(prevMemo.updateTime) : undefined;
-    if (!isEqual(state.timestamps.updateTime, prevUpdateTime)) {
-      mask.add("update_time");
-      patch.updateTime = timestampFromDate(state.timestamps.updateTime);
+    if (state.timestamps.updateTime) {
+      const prevUpdateTime = prevMemo.updateTime ? timestampDate(prevMemo.updateTime) : undefined;
+      if (!isEqual(state.timestamps.updateTime, prevUpdateTime)) {
+        mask.add("update_time");
+        patch.updateTime = timestampFromDate(state.timestamps.updateTime);
+      }
     }
   }
 
@@ -96,6 +101,7 @@ export const memoService = {
     options: {
       memoName?: string;
       parentMemoName?: string;
+      canCustomizeTimestamps?: boolean;
     },
   ): Promise<{ memoName: string; hasChanges: boolean }> {
     // 1. Upload local files first
@@ -105,7 +111,7 @@ export const memoService = {
     // 2. Update existing memo
     if (options.memoName) {
       const prevMemo = await memoServiceClient.getMemo({ name: options.memoName });
-      const { mask, patch } = buildUpdateMask(prevMemo, state, allAttachments);
+      const { mask, patch } = buildUpdateMask(prevMemo, state, allAttachments, options.canCustomizeTimestamps ?? false);
 
       if (mask.size === 0) {
         return { memoName: prevMemo.name, hasChanges: false };
@@ -129,8 +135,10 @@ export const memoService = {
       ...(options.parentMemoName ? {} : { hidden: state.metadata.hidden }),
       ...(options.parentMemoName ? {} : { draft: state.metadata.draft }),
       ...(options.parentMemoName || !state.metadata.publishTime ? {} : { publishTime: timestampFromDate(state.metadata.publishTime) }),
-      createTime: state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
-      updateTime: state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
+      createTime:
+        options.canCustomizeTimestamps && state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
+      updateTime:
+        options.canCustomizeTimestamps && state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
     });
 
     const memo = options.parentMemoName

@@ -3,9 +3,9 @@ import { type RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import { isImage } from "@/utils/attachment";
+import { getAttachmentType, isImage } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
-import { buildManagedAttachmentMarkdown, canInlineAttachment } from "@/utils/managed-attachment";
+import { buildManagedAttachmentMarkdown, buildManagedVideoMarkdown, canInlineMediaAttachment } from "@/utils/managed-attachment";
 import { errorService, uploadService } from "../services";
 import { useEditorContext } from "../state";
 import type { LocalFile } from "../types/attachment";
@@ -18,6 +18,7 @@ interface UploadEntry {
 
 interface UploadJob {
   id: string;
+  kind: "image" | "video";
   entries: UploadEntry[];
   representativeIndexes: number[];
   active: boolean;
@@ -66,11 +67,18 @@ export const splitInlineLocalFiles = (localFiles: LocalFile[]): InlineLocalFileS
   return { inline, representativeIndexes, attachments };
 };
 
-const createJob = (localFiles: LocalFile[]): UploadJob | undefined => {
-  const { inline, representativeIndexes } = splitInlineLocalFiles(localFiles);
+const createJob = (localFiles: LocalFile[], kind: UploadJob["kind"]): UploadJob | undefined => {
+  const { inline, representativeIndexes } =
+    kind === "image"
+      ? splitInlineLocalFiles(localFiles)
+      : {
+          inline: localFiles.filter((localFile) => localFile.file.type.startsWith("video/")),
+          representativeIndexes: localFiles.filter((localFile) => localFile.file.type.startsWith("video/")).map((_, index) => index),
+        };
   if (inline.length === 0) return undefined;
   return {
     id: uuidv4(),
+    kind,
     entries: inline.map((localFile) => ({ localFile })),
     representativeIndexes,
     active: false,
@@ -141,16 +149,17 @@ export const useInlineImageUpload = (editorRef: RefObject<EditorController | nul
   const descriptorFor = useCallback(
     (job: UploadJob, status: "uploading" | "failed") => {
       const completed = job.entries.filter((entry) => entry.attachment).length;
+      const mediaLabel = job.kind === "video" ? "video" : "image";
       return {
         id: job.id,
         status,
         completed,
         total: job.entries.length,
-        message: t(status === "uploading" ? "editor.insert-menu.uploading-images" : "editor.insert-menu.image-upload-stopped", {
-          completed,
-          total: job.entries.length,
-        }),
-        retryLabel: t("editor.insert-menu.retry-image-upload"),
+        message: t(
+          status === "uploading" ? `editor.insert-menu.uploading-${mediaLabel}s` : `editor.insert-menu.${mediaLabel}-upload-stopped`,
+          { completed, total: job.entries.length },
+        ),
+        retryLabel: t(`editor.insert-menu.retry-${mediaLabel}-upload`),
         // Partially-uploaded jobs keep what landed; a job with nothing uploaded is just cancelled.
         keepLabel: t(completed > 0 ? "editor.insert-menu.keep-as-attachments" : "common.cancel"),
         onRetry: status === "failed" ? () => retryJob(job.id) : undefined,
@@ -187,12 +196,17 @@ export const useInlineImageUpload = (editorRef: RefObject<EditorController | nul
 
       if (job.entries.some((entry) => !entry.attachment)) {
         editorRef.current?.updateUploadAnchor(descriptorFor(job, "failed"));
-        toast.error(errorService.getErrorMessage(lastError) || t("editor.insert-menu.image-upload-failed"));
+        toast.error(errorService.getErrorMessage(lastError) || t(`editor.insert-menu.${job.kind}-upload-failed`));
         return;
       }
 
       const markdown = job.representativeIndexes
-        .map((index) => buildManagedAttachmentMarkdown(job.entries[index]!.attachment!))
+        .map((index) => {
+          const attachment = job.entries[index]!.attachment!;
+          return getAttachmentType(attachment) === "video/*"
+            ? buildManagedVideoMarkdown(attachment)
+            : buildManagedAttachmentMarkdown(attachment);
+        })
         .join("\n\n");
       editorRef.current?.resolveUploadAnchor(job.id, markdown);
       finishJob(job);
@@ -205,7 +219,7 @@ export const useInlineImageUpload = (editorRef: RefObject<EditorController | nul
     (localFiles: LocalFile[], position?: number) => {
       if (getState().ui.isLoading.saving) return;
       const editor = editorRef.current;
-      const job = createJob(localFiles);
+      const job = createJob(localFiles, "image");
       if (!editor || !job) return;
       jobsRef.current.set(job.id, job);
       syncJobState();
@@ -215,10 +229,29 @@ export const useInlineImageUpload = (editorRef: RefObject<EditorController | nul
     [descriptorFor, editorRef, getState, runJob, syncJobState],
   );
 
-  const insertRemoteImages = useCallback(
+  const insertLocalVideos = useCallback(
+    (localFiles: LocalFile[], position?: number) => {
+      if (getState().ui.isLoading.saving) return;
+      const editor = editorRef.current;
+      const job = createJob(localFiles, "video");
+      if (!editor || !job) return;
+      jobsRef.current.set(job.id, job);
+      syncJobState();
+      editor.createUploadAnchor(descriptorFor(job, "uploading"), position);
+      void runJob(job.id);
+    },
+    [descriptorFor, editorRef, getState, runJob, syncJobState],
+  );
+
+  const insertRemoteMedia = useCallback(
     (attachments: Attachment[]) => {
       if (getState().ui.isLoading.saving) return;
-      const markdown = attachments.filter(canInlineAttachment).map(buildManagedAttachmentMarkdown).join("\n\n");
+      const markdown = attachments
+        .filter(canInlineMediaAttachment)
+        .map((attachment) =>
+          getAttachmentType(attachment) === "video/*" ? buildManagedVideoMarkdown(attachment) : buildManagedAttachmentMarkdown(attachment),
+        )
+        .join("\n\n");
       editorRef.current?.insertMarkdown(markdown);
     },
     [editorRef, getState],
@@ -232,5 +265,5 @@ export const useInlineImageUpload = (editorRef: RefObject<EditorController | nul
     };
   }, []);
 
-  return { insertLocalImages, insertRemoteImages, uploadingLocalFileURLs };
+  return { insertLocalImages, insertLocalVideos, insertRemoteMedia, uploadingLocalFileURLs };
 };

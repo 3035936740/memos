@@ -44,7 +44,15 @@ export const SANITIZE_SCHEMA = {
     img: [...(defaultSchema.attributes?.img || []), "height", "width"],
     input: INPUT_ATTRIBUTES,
     code: [...(defaultSchema.attributes?.code || []), ["className", ...KATEX_INLINE_CLASS_NAMES, ...KATEX_BLOCK_CLASS_NAMES]],
-    span: [...(defaultSchema.attributes?.span || []), ["className", ...SPAN_CLASS_NAMES], ["aria*"], ["data*"]],
+    div: [...(defaultSchema.attributes?.div || []), ["dataMemoAlign", "center", "right"]],
+    span: [
+      ...(defaultSchema.attributes?.span || []),
+      ["className", ...SPAN_CLASS_NAMES],
+      ["aria*"],
+      ["dataMemoColor", /^rgba\((?:\d{1,3}, ){3}(?:0(?:\.\d+)?|1(?:\.0+)?)\)$/],
+      ["dataMemoSize", /^(?:[89]|[1-8]\d|9[0-6])px$/],
+      ["dataMemoSpoiler", "true"],
+    ],
     iframe: [
       ["src", ...TRUSTED_IFRAME_SRC_PATTERNS],
       "width",

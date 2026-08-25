@@ -209,7 +209,7 @@ const MemoCommentSection = ({
     ) : null;
 
   return (
-    <div data-memo-comment-section="" className="mt-5 w-full pb-12">
+    <div data-memo-comment-section="" className="mt-3 w-full pb-2 lg:mt-5 lg:pb-8">
       <div
         data-comment-section-header=""
         className="flex min-h-11 w-full flex-wrap items-center justify-between gap-3 border-b border-border pb-3"
@@ -280,6 +280,15 @@ const MemoCommentSection = ({
       )}
 
       {!replyToMemo && showEditor && <div className="mt-3">{renderEditor()}</div>}
+
+      {comments.length === 0 && !hasMoreComments && !showEditor && (
+        <div
+          data-comment-empty-state=""
+          className="flex min-h-12 w-full items-center justify-center px-4 pt-4 text-center text-xs text-muted-foreground/65 lg:min-h-24"
+        >
+          {t("memo.comment.empty")}
+        </div>
+      )}
 
       <div className="mt-3 flex w-full flex-col gap-3">
         {comments.map((comment, index) => (

@@ -78,4 +78,55 @@ describe("formatting controller", () => {
     f.run("codeBlock");
     expect(view.state.doc.toString()).toBe("first\nsecond");
   });
+
+  it("aligns a Markdown block and can restore the default left alignment", () => {
+    const { view, f } = setup("hello world", 3, 3);
+
+    f.run("alignCenter");
+    expect(view.state.doc.toString()).toBe(":::align center\n\nhello world\n\n:::");
+    expect(f.getActiveFormats().alignment).toBe("center");
+
+    f.run("alignRight");
+    expect(view.state.doc.toString()).toContain(":::align right");
+    expect(f.getActiveFormats().alignment).toBe("right");
+
+    f.run("alignLeft");
+    expect(view.state.doc.toString()).toBe("hello world");
+    expect(f.getActiveFormats().alignment).toBe("left");
+  });
+
+  it("applies and removes a validated RGBA text color", () => {
+    const { view, f } = setup("color me", 0, 5);
+
+    f.run("textColor", { color: "255, 80, 40, 0.65" });
+    expect(view.state.doc.toString()).toBe("[color=rgba(255, 80, 40, 0.65)]color[/color] me");
+    expect(f.getActiveFormats().textColor).toBe("rgba(255, 80, 40, 0.65)");
+
+    f.run("textColor", { color: "" });
+    expect(view.state.doc.toString()).toBe("color me");
+    expect(f.getActiveFormats().textColor).toBeNull();
+  });
+
+  it("applies and removes a validated custom font size", () => {
+    const { view, f } = setup("large text", 0, 5);
+
+    f.run("fontSize", { fontSize: "28" });
+    expect(view.state.doc.toString()).toBe("[size=28px]large[/size] text");
+    expect(f.getActiveFormats().fontSize).toBe("28px");
+
+    f.run("fontSize", { fontSize: "" });
+    expect(view.state.doc.toString()).toBe("large text");
+    expect(f.getActiveFormats().fontSize).toBeNull();
+  });
+
+  it("toggles hidden text without colliding with Markdown links", () => {
+    const { view, f } = setup("secret [link](https://example.com)", 0, 6);
+
+    f.run("spoiler");
+    expect(view.state.doc.toString()).toBe("||secret|| [link](https://example.com)");
+    expect(f.getActiveFormats().spoiler).toBe(true);
+
+    f.run("spoiler");
+    expect(view.state.doc.toString()).toBe("secret [link](https://example.com)");
+  });
 });

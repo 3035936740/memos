@@ -1,15 +1,22 @@
 import {
+  AlignCenterIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
   BoldIcon,
   CodeIcon,
+  EyeOffIcon,
   ItalicIcon,
   LinkIcon,
   ListIcon,
   ListOrderedIcon,
   ListTodoIcon,
   type LucideIcon,
+  PaletteIcon,
   StrikethroughIcon,
+  TypeIcon,
 } from "lucide-react";
 import type { Translations } from "@/utils/i18n";
+import type { MemoTextAlignment } from "@/utils/memo-rich-text";
 
 /**
  * Backend-agnostic catalog of the editor's formatting verbs — metadata only, no
@@ -43,6 +50,12 @@ export type EditorCommandId =
   | "heading1"
   | "heading2"
   | "heading3"
+  | "alignLeft"
+  | "alignCenter"
+  | "alignRight"
+  | "textColor"
+  | "fontSize"
+  | "spoiler"
   | "link";
 
 /** Which marks/blocks are active at the current selection (toolbar highlighting). */
@@ -56,6 +69,10 @@ export interface ActiveFormatState {
   orderedList: boolean;
   taskList: boolean;
   link: boolean;
+  spoiler: boolean;
+  alignment: MemoTextAlignment;
+  textColor: string | null;
+  fontSize: string | null;
   headingLevel: ToolbarHeadingLevel | null;
 }
 
@@ -69,17 +86,25 @@ export const EMPTY_ACTIVE_FORMATS: ActiveFormatState = {
   orderedList: false,
   taskList: false,
   link: false,
+  spoiler: false,
+  alignment: "left",
+  textColor: null,
+  fontSize: null,
   headingLevel: null,
 };
 
 export interface EditorCommandContext {
   /** Link target, read by the `link` command when adding a link. */
   url?: string;
+  /** RGBA text color. Blank removes an existing custom color. */
+  color?: string;
+  /** Whole-pixel font size. Blank removes an existing custom size. */
+  fontSize?: string;
 }
 
 /** Toolbar grouping — the toolbar builds each group by filtering on this.
  *  `mark` = inline formatting, `block` = line/block-level (lists, code block). */
-export type EditorCommandGroup = "mark" | "block" | "heading" | "link";
+export type EditorCommandGroup = "mark" | "block" | "heading" | "alignment" | "color" | "size" | "link";
 
 export interface EditorCommand {
   id: EditorCommandId;
@@ -107,6 +132,12 @@ export const EDITOR_COMMANDS: EditorCommand[] = [
     id: "strikethrough",
     labelKey: "editor.format.strikethrough",
     icon: StrikethroughIcon,
+    group: "mark",
+  },
+  {
+    id: "spoiler",
+    labelKey: "editor.format.spoiler",
+    icon: EyeOffIcon,
     group: "mark",
   },
   {
@@ -154,6 +185,36 @@ export const EDITOR_COMMANDS: EditorCommand[] = [
     group: "heading",
   },
   {
+    id: "alignLeft",
+    labelKey: "editor.format.align-left",
+    icon: AlignLeftIcon,
+    group: "alignment",
+  },
+  {
+    id: "alignCenter",
+    labelKey: "editor.format.align-center",
+    icon: AlignCenterIcon,
+    group: "alignment",
+  },
+  {
+    id: "alignRight",
+    labelKey: "editor.format.align-right",
+    icon: AlignRightIcon,
+    group: "alignment",
+  },
+  {
+    id: "textColor",
+    labelKey: "editor.format.text-color",
+    icon: PaletteIcon,
+    group: "color",
+  },
+  {
+    id: "fontSize",
+    labelKey: "editor.format.font-size",
+    icon: TypeIcon,
+    group: "size",
+  },
+  {
     id: "link",
     labelKey: "editor.format.link",
     icon: LinkIcon,
@@ -179,6 +240,16 @@ export function isCommandActive(active: ActiveFormatState, id: EditorCommandId):
       return active.headingLevel === 2;
     case "heading3":
       return active.headingLevel === 3;
+    case "alignLeft":
+      return active.alignment === "left";
+    case "alignCenter":
+      return active.alignment === "center";
+    case "alignRight":
+      return active.alignment === "right";
+    case "textColor":
+      return active.textColor !== null;
+    case "fontSize":
+      return active.fontSize !== null;
     // The remaining ids (marks, blocks, link) map 1:1 to the snapshot.
     default:
       return active[id];

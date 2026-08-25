@@ -1,12 +1,16 @@
 import { Heading1Icon, Heading2Icon, Heading3Icon, type LucideIcon, Minimize2Icon, MoreHorizontalIcon, TypeIcon } from "lucide-react";
-import { type ComponentPropsWithoutRef, forwardRef, type MouseEventHandler, type RefObject, useRef } from "react";
+import { type ComponentPropsWithoutRef, forwardRef, type MouseEventHandler, type RefObject, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
+import { normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
 import {
   EDITOR_COMMANDS,
   type EditorCommand,
+  type EditorCommandContext,
   type EditorCommandId,
   isCommandActive,
   type ToolbarHeadingLevel,
@@ -27,6 +31,9 @@ const BLOCK_COMMANDS = EDITOR_COMMANDS.filter((command) => command.group === "bl
 // Paragraph + headings render as a single icon dropdown (a closed set); the
 // trigger glyph reflects the current block level.
 const HEADING_COMMANDS = EDITOR_COMMANDS.filter((command) => command.group === "heading");
+const ALIGNMENT_COMMANDS = EDITOR_COMMANDS.filter((command) => command.group === "alignment");
+const COLOR_COMMAND = EDITOR_COMMANDS.find((command) => command.group === "color");
+const SIZE_COMMAND = EDITOR_COMMANDS.find((command) => command.group === "size");
 const HEADING_LEVEL_ICONS: Record<ToolbarHeadingLevel, LucideIcon> = { 1: Heading1Icon, 2: Heading2Icon, 3: Heading3Icon };
 
 interface ToolbarButton {
@@ -47,6 +54,33 @@ const SEGMENT_BASE =
 const SEGMENT_IDLE = "text-muted-foreground hover:text-foreground hover:bg-foreground/5";
 const SEGMENT_ACTIVE = "bg-accent text-accent-foreground";
 
+const NORMALIZED_RGBA_PATTERN = /^rgba\((\d+), (\d+), (\d+), (0(?:\.\d+)?|1(?:\.0+)?)\)$/;
+
+function parseMemoTextColor(value: string | null | undefined) {
+  const normalized = normalizeMemoTextColor(value ?? "");
+  const match = normalized ? NORMALIZED_RGBA_PATTERN.exec(normalized) : null;
+  if (!match) return undefined;
+  return {
+    red: Number(match[1]),
+    green: Number(match[2]),
+    blue: Number(match[3]),
+    alpha: Number(match[4]),
+  };
+}
+
+function memoTextColorToHex(value: string | null | undefined) {
+  const color = parseMemoTextColor(value);
+  if (!color) return "#000000";
+  return `#${[color.red, color.green, color.blue].map((component) => component.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function pickerHexToMemoTextColor(hex: string, alpha: number) {
+  const red = Number.parseInt(hex.slice(1, 3), 16);
+  const green = Number.parseInt(hex.slice(3, 5), 16);
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 // Command buttons must not take focus on mousedown — that blurs the editor and
 // drops the selection the command targets. The click still fires and applies the
 // format to the live selection.
@@ -66,8 +100,25 @@ export function FormattingToolbar({ controllerRef, onExit, className }: Formatti
   const width = useElementWidth(rootRef);
   const compact = isCompactWidth(width);
   const active = useEditorActiveState(controllerRef);
+  const [colorPopoverOpen, setColorPopoverOpen] = useState(false);
+  const [colorInput, setColorInput] = useState("");
+  const [colorError, setColorError] = useState(false);
+  const [sizePopoverOpen, setSizePopoverOpen] = useState(false);
+  const [sizeInput, setSizeInput] = useState("");
+  const [sizeError, setSizeError] = useState(false);
 
-  const run = (id: EditorCommandId) => controllerRef.current?.formatting?.run(id);
+  const run = (id: EditorCommandId, context?: EditorCommandContext) => {
+    if (context) controllerRef.current?.formatting?.run(id, context);
+    else controllerRef.current?.formatting?.run(id);
+  };
+
+  useEffect(() => {
+    if (!colorPopoverOpen) setColorInput(active.textColor ?? "");
+  }, [active.textColor, colorPopoverOpen]);
+
+  useEffect(() => {
+    if (!sizePopoverOpen) setSizeInput(active.fontSize?.replace(/px$/u, "") ?? "");
+  }, [active.fontSize, sizePopoverOpen]);
 
   // Menus grab focus while open and hand it back to their trigger on close; send
   // it to the editor instead so the user can keep typing after a pick.
@@ -89,11 +140,41 @@ export function FormattingToolbar({ controllerRef, onExit, className }: Formatti
   const HeadingGlyph = active.headingLevel === null ? TypeIcon : HEADING_LEVEL_ICONS[active.headingLevel];
   const markButtons = MARK_COMMANDS.map(toButton);
   const blockButtons = BLOCK_COMMANDS.map(toButton);
+  const alignmentButtons = ALIGNMENT_COMMANDS.map(toButton);
+  const colorButton = COLOR_COMMAND ? toButton(COLOR_COMMAND) : undefined;
+  const sizeButton = SIZE_COMMAND ? toButton(SIZE_COMMAND) : undefined;
+  const colorPickerHex = memoTextColorToHex(colorInput || active.textColor);
+
+  const applyTextColor = () => {
+    const input = colorInput.trim();
+    const normalized = normalizeMemoTextColor(input);
+    if (input && !normalized) {
+      setColorError(true);
+      return;
+    }
+    run("textColor", { color: normalized ?? "" });
+    setColorError(false);
+    setColorPopoverOpen(false);
+    controllerRef.current?.focus();
+  };
+
+  const applyFontSize = () => {
+    const input = sizeInput.trim();
+    const normalized = normalizeMemoTextSize(input);
+    if (input && !normalized) {
+      setSizeError(true);
+      return;
+    }
+    run("fontSize", { fontSize: normalized ?? "" });
+    setSizeError(false);
+    setSizePopoverOpen(false);
+    controllerRef.current?.focus();
+  };
 
   return (
     <div
       ref={rootRef}
-      className={cn("w-full flex flex-row items-center gap-0.5", className)}
+      className={cn("w-full flex flex-row items-center gap-0.5 overflow-x-auto", className)}
       role="toolbar"
       aria-label={t("editor.format.heading")}
     >
@@ -129,6 +210,153 @@ export function FormattingToolbar({ controllerRef, onExit, className }: Formatti
         </DropdownMenu>
       ) : (
         blockButtons.map((button) => <SegmentButton key={button.label} {...button} onMouseDown={preventFocusSteal} />)
+      )}
+
+      <Divider />
+
+      {alignmentButtons.map((button) => (
+        <SegmentButton key={button.label} {...button} onMouseDown={preventFocusSteal} />
+      ))}
+
+      {colorButton && COLOR_COMMAND && (
+        <>
+          <Divider />
+          <Popover
+            open={colorPopoverOpen}
+            onOpenChange={(open) => {
+              setColorPopoverOpen(open);
+              setColorError(false);
+              if (open) setColorInput(active.textColor ?? "");
+            }}
+          >
+            <PopoverTrigger
+              render={
+                <SegmentButton
+                  Icon={colorButton.Icon}
+                  label={colorButton.label}
+                  active={colorButton.active}
+                  style={{ color: active.textColor ?? undefined }}
+                />
+              }
+            />
+            <PopoverContent align="start" className="w-72 p-3">
+              <div className="space-y-2">
+                <label htmlFor="memo-text-color" className="text-xs font-medium text-foreground">
+                  {t("editor.format.text-color")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="memo-text-color"
+                    className="min-w-0 flex-1"
+                    value={colorInput}
+                    placeholder={t("editor.format.text-color-placeholder")}
+                    aria-invalid={colorError}
+                    onChange={(event) => {
+                      setColorInput(event.target.value);
+                      setColorError(false);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") applyTextColor();
+                    }}
+                  />
+                  <input
+                    type="color"
+                    value={colorPickerHex}
+                    aria-label={t("editor.format.text-color-picker")}
+                    title={t("editor.format.text-color-picker")}
+                    className="size-9 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1"
+                    onChange={(event) => {
+                      const alpha = parseMemoTextColor(colorInput)?.alpha ?? parseMemoTextColor(active.textColor)?.alpha ?? 1;
+                      setColorInput(pickerHexToMemoTextColor(event.target.value, alpha));
+                      setColorError(false);
+                    }}
+                  />
+                </div>
+                {colorError && <p className="text-xs text-destructive">{t("editor.format.text-color-invalid")}</p>}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setColorInput("");
+                      run("textColor", { color: "" });
+                      setColorPopoverOpen(false);
+                      controllerRef.current?.focus();
+                    }}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="button" size="sm" onClick={applyTextColor}>
+                    {t("common.confirm")}
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
+      )}
+
+      {sizeButton && SIZE_COMMAND && (
+        <>
+          <Divider />
+          <Popover
+            open={sizePopoverOpen}
+            onOpenChange={(open) => {
+              setSizePopoverOpen(open);
+              setSizeError(false);
+              if (open) setSizeInput(active.fontSize?.replace(/px$/u, "") ?? "");
+            }}
+          >
+            <PopoverTrigger render={<SegmentButton Icon={sizeButton.Icon} label={sizeButton.label} active={sizeButton.active} />} />
+            <PopoverContent align="start" className="w-64 p-3">
+              <div className="space-y-2">
+                <label htmlFor="memo-font-size" className="text-xs font-medium text-foreground">
+                  {t("editor.format.font-size")}
+                </label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="memo-font-size"
+                    type="number"
+                    min={8}
+                    max={96}
+                    step={1}
+                    value={sizeInput}
+                    placeholder={t("editor.format.font-size-placeholder")}
+                    aria-invalid={sizeError}
+                    onChange={(event) => {
+                      setSizeInput(event.target.value);
+                      setSizeError(false);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") applyFontSize();
+                    }}
+                  />
+                  <span className="text-sm text-muted-foreground">px</span>
+                </div>
+                {sizeError && <p className="text-xs text-destructive">{t("editor.format.font-size-invalid")}</p>}
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setSizeInput("");
+                      run("fontSize", { fontSize: "" });
+                      setSizePopoverOpen(false);
+                      controllerRef.current?.focus();
+                    }}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="button" size="sm" onClick={applyFontSize}>
+                    {t("common.confirm")}
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
       )}
 
       {onExit && (

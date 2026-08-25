@@ -74,6 +74,51 @@ describe("FormattingToolbar", () => {
     expect(screen.getByRole("button", { name: "editor.format.italic" })).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("runs alignment and hidden-text commands", () => {
+    const { controller, run } = makeController();
+    renderToolbar(controller);
+
+    fireEvent.click(screen.getByRole("button", { name: "editor.format.align-center" }));
+    fireEvent.click(screen.getByRole("button", { name: "editor.format.spoiler" }));
+
+    expect(run).toHaveBeenCalledWith("alignCenter");
+    expect(run).toHaveBeenCalledWith("spoiler");
+  });
+
+  it("applies a validated RGBA text color", () => {
+    const { controller, run } = makeController();
+    renderToolbar(controller);
+
+    fireEvent.click(screen.getByRole("button", { name: "editor.format.text-color" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "editor.format.text-color" }), { target: { value: "12, 34, 56, 0.7" } });
+    fireEvent.click(screen.getByRole("button", { name: "common.confirm" }));
+
+    expect(run).toHaveBeenCalledWith("textColor", { color: "rgba(12, 34, 56, 0.7)" });
+  });
+
+  it("uses the color picker while preserving the current alpha", () => {
+    const { controller, run } = makeController({ active: { textColor: "rgba(100, 110, 120, 0.6)" } });
+    renderToolbar(controller);
+
+    fireEvent.click(screen.getByRole("button", { name: "editor.format.text-color" }));
+    fireEvent.change(screen.getByLabelText("editor.format.text-color-picker"), { target: { value: "#0c2238" } });
+    expect(screen.getByRole("textbox", { name: "editor.format.text-color" })).toHaveValue("rgba(12, 34, 56, 0.6)");
+    fireEvent.click(screen.getByRole("button", { name: "common.confirm" }));
+
+    expect(run).toHaveBeenCalledWith("textColor", { color: "rgba(12, 34, 56, 0.6)" });
+  });
+
+  it("applies a validated custom font size", () => {
+    const { controller, run } = makeController();
+    renderToolbar(controller);
+
+    fireEvent.click(screen.getByRole("button", { name: "editor.format.font-size" }));
+    fireEvent.change(screen.getByRole("spinbutton", { name: "editor.format.font-size" }), { target: { value: "28" } });
+    fireEvent.click(screen.getByRole("button", { name: "common.confirm" }));
+
+    expect(run).toHaveBeenCalledWith("fontSize", { fontSize: "28px" });
+  });
+
   it("calls onExit when the exit button is clicked", () => {
     const { controller } = makeController();
     const { onExit } = renderToolbar(controller);

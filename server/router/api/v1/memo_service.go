@@ -246,6 +246,9 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if request.Memo.Hidden && !isSuperUser(user) {
 		return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
 	}
+	if !isSuperUser(user) && (request.Memo.CreateTime != nil || request.Memo.UpdateTime != nil) {
+		return nil, status.Errorf(codes.PermissionDenied, "only administrators can customize memo timestamps")
+	}
 
 	// Set custom timestamps if provided in the request.
 	if request.Memo.CreateTime != nil && request.Memo.CreateTime.IsValid() {
@@ -687,6 +690,14 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		}
 		if path == "pinned" && !isSuperUser(user) {
 			return nil, status.Errorf(codes.PermissionDenied, "only administrators can pin memos")
+		}
+		if path == "create_time" && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can customize memo timestamps")
+		}
+		// An update_time path with no explicit value is the normal automatic
+		// timestamp applied to content edits. Only explicit overrides are admin-only.
+		if path == "update_time" && request.Memo.UpdateTime != nil && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can customize memo timestamps")
 		}
 	}
 

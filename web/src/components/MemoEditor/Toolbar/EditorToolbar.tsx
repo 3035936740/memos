@@ -22,6 +22,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   isFormattingToolbarVisible,
   onToggleFormattingToolbar,
   onInsertImages,
+  onInsertVideos,
   onInsertEmoji,
   onInsertAIText,
 }) => {
@@ -82,6 +83,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           isFormattingToolbarVisible={isFormattingToolbarVisible}
           onToggleFormattingToolbar={onToggleFormattingToolbar}
           onInsertImages={onInsertImages}
+          onInsertVideos={onInsertVideos}
           onInsertEmoji={onInsertEmoji}
           onInsertAIText={onInsertAIText}
         />

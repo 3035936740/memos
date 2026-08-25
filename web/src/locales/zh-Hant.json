@@ -258,7 +258,18 @@
       "task-list": "待辦清單",
       "link": "連結",
       "link-prompt": "輸入網址",
-      "more": "更多格式"
+      "more": "更多格式",
+      "align-left": "靠左對齊",
+      "align-center": "置中對齊",
+      "align-right": "靠右對齊",
+      "text-color": "文字顏色（RGBA）",
+      "text-color-picker": "開啟調色盤",
+      "text-color-placeholder": "rgba(255, 120, 80, 0.85)",
+      "text-color-invalid": "請輸入有效的 RGBA 顏色，留空則恢復預設顏色。",
+      "font-size": "文字大小",
+      "font-size-placeholder": "8–96",
+      "font-size-invalid": "請輸入 8 到 96 之間的整數，留空則恢復預設字號。",
+      "spoiler": "隱藏文字"
     },
     "insert-menu": {
       "add-attachment": "新增附件",
@@ -266,11 +277,16 @@
       "image-upload-failed": "部分圖片上傳失敗，請重試或將已上傳檔案保留為附件。",
       "image-upload-stopped": "圖片上傳已暫停 {{completed}}/{{total}}",
       "insert-image": "插入圖片",
+      "insert-video": "插入影片",
       "keep-as-attachments": "保留為附件",
       "link-memo": "連結備忘錄",
       "retry-image-upload": "重試",
+      "retry-video-upload": "重試",
       "uploading-inline-image": "正在上傳到正文",
       "uploading-images": "正在上傳圖片 {{completed}}/{{total}}",
+      "uploading-videos": "正在上傳影片 {{completed}}/{{total}}",
+      "video-upload-failed": "部分影片上傳失敗，請重試或將已上傳檔案保留為附件。",
+      "video-upload-stopped": "影片上傳已暫停 {{completed}}/{{total}}",
       "upload-file": "上傳文件"
     },
     "no-changes-detected": "未發現變更",
@@ -342,7 +358,12 @@
     "click-to-hide-sensitive-content": "點擊隱藏 NSFW 內容",
     "click-to-show-sensitive-content": "點擊顯示 NSFW 內容",
     "code": "程式碼",
+    "spoiler": {
+      "reveal": "顯示隱藏文字",
+      "hide": "隱藏文字"
+    },
     "comment": {
+      "empty": "目前還沒有評論哦",
       "self": "評論",
       "write-a-comment": "寫下評論"
     },

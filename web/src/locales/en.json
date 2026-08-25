@@ -257,7 +257,18 @@
       "task-list": "To-do list",
       "link": "Link",
       "link-prompt": "Enter a URL",
-      "more": "More formatting"
+      "more": "More formatting",
+      "align-left": "Align left",
+      "align-center": "Align center",
+      "align-right": "Align right",
+      "text-color": "Text color (RGBA)",
+      "text-color-picker": "Open color picker",
+      "text-color-placeholder": "rgba(255, 120, 80, 0.85)",
+      "text-color-invalid": "Enter a valid RGBA color, or leave it blank for the default color.",
+      "font-size": "Font size",
+      "font-size-placeholder": "8–96",
+      "font-size-invalid": "Enter a whole number from 8 to 96, or leave it blank for the default size.",
+      "spoiler": "Hidden text"
     },
     "insert-menu": {
       "add-attachment": "Add attachment",
@@ -265,13 +276,18 @@
       "image-upload-failed": "Some images could not be uploaded. Retry or keep the uploaded files as attachments.",
       "image-upload-stopped": "Image upload stopped {{completed}}/{{total}}",
       "insert-image": "Insert image",
+      "insert-video": "Insert video",
       "insert-emoji": "Insert emoji pack",
       "ai-assistant": "AI writing assistant",
       "keep-as-attachments": "Keep as attachments",
       "link-memo": "Link memo",
       "retry-image-upload": "Retry",
+      "retry-video-upload": "Retry",
       "uploading-inline-image": "Uploading to content",
       "uploading-images": "Uploading images {{completed}}/{{total}}",
+      "uploading-videos": "Uploading videos {{completed}}/{{total}}",
+      "video-upload-failed": "Some videos could not be uploaded. Retry or keep the uploaded files as attachments.",
+      "video-upload-stopped": "Video upload stopped {{completed}}/{{total}}",
       "upload-file": "Upload file"
     },
     "ai": {
@@ -357,7 +373,12 @@
     "click-to-hide-sensitive-content": "Click to hide sensitive content",
     "click-to-show-sensitive-content": "Click to show sensitive content",
     "code": "Code",
+    "spoiler": {
+      "reveal": "Reveal hidden text",
+      "hide": "Hide text"
+    },
     "comment": {
+      "empty": "No comments yet.",
       "guest-description": "Please sign in to comment.",
       "guest-prefix": "Please",
       "guest-suffix": "to comment",

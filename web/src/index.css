@@ -3,6 +3,19 @@
 @import "./themes/default.css";
 @import "./themes/atmospheric-shells.css";
 
+/* Markdown images are block elements, so text-align alone cannot move them.
+   Keep image alignment scoped to the validated memo alignment container. */
+[data-memo-align="center"] img[data-memo-image] {
+  display: block;
+  margin-inline: auto;
+}
+
+[data-memo-align="right"] img[data-memo-image] {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+}
+
 /* Blog 2 uses depth instead of card outlines. Keep these structural rules
    theme-neutral so every palette gets the same clean layout. */
 [data-feed-layout="blog2"] [data-memo-editor],

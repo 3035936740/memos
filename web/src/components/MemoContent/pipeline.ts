@@ -11,6 +11,7 @@ import type { CustomEmoji } from "@/utils/emoji";
 import { getHeadingText, isHeadingElement, rehypeHeadingId } from "@/utils/rehype-plugins/rehype-heading-id";
 import { remarkDisableSetext } from "@/utils/remark-plugins/remark-disable-setext";
 import { remarkEmoji } from "@/utils/remark-plugins/remark-emoji";
+import { remarkMemoRichText } from "@/utils/remark-plugins/remark-memo-rich-text";
 import { remarkPreserveType } from "@/utils/remark-plugins/remark-preserve-type";
 import { remarkSplitMixedTaskLists } from "@/utils/remark-plugins/remark-split-mixed-task-lists";
 import { remarkMemoSyntax } from "@/utils/remark-plugins/remark-tag";
@@ -28,6 +29,7 @@ export const buildRemarkPlugins = (mathRemarkPlugins: PluggableList = [], emojis
   [remarkEmoji, emojis],
   remarkSplitMixedTaskLists,
   remarkMemoSyntax,
+  remarkMemoRichText,
   remarkBreaks,
   remarkPreserveType,
 ];

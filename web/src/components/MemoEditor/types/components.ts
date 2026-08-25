@@ -47,6 +47,7 @@ export interface EditorToolbarProps {
   isFormattingToolbarVisible: boolean;
   onToggleFormattingToolbar: () => void;
   onInsertImages: (files: File[]) => void;
+  onInsertVideos: (files: File[]) => void;
   onInsertEmoji: (token: string) => void;
   onInsertAIText: (text: string) => void;
 }
@@ -92,6 +93,7 @@ export interface InsertMenuProps {
   isFormattingToolbarVisible?: boolean;
   onToggleFormattingToolbar?: () => void;
   onInsertImages: (files: File[]) => void;
+  onInsertVideos: (files: File[]) => void;
   onInsertEmoji: (token: string) => void;
   onInsertAIText: (text: string) => void;
 }

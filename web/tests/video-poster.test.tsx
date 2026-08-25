@@ -43,11 +43,22 @@ describe("<VideoPoster>", () => {
     enterViewport();
 
     const video = screen.getByTestId("video-poster-fallback");
-    expect(video).toHaveAttribute("src", "/file/attachments/video/video.mp4#t=0.001");
+    expect(video).toHaveAttribute("src", "/file/attachments/video/video.mp4");
     expect(video).toHaveAttribute("preload", "auto");
     expect(video).toHaveAttribute("playsinline");
     expect((video as HTMLVideoElement).muted).toBe(true);
     expect(video).toHaveClass("object-cover");
+  });
+
+  it("seeks to one tenth of the video duration before capturing", () => {
+    render(<VideoPoster sourceUrl="/file/attachments/video/video.mp4" alt="clip.mp4" />);
+    enterViewport();
+
+    const video = screen.getByTestId("video-poster-fallback") as HTMLVideoElement;
+    Object.defineProperty(video, "duration", { configurable: true, value: 80 });
+    fireEvent.loadedMetadata(video);
+
+    expect(video.currentTime).toBe(8);
   });
 
   it("renders a captured frame as an image poster", async () => {
@@ -84,13 +95,7 @@ describe("<VideoPoster>", () => {
   });
 
   it("uses an available poster without loading the video fallback", () => {
-    render(
-      <VideoPoster
-        sourceUrl="/file/attachments/video/video.mp4"
-        posterUrl="/file/attachments/video/poster.webp"
-        alt="clip.mp4"
-      />,
-    );
+    render(<VideoPoster sourceUrl="/file/attachments/video/video.mp4" posterUrl="/file/attachments/video/poster.webp" alt="clip.mp4" />);
 
     expect(screen.getByRole("img", { name: "clip.mp4" })).toHaveAttribute("src", "/file/attachments/video/poster.webp");
     expect(screen.queryByTestId("video-poster-fallback")).not.toBeInTheDocument();

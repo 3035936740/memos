@@ -1,5 +1,8 @@
+import { create } from "@bufbuild/protobuf";
 import { describe, expect, it } from "vitest";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
+import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
+import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
 
 describe("deriveBlogMemoText", () => {
   it("uses the first heading as the title and turns the remainder into a plain-text excerpt", () => {
@@ -14,5 +17,29 @@ describe("deriveBlogMemoText", () => {
       title: "随手记录",
       excerpt: "第二行内容",
     });
+  });
+});
+
+describe("selectBlogCoverMedia", () => {
+  const image = create(AttachmentSchema, {
+    name: "attachments/image-one",
+    filename: "image.png",
+    type: "image/png",
+  });
+  const video = create(AttachmentSchema, {
+    name: "attachments/video-one",
+    filename: "video.mp4",
+    type: "video/mp4",
+  });
+  const items = buildAttachmentVisualItems([image, video]);
+
+  it("uses a video when it occurs before an image in the article body", () => {
+    const content = ["[video:video](/file/attachments/video-one)", "![image](/file/attachments/image-one)"].join("\n\n");
+    expect(selectBlogCoverMedia(content, items)?.kind).toBe("video");
+  });
+
+  it("uses an image when it occurs before a video in the article body", () => {
+    const content = ["![image](/file/attachments/image-one)", "[video:video](/file/attachments/video-one)"].join("\n\n");
+    expect(selectBlogCoverMedia(content, items)?.kind).toBe("image");
   });
 });

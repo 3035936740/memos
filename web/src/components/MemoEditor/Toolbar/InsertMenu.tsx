@@ -12,6 +12,7 @@ import {
   SmilePlusIcon,
   SparklesIcon,
   TypeIcon,
+  VideoIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LinkMemoDialog, LocationDialog } from "@/components/MemoMetadata";
@@ -54,6 +55,7 @@ const InsertMenu = (props: InsertMenuProps) => {
   const [aiDialogOpen, setAIDialogOpen] = useState(false);
   const [aiContext, setAIContext] = useState("");
   const inlineImageInputRef = useRef<HTMLInputElement>(null);
+  const inlineVideoInputRef = useRef<HTMLInputElement>(null);
 
   const { fileInputRef, selectingFlag, handleFileInputChange, handleUploadClick } = useFileUpload((newFiles: LocalFile[]) => {
     if (getState().ui.isLoading.saving) return;
@@ -154,10 +156,25 @@ const InsertMenu = (props: InsertMenuProps) => {
     [props.onInsertImages],
   );
 
+  const handleInlineVideoUploadClick = useCallback(() => {
+    if (getState().ui.isLoading.saving) return;
+    inlineVideoInputRef.current?.click();
+  }, [getState]);
+
+  const handleInlineVideoInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = Array.from(event.target.files ?? []);
+      if (files.length > 0) props.onInsertVideos(files);
+      event.target.value = "";
+    },
+    [props.onInsertVideos],
+  );
+
   // Insert actions (add content).
   const insertItems = [
     { key: "attachment", label: t("editor.insert-menu.add-attachment"), icon: PaperclipIcon, onClick: handleAttachmentUploadClick },
     { key: "inline-image", label: t("editor.insert-menu.insert-image"), icon: ImageIcon, onClick: handleInlineImageUploadClick },
+    { key: "inline-video", label: t("editor.insert-menu.insert-video"), icon: VideoIcon, onClick: handleInlineVideoUploadClick },
     { key: "emoji", label: t("editor.insert-menu.insert-emoji"), icon: SmilePlusIcon, onClick: () => setEmojiDialogOpen(true) },
     {
       key: "ai",
@@ -219,6 +236,16 @@ const InsertMenu = (props: InsertMenuProps) => {
         type="file"
         multiple={true}
         accept="image/*"
+      />
+
+      <input
+        className="hidden"
+        ref={inlineVideoInputRef}
+        disabled={insertionDisabled}
+        onChange={handleInlineVideoInputChange}
+        type="file"
+        multiple={true}
+        accept="video/*"
       />
 
       <LinkMemoDialog

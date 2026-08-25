@@ -17,6 +17,8 @@ vi.mock("@/hooks/useCurrentUser", () => ({ default: () => authState.currentUser 
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ userGeneralSetting: undefined }) }));
 vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ generalSetting: { memoCategoriesJson: "" } }) }));
 vi.mock("@/components/map/useReverseGeocoding", () => ({ useReverseGeocoding: () => ({ data: undefined }) }));
+vi.mock("@/components/MemoEditor/components/EmojiPickerDialog", () => ({ default: () => null }));
+vi.mock("@/components/MemoEditor/components/AIGenerateDialog", () => ({ default: () => null }));
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -34,13 +36,14 @@ const HiddenStateProbe = () => {
   return <output aria-label="hidden-state">{String(hidden)}</output>;
 };
 
-const renderMenu = (onInsertImages = vi.fn(), isSaving = false) =>
+const renderMenu = (onInsertImages = vi.fn(), isSaving = false, onInsertVideos = vi.fn()) =>
   render(
     <EditorProvider>
       <InsertMenu
         isSaving={isSaving}
         onLocationChange={vi.fn()}
         onInsertImages={onInsertImages}
+        onInsertVideos={onInsertVideos}
         onAudioRecorderClick={vi.fn()}
         isFormattingToolbarVisible={false}
       />
@@ -58,6 +61,9 @@ describe("InsertMenu", () => {
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
       "editor.insert-menu.add-attachment",
       "editor.insert-menu.insert-image",
+      "editor.insert-menu.insert-video",
+      "editor.insert-menu.insert-emoji",
+      "editor.insert-menu.ai-assistant",
       "editor.audio-recorder.trigger",
       "editor.insert-menu.link-memo",
       "editor.insert-menu.add-location",
@@ -66,21 +72,29 @@ describe("InsertMenu", () => {
     ]);
   });
 
-  test("uses separate unrestricted and multi-image file inputs", () => {
+  test("uses separate unrestricted, image, and video file inputs", () => {
     const onInsertImages = vi.fn();
-    const { container } = renderMenu(onInsertImages);
+    const onInsertVideos = vi.fn();
+    const { container } = renderMenu(onInsertImages, false, onInsertVideos);
     const inputs = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="file"]'));
     const attachmentInput = inputs.find((input) => input.accept === "");
     const inlineImageInput = inputs.find((input) => input.accept === "image/*");
+    const inlineVideoInput = inputs.find((input) => input.accept === "video/*");
 
     expect(attachmentInput).toBeDefined();
     expect(attachmentInput).toHaveAttribute("multiple");
     expect(inlineImageInput).toBeDefined();
     expect(inlineImageInput).toHaveAttribute("multiple");
+    expect(inlineVideoInput).toBeDefined();
+    expect(inlineVideoInput).toHaveAttribute("multiple");
 
     const image = new File(["image"], "photo.png", { type: "image/png" });
     fireEvent.change(inlineImageInput!, { target: { files: [image] } });
     expect(onInsertImages).toHaveBeenCalledWith([image]);
+
+    const video = new File(["video"], "clip.mp4", { type: "video/mp4" });
+    fireEvent.change(inlineVideoInput!, { target: { files: [video] } });
+    expect(onInsertVideos).toHaveBeenCalledWith([video]);
   });
 
   test("disables insertion controls while saving", () => {
@@ -105,6 +119,7 @@ describe("InsertMenu", () => {
           isFormattingToolbarVisible={false}
           onToggleFormattingToolbar={vi.fn()}
           onInsertImages={vi.fn()}
+          onInsertVideos={vi.fn()}
         />
       </EditorProvider>,
     );
@@ -126,12 +141,13 @@ describe("InsertMenu", () => {
           isFormattingToolbarVisible={false}
           onToggleFormattingToolbar={vi.fn()}
           onInsertImages={vi.fn()}
+          onInsertVideos={vi.fn()}
         />
         <HiddenStateProbe />
       </EditorProvider>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "memo.visibility.private" }));
+    fireEvent.click(screen.getByRole("button", { name: "memo.visibility.public" }));
     fireEvent.click(screen.getByText("memo.hidden.label"));
 
     expect(screen.getByLabelText("hidden-state")).toHaveTextContent("true");

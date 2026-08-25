@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface VideoPosterProps {
@@ -11,13 +11,7 @@ interface VideoPosterProps {
 const MAX_POSTER_DIMENSION = 960;
 const POSTER_LOAD_MARGIN = "200px 0px";
 
-const getFrameSourceUrl = (sourceUrl: string): string => {
-  if (!sourceUrl || sourceUrl.startsWith("blob:") || sourceUrl.startsWith("data:") || sourceUrl.includes("#")) {
-    return sourceUrl;
-  }
-
-  return `${sourceUrl}#t=0.001`;
-};
+const POSTER_FRAME_FRACTION = 0.1;
 
 const getCanvasSize = (width: number, height: number) => {
   const scale = Math.min(1, MAX_POSTER_DIMENSION / Math.max(width, height));
@@ -32,7 +26,6 @@ const VideoPoster = ({ sourceUrl, alt, className, posterUrl }: VideoPosterProps)
   const usablePosterUrl = posterUrl && posterUrl !== sourceUrl ? posterUrl : undefined;
   const [capturedPoster, setCapturedPoster] = useState<{ sourceUrl: string; url: string }>();
   const [nearViewport, setNearViewport] = useState(false);
-  const frameSourceUrl = useMemo(() => getFrameSourceUrl(sourceUrl), [sourceUrl]);
   const capturedPosterUrl = capturedPoster?.sourceUrl === sourceUrl ? capturedPoster.url : undefined;
   const posterImageUrl = usablePosterUrl ?? capturedPosterUrl;
 
@@ -93,6 +86,24 @@ const VideoPoster = ({ sourceUrl, alt, className, posterUrl }: VideoPosterProps)
     [capturedPosterUrl, sourceUrl, usablePosterUrl],
   );
 
+  const seekToPosterFrame = useCallback(
+    (video: HTMLVideoElement) => {
+      const duration = video.duration;
+      if (!Number.isFinite(duration) || duration <= 0) {
+        captureFrame(video);
+        return;
+      }
+
+      const target = Math.min(duration * POSTER_FRAME_FRACTION, Math.max(0, duration - 0.05));
+      if (Math.abs(video.currentTime - target) < 0.02) {
+        captureFrame(video);
+        return;
+      }
+      video.currentTime = target;
+    },
+    [captureFrame],
+  );
+
   if (posterImageUrl) {
     return <img src={posterImageUrl} alt={alt} className={className} loading="lazy" decoding="async" />;
   }
@@ -104,14 +115,16 @@ const VideoPoster = ({ sourceUrl, alt, className, posterUrl }: VideoPosterProps)
   return (
     <video
       data-testid="video-poster-fallback"
-      src={frameSourceUrl}
+      src={sourceUrl}
       className={cn("pointer-events-none", className)}
       role="img"
       aria-label={alt}
       muted
       playsInline
       preload="auto"
-      onLoadedData={(event) => captureFrame(event.currentTarget)}
+      onLoadedMetadata={(event) => seekToPosterFrame(event.currentTarget)}
+      onLoadedData={(event) => seekToPosterFrame(event.currentTarget)}
+      onSeeked={(event) => captureFrame(event.currentTarget)}
     />
   );
 };
