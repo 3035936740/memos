@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useState } from "react";
+import { type RefObject, useLayoutEffect, useState } from "react";
 
 /** Below this content width (px) the formatting toolbar uses its compact layout. */
 export const COMPACT_TOOLBAR_WIDTH = 380;
@@ -9,13 +9,14 @@ export function isCompactWidth(width: number): boolean {
 }
 
 /**
- * Tracks an element's content-box width via ResizeObserver. Returns 0 until the
- * first measurement (or when ResizeObserver is unavailable, e.g. jsdom), which
- * isCompactWidth() treats as the full (non-compact) layout.
+ * Tracks an element's content-box width via ResizeObserver. The initial
+ * measurement happens in a layout effect so responsive consumers can settle
+ * before the browser paints their first frame. Returns 0 when measurement is
+ * unavailable (for example in jsdom).
  */
 export function useElementWidth<T extends HTMLElement>(ref: RefObject<T | null>): number {
   const [width, setWidth] = useState(0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element || typeof ResizeObserver === "undefined") {
       return;

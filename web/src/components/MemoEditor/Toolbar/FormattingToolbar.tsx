@@ -174,7 +174,14 @@ export function FormattingToolbar({ controllerRef, onExit, className }: Formatti
   return (
     <div
       ref={rootRef}
-      className={cn("w-full flex flex-row items-center gap-0.5 overflow-x-auto", className)}
+      className={cn(
+        "w-full flex flex-row items-center gap-0.5",
+        // Before the first synchronous width measurement the full command set
+        // can briefly overflow on phones. Hide that unmeasured scrollbar; once
+        // measured, compact mode has already folded the block group into `…`.
+        width === 0 ? "overflow-x-hidden" : "overflow-x-auto",
+        className,
+      )}
       role="toolbar"
       aria-label={t("editor.format.heading")}
     >

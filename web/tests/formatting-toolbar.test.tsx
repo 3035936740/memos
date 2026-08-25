@@ -52,6 +52,14 @@ function renderToolbar(controller: EditorController, onExit = vi.fn()) {
 }
 
 describe("FormattingToolbar", () => {
+  it("does not expose a transient scrollbar before its width is measured", () => {
+    const { controller } = makeController();
+    renderToolbar(controller);
+
+    expect(screen.getByRole("toolbar")).toHaveClass("overflow-x-hidden");
+    expect(screen.getByRole("toolbar")).not.toHaveClass("overflow-x-auto");
+  });
+
   it("runs the bold command when the bold button is clicked", () => {
     const { controller, run } = makeController();
     renderToolbar(controller);
