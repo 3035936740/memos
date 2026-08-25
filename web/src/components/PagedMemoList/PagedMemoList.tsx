@@ -172,13 +172,6 @@ const PagedMemoList = (props: Props) => {
   // A freshly created memo is hoisted to the front; pin it to the top of column one so it
   // appears right under the composer instead of dropping into a random (shortest) column.
   const displayMemoList = isDisplayPending ? [] : sortedMemoList;
-  const blog2FeaturedMemo = displayMemoList[0];
-  const blog2SecondaryMemos = displayMemoList.slice(1);
-  const blog2DesktopRows: Memo[][] = [];
-  for (let offset = 0, rowSize = 2; offset < blog2SecondaryMemos.length; rowSize = rowSize === 2 ? 1 : 2) {
-    blog2DesktopRows.push(blog2SecondaryMemos.slice(offset, offset + rowSize));
-    offset += rowSize;
-  }
   const firstMemo = displayMemoList[0];
   const priorityKey = newMemoName && firstMemo?.name === newMemoName ? getMemoKey(firstMemo) : undefined;
 
@@ -251,54 +244,16 @@ const PagedMemoList = (props: Props) => {
               <MemoFilters className="mb-2" />
               {initialLoader}
               {feedLayout === "blog2" ? (
-                <div>
-                  {blog2FeaturedMemo && (
+                <div className="flex flex-col gap-4">
+                  {displayMemoList.map((memo) => (
                     <Blog2MemoView
-                      key={getMemoKey(blog2FeaturedMemo)}
-                      memo={blog2FeaturedMemo}
-                      featured
+                      key={getMemoKey(memo)}
+                      memo={memo}
                       showCreator={props.showCreator}
                       parentPage={parentPage}
                       navigationScope={navigationScope}
                     />
-                  )}
-                  <div className="mt-4 flex flex-col gap-4 sm:hidden">
-                    {blog2SecondaryMemos.map((memo) => (
-                      <Blog2MemoView
-                        key={getMemoKey(memo)}
-                        memo={memo}
-                        showCreator={props.showCreator}
-                        parentPage={parentPage}
-                        navigationScope={navigationScope}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-4 hidden flex-col gap-4 sm:flex">
-                    {blog2DesktopRows.map((row) =>
-                      row.length === 1 ? (
-                        <Blog2MemoView
-                          key={getMemoKey(row[0]!)}
-                          memo={row[0]!}
-                          featured
-                          showCreator={props.showCreator}
-                          parentPage={parentPage}
-                          navigationScope={navigationScope}
-                        />
-                      ) : (
-                        <div key={row.map(getMemoKey).join("|")} className="grid grid-cols-2 items-stretch gap-4">
-                          {row.map((memo) => (
-                            <Blog2MemoView
-                              key={getMemoKey(memo)}
-                              memo={memo}
-                              showCreator={props.showCreator}
-                              parentPage={parentPage}
-                              navigationScope={navigationScope}
-                            />
-                          ))}
-                        </div>
-                      ),
-                    )}
-                  </div>
+                  ))}
                 </div>
               ) : (
                 displayMemoList.map(renderMemo)

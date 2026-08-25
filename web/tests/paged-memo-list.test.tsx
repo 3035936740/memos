@@ -68,6 +68,10 @@ vi.mock("@/components/BlogMemoView", () => ({
   default: ({ memo: blogMemo }: { memo: Memo }) => <article data-testid={`blog-${blogMemo.name}`} />,
 }));
 
+vi.mock("@/components/Blog2MemoView", () => ({
+  default: ({ memo: blogMemo }: { memo: Memo }) => <article data-testid={`blog2-${blogMemo.name}`} />,
+}));
+
 vi.mock("@/components/BlogSidebar", () => ({
   default: () => <div data-testid="blog-sidebar" />,
 }));
@@ -186,6 +190,21 @@ describe("<PagedMemoList>", () => {
     const pagination = screen.getByRole("navigation", { name: "Page 1 of 2" });
     expect(mobileSidebar).toBeDefined();
     expect(pagination.compareDocumentPosition(mobileSidebar as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("renders Blog2 as one continuous single-column feed", () => {
+    view.feedLayout = "blog2";
+    feed.memos = [memo, { ...memo, name: "memos/2" }];
+
+    const { container } = renderList();
+
+    const layout = container.querySelector('[data-feed-layout="blog2"]');
+    const feedColumn = screen.getByTestId("blog2-memos/1").parentElement;
+    expect(layout).not.toBeNull();
+    expect(feedColumn).toHaveClass("flex", "flex-col", "gap-4");
+    expect(feedColumn?.children).toHaveLength(2);
+    expect(feedColumn).toContainElement(screen.getByTestId("blog2-memos/2"));
+    expect(feedColumn).not.toHaveClass("grid", "grid-cols-2");
   });
 
   it("places leading content and the empty state in the first grid column", () => {

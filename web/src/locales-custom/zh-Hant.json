@@ -36,6 +36,8 @@
     "update-failed": "更新失敗"
   },
   "memo": {
+    "blog-sidebar-recent-comments": "最近評論",
+    "blog-sidebar-random-memo": "隨機備忘錄",
     "article-navigation": "文章導覽",
     "previous-article": "上一篇文章",
     "next-article": "下一篇文章",

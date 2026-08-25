@@ -39,6 +39,8 @@
     "article-navigation": "Article navigation",
     "previous-article": "Previous article",
     "next-article": "Next article",
+    "blog-sidebar-recent-comments": "Recent comments",
+    "blog-sidebar-random-memo": "Random memo",
     "category": {
       "not-found": "Category not found.",
       "access-denied": "You do not have access to this category."

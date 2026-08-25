@@ -1,14 +1,26 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { ActivityIcon, CalendarDaysIcon, HistoryIcon, MessageCircleIcon, NotebookTextIcon, PinIcon } from "lucide-react";
+import {
+  ActivityIcon,
+  CalendarDaysIcon,
+  HistoryIcon,
+  MessageCircleIcon,
+  MessageSquareReplyIcon,
+  NotebookTextIcon,
+  PinIcon,
+  ShuffleIcon,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import RelativeTime from "@/components/RelativeTime";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { useAllUserStats } from "@/hooks/useUserQueries";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
+import { extractMemoIdFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { UserStats } from "@/types/proto/api/v1/user_service_pb";
+import { useRandomBlogMemo, useRecentBlogComments } from "@/utils/blog-sidebar";
 import { useTranslate } from "@/utils/i18n";
 
 const TIME_MACHINE_SIZE = 4;
@@ -40,12 +52,17 @@ interface Props {
 
 const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filter, parentPage, className }: Props) => {
   const t = useTranslate();
+  const { currentUser } = useAuth();
+  const viewerKey = currentUser?.name ?? "guest";
   const { data: recentData } = useMemos({ state, orderBy, filter, pageSize: TIME_MACHINE_SIZE });
   const pinnedFilter = filter ? `(${filter}) && pinned` : "pinned";
   const { data: pinnedData } = useMemos({ state, orderBy, filter: pinnedFilter, pageSize: PINNED_ARTICLE_SIZE });
   const { data: userStats = [] } = useAllUserStats({ state, filter });
+  const { data: recentComments = [] } = useRecentBlogComments(viewerKey);
+  const randomMemo = useRandomBlogMemo(viewerKey);
   const stats = deriveBlogSidebarStats(userStats);
   const navigationScope: MemoNavigationScope = { state, orderBy, filter };
+  const randomNavigationScope: MemoNavigationScope = { state: State.NORMAL, orderBy: "create_time desc" };
 
   const statRows = [
     { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(), icon: NotebookTextIcon },
@@ -99,6 +116,49 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
           })}
         </div>
       </section>
+
+      {recentComments.length > 0 && (
+        <section className="border-t border-border p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <MessageSquareReplyIcon className="size-4" />
+            {t("memo.blog-sidebar-recent-comments")}
+          </h2>
+          <div className="mt-3 space-y-1.5">
+            {recentComments.map((comment) => (
+              <Link
+                key={comment.name}
+                to={`/${comment.parentName}#${extractMemoIdFromName(comment.name)}`}
+                state={{ from: parentPage, commentTarget: extractMemoIdFromName(comment.name) }}
+                className="block rounded-md px-2 py-2 transition-colors hover:bg-muted"
+              >
+                <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                  <span className="truncate">{comment.creator ? `@${comment.creator}` : "—"}</span>
+                  <RelativeTime date={new Date(comment.createTime * 1000)} />
+                </div>
+                <p className="mt-1 line-clamp-2 text-sm leading-5 text-foreground/85">{comment.content}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {randomMemo && (
+        <section className="border-t border-border p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <ShuffleIcon className="size-4" />
+            {t("memo.blog-sidebar-random-memo")}
+          </h2>
+          <Link
+            to={`/${randomMemo.name}`}
+            state={{ from: parentPage, navigationScope: randomNavigationScope }}
+            className="mt-3 block rounded-md px-2 py-2 transition-colors hover:bg-muted hover:text-primary"
+          >
+            <span className="line-clamp-2 text-sm font-medium leading-5">
+              {deriveBlogMemoText(randomMemo.content, randomMemo.property?.title).title || t("memo.blog-untitled")}
+            </span>
+          </Link>
+        </section>
+      )}
 
       {(pinnedData?.memos.length ?? 0) > 0 ? (
         <section className="border-t border-border p-4">

@@ -166,6 +166,7 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	RegisterContentModerationRoutes(gwGroup, s, authorizer)
 	RegisterModerationRoutes(gwGroup, s, authorizer)
 	RegisterEmojiRoutes(gwGroup, s, authorizer)
+	RegisterBlogSidebarRoutes(gwGroup, s, authorizer)
 	handler := echo.WrapHandler(http.MaxBytesHandler(gwMux, MaxAPIRequestBytes))
 
 	gwGroup.Any("/api/v1/*", handler)

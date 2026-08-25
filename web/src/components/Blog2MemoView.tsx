@@ -8,6 +8,7 @@ import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
+import { extractUsernameFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
@@ -26,7 +27,8 @@ interface Props {
 const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage, navigationScope }: Props) => {
   const t = useTranslate();
   const [coverFailed, setCoverFailed] = useState(false);
-  const creator = useResolvedUser(memo.creator, { enabled: showCreator });
+  const shouldShowCreator = showCreator || Boolean(memo.creator);
+  const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
   const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
   const cover = useMemo(() => {
     const visualAttachments = memo.attachments.filter((attachment) => {
@@ -39,10 +41,9 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
   const detailState = { from: parentPage, navigationScope };
-  const creatorLabel = creator?.displayName || creator?.username;
+  const creatorUsername = creator?.username || extractUsernameFromName(memo.creator);
+  const creatorLabel = creator?.displayName || creatorUsername;
   const visibleCover = coverFailed ? undefined : cover;
-  const hasWideCover = featured && Boolean(visibleCover);
-  const hasCompactCover = !featured && Boolean(visibleCover);
   const isCompactDynamic = !visibleCover && !excerpt.trim();
 
   useEffect(() => {
@@ -91,12 +92,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       to={detailPath}
       state={detailState}
       aria-label={title || t("memo.blog-untitled")}
-      className={cn(
-        "relative block overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50",
-        hasWideCover
-          ? "min-h-64 md:order-2 md:min-h-full"
-          : "aspect-[16/8] border-b border-border/60 sm:order-2 sm:aspect-auto sm:min-h-full sm:border-b-0 sm:border-l",
-      )}
+      className="relative order-2 my-3 block aspect-[4/3] w-full self-start overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:my-4"
     >
       <img
         src={visibleCover.posterUrl}
@@ -114,17 +110,14 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       data-blog2-card=""
       className={cn(
         "group relative isolate flex h-full min-w-0 flex-col overflow-hidden rounded-md bg-card text-card-foreground shadow-xs transition-shadow duration-200 hover:shadow-sm",
-        featured && "sm:col-span-2",
       )}
     >
       <div
         className={cn(
-          "flex h-full min-w-0 flex-col",
-          hasWideCover && "md:grid md:grid-cols-[1.08fr_0.92fr]",
-          hasCompactCover && "sm:grid sm:grid-cols-[minmax(0,1fr)_9rem]",
+          "grid h-full min-w-0",
+          visibleCover ? "grid-cols-[minmax(0,1fr)_5.5rem] gap-3 pr-3 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-4 sm:pr-4" : "grid-cols-1",
         )}
       >
-        {!hasWideCover && coverLink}
         <div className="flex min-w-0 flex-1 flex-col p-4">
           {badges}
 
@@ -150,9 +143,9 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
           )}
 
           <footer className="mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-            {showCreator && creatorLabel && (
+            {shouldShowCreator && creatorLabel && (
               <Link
-                to={`/u/${encodeURIComponent(creator?.username ?? "")}`}
+                to={`/u/${encodeURIComponent(creatorUsername)}`}
                 className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-foreground"
               >
                 <UserAvatar avatarUrl={creator?.avatarUrl} className="size-5 rounded-md" />
@@ -176,7 +169,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
             )}
           </footer>
         </div>
-        {hasWideCover && coverLink}
+        {coverLink}
       </div>
     </article>
   );

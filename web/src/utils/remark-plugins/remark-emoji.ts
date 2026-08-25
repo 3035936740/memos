@@ -20,7 +20,11 @@ const transformParent = (parent: Parent, byToken: Map<string, CustomEmoji>, matc
       for (const match of text.value.matchAll(matcher)) {
         const offset = match.index ?? 0;
         if (offset > cursor) replacements.push({ type: "text", value: text.value.slice(cursor, offset) });
-        const emoji = byToken.get(match[0]);
+        // Older editor builds could leave a Markdown image marker immediately
+        // before a custom emoji token (`![group_name]`). Treat that legacy form
+        // as the same emoji instead of leaving a literal `!` in the document.
+        const matchedToken = match[0].startsWith("!") ? match[0].slice(1) : match[0];
+        const emoji = byToken.get(matchedToken);
         if (emoji) replacements.push({ type: "image", url: emoji.url, alt: emoji.token, title: emoji.name });
         cursor = offset + match[0].length;
       }
@@ -39,6 +43,6 @@ export const remarkEmoji: Plugin<[CustomEmoji[]], Root> = (emojis = []) => {
     .sort((a, b) => b.length - a.length)
     .map(escapeRegExp);
   if (alternatives.length === 0) return () => undefined;
-  const matcher = new RegExp(alternatives.join("|"), "gu");
+  const matcher = new RegExp(`!?(?:${alternatives.join("|")})`, "gu");
   return (tree) => transformParent(tree, byToken, matcher);
 };

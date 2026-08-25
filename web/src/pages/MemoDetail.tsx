@@ -62,6 +62,7 @@ const MemoDetail = () => {
   const location = useLocation();
   const { state: locationState, hash } = location;
   const parentPage = typeof locationState?.from === "string" ? locationState.from : undefined;
+  const commentTarget = typeof locationState?.commentTarget === "string" ? locationState.commentTarget : undefined;
   const handleShareImageOpen = useCallback(() => setShareImageDialogOpen(true), []);
 
   // Detect share mode from the route parameter.
@@ -160,6 +161,15 @@ const MemoDetail = () => {
     scrolledHashRef.current = scrollKey;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [hash, memo, memoName, comments]);
+
+  // A recent-comment sidebar link may target a comment beyond the first
+  // ascending page. Load subsequent pages until that exact comment exists,
+  // then the hash-scrolling effect above takes over.
+  useEffect(() => {
+    if (!commentTarget || !hash || isShareMode || isFetchingNextComments || !hasNextComments) return;
+    if (findMemoAnchorTarget(document, memoName, commentTarget)) return;
+    void fetchNextComments();
+  }, [commentTarget, fetchNextComments, hasNextComments, hash, isFetchingNextComments, isShareMode, memoName, comments]);
 
   if (isShareMode) {
     const isNotFound = error instanceof ConnectError && (error.code === Code.NotFound || error.code === Code.Unauthenticated);

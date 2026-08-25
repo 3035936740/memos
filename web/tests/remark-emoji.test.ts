@@ -35,4 +35,20 @@ describe("remarkEmoji", () => {
     if (paragraph.type !== "paragraph") return;
     expect(paragraph.children.map((node) => node.type)).toEqual(["link", "text", "inlineCode"]);
   });
+
+  test("renders a shortcode on a later line", () => {
+    const paragraph = parse(`first line\n${emoji.token}\nlast line`).children[0];
+    expect(paragraph.type).toBe("paragraph");
+    if (paragraph.type !== "paragraph") return;
+    expect(paragraph.children.map((node) => node.type)).toEqual(["text", "image", "text"]);
+    expect(paragraph.children[1]).toMatchObject({ type: "image", url: emoji.url, alt: emoji.token });
+  });
+
+  test("repairs the legacy markdown-image marker before an emoji shortcode", () => {
+    const paragraph = parse(`first line\n!${emoji.token}\nlast line`).children[0];
+    expect(paragraph.type).toBe("paragraph");
+    if (paragraph.type !== "paragraph") return;
+    expect(paragraph.children.map((node) => node.type)).toEqual(["text", "image", "text"]);
+    expect(paragraph.children.some((node) => node.type === "text" && node.value.includes("!"))).toBe(false);
+  });
 });

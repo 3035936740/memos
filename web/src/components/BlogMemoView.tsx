@@ -7,6 +7,7 @@ import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
+import { extractUsernameFromName } from "@/lib/resource-names";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
@@ -71,7 +72,8 @@ interface Props {
 
 const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }: Props) => {
   const t = useTranslate();
-  const creator = useResolvedUser(memo.creator, { enabled: showCreator });
+  const shouldShowCreator = showCreator || Boolean(memo.creator);
+  const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
   const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
   const cover = useMemo(() => {
     const visualAttachments = memo.attachments.filter((attachment) => {
@@ -83,7 +85,8 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
   const createTime = memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
-  const creatorLabel = creator?.displayName || creator?.username;
+  const creatorUsername = creator?.username || extractUsernameFromName(memo.creator);
+  const creatorLabel = creator?.displayName || creatorUsername;
 
   return (
     <article className="group mb-3 w-full overflow-hidden rounded-lg border border-border bg-card text-card-foreground transition-colors hover:border-border/90 hover:bg-card/95">
@@ -155,11 +158,8 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
         </div>
 
         <footer className="mt-4 flex min-h-9 flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-muted/45 px-3 py-2 text-xs text-muted-foreground">
-          {showCreator && creatorLabel && (
-            <Link
-              to={`/u/${encodeURIComponent(creator?.username ?? "")}`}
-              className="flex min-w-0 items-center gap-1.5 hover:text-foreground"
-            >
+          {shouldShowCreator && creatorLabel && (
+            <Link to={`/u/${encodeURIComponent(creatorUsername)}`} className="flex min-w-0 items-center gap-1.5 hover:text-foreground">
               <UserAvatar avatarUrl={creator?.avatarUrl} className="size-5 rounded-md" />
               <span className="max-w-28 truncate">{creatorLabel}</span>
             </Link>
