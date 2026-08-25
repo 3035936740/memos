@@ -18,6 +18,18 @@ describe("deriveBlogMemoText", () => {
       excerpt: "第二行内容",
     });
   });
+
+  it("removes custom memo presentation markers from card excerpts", () => {
+    expect(
+      deriveBlogMemoText(
+        "# 标题\n\n[color=rgba(134, 29, 29, 1)]娃娃[/color]\n\n:::align right\n\n右对齐内容\n\n:::\n\n[size=28px]大字[/size]",
+        "标题",
+      ),
+    ).toEqual({
+      title: "标题",
+      excerpt: "娃娃 右对齐内容 大字",
+    });
+  });
 });
 
 describe("selectBlogCoverMedia", () => {

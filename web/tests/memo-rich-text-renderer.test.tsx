@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MemoMarkdownRendererCore } from "@/components/MemoContent/MemoMarkdownRenderer";
-import { normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
+import { normalizeMemoAlignmentBlocks, normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
 
 vi.mock("@/utils/emoji", () => ({ useEmojiPacks: () => ({ data: [] }) }));
 vi.mock("@/utils/i18n", async (importOriginal) => ({
@@ -20,6 +20,32 @@ describe("memo rich text rendering", () => {
     expect(block).toHaveClass("w-full", "text-center");
     expect(block).toHaveTextContent("Centered text");
     expect(block?.querySelector("strong")).toHaveTextContent("text");
+  });
+
+  it.each([
+    ":::align center\nCentered content\n:::\nFollowing text",
+    ":::align center\n\nCentered content\n\n:::\nFollowing text",
+    ":::align center\nCentered content\n:::\n\nFollowing text",
+  ])("does not require blank lines around alignment markers", (content) => {
+    const { container } = renderMarkdown(content);
+
+    const block = container.querySelector('[data-memo-align="center"]');
+    expect(block).toHaveTextContent("Centered content");
+    expect(block).not.toHaveTextContent("Following text");
+    expect(container).toHaveTextContent("Following text");
+  });
+
+  it("keeps a video-style link inside an alignment block without blank lines", () => {
+    const { container } = renderMarkdown(":::align center\n[video:夏美的一步](/file/attachments/example)\n:::\n只能传10MiB以内的视频哦");
+
+    const block = container.querySelector('[data-memo-align="center"]');
+    expect(block?.querySelector("a")).toHaveTextContent("video:夏美的一步");
+    expect(block).not.toHaveTextContent("只能传10MiB以内的视频哦");
+  });
+
+  it("does not interpret alignment markers inside fenced code", () => {
+    const source = "```text\n:::align center\nliteral\n:::\n```";
+    expect(normalizeMemoAlignmentBlocks(source)).toBe(source);
   });
 
   it("aligns block markdown images instead of only their surrounding text", () => {

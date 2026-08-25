@@ -83,7 +83,7 @@ describe("formatting controller", () => {
     const { view, f } = setup("hello world", 3, 3);
 
     f.run("alignCenter");
-    expect(view.state.doc.toString()).toBe(":::align center\n\nhello world\n\n:::");
+    expect(view.state.doc.toString()).toBe(":::align center\nhello world\n:::");
     expect(f.getActiveFormats().alignment).toBe("center");
 
     f.run("alignRight");

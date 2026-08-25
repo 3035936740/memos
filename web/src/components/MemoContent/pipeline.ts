@@ -8,6 +8,7 @@ import remarkRehype from "remark-rehype";
 import { type PluggableList, unified } from "unified";
 import { visit } from "unist-util-visit";
 import type { CustomEmoji } from "@/utils/emoji";
+import { normalizeMemoAlignmentBlocks } from "@/utils/memo-rich-text";
 import { getHeadingText, isHeadingElement, rehypeHeadingId } from "@/utils/rehype-plugins/rehype-heading-id";
 import { remarkDisableSetext } from "@/utils/remark-plugins/remark-disable-setext";
 import { remarkEmoji } from "@/utils/remark-plugins/remark-emoji";
@@ -75,6 +76,8 @@ const MAYBE_HAS_HEADING = /^[ \t]{0,3}#{1,6}[ \t]|<h[1-6][\s/>]/im;
 export function extractHeadings(markdown: string): HeadingItem[] {
   if (!MAYBE_HAS_HEADING.test(markdown)) return [];
 
+  const normalizedMarkdown = normalizeMemoAlignmentBlocks(markdown);
+
   const processor = unified()
     .use(remarkParse)
     .use(buildRemarkPlugins())
@@ -82,7 +85,7 @@ export function extractHeadings(markdown: string): HeadingItem[] {
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(buildRehypePlugins());
 
-  const tree = processor.runSync(processor.parse(markdown)) as HastRoot;
+  const tree = processor.runSync(processor.parse(normalizedMarkdown)) as HastRoot;
   const headings: HeadingItem[] = [];
 
   visit(tree, "element", (node: Element) => {

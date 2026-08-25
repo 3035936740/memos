@@ -45,6 +45,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
   const creatorUsername = creator?.username || extractUsernameFromName(memo.creator);
   const creatorLabel = creator?.displayName || creatorUsername;
   const visibleCover = coverFailed ? undefined : cover;
+  const hasFlowingCover = Boolean(visibleCover && excerpt.trim());
   const isCompactDynamic = !visibleCover && !excerpt.trim();
 
   useEffect(() => {
@@ -93,7 +94,10 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       to={detailPath}
       state={detailState}
       aria-label={title || t("memo.blog-untitled")}
-      className="relative order-2 my-3 block aspect-[4/3] w-full self-start overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 sm:my-4"
+      className={cn(
+        "relative block aspect-[4/3] self-start overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        hasFlowingCover ? "float-right mb-2 ml-3 w-24 sm:mb-3 sm:ml-4 sm:w-36" : "order-2 my-3 w-full sm:my-4",
+      )}
     >
       {visibleCover.kind === "video" ? (
         <VideoPoster
@@ -124,11 +128,19 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
     >
       <div
         className={cn(
-          "grid h-full min-w-0",
-          visibleCover ? "grid-cols-[minmax(0,1fr)_5.5rem] gap-3 pr-3 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-4 sm:pr-4" : "grid-cols-1",
+          "h-full min-w-0",
+          hasFlowingCover
+            ? "flow-root p-4"
+            : cn(
+                "grid",
+                visibleCover
+                  ? "grid-cols-[minmax(0,1fr)_5.5rem] gap-3 pr-3 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-4 sm:pr-4"
+                  : "grid-cols-1",
+              ),
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col p-4">
+        {hasFlowingCover && coverLink}
+        <div className={cn("min-w-0", hasFlowingCover ? "" : "flex flex-1 flex-col p-4")}>
           {badges}
 
           <Link
@@ -147,12 +159,23 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
           </Link>
 
           {excerpt && (
-            <p className={cn("mt-2 text-sm leading-6 text-muted-foreground", featured ? "line-clamp-3 max-w-2xl" : "line-clamp-3")}>
+            <p
+              className={cn(
+                "mt-2 text-sm leading-6 text-muted-foreground",
+                hasFlowingCover ? "max-h-[4.5rem] overflow-clip" : "line-clamp-3",
+                featured && "max-w-2xl",
+              )}
+            >
               {excerpt}
             </p>
           )}
 
-          <footer className="mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+          <footer
+            className={cn(
+              "mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border/60 pt-3 text-xs text-muted-foreground",
+              hasFlowingCover && "clear-both mt-3",
+            )}
+          >
             {shouldShowCreator && creatorLabel && (
               <Link
                 to={`/u/${encodeURIComponent(creatorUsername)}`}
@@ -179,7 +202,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
             )}
           </footer>
         </div>
-        {coverLink}
+        {!hasFlowingCover && coverLink}
       </div>
     </article>
   );

@@ -13,6 +13,7 @@ import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
 import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
+import { stripMemoRichTextMarkers } from "@/utils/memo-rich-text";
 import { computeCommentAmount } from "./MemoView/MemoViewContext";
 
 const TITLE_LIMIT = 72;
@@ -24,7 +25,7 @@ const truncateText = (value: string, limit: number) => {
 };
 
 const markdownToPlainText = (value: string) =>
-  value
+  stripMemoRichTextMarkers(value)
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\[video:[^\]]*\]\([^)]*\)/gi, " ")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")

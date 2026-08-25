@@ -11,7 +11,7 @@ import { useEmojiPacks } from "@/utils/emoji";
 import { useTranslate } from "@/utils/i18n";
 import { lazyWithReload } from "@/utils/lazy";
 import { resolveManagedAttachmentImageSource, resolveManagedAttachmentVideoSource } from "@/utils/managed-attachment";
-import { isMemoTextAlignment, normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
+import { isMemoTextAlignment, normalizeMemoAlignmentBlocks, normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
 import { CodeBlock } from "./CodeBlock";
 import { MarkdownRenderContext, rootMarkdownRenderContext } from "./MarkdownRenderContext";
 import { Mention } from "./Mention";
@@ -122,6 +122,7 @@ export const MemoMarkdownRendererCore = ({
 }: MemoMarkdownRendererCoreProps) => {
   const { data: emojiGroups = [] } = useEmojiPacks();
   const emojis = useMemo(() => emojiGroups.flatMap((group) => group.emojis), [emojiGroups]);
+  const normalizedContent = useMemo(() => normalizeMemoAlignmentBlocks(content), [content]);
   const markdownComponents: Components = {
     div: ({ node, className, ...divProps }) => {
       const alignment = elementDataAttribute(node, "data-memo-align", "dataMemoAlign");
@@ -285,7 +286,7 @@ export const MemoMarkdownRendererCore = ({
         rehypePlugins={buildRehypePlugins(mathRehypePlugins)}
         components={markdownComponents}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </MarkdownRenderContext.Provider>
   );

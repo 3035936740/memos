@@ -429,8 +429,13 @@ function removeWrapper(view: EditorView, wrapper: MarkerWrapperRange) {
 
 function removeAlignmentWrapper(view: EditorView, wrapper: MarkerWrapperRange) {
   const doc = view.state.doc.toString();
-  const openingPadding = doc.slice(wrapper.openTo, wrapper.openTo + 2) === "\n\n" ? 2 : 0;
-  const closingPadding = doc.slice(Math.max(wrapper.openTo, wrapper.closeFrom - 2), wrapper.closeFrom) === "\n\n" ? 2 : 0;
+  const openingPadding = doc.slice(wrapper.openTo, wrapper.openTo + 2) === "\n\n" ? 2 : doc[wrapper.openTo] === "\n" ? 1 : 0;
+  const closingPadding =
+    doc.slice(Math.max(wrapper.openTo, wrapper.closeFrom - 2), wrapper.closeFrom) === "\n\n"
+      ? 2
+      : doc[wrapper.closeFrom - 1] === "\n"
+        ? 1
+        : 0;
   const changes = view.state.changes([
     { from: wrapper.openFrom, to: wrapper.openTo + openingPadding, insert: "" },
     { from: wrapper.closeFrom - closingPadding, to: wrapper.closeTo, insert: "" },
@@ -470,8 +475,8 @@ function setAlignment(view: EditorView, alignment: MemoTextAlignment) {
   const blockFrom = firstLine.from;
   const blockTo = lastLine.to;
   const content = view.state.sliceDoc(blockFrom, blockTo);
-  const opening = `${memoAlignmentOpenMarker(alignment)}\n\n`;
-  const closing = `\n\n${MEMO_ALIGNMENT_CLOSE_MARKER}`;
+  const opening = `${memoAlignmentOpenMarker(alignment)}\n`;
+  const closing = `\n${MEMO_ALIGNMENT_CLOSE_MARKER}`;
   view.dispatch({
     changes: { from: blockFrom, to: blockTo, insert: `${opening}${content}${closing}` },
     selection: { anchor: blockFrom + opening.length, head: blockFrom + opening.length + content.length },
