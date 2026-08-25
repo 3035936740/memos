@@ -46,6 +46,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
   const creatorLabel = creator?.displayName || creatorUsername;
   const visibleCover = coverFailed ? undefined : cover;
   const hasFlowingCover = Boolean(visibleCover && excerpt.trim());
+  const hasTitleOnlyCover = Boolean(visibleCover && !excerpt.trim());
   const isCompactDynamic = !visibleCover && !excerpt.trim();
 
   useEffect(() => {
@@ -95,8 +96,10 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       state={detailState}
       aria-label={title || t("memo.blog-untitled")}
       className={cn(
-        "relative block aspect-[4/3] self-start overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-        hasFlowingCover ? "float-right mb-2 ml-3 w-24 sm:mb-3 sm:ml-4 sm:w-36" : "order-2 my-3 w-full sm:my-4",
+        "relative block aspect-[4/3] overflow-hidden rounded-sm bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        hasFlowingCover
+          ? "float-right mb-2 ml-3 w-24 self-start sm:mb-3 sm:ml-4 sm:w-36"
+          : "col-start-2 row-start-1 my-auto w-full self-center",
       )}
     >
       {visibleCover.kind === "video" ? (
@@ -129,18 +132,11 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
       <div
         className={cn(
           "h-full min-w-0",
-          hasFlowingCover
-            ? "flow-root p-4"
-            : cn(
-                "grid",
-                visibleCover
-                  ? "grid-cols-[minmax(0,1fr)_5.5rem] gap-3 pr-3 sm:grid-cols-[minmax(0,1fr)_9rem] sm:gap-4 sm:pr-4"
-                  : "grid-cols-1",
-              ),
+          hasFlowingCover ? "flow-root p-4" : cn("grid", hasTitleOnlyCover ? "grid-cols-[minmax(0,1fr)_9rem] gap-4 pr-4" : "grid-cols-1"),
         )}
       >
         {hasFlowingCover && coverLink}
-        <div className={cn("min-w-0", hasFlowingCover ? "" : "flex flex-1 flex-col p-4")}>
+        <div className={cn("min-w-0", hasFlowingCover ? "" : "flex flex-1 flex-col p-4", hasTitleOnlyCover && "col-start-1 row-start-1")}>
           {badges}
 
           <Link
