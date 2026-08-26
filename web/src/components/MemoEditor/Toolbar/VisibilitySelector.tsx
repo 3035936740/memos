@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronDownIcon, EyeOffIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, EyeOffIcon, UserRoundXIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import { useTranslate } from "@/utils/i18n";
 import type { VisibilitySelectorProps } from "../types";
 
 const VisibilitySelector = (props: VisibilitySelectorProps) => {
-  const { value, onChange, hidden = false, onHiddenChange } = props;
+  const { value, onChange, hidden = false, onHiddenChange, anonymous = false, onAnonymousChange } = props;
   const compact = props.size === "compact";
   const t = useTranslate();
 
@@ -72,6 +72,19 @@ const VisibilitySelector = (props: VisibilitySelectorProps) => {
                 <span className="text-xs text-muted-foreground">{t("memo.hidden.description")}</span>
               </div>
               {hidden && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
+            </DropdownMenuItem>
+          </>
+        ) : null}
+        {onAnonymousChange ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAnonymousChange(!anonymous)}>
+              <UserRoundXIcon />
+              <div className="flex flex-col">
+                <span>{t("memo.anonymous.label")}</span>
+                <span className="text-xs text-muted-foreground">{t("memo.anonymous.description")}</span>
+              </div>
+              {anonymous && <CheckIcon className="ml-auto w-4 h-4 text-primary" />}
             </DropdownMenuItem>
           </>
         ) : null}

@@ -34,16 +34,21 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 	if creator == nil {
 		return nil, errMemoCreatorNotFound
 	}
+	viewer, err := s.fetchCurrentUser(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to resolve memo viewer")
+	}
 	memoMessage := &v1pb.Memo{
-		Name:       name,
-		State:      convertStateFromStore(memo.RowStatus),
-		Creator:    BuildUserName(creator.Username),
-		CreateTime: timestamppb.New(time.Unix(memo.CreatedTs, 0)),
-		UpdateTime: timestamppb.New(time.Unix(memo.UpdatedTs, 0)),
-		Content:    memo.Content,
-		Visibility: convertVisibilityFromStore(memo.Visibility),
-		Pinned:     memo.Pinned,
-		ViewCount:  memo.ViewCount,
+		Name:            name,
+		State:           convertStateFromStore(memo.RowStatus),
+		Creator:         BuildUserName(creator.Username),
+		CreateTime:      timestamppb.New(time.Unix(memo.CreatedTs, 0)),
+		UpdateTime:      timestamppb.New(time.Unix(memo.UpdatedTs, 0)),
+		Content:         memo.Content,
+		Visibility:      convertVisibilityFromStore(memo.Visibility),
+		Pinned:          memo.Pinned,
+		ViewCount:       memo.ViewCount,
+		CreatorIsViewer: viewer != nil && viewer.ID == memo.CreatorID,
 	}
 	if memo.Payload != nil {
 		memoMessage.Tags = memo.Payload.Tags
@@ -54,10 +59,23 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 			memoMessage.Category = &category
 		}
 		memoMessage.Hidden = memo.Payload.Hidden
+		memoMessage.Anonymous = memo.Payload.Anonymous
+		// The script is administrator-authored, but intentionally executes for
+		// every viewer on the memo detail page. Keep the source in the response so
+		// ordinary users and guests can receive the same article behavior.
+		memoMessage.AdminScript = memo.Payload.AdminScript
 		memoMessage.Draft = memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > time.Now().Unix())
 		memoMessage.Quarantined = memo.Payload.Quarantined
 		if memo.Payload.PublishTs > 0 {
 			memoMessage.PublishTime = timestamppb.New(time.Unix(memo.Payload.PublishTs, 0))
+		}
+	}
+	if memoMessage.Anonymous {
+		// Anonymous publication hides the creator from everyone except admins,
+		// including the author. The stored CreatorID remains untouched for
+		// ownership checks, moderation and reporting.
+		if !isSuperUser(viewer) {
+			memoMessage.Creator = ""
 		}
 	}
 

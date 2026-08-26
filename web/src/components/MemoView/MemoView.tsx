@@ -37,9 +37,12 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const currentUser = useCurrentUser();
   const { userTagsSetting } = useAuth();
-  const creator = useResolvedUser(memoData.creator, { enabled: Boolean(showCreator || props.shareImageDialogOpen) });
+  const anonymousForViewer = memoData.anonymous && !isSuperUser(currentUser);
+  const creator = useResolvedUser(memoData.creator, {
+    enabled: !anonymousForViewer && Boolean(showCreator || props.shareImageDialogOpen),
+  });
   const isArchived = memoData.state === State.ARCHIVED;
-  const readonly = memoData.creator !== currentUser?.name && !isSuperUser(currentUser);
+  const readonly = !memoData.creatorIsViewer && !isSuperUser(currentUser);
   const parentPage = parentPageProp || "/";
 
   // Blur content when any tag has blur_content enabled in the current user's tag settings.
@@ -61,6 +64,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
 
   const location = useLocation();
   const isInMemoDetailPage = location.pathname.startsWith(`/${memoData.name}`) || location.pathname.startsWith("/memos/shares/");
+  const allowLocalScripts = isInMemoDetailPage;
   const showCommentPreview = !props.hideCommentPreview && !isInMemoDetailPage && computeCommentAmount(memoData) > 0;
 
   // The card width is only needed by the share-image dialog. Keep feed cards
@@ -108,6 +112,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       readonly,
       showBlurredContent,
       blurred,
+      allowLocalScripts,
       openEditor,
       toggleBlurVisibility,
       openPreview,
@@ -123,6 +128,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       readonly,
       showBlurredContent,
       blurred,
+      allowLocalScripts,
       openEditor,
       toggleBlurVisibility,
       openPreview,

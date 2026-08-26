@@ -28,6 +28,15 @@ message MemoPayload {
   // Quarantined memos and comments are visible only to instance admins.
   bool quarantined = 8;
 
+  // Whether the memo creator identity is hidden from everyone except instance
+  // administrators. The creator relationship remains stored for permissions,
+  // moderation, and reporting.
+  bool anonymous = 9;
+
+  // Administrator-authored JavaScript that runs only while this memo or
+  // comment is mounted on its detail page.
+  string admin_script = 11;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;
@@ -43,4 +52,5 @@ message MemoPayload {
     double latitude = 2;
     double longitude = 3;
   }
+
 }

@@ -16,6 +16,8 @@ export interface EditorState {
     location?: Location;
     category?: string;
     hidden: boolean;
+    anonymous: boolean;
+    adminScript: string;
     draft: boolean;
     publishTime?: Date;
   };
@@ -63,6 +65,8 @@ const defaultState: EditorState = {
     location: undefined,
     category: undefined,
     hidden: false,
+    anonymous: false,
+    adminScript: "",
     draft: false,
     publishTime: undefined,
   },

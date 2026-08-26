@@ -241,6 +241,20 @@
     "exit-focus-mode": "Exit Focus Mode",
     "focus-mode": "Focus Mode",
     "formatting-toolbar": "Formatting toolbar",
+    "admin-script": {
+      "menu": "Insert admin script",
+      "title": "Admin script",
+      "placeholder": "JavaScript run while this detail page is open",
+      "clear": "Remove script"
+    },
+    "local-script": {
+      "menu": "Insert local script",
+      "title": "Insert local script",
+      "label": "Element content",
+      "code": "JavaScript",
+      "placeholder": "Runs after the article global script; this refers to the current element",
+      "insert": "Insert"
+    },
     "format": {
       "heading": "Heading",
       "paragraph": "Paragraph",
@@ -513,6 +527,11 @@
     "hidden": {
       "label": "Hidden link",
       "description": "Public by direct URL, omitted from site lists"
+    },
+    "anonymous": {
+      "label": "Anonymous",
+      "description": "Hide your name and avatar from everyone except administrators",
+      "admin-notice": "Anonymous to other viewers"
     },
     "publication": {
       "published": "Published",

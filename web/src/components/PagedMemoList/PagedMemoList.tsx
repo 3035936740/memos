@@ -181,10 +181,12 @@ const PagedMemoList = (props: Props) => {
     () =>
       Array.from(
         new Set(
-          displayMemoList.flatMap((memo) => [
-            ...(props.showCreator ? [memo.creator] : []),
-            ...(memo.reactions ?? []).map((reaction) => reaction.creator),
-          ]),
+          displayMemoList
+            .flatMap((memo) => [
+              ...(props.showCreator ? [memo.creator] : []),
+              ...(memo.reactions ?? []).map((reaction) => reaction.creator),
+            ])
+            .filter(Boolean),
         ),
       ),
     [props.showCreator, displayMemoList],

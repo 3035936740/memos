@@ -55,6 +55,7 @@ func (s *APIV1Service) CreateMemoComment(ctx context.Context, request *v1pb.Crea
 	}
 	comment.Visibility = convertVisibilityFromStore(relatedMemo.Visibility)
 	comment.Hidden = false
+	comment.Anonymous = false
 	comment.Draft = false
 	comment.PublishTime = nil
 

@@ -25,6 +25,8 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onInsertVideos,
   onInsertEmoji,
   onInsertAIText,
+  canUseAdminScript,
+  onInsertLocalScript,
 }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -41,6 +43,8 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   const visibility = useEditorSelector((s) => s.metadata.visibility);
   const category = useEditorSelector((s) => s.metadata.category);
   const hidden = useEditorSelector((s) => s.metadata.hidden);
+  const anonymous = useEditorSelector((s) => s.metadata.anonymous);
+  const adminScript = useEditorSelector((s) => s.metadata.adminScript);
   const draft = useEditorSelector((s) => s.metadata.draft);
   const publishTime = useEditorSelector((s) => s.metadata.publishTime);
   const blockedMessage = valid
@@ -86,12 +90,18 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
           onInsertVideos={onInsertVideos}
           onInsertEmoji={onInsertEmoji}
           onInsertAIText={onInsertAIText}
+          adminScript={adminScript}
+          onAdminScriptChange={(next) => dispatch(actions.setMetadata({ adminScript: next }))}
+          canUseAdminScript={canUseAdminScript}
+          onInsertLocalScript={onInsertLocalScript}
         />
         <VisibilitySelector
           value={visibility}
           onChange={handleVisibilityChange}
           hidden={hidden}
           onHiddenChange={showCategory && isSuperUser(currentUser) ? handleHiddenChange : undefined}
+          anonymous={anonymous}
+          onAnonymousChange={showCategory ? (next) => dispatch(actions.setMetadata({ anonymous: next })) : undefined}
         />
         {showCategory ? <CategorySelector value={category} onChange={handleCategoryChange} /> : null}
         {showCategory ? (

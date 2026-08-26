@@ -246,6 +246,15 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 	if request.Memo.Hidden && !isSuperUser(user) {
 		return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
 	}
+	if request.Memo.AdminScript != "" && !isSuperUser(user) {
+		return nil, status.Errorf(codes.PermissionDenied, "only administrators can set memo scripts")
+	}
+	if err := validateMemoAdminScript(request.Memo.AdminScript); err != nil {
+		return nil, err
+	}
+	if err := validateMemoLocalScripts(request.Memo.Content, isSuperUser(user)); err != nil {
+		return nil, err
+	}
 	if !isSuperUser(user) && (request.Memo.CreateTime != nil || request.Memo.UpdateTime != nil) {
 		return nil, status.Errorf(codes.PermissionDenied, "only administrators can customize memo timestamps")
 	}
@@ -289,6 +298,8 @@ func (s *APIV1Service) CreateMemo(ctx context.Context, request *v1pb.CreateMemoR
 		create.Payload.Hidden = true
 		create.Visibility = store.Public
 	}
+	create.Payload.Anonymous = request.Memo.Anonymous
+	create.Payload.AdminScript = request.Memo.AdminScript
 	if request.Memo.Location != nil {
 		create.Payload.Location = convertLocationToStore(request.Memo.Location)
 	}
@@ -694,6 +705,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		if path == "create_time" && !isSuperUser(user) {
 			return nil, status.Errorf(codes.PermissionDenied, "only administrators can customize memo timestamps")
 		}
+		if path == "admin_script" && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can set memo scripts")
+		}
 		// An update_time path with no explicit value is the normal automatic
 		// timestamp applied to content edits. Only explicit overrides are admin-only.
 		if path == "update_time" && request.Memo.UpdateTime != nil && !isSuperUser(user) {
@@ -703,6 +717,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 
 	for _, path := range request.UpdateMask.Paths {
 		if path == "content" {
+			if err := validateMemoLocalScripts(request.Memo.Content, isSuperUser(user)); err != nil {
+				return nil, err
+			}
 			contentUpdated = true
 			contentLengthLimit, err := s.getContentLengthLimit(ctx)
 			if err != nil {
@@ -777,6 +794,24 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				nextMemo.Payload = &storepb.MemoPayload{}
 			}
 			nextMemo.Payload.Hidden = request.Memo.Hidden
+			update.Payload = nextMemo.Payload
+		} else if path == "anonymous" {
+			if memo.ParentUID != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "comments cannot be anonymous")
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.Anonymous = request.Memo.Anonymous
+			update.Payload = nextMemo.Payload
+		} else if path == "admin_script" {
+			if err := validateMemoAdminScript(request.Memo.AdminScript); err != nil {
+				return nil, err
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.AdminScript = request.Memo.AdminScript
 			update.Payload = nextMemo.Payload
 		} else if path == "draft" {
 			if memo.ParentUID != nil {

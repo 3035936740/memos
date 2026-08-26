@@ -171,6 +171,20 @@
     "exit-focus-mode": "退出聚焦模式",
     "focus-mode": "聚焦模式",
     "formatting-toolbar": "格式工具栏",
+    "admin-script": {
+      "menu": "插入管理员脚本",
+      "title": "管理员脚本",
+      "placeholder": "仅在当前详情页打开期间运行的 JavaScript",
+      "clear": "移除脚本"
+    },
+    "local-script": {
+      "menu": "插入局部脚本",
+      "title": "插入局部脚本",
+      "label": "标签内容",
+      "code": "JavaScript",
+      "placeholder": "文章全局脚本完成后自动运行；this 指向当前标签",
+      "insert": "插入"
+    },
     "format": {
       "heading": "标题",
       "paragraph": "正文",
@@ -397,6 +411,11 @@
     "hidden": {
       "label": "隐藏直链",
       "description": "仅通过直链公开访问，不在网站列表中显示"
+    },
+    "anonymous": {
+      "label": "匿名发布",
+      "description": "对管理员以外的所有人隐藏作者姓名和头像",
+      "admin-notice": "此备忘录对其他人匿名"
     },
     "publication": {
       "published": "已发布",

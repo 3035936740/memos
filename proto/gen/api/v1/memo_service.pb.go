@@ -274,9 +274,19 @@ type Memo struct {
 	// quarantine. Quarantined content is visible only to administrators.
 	Quarantined bool `protobuf:"varint,23,opt,name=quarantined,proto3" json:"quarantined,omitempty"`
 	// Output only. Total successful visits to the memo detail page.
-	ViewCount     int64 `protobuf:"varint,24,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	ViewCount int64 `protobuf:"varint,24,opt,name=view_count,json=viewCount,proto3" json:"view_count,omitempty"`
+	// Optional. Hide the creator name and avatar from everyone except instance
+	// administrators. The server retains the creator for permissions and
+	// moderation.
+	Anonymous bool `protobuf:"varint,25,opt,name=anonymous,proto3" json:"anonymous,omitempty"`
+	// Optional administrator-authored JavaScript for this memo or comment.
+	// Only instance administrators may create or update this field.
+	AdminScript string `protobuf:"bytes,27,opt,name=admin_script,json=adminScript,proto3" json:"admin_script,omitempty"`
+	// Output only. True when the authenticated viewer is the memo creator. This
+	// preserves owner controls for anonymous memos without exposing identity.
+	CreatorIsViewer bool `protobuf:"varint,28,opt,name=creator_is_viewer,json=creatorIsViewer,proto3" json:"creator_is_viewer,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Memo) Reset() {
@@ -461,6 +471,27 @@ func (x *Memo) GetViewCount() int64 {
 		return x.ViewCount
 	}
 	return 0
+}
+
+func (x *Memo) GetAnonymous() bool {
+	if x != nil {
+		return x.Anonymous
+	}
+	return false
+}
+
+func (x *Memo) GetAdminScript() string {
+	if x != nil {
+		return x.AdminScript
+	}
+	return ""
+}
+
+func (x *Memo) GetCreatorIsViewer() bool {
+	if x != nil {
+		return x.CreatorIsViewer
+	}
+	return false
 }
 
 type Location struct {
@@ -2514,8 +2545,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\rreaction_type\x18\x04 \x01(\tB\x03\xe0A\x02R\freactionType\x12@\n" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
-	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breaction\"\xce\n" +
-	"\n" +
+	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breaction\"\xca\v\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -2546,7 +2576,10 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\fpublish_time\x18\x16 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x01H\x03R\vpublishTime\x88\x01\x01\x12%\n" +
 	"\vquarantined\x18\x17 \x01(\bB\x03\xe0A\x03R\vquarantined\x12\"\n" +
 	"\n" +
-	"view_count\x18\x18 \x01(\x03B\x03\xe0A\x03R\tviewCount\x1a\xac\x01\n" +
+	"view_count\x18\x18 \x01(\x03B\x03\xe0A\x03R\tviewCount\x12!\n" +
+	"\tanonymous\x18\x19 \x01(\bB\x03\xe0A\x01R\tanonymous\x12&\n" +
+	"\fadmin_script\x18\x1b \x01(\tB\x03\xe0A\x01R\vadminScript\x12/\n" +
+	"\x11creator_is_viewer\x18\x1c \x01(\bB\x03\xe0A\x03R\x0fcreatorIsViewer\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

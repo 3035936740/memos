@@ -7,6 +7,7 @@ import { useResolvedUser } from "@/components/MemoContent/MentionResolutionConte
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import VideoPoster from "@/components/VideoPoster";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractUsernameFromName } from "@/lib/resource-names";
@@ -15,6 +16,7 @@ import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
 import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
+import { isSuperUser } from "@/utils/user";
 import { computeCommentAmount } from "./MemoView/MemoViewContext";
 
 interface Props {
@@ -28,7 +30,9 @@ interface Props {
 const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage, navigationScope }: Props) => {
   const t = useTranslate();
   const [coverFailed, setCoverFailed] = useState(false);
-  const shouldShowCreator = showCreator || Boolean(memo.creator);
+  const currentUser = useCurrentUser();
+  const anonymousForViewer = memo.anonymous && !isSuperUser(currentUser);
+  const shouldShowCreator = !anonymousForViewer && (showCreator || Boolean(memo.creator));
   const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
   const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
   const cover = useMemo(() => {

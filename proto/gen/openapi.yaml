@@ -2862,14 +2862,10 @@ components:
                     description: "first_visit_default_theme is used when a browser has no saved theme preference.\r\n Empty values fall back to Cosmic in the frontend."
                 defaultBackgroundImageUrl:
                     type: string
-                    description: |-
-                        default_background_image_url overrides the active theme's preset page background.
-                         Empty values keep the preset background provided by the selected theme.
+                    description: "default_background_image_url overrides the active theme's preset page background.\r\n Empty values keep the preset background provided by the selected theme."
                 defaultMemberMemoVisibility:
                     type: string
-                    description: |-
-                        default_member_memo_visibility is assigned to newly created accounts.
-                         Empty values fall back to PUBLIC.
+                    description: "default_member_memo_visibility is assigned to newly created accounts.\r\n Empty values fall back to PUBLIC."
                 defaultMemberSaveMediaMetadata:
                     type: boolean
                     description: default_member_save_media_metadata is assigned to newly created accounts.
@@ -3359,6 +3355,23 @@ components:
                     readOnly: true
                     type: string
                     description: Output only. Total successful visits to the memo detail page.
+                anonymous:
+                    type: boolean
+                    description: |-
+                        Optional. Hide the creator name and avatar from everyone except instance
+                         administrators. The server retains the creator for permissions and
+                         moderation.
+                adminScript:
+                    type: string
+                    description: |-
+                        Optional administrator-authored JavaScript for this memo or comment.
+                         Only instance administrators may create or update this field.
+                creatorIsViewer:
+                    readOnly: true
+                    type: boolean
+                    description: |-
+                        Output only. True when the authenticated viewer is the memo creator. This
+                         preserves owner controls for anonymous memos without exposing identity.
         MemoRelation:
             required:
                 - memo

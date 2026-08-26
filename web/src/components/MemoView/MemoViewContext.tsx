@@ -20,6 +20,7 @@ export interface MemoViewContextValue {
   readonly: boolean;
   showBlurredContent: boolean;
   blurred: boolean;
+  allowLocalScripts: boolean;
   openEditor: () => void;
   toggleBlurVisibility: () => void;
   openPreview: (items: string | string[] | PreviewMediaItem[], index?: number) => void;

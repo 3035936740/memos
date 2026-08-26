@@ -25,6 +25,44 @@ import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { findMemoAnchorTarget } from "@/utils/markdown-manipulation";
 
+const MemoDetailScript = ({ memo }: { memo: Memo }) => {
+  const adminScript = memo.adminScript;
+
+  useEffect(() => {
+    let adminScriptElement: HTMLScriptElement | undefined;
+    if (adminScript.trim()) {
+      adminScriptElement = document.createElement("script");
+      adminScriptElement.type = "text/javascript";
+      adminScriptElement.dataset.memoAdminScript = memo.name;
+      adminScriptElement.text = adminScript;
+      // Appending an inline script executes it synchronously. Bind local scripts
+      // only after this returns so article setup always follows the admin script.
+      try {
+        document.body.appendChild(adminScriptElement);
+      } catch (error) {
+        // A malformed admin script must not prevent independent element setup.
+        console.error("Memo admin script failed", error);
+      }
+    }
+
+    const root = document.querySelector<HTMLElement>(`[data-memo-content][data-memo-name="${CSS.escape(memo.name)}"]`);
+    root?.querySelectorAll<HTMLElement>("[script]").forEach((element) => {
+      const localScript = element.getAttribute("script");
+      if (!localScript) return;
+      try {
+        const execute = new Function("element", localScript);
+        execute.call(element, element);
+      } catch (error) {
+        console.error("Memo local script failed", error);
+      }
+    });
+
+    return () => adminScriptElement?.remove();
+  }, [adminScript, memo.name]);
+
+  return null;
+};
+
 const MemoSidebarRegistration = ({
   memo,
   from,
@@ -194,6 +232,7 @@ const MemoDetail = () => {
       className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4"
     >
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
+        <MemoDetailScript memo={displayMemo} />
         <MemoSidebarRegistration
           memo={displayMemo}
           from={resolvedParentPage}

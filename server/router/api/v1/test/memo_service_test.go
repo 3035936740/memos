@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -140,6 +141,158 @@ func TestHiddenMemoIsDirectLinkPublicButOmittedFromCollections(t *testing.T) {
 	_, err = ts.Service.UpdateMemo(ownerCtx, &apiv1.UpdateMemoRequest{
 		Memo:       &apiv1.Memo{Name: memo.Name, Hidden: false},
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"hidden"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+}
+
+func TestAnonymousMemoRedactsCreatorWithoutChangingOwnership(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	admin, err := ts.CreateHostUser(ctx, "anonymous-admin")
+	require.NoError(t, err)
+	owner, err := ts.CreateRegularUser(ctx, "anonymous-owner")
+	require.NoError(t, err)
+	visitor, err := ts.CreateRegularUser(ctx, "anonymous-visitor")
+	require.NoError(t, err)
+	adminCtx := ts.CreateUserContext(ctx, admin.ID)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+	visitorCtx := ts.CreateUserContext(ctx, visitor.ID)
+
+	memo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{
+		Memo: &apiv1.Memo{
+			Content:    "anonymous public memo",
+			Visibility: apiv1.Visibility_PUBLIC,
+			Anonymous:  true,
+		},
+	})
+	require.NoError(t, err)
+	require.True(t, memo.Anonymous)
+	require.Empty(t, memo.Creator)
+	require.True(t, memo.CreatorIsViewer)
+
+	publicMemo, err := ts.Service.GetMemo(ctx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.True(t, publicMemo.Anonymous)
+	require.Empty(t, publicMemo.Creator)
+	require.False(t, publicMemo.CreatorIsViewer)
+
+	visitorMemo, err := ts.Service.GetMemo(visitorCtx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.True(t, visitorMemo.Anonymous)
+	require.Empty(t, visitorMemo.Creator)
+	require.False(t, visitorMemo.CreatorIsViewer)
+
+	adminMemo, err := ts.Service.GetMemo(adminCtx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.Equal(t, "users/"+owner.Username, adminMemo.Creator)
+	require.False(t, adminMemo.CreatorIsViewer)
+
+	updated, err := ts.Service.UpdateMemo(ownerCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: memo.Name, Content: "owner can still edit"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content"}},
+	})
+	require.NoError(t, err)
+	require.True(t, updated.Anonymous)
+	require.Empty(t, updated.Creator)
+	require.True(t, updated.CreatorIsViewer)
+
+	comment, err := ts.Service.CreateMemoComment(visitorCtx, &apiv1.CreateMemoCommentRequest{
+		Name: memo.Name,
+		Comment: &apiv1.Memo{
+			Content:   "ordinary users can still interact with this memo",
+			Anonymous: true,
+		},
+	})
+	require.NoError(t, err)
+	require.False(t, comment.Anonymous)
+	require.Equal(t, "users/"+visitor.Username, comment.Creator)
+}
+
+func TestMemoAdminScriptIsAdminOnlyToWriteAndVisibleToAllViewers(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	admin, err := ts.CreateHostUser(ctx, "script-admin")
+	require.NoError(t, err)
+	member, err := ts.CreateRegularUser(ctx, "script-member")
+	require.NoError(t, err)
+	adminCtx := ts.CreateUserContext(ctx, admin.ID)
+	memberCtx := ts.CreateUserContext(ctx, member.ID)
+
+	_, err = ts.Service.CreateMemo(memberCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:     "forged script",
+		Visibility:  apiv1.Visibility_PUBLIC,
+		AdminScript: "window.forged = true",
+	}})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+	_, err = ts.Service.CreateMemo(memberCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:    `<div script="window.forgedLocal = true">click</div>`,
+		Visibility: apiv1.Visibility_PUBLIC,
+	}})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+	_, err = ts.Service.CreateMemo(memberCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:    `<div script=window.forgedUnquoted>click</div>`,
+		Visibility: apiv1.Visibility_PUBLIC,
+	}})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+	_, err = ts.Service.CreateMemo(memberCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:    `<button script=window.forgedSelfClosing />`,
+		Visibility: apiv1.Visibility_PUBLIC,
+	}})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	memo, err := ts.Service.CreateMemo(adminCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:     "admin scripted memo",
+		Visibility:  apiv1.Visibility_PUBLIC,
+		AdminScript: "window.memoScript = true",
+	}})
+	require.NoError(t, err)
+	require.Equal(t, "window.memoScript = true", memo.AdminScript)
+	localMemo, err := ts.Service.CreateMemo(adminCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content:    `<div script="window.localMemoScript = true">click</div>`,
+		Visibility: apiv1.Visibility_PUBLIC,
+	}})
+	require.NoError(t, err)
+	require.Contains(t, localMemo.Content, `script="window.localMemoScript = true"`)
+
+	publicMemo, err := ts.Service.GetMemo(ctx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.Equal(t, "window.memoScript = true", publicMemo.AdminScript)
+	memberMemo, err := ts.Service.GetMemo(memberCtx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.Equal(t, "window.memoScript = true", memberMemo.AdminScript)
+	adminMemo, err := ts.Service.GetMemo(adminCtx, &apiv1.GetMemoRequest{Name: memo.Name})
+	require.NoError(t, err)
+	require.Equal(t, "window.memoScript = true", adminMemo.AdminScript)
+	share, err := ts.Service.CreateMemoShare(adminCtx, &apiv1.CreateMemoShareRequest{
+		Parent:    memo.Name,
+		MemoShare: &apiv1.MemoShare{},
+	})
+	require.NoError(t, err)
+	shareToken := share.Name[strings.LastIndex(share.Name, "/")+1:]
+	sharedMemo, err := ts.Service.GetSharedMemo(ctx, &apiv1.GetSharedMemoRequest{ShareToken: shareToken})
+	require.NoError(t, err)
+	require.Equal(t, "window.memoScript = true", sharedMemo.AdminScript)
+
+	comment, err := ts.Service.CreateMemoComment(adminCtx, &apiv1.CreateMemoCommentRequest{
+		Name: memo.Name,
+		Comment: &apiv1.Memo{
+			Content:     "comment script is explicitly cleared",
+			AdminScript: "window.commentScript = true",
+		},
+	})
+	require.NoError(t, err)
+	require.Equal(t, "window.commentScript = true", comment.AdminScript)
+
+	_, err = ts.Service.CreateMemoComment(memberCtx, &apiv1.CreateMemoCommentRequest{
+		Name: memo.Name,
+		Comment: &apiv1.Memo{
+			Content:     "forged comment script",
+			AdminScript: "window.forgedComment = true",
+		},
 	})
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
 }

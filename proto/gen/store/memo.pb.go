@@ -37,7 +37,14 @@ type MemoPayload struct {
 	// Unix timestamp at which a scheduled draft becomes publicly listable.
 	PublishTs int64 `protobuf:"varint,7,opt,name=publish_ts,json=publishTs,proto3" json:"publish_ts,omitempty"`
 	// Quarantined memos and comments are visible only to instance admins.
-	Quarantined   bool `protobuf:"varint,8,opt,name=quarantined,proto3" json:"quarantined,omitempty"`
+	Quarantined bool `protobuf:"varint,8,opt,name=quarantined,proto3" json:"quarantined,omitempty"`
+	// Whether the memo creator identity is hidden from everyone except instance
+	// administrators. The creator relationship remains stored for permissions,
+	// moderation, and reporting.
+	Anonymous bool `protobuf:"varint,9,opt,name=anonymous,proto3" json:"anonymous,omitempty"`
+	// Administrator-authored JavaScript that runs only while this memo or
+	// comment is mounted on its detail page.
+	AdminScript   string `protobuf:"bytes,11,opt,name=admin_script,json=adminScript,proto3" json:"admin_script,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -126,6 +133,20 @@ func (x *MemoPayload) GetQuarantined() bool {
 		return x.Quarantined
 	}
 	return false
+}
+
+func (x *MemoPayload) GetAnonymous() bool {
+	if x != nil {
+		return x.Anonymous
+	}
+	return false
+}
+
+func (x *MemoPayload) GetAdminScript() string {
+	if x != nil {
+		return x.AdminScript
+	}
+	return ""
 }
 
 // The calculated properties from the memo content.
@@ -270,7 +291,7 @@ var File_store_memo_proto protoreflect.FileDescriptor
 
 const file_store_memo_proto_rawDesc = "" +
 	"\n" +
-	"\x10store/memo.proto\x12\vmemos.store\"\xc1\x04\n" +
+	"\x10store/memo.proto\x12\vmemos.store\"\x82\x05\n" +
 	"\vMemoPayload\x12=\n" +
 	"\bproperty\x18\x01 \x01(\v2!.memos.store.MemoPayload.PropertyR\bproperty\x12=\n" +
 	"\blocation\x18\x02 \x01(\v2!.memos.store.MemoPayload.LocationR\blocation\x12\x12\n" +
@@ -280,7 +301,9 @@ const file_store_memo_proto_rawDesc = "" +
 	"\x05draft\x18\x06 \x01(\bR\x05draft\x12\x1d\n" +
 	"\n" +
 	"publish_ts\x18\a \x01(\x03R\tpublishTs\x12 \n" +
-	"\vquarantined\x18\b \x01(\bR\vquarantined\x1a\xac\x01\n" +
+	"\vquarantined\x18\b \x01(\bR\vquarantined\x12\x1c\n" +
+	"\tanonymous\x18\t \x01(\bR\tanonymous\x12!\n" +
+	"\fadmin_script\x18\v \x01(\tR\vadminScript\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

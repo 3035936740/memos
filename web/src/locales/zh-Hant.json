@@ -242,6 +242,20 @@
     "exit-focus-mode": "退出專注模式",
     "focus-mode": "專注模式",
     "formatting-toolbar": "格式工具列",
+    "admin-script": {
+      "menu": "插入管理員腳本",
+      "title": "管理員腳本",
+      "placeholder": "僅在目前詳情頁開啟期間執行的 JavaScript",
+      "clear": "移除腳本"
+    },
+    "local-script": {
+      "menu": "Insert local script",
+      "title": "Insert local script",
+      "label": "Element content",
+      "code": "JavaScript",
+      "placeholder": "Runs after the article global script; this refers to the current element",
+      "insert": "Insert"
+    },
     "format": {
       "heading": "標題",
       "paragraph": "段落",
@@ -465,6 +479,11 @@
     "hidden": {
       "label": "隱藏直鏈",
       "description": "僅透過直鏈公開存取，不在網站列表中顯示"
+    },
+    "anonymous": {
+      "label": "匿名發佈",
+      "description": "對管理員以外的所有人隱藏作者姓名和頭像",
+      "admin-notice": "此備忘錄對其他人匿名"
     },
     "publication": {
       "published": "已發佈",

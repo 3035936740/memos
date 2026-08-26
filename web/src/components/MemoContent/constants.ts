@@ -71,3 +71,14 @@ export const SANITIZE_SCHEMA = {
     src: ["https"],
   },
 };
+
+export const LOCAL_SCRIPT_SANITIZE_SCHEMA = {
+  ...SANITIZE_SCHEMA,
+  attributes: {
+    ...SANITIZE_SCHEMA.attributes,
+    div: [...SANITIZE_SCHEMA.attributes.div, "script"],
+    span: [...SANITIZE_SCHEMA.attributes.span, "script"],
+    button: [...(defaultSchema.attributes?.button || []), "script"],
+  },
+  tagNames: [...SANITIZE_SCHEMA.tagNames, "button"],
+};

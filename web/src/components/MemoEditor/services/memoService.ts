@@ -57,6 +57,14 @@ function buildUpdateMask(
     mask.add("hidden");
     patch.hidden = state.metadata.hidden;
   }
+  if (!isEqual(state.metadata.anonymous, prevMemo.anonymous)) {
+    mask.add("anonymous");
+    patch.anonymous = state.metadata.anonymous;
+  }
+  if (!isEqual(state.metadata.adminScript, prevMemo.adminScript)) {
+    mask.add("admin_script");
+    patch.adminScript = state.metadata.adminScript;
+  }
   if (!isEqual(state.metadata.draft, prevMemo.draft)) {
     mask.add("draft");
     patch.draft = state.metadata.draft;
@@ -133,6 +141,8 @@ export const memoService = {
       location: state.metadata.location,
       ...(options.parentMemoName ? {} : { category: state.metadata.category }),
       ...(options.parentMemoName ? {} : { hidden: state.metadata.hidden }),
+      ...(options.parentMemoName ? {} : { anonymous: state.metadata.anonymous }),
+      adminScript: state.metadata.adminScript,
       ...(options.parentMemoName ? {} : { draft: state.metadata.draft }),
       ...(options.parentMemoName || !state.metadata.publishTime ? {} : { publishTime: timestampFromDate(state.metadata.publishTime) }),
       createTime:
@@ -166,6 +176,8 @@ export const memoService = {
         location: memo.location,
         category: memo.category || undefined,
         hidden: memo.hidden,
+        anonymous: memo.anonymous,
+        adminScript: memo.adminScript,
         draft: memo.draft,
         publishTime: memo.publishTime ? timestampDate(memo.publishTime) : undefined,
       },

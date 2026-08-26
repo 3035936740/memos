@@ -58,7 +58,7 @@ const MemoDetailSidebar = ({ memo, className, onShareImageOpen, forceReadonly = 
   const [sharePanelOpen, setSharePanelOpen] = useState(false);
 
   const canPin = !forceReadonly && isSuperUser(currentUser) && !memo.parent && memo.state === State.NORMAL;
-  const canManageShares = !forceReadonly && !memo.parent && (memo.creator === currentUser?.name || isSuperUser(currentUser));
+  const canManageShares = !forceReadonly && !memo.parent && (memo.creatorIsViewer || isSuperUser(currentUser));
 
   const headings = useMemo(() => extractHeadings(memo.content), [memo.content]);
   const { referenced } = useMemo(() => getRelationBuckets(memo.relations, memo.name), [memo.relations, memo.name]);

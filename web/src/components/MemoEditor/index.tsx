@@ -144,6 +144,12 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     editor.scrollToCursor();
   }, []);
 
+  const handleInsertLocalScript = useCallback((script: string, label: string) => {
+    const escapeAttribute = (value: string) =>
+      value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    editorRef.current?.insertMarkdown(`<div script="${escapeAttribute(script)}">${escapeAttribute(label)}</div>`);
+  }, []);
+
   const handleTranscribeRecordedAudio = useCallback(
     async (localFile: LocalFile) => {
       if (!canTranscribe) {
@@ -382,6 +388,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             onInsertVideos={handleInsertVideos}
             onInsertEmoji={handleInsertEmoji}
             onInsertAIText={handleInsertAIText}
+            canUseAdminScript={isSuperUser(currentUser)}
+            onInsertLocalScript={isSuperUser(currentUser) ? handleInsertLocalScript : undefined}
           />
         </div>
       </div>

@@ -16,7 +16,7 @@ import { remarkMemoRichText } from "@/utils/remark-plugins/remark-memo-rich-text
 import { remarkPreserveType } from "@/utils/remark-plugins/remark-preserve-type";
 import { remarkSplitMixedTaskLists } from "@/utils/remark-plugins/remark-split-mixed-task-lists";
 import { remarkMemoSyntax } from "@/utils/remark-plugins/remark-tag";
-import { SANITIZE_SCHEMA } from "./constants";
+import { LOCAL_SCRIPT_SANITIZE_SCHEMA, SANITIZE_SCHEMA } from "./constants";
 
 /**
  * The memo markdown pipeline, in one place. The renderer and the outline both build from these,
@@ -35,9 +35,9 @@ export const buildRemarkPlugins = (mathRemarkPlugins: PluggableList = [], emojis
   remarkPreserveType,
 ];
 
-export const buildRehypePlugins = (mathRehypePlugins: PluggableList = []): PluggableList => [
+export const buildRehypePlugins = (mathRehypePlugins: PluggableList = [], allowLocalScripts = false): PluggableList => [
   rehypeRaw,
-  [rehypeSanitize, SANITIZE_SCHEMA],
+  [rehypeSanitize, allowLocalScripts ? LOCAL_SCRIPT_SANITIZE_SCHEMA : SANITIZE_SCHEMA],
   rehypeHeadingId,
   ...mathRehypePlugins,
 ];

@@ -1,4 +1,13 @@
-import { BanIcon, BookmarkIcon, CalendarClockIcon, EyeIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon } from "lucide-react";
+import {
+  BanIcon,
+  BookmarkIcon,
+  CalendarClockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  FilePenLineIcon,
+  MessageCircleIcon,
+  UserRoundXIcon,
+} from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
@@ -11,6 +20,7 @@ import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityToString } from "@/utils/memo";
+import { isSuperUser } from "@/utils/user";
 import MemoActionMenu from "../../MemoActionMenu";
 import { ReactionSelector } from "../../MemoReactionListView";
 import UserAvatar from "../../UserAvatar";
@@ -23,6 +33,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   const t = useTranslate();
 
   const { memo, creator, currentUser, parentPage, navigationScope, isArchived, readonly, openEditor } = useMemoViewContext();
+  const anonymousForViewer = memo.anonymous && !isSuperUser(currentUser);
   const { createTime, updateTime, displayTime: memoDisplayTime, isDisplayingUpdatedTime, relativeTimeFormat } = useMemoViewDerived();
   const { newMemoName } = useNewMemo();
 
@@ -87,7 +98,9 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
   return (
     <div className="w-full flex flex-row justify-between items-center gap-2">
       <div className="w-auto max-w-[calc(100%-8rem)] grow flex flex-row justify-start items-center">
-        {showCreator && creator ? (
+        {showCreator && anonymousForViewer ? (
+          <TimeDisplay displayTime={displayTime} timeTooltip={timeTooltip} onGotoDetail={handleGotoMemoDetailPage} />
+        ) : showCreator && creator ? (
           <CreatorDisplay creator={creator} displayTime={displayTime} timeTooltip={timeTooltip} onGotoDetail={handleGotoMemoDetailPage} />
         ) : (
           <TimeDisplay displayTime={displayTime} timeTooltip={timeTooltip} onGotoDetail={handleGotoMemoDetailPage} />
@@ -123,6 +136,14 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ showCreator, showVisibility, sh
               <EyeOffIcon className="size-4" />
             </TooltipTrigger>
             <TooltipContent>{t("memo.hidden.label")}</TooltipContent>
+          </Tooltip>
+        )}
+        {memo.anonymous && isSuperUser(currentUser) && (
+          <Tooltip>
+            <TooltipTrigger render={<span className="flex size-4 items-center justify-center text-muted-foreground" />}>
+              <UserRoundXIcon className="size-4" />
+            </TooltipTrigger>
+            <TooltipContent>{t("memo.anonymous.admin-notice")}</TooltipContent>
           </Tooltip>
         )}
         {memo.quarantined && (

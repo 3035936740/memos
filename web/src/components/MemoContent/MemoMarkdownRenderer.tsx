@@ -32,6 +32,7 @@ export interface MemoMarkdownRendererProps {
   compact?: boolean;
   /** Render outside MemoViewContext, for instance pages and editor previews. */
   standalone?: boolean;
+  allowLocalScripts?: boolean;
 }
 
 type RemarkPlugins = NonNullable<ComponentProps<typeof ReactMarkdown>["remarkPlugins"]>;
@@ -117,6 +118,7 @@ export const MemoMarkdownRendererCore = ({
   memoName,
   compact,
   standalone = false,
+  allowLocalScripts = false,
   mathRemarkPlugins = [],
   mathRehypePlugins = [],
 }: MemoMarkdownRendererCoreProps) => {
@@ -283,7 +285,7 @@ export const MemoMarkdownRendererCore = ({
     <MarkdownRenderContext.Provider value={rootMarkdownRenderContext}>
       <ReactMarkdown
         remarkPlugins={buildRemarkPlugins(mathRemarkPlugins, emojis)}
-        rehypePlugins={buildRehypePlugins(mathRehypePlugins)}
+        rehypePlugins={buildRehypePlugins(mathRehypePlugins, allowLocalScripts)}
         components={markdownComponents}
       >
         {normalizedContent}
@@ -318,5 +320,6 @@ export const MemoMarkdownRenderer = memo(
     previous.memoName === next.memoName &&
     previous.compact === next.compact &&
     previous.standalone === next.standalone &&
+    previous.allowLocalScripts === next.allowLocalScripts &&
     haveEqualResolvedMentions(previous.resolvedMentionUsernames, next.resolvedMentionUsernames),
 );

@@ -53,7 +53,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
   const isArchived = memo.state === State.ARCHIVED;
   const canMutateTasks = !readonly && !isArchived && Boolean(memo.property?.hasTaskList);
   const hasOpenTasks = Boolean(memo.property?.hasIncompleteTasks);
-  const canReport = Boolean(currentUser && currentUser.name !== memo.creator);
+  const canReport = Boolean(currentUser && !memo.creatorIsViewer);
   const memoUID = memo.name.replace(/^memos\//, "");
 
   const loadBookmarkStatus = () => {

@@ -1,6 +1,7 @@
 import { uniqBy } from "lodash-es";
 import {
   CheckIcon,
+  Code2Icon,
   ImageIcon,
   LinkIcon,
   LoaderIcon,
@@ -29,6 +30,7 @@ import {
 import { useDebouncedEffect } from "@/hooks";
 import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { AdminScriptDialog, LocalScriptDialog } from "../components";
 import AIGenerateDialog from "../components/AIGenerateDialog";
 import EmojiPickerDialog from "../components/EmojiPickerDialog";
 import { useFileUpload, useLinkMemo, useLocation } from "../hooks";
@@ -47,12 +49,18 @@ const InsertMenu = (props: InsertMenuProps) => {
     onToggleFormattingToolbar,
     isFormattingToolbarVisible,
     isUploading: isUploadingProp,
+    adminScript = "",
+    onAdminScriptChange,
+    canUseAdminScript,
+    onInsertLocalScript,
   } = props;
 
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [emojiDialogOpen, setEmojiDialogOpen] = useState(false);
   const [aiDialogOpen, setAIDialogOpen] = useState(false);
+  const [adminScriptDialogOpen, setAdminScriptDialogOpen] = useState(false);
+  const [localScriptDialogOpen, setLocalScriptDialogOpen] = useState(false);
   const [aiContext, setAIContext] = useState("");
   const inlineImageInputRef = useRef<HTMLInputElement>(null);
   const inlineVideoInputRef = useRef<HTMLInputElement>(null);
@@ -189,6 +197,20 @@ const InsertMenu = (props: InsertMenuProps) => {
     { key: "link", label: t("editor.insert-menu.link-memo"), icon: LinkIcon, onClick: handleOpenLinkDialog },
     { key: "location", label: t("editor.insert-menu.add-location"), icon: MapPinIcon, onClick: handleLocationClick },
   ];
+  if (canUseAdminScript)
+    insertItems.push({
+      key: "admin-script",
+      label: t("editor.admin-script.menu"),
+      icon: Code2Icon,
+      onClick: () => setAdminScriptDialogOpen(true),
+    });
+  if (canUseAdminScript && onInsertLocalScript)
+    insertItems.push({
+      key: "local-script",
+      label: t("editor.local-script.menu"),
+      icon: Code2Icon,
+      onClick: () => setLocalScriptDialogOpen(true),
+    });
 
   return (
     <>
@@ -272,6 +294,17 @@ const InsertMenu = (props: InsertMenuProps) => {
 
       <EmojiPickerDialog open={emojiDialogOpen} onOpenChange={setEmojiDialogOpen} onSelect={props.onInsertEmoji} />
       <AIGenerateDialog open={aiDialogOpen} onOpenChange={setAIDialogOpen} context={aiContext} onInsert={props.onInsertAIText} />
+      <AdminScriptDialog
+        open={adminScriptDialogOpen}
+        onOpenChange={setAdminScriptDialogOpen}
+        value={adminScript}
+        onChange={onAdminScriptChange ?? (() => undefined)}
+      />
+      <LocalScriptDialog
+        open={localScriptDialogOpen}
+        onOpenChange={setLocalScriptDialogOpen}
+        onInsert={onInsertLocalScript ?? (() => undefined)}
+      />
     </>
   );
 };

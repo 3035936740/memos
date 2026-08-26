@@ -50,6 +50,8 @@ export interface EditorToolbarProps {
   onInsertVideos: (files: File[]) => void;
   onInsertEmoji: (token: string) => void;
   onInsertAIText: (text: string) => void;
+  canUseAdminScript?: boolean;
+  onInsertLocalScript?: (script: string, label: string) => void;
 }
 
 export interface EditorMetadataProps {
@@ -96,6 +98,10 @@ export interface InsertMenuProps {
   onInsertVideos: (files: File[]) => void;
   onInsertEmoji: (token: string) => void;
   onInsertAIText: (text: string) => void;
+  adminScript?: string;
+  onAdminScriptChange?: (script: string) => void;
+  onInsertLocalScript?: (script: string, label: string) => void;
+  canUseAdminScript?: boolean;
 }
 
 export interface VisibilitySelectorProps {
@@ -103,6 +109,8 @@ export interface VisibilitySelectorProps {
   onChange: (visibility: Visibility) => void;
   hidden?: boolean;
   onHiddenChange?: (hidden: boolean) => void;
+  anonymous?: boolean;
+  onAnonymousChange?: (anonymous: boolean) => void;
   onOpenChange?: (open: boolean) => void;
   /** "compact" renders a 13px trigger that blends into dense surfaces like the memo detail rail. */
   size?: "default" | "compact";

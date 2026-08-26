@@ -300,6 +300,19 @@ message Memo {
   // Output only. Total successful visits to the memo detail page.
   int64 view_count = 24 [(google.api.field_behavior) = OUTPUT_ONLY];
 
+  // Optional. Hide the creator name and avatar from everyone except instance
+  // administrators. The server retains the creator for permissions and
+  // moderation.
+  bool anonymous = 25 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional administrator-authored JavaScript for this memo or comment.
+  // Only instance administrators may create or update this field.
+  string admin_script = 27 [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. True when the authenticated viewer is the memo creator. This
+  // preserves owner controls for anonymous memos without exposing identity.
+  bool creator_is_viewer = 28 [(google.api.field_behavior) = OUTPUT_ONLY];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;
