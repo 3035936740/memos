@@ -5,6 +5,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -137,6 +138,13 @@ func memoIsUnpublished(memo *store.Memo, now int64) bool {
 	return memo != nil && memo.Payload != nil && memo.Payload.Draft && (memo.Payload.PublishTs == 0 || memo.Payload.PublishTs > now)
 }
 
+func memoVisibleInCollectionScope(memo *store.Memo, user *store.User, hideAnonymousOwnership bool) bool {
+	if hideAnonymousOwnership && memo != nil && memo.Payload != nil && memo.Payload.Anonymous && !isSuperUser(user) {
+		return user != nil && memo.CreatorID == user.ID
+	}
+	return memoVisibleInCollection(memo, user)
+}
+
 func filterMemosForCollection(memos []*store.Memo, user *store.User, deniedCategories map[string]struct{}) []*store.Memo {
 	visibleMemos := make([]*store.Memo, 0, len(memos))
 	for _, memo := range memos {
@@ -155,6 +163,7 @@ func (s *APIV1Service) listMemoCollectionPage(
 	find *store.FindMemo,
 	user *store.User,
 	deniedCategories map[string]struct{},
+	hideAnonymousOwnership bool,
 	visibleOffset int,
 	visibleLimit int,
 ) ([]*store.Memo, error) {
@@ -179,7 +188,7 @@ func (s *APIV1Service) listMemoCollectionPage(
 		}
 
 		for _, memo := range batch {
-			if !memoVisibleInCollection(memo, user) || !memoVisibleInCategories(memo, deniedCategories) {
+			if !memoVisibleInCollectionScope(memo, user, hideAnonymousOwnership) || !memoVisibleInCategories(memo, deniedCategories) {
 				continue
 			}
 			if skippedVisible < visibleOffset {
@@ -418,6 +427,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		}
 		memoFind.Filters = append(memoFind.Filters, request.Filter)
 	}
+	hideAnonymousOwnership := strings.Contains(request.Filter, "creator ==")
 
 	if currentUser == nil {
 		memoFind.VisibilityList = []store.Visibility{store.Public}
@@ -443,7 +453,13 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to count memos: %v", err)
 		}
-		totalSize = int32(len(filterMemosForCollection(matchingMemos, currentUser, deniedCategories)))
+		visibleMemos := filterMemosForCollection(matchingMemos, currentUser, deniedCategories)
+		if hideAnonymousOwnership {
+			visibleMemos = slices.DeleteFunc(visibleMemos, func(memo *store.Memo) bool {
+				return !memoVisibleInCollectionScope(memo, currentUser, true)
+			})
+		}
+		totalSize = int32(len(visibleMemos))
 	}
 
 	var limit, offset int
@@ -460,7 +476,7 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 	}
 	limit = min(limit, MaxPageSize)
 	limitPlusOne := limit + 1
-	memos, err := s.listMemoCollectionPage(ctx, memoFind, currentUser, deniedCategories, offset, limitPlusOne)
+	memos, err := s.listMemoCollectionPage(ctx, memoFind, currentUser, deniedCategories, hideAnonymousOwnership, offset, limitPlusOne)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list memos: %v", err)
 	}

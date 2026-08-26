@@ -185,6 +185,12 @@ func TestAnonymousMemoRedactsCreatorWithoutChangingOwnership(t *testing.T) {
 	require.False(t, visitorMemo.CreatorIsViewer)
 
 	profileFilter := `creator == "users/` + owner.Username + `"`
+	publicFeed, err := ts.Service.ListMemos(ctx, &apiv1.ListMemosRequest{})
+	require.NoError(t, err)
+	require.Len(t, publicFeed.Memos, 1)
+	require.Equal(t, memo.Name, publicFeed.Memos[0].Name)
+	require.Empty(t, publicFeed.Memos[0].Creator)
+
 	for name, viewerCtx := range map[string]context.Context{
 		"guest":   ctx,
 		"visitor": visitorCtx,
@@ -192,9 +198,15 @@ func TestAnonymousMemoRedactsCreatorWithoutChangingOwnership(t *testing.T) {
 		"admin":   adminCtx,
 	} {
 		t.Run("visible on profile to "+name, func(t *testing.T) {
-			list, err := ts.Service.ListMemos(viewerCtx, &apiv1.ListMemosRequest{Filter: profileFilter})
+			list, err := ts.Service.ListMemos(viewerCtx, &apiv1.ListMemosRequest{Filter: profileFilter, ShowTotalSize: true})
 			require.NoError(t, err)
+			if name == "visitor" || name == "guest" {
+				require.Empty(t, list.Memos)
+				require.Zero(t, list.TotalSize)
+				return
+			}
 			require.Len(t, list.Memos, 1)
+			require.Equal(t, int32(1), list.TotalSize)
 			require.Equal(t, memo.Name, list.Memos[0].Name)
 			if name == "admin" {
 				require.Equal(t, "users/"+owner.Username, list.Memos[0].Creator)
