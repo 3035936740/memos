@@ -1,4 +1,16 @@
-import { CheckIcon, ChevronsUpDownIcon, GlobeIcon, LogOutIcon, PaletteIcon, SettingsIcon, SquareUserIcon, User2Icon } from "lucide-react";
+import {
+  ArchiveIcon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  GlobeIcon,
+  InfoIcon,
+  LogOutIcon,
+  PaletteIcon,
+  SettingsIcon,
+  SquareUserIcon,
+  User2Icon,
+} from "lucide-react";
+import { matchPath, useLocation } from "react-router-dom";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
@@ -16,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -30,6 +43,7 @@ interface Props {
 const UserMenu = (props: Props) => {
   const { collapsed } = props;
   const t = useTranslate();
+  const location = useLocation();
   const navigateTo = useNavigateTo();
   const { setMobileOpen } = useAppSidebar();
   const currentUser = useCurrentUser();
@@ -39,6 +53,7 @@ const UserMenu = (props: Props) => {
   const sseStatus = useSSEConnectionStatus();
   const currentLocale = getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
   const currentTheme = getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme);
+  const archivedActive = Boolean(matchPath(Routes.ARCHIVED, location.pathname));
 
   const handleLocaleChange = async (locale: Locale) => {
     if (!currentUser) return;
@@ -146,6 +161,15 @@ const UserMenu = (props: Props) => {
           <SquareUserIcon className="size-4 text-muted-foreground" />
           {t("common.profile")}
         </DropdownMenuItem>
+        <DropdownMenuItem
+          aria-current={archivedActive ? "page" : undefined}
+          className={cn(archivedActive && "bg-accent text-accent-foreground")}
+          onClick={() => navigateFromMenu(Routes.ARCHIVED)}
+        >
+          <ArchiveIcon className="size-4 text-muted-foreground" />
+          {t("common.archived")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <GlobeIcon className="size-4 text-muted-foreground" />
@@ -170,10 +194,15 @@ const UserMenu = (props: Props) => {
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuItem onClick={() => navigateFromMenu(Routes.ABOUT)}>
+          <InfoIcon className="size-4 text-muted-foreground" />
+          {t("common.about")}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigateFromMenu(Routes.SETTING)}>
           <SettingsIcon className="size-4 text-muted-foreground" />
           {t("common.settings")}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           <LogOutIcon className="size-4 text-muted-foreground" />
           {t("common.sign-out")}

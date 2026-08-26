@@ -3,7 +3,7 @@ import { getRouteActionPolicy, getSidebarRouteKind, routeSupportsCollectionScope
 
 describe("sidebar route content", () => {
   it.each([
-    ["/", "empty"],
+    ["/", "home"],
     ["/home", "home"],
     ["/archived", "archived"],
     ["/explore", "explore"],
@@ -32,10 +32,10 @@ describe("sidebar route content", () => {
   it.each([
     ["/", true],
     ["/explore", true],
-    ["/archived", true],
+    ["/archived", false],
     ["/attachments", true],
     ["/Explore/", true],
-    ["/ARCHIVED/", true],
+    ["/ARCHIVED/", false],
     ["/Attachments/", true],
     ["/u/steven", false],
     ["/inbox", false],
@@ -49,17 +49,24 @@ describe("sidebar route content", () => {
     expect(routeSupportsCollectionScope(path)).toBe(expected);
   });
 
-  it.each(["/", "/explore", "/archived"])("keeps search and Compose in the remembered collection on %s", (path) => {
+  it.each(["/", "/explore"])("keeps search and Compose in the remembered collection on %s", (path) => {
     expect(getRouteActionPolicy(path)).toEqual({
       searchScope: "remembered-collection",
       composePlacement: "remembered-space",
     });
   });
 
+  it.each(["/archived", "/ARCHIVED/"])("keeps %s in the user archive without inheriting Space placement", (path) => {
+    expect(getRouteActionPolicy(path)).toEqual({
+      searchScope: "user-collection",
+      composePlacement: "unassigned",
+    });
+  });
+
   it("keeps the remembered scope when Attachments sends search to Home", () => {
     expect(getRouteActionPolicy("/attachments")).toEqual({
       searchScope: "remembered-collection",
-      searchDestination: "/",
+      searchDestination: "/home",
       composePlacement: "remembered-space",
     });
   });
@@ -80,7 +87,8 @@ describe("sidebar route content", () => {
     });
   });
 
-  it.each(["/Explore/", "/ARCHIVED/"])("keeps normalized collection route %s in the remembered scope", (path) => {
+  it("keeps a normalized Explore route in the remembered scope", () => {
+    const path = "/Explore/";
     expect(getRouteActionPolicy(path)).toEqual({
       searchScope: "remembered-collection",
       composePlacement: "remembered-space",
@@ -100,7 +108,7 @@ describe("sidebar route content", () => {
   ])("sends search to All and makes Compose unassigned on %s", (path) => {
     expect(getRouteActionPolicy(path)).toEqual({
       searchScope: "all",
-      searchDestination: "/",
+      searchDestination: "/home",
       composePlacement: "unassigned",
     });
   });
