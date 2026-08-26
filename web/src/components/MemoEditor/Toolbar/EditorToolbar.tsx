@@ -18,6 +18,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   onCancel,
   memoName,
   showCategory = true,
+  space,
   onAudioRecorderClick,
   viewToggles,
   onInsertImages,
@@ -90,6 +91,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
         />
         <VisibilitySelector
           value={visibility}
+          space={space}
           onChange={handleVisibilityChange}
           hidden={hidden}
           onHiddenChange={showCategory && isSuperUser(currentUser) ? handleHiddenChange : undefined}

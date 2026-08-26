@@ -8,7 +8,7 @@ import { Memo } from "@/types/proto/api/v1/memo_service_pb";
 
 const Archived = () => {
   const user = useCurrentUser();
-  const { memoFilter: contextFilter } = useSpaceContext();
+  const { memoFilter: contextFilter, selectedSpaceName } = useSpaceContext();
 
   const memoFilter = useMemoFilters({
     creatorName: user?.name,
@@ -31,6 +31,7 @@ const Archived = () => {
           parentPage={parentPage}
           navigationScope={navigationScope}
           showVisibility
+          showSpace={!selectedSpaceName}
           compact={compact}
         />
       )}

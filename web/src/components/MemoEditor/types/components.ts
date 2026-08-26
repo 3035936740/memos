@@ -61,6 +61,8 @@ export interface EditorToolbarProps {
   memoName?: string;
   /** Comment editors should not expose category selection. */
   showCategory?: boolean;
+  /** The Space that owns the memo being created or edited, if any. */
+  space?: string;
   onAudioRecorderClick: () => void;
   viewToggles?: EditorViewToggles;
   onInsertImages: (files: File[]) => void;
@@ -125,6 +127,8 @@ export interface VisibilitySelectorProps {
   onHiddenChange?: (hidden: boolean) => void;
   anonymous?: boolean;
   onAnonymousChange?: (anonymous: boolean) => void;
+  /** The memo's actual placement; independent of the ambient collection scope. */
+  space?: string;
   onOpenChange?: (open: boolean) => void;
   /** "compact" renders a 13px trigger that blends into dense surfaces like the memo detail rail. */
   size?: "default" | "compact";

@@ -14,6 +14,7 @@ import { MemoBody, MemoCommentListView, MemoHeader } from "./components";
 import { MEMO_CARD_BASE_CLASSES } from "./constants";
 import { useImagePreview } from "./hooks";
 import { computeCommentAmount, MemoViewContext } from "./MemoViewContext";
+import { isMemoDetailPath, resolveMemoOrigin } from "./navigation";
 import type { MemoViewProps } from "./types";
 
 const MemoShareImageDialog = lazyWithReload(() => import("../MemoActionMenu/MemoShareImageDialog"));
@@ -25,10 +26,13 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
     className,
     parentPage: parentPageProp,
     navigationScope,
+    parentScope: parentScopeProp,
     compact,
     showCreator,
     showVisibility,
     showPinned,
+    showSpace,
+    headerActionLeading,
   } = props;
   const cardRef = useRef<HTMLDivElement>(null);
   const [showEditor, setShowEditor] = useState(false);
@@ -43,7 +47,14 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
   });
   const isArchived = memoData.state === State.ARCHIVED;
   const readonly = !memoData.creatorIsViewer && !isSuperUser(currentUser);
-  const parentPage = parentPageProp || "/";
+  const location = useLocation();
+  const { parentPage, parentScope } = resolveMemoOrigin({
+    explicitParentPage: parentPageProp,
+    explicitParentScope: parentScopeProp,
+    pathname: location.pathname,
+    search: location.search,
+    memoName: memoData.name,
+  });
 
   // Blur content when any tag has blur_content enabled in the current user's tag settings.
   const [showBlurredContent, setShowBlurredContent] = useState(false);
@@ -62,8 +73,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
   }, []);
   const closeEditor = useCallback(() => setShowEditor(false), []);
 
-  const location = useLocation();
-  const isInMemoDetailPage = location.pathname.startsWith(`/${memoData.name}`) || location.pathname.startsWith("/memos/shares/");
+  const isInMemoDetailPage = isMemoDetailPath(location.pathname, memoData.name);
   const allowLocalScripts = isInMemoDetailPage;
   const showCommentPreview = !props.hideCommentPreview && !isInMemoDetailPage && computeCommentAmount(memoData) > 0;
 
@@ -107,6 +117,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       currentUser,
       parentPage,
       navigationScope,
+      parentScope,
       cardWidth,
       isArchived,
       readonly,
@@ -123,6 +134,7 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       currentUser,
       parentPage,
       navigationScope,
+      parentScope,
       cardWidth,
       isArchived,
       readonly,
@@ -142,7 +154,13 @@ const MemoView: React.FC<MemoViewProps> = (props: MemoViewProps) => {
       ref={cardRef}
       tabIndex={readonly ? -1 : 0}
     >
-      <MemoHeader showCreator={showCreator} showVisibility={showVisibility} showPinned={showPinned} />
+      <MemoHeader
+        showCreator={showCreator}
+        showVisibility={showVisibility}
+        showPinned={showPinned}
+        showSpace={showSpace}
+        actionLeading={headerActionLeading}
+      />
 
       <MemoBody compact={compact} />
 

@@ -32,8 +32,18 @@ const BlurOverlay: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
 };
 
 const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
-  const { memo, parentPage, showBlurredContent, blurred, readonly, allowLocalScripts, openEditor, openPreview, toggleBlurVisibility } =
-    useMemoViewContext();
+  const {
+    memo,
+    parentPage,
+    parentScope,
+    showBlurredContent,
+    blurred,
+    readonly,
+    allowLocalScripts,
+    openEditor,
+    openPreview,
+    toggleBlurVisibility,
+  } = useMemoViewContext();
 
   const { handleMemoContentClick, handleMemoContentDoubleClick } = useMemoHandlers({ readonly, openEditor, openPreview });
 
@@ -57,6 +67,8 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
         <ClampedSection enabled={Boolean(compact)}>
           <MemoContent
             memoName={memo.name}
+            parentPage={parentPage}
+            parentScope={parentScope}
             content={memo.content}
             attachments={memo.attachments}
             onClick={handleMemoContentClick}
@@ -65,7 +77,7 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
             allowLocalScripts={allowLocalScripts && !compact}
           />
           <AttachmentListView attachments={attachmentOnlyItems} onImagePreview={openPreview} />
-          <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} />
+          <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} parentScope={parentScope} />
           {memo.location && <LocationDisplayView location={memo.location} />}
         </ClampedSection>
         <MemoReactionListView memo={memo} reactions={memo.reactions} />

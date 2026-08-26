@@ -76,6 +76,9 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const memoName = memo?.name;
   const canCustomizeTimestamps = Boolean(isSuperUser(currentUser));
   const editableDefaultCreateTime = canCustomizeTimestamps ? defaultCreateTime : undefined;
+  // Existing resources own their placement. New replies are not placed
+  // independently; only a new top-level memo inherits its host's target.
+  const editorSpace = memo ? memo.space : parentMemoName ? undefined : defaultSpace;
   const canTranscribe = useMemo(() => {
     const providerId = aiSetting.transcription?.providerId ?? "";
     if (!providerId) return false;
@@ -408,6 +411,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
             onCancel={onCancel ? handleCancel : undefined}
             memoName={memoName}
             showCategory={!parentMemoName}
+            space={editorSpace}
             onAudioRecorderClick={handleAudioRecorderClick}
             viewToggles={viewToggles}
             onInsertImages={handleInsertImages}

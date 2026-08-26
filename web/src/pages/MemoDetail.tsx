@@ -6,6 +6,7 @@ import BlogSidebar from "@/components/BlogSidebar";
 import MemoCommentSection, { type CommentSortOrder } from "@/components/MemoCommentSection";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import MemoView from "@/components/MemoView";
+import { createMemoNavigationState, type MemoOriginScope, resolveMemoDetailOrigin } from "@/components/MemoView/navigation";
 import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,19 +67,21 @@ const MemoDetailScript = ({ memo }: { memo: Memo }) => {
 const MemoSidebarRegistration = ({
   memo,
   from,
+  fromScope,
   readonly,
   onShareImageOpen,
 }: {
   memo: Memo;
-  from?: string;
+  from: string;
+  fromScope: MemoOriginScope;
   readonly: boolean;
   onShareImageOpen: () => void;
 }) => {
   const { setMemoDetail } = useAppSidebar();
 
   useEffect(() => {
-    setMemoDetail({ memo, from, readonly, onShareImageOpen });
-  }, [from, memo, onShareImageOpen, readonly, setMemoDetail]);
+    setMemoDetail({ memo, from, fromScope, readonly, onShareImageOpen });
+  }, [from, fromScope, memo, onShareImageOpen, readonly, setMemoDetail]);
 
   useEffect(() => () => setMemoDetail(undefined), [setMemoDetail]);
 
@@ -99,7 +102,6 @@ const MemoDetail = () => {
   const params = useParams();
   const location = useLocation();
   const { state: locationState, hash } = location;
-  const parentPage = typeof locationState?.from === "string" ? locationState.from : undefined;
   const commentTarget = typeof locationState?.commentTarget === "string" ? locationState.commentTarget : undefined;
   const handleShareImageOpen = useCallback(() => setShareImageDialogOpen(true), []);
 
@@ -119,6 +121,7 @@ const MemoDetail = () => {
   const memo = isShareMode ? memoFromShare : memoFromDirect;
   const error = isShareMode ? shareError : directError;
   const isLoading = isShareMode ? shareLoading : directLoading;
+  const { parentPage, parentScope } = resolveMemoDetailOrigin(locationState, { memoArchived: memo?.state === State.ARCHIVED });
   const memoName = memo?.name ?? memoNameFromParams;
   const { mutate: recordMemoView } = useRecordMemoView();
   const recordedMemoViewRef = useRef("");
@@ -236,6 +239,7 @@ const MemoDetail = () => {
         <MemoSidebarRegistration
           memo={displayMemo}
           from={resolvedParentPage}
+          fromScope={parentScope}
           readonly={isShareMode}
           onShareImageOpen={handleShareImageOpen}
         />
@@ -272,7 +276,7 @@ const MemoDetail = () => {
                 <Link
                   className="px-3 py-1 border border-border rounded-lg max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-muted-foreground hover:shadow hover:opacity-80"
                   to={`/${parentMemo.name}`}
-                  state={locationState}
+                  state={createMemoNavigationState(parentPage, parentScope)}
                   viewTransition
                 >
                   <ArrowUpLeftFromCircleIcon className="w-4 h-auto shrink-0 opacity-60 mr-2" />
@@ -286,10 +290,12 @@ const MemoDetail = () => {
               compact={false}
               parentPage={resolvedParentPage}
               navigationScope={navigationScope}
+              parentScope={parentScope}
               shareImageDialogOpen={shareImageDialogOpen}
               showCreator
               showVisibility
               showPinned
+              showSpace
               className={
                 isBlog2
                   ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
@@ -308,7 +314,7 @@ const MemoDetail = () => {
                 {previousMemo ? (
                   <Link
                     to={`/${previousMemo.name}`}
-                    state={{ from: resolvedParentPage, navigationScope }}
+                    state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
                     className={cn(
                       isBlog2
                         ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
@@ -336,7 +342,7 @@ const MemoDetail = () => {
                 {nextMemo ? (
                   <Link
                     to={`/${nextMemo.name}`}
-                    state={{ from: resolvedParentPage, navigationScope }}
+                    state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
                     className={cn(
                       isBlog2
                         ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
@@ -366,6 +372,7 @@ const MemoDetail = () => {
                 memo={displayMemo}
                 comments={comments}
                 parentPage={resolvedParentPage}
+                parentScope={parentScope}
                 hasMoreComments={hasNextComments}
                 isFetchingMoreComments={isFetchingNextComments}
                 onLoadMoreComments={fetchNextComments}

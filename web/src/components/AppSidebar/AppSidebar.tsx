@@ -71,7 +71,7 @@ import type { MemoView } from "@/types/proto/api/v1/memo_view_service_pb";
 import { User_Role, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import MemosLogo from "../MemosLogo";
-import { getSidebarRouteKind } from "./routes";
+import { getSidebarRouteKind, routeSupportsCollectionScope } from "./routes";
 import SidebarRow, { SIDEBAR_ROW_CLASSES, SIDEBAR_ROW_FOCUS_CLASSES, SIDEBAR_ROW_ICON_CLASSES, sidebarRowStateClasses } from "./SidebarRow";
 import SidebarSection, {
   SIDEBAR_SECTION_ACTION_BUTTON_CLASSES,
@@ -275,7 +275,6 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
     context,
     userName: statsUserName,
     filter: statsFilter,
-    includeSpaceVisibility: !!selectedSpaceName,
     enabled: authInitialized && instanceInitialized && (md || mobileOpen),
   });
 
@@ -287,7 +286,8 @@ const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) =>
   // clicks must land somewhere that renders the filtered feed.
   const onCollectionRoute = isMemoScopeRoute(location.pathname) || !!profileMatch;
   const filterTarget = onCollectionRoute ? undefined : context === "explore" ? ROUTES.EXPLORE : ROUTES.HOME;
-  const tagStateScope = `${statsUserName ?? context}${selectedSpaceName ? `:${selectedSpaceName}` : ""}`;
+  const tagStateScope =
+    context === "profile" ? (statsUserName ?? context) : `${statsUserName ?? context}${selectedSpaceName ? `:${selectedSpaceName}` : ""}`;
 
   return (
     <div className={SIDEBAR_SECTION_STACK_CLASSES}>
@@ -419,6 +419,8 @@ const MemoDetailSidebarContent = () => {
   return (
     <MemoDetailSidebar
       memo={memoDetail.memo}
+      parentPage={memoDetail.from}
+      parentScope={memoDetail.fromScope}
       forceReadonly={memoDetail.readonly}
       onShareImageOpen={memoDetail.onShareImageOpen}
       className="pb-2"
@@ -428,8 +430,6 @@ const MemoDetailSidebarContent = () => {
 
 const RouteSidebarContent = () => {
   const location = useLocation();
-  const currentUser = useCurrentUser();
-  const { memoDetail } = useAppSidebar();
   const kind = getSidebarRouteKind(location.pathname);
   if (kind === "home" || kind === "archived" || kind === "explore" || kind === "profile") {
     return <CollectionSidebarContent context={kind} />;
@@ -438,10 +438,8 @@ const RouteSidebarContent = () => {
   if (kind === "attachments") return <AttachmentsSidebarContent />;
   if (kind === "inbox") return <InboxSidebarContent />;
   if (kind === "settings") return <SettingsSidebarContent />;
-  if (kind === "memo" && memoDetail) return <MemoDetailSidebarContent />;
-  // Routes without a specific tenant (about, error pages, unknown paths, memo detail
-  // before the page publishes its descriptor) fall back to the default library content.
-  return <CollectionSidebarContent context={currentUser ? "home" : "explore"} />;
+  if (kind === "memo") return <MemoDetailSidebarContent />;
+  return null;
 };
 
 interface GlobalNavItem {
@@ -493,10 +491,8 @@ const GlobalNavigation = () => {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const { generalSetting } = useInstance();
-  const { data: notifications = [] } = useNotifications();
   const { memoDetail, memoScope, setMemoScope, setMobileOpen } = useAppSidebar();
   const { filters } = useMemoFilterContext();
-  const unreadCount = notifications.filter((notification) => notification.status === UserNotification_Status.UNREAD).length;
   const routeKind = getSidebarRouteKind(location.pathname);
   const resolvedScope = resolveMemoScope(location.pathname, {
     currentUsername: currentUser?.username,
@@ -542,15 +538,7 @@ const GlobalNavigation = () => {
           label: t("common.attachments"),
           path: ROUTES.ATTACHMENTS,
           icon: PaperclipIcon,
-          active: location.pathname === ROUTES.ATTACHMENTS,
-        },
-        {
-          id: "inbox",
-          label: t("common.inbox"),
-          path: ROUTES.INBOX,
-          icon: BellIcon,
-          active: location.pathname === ROUTES.INBOX,
-          count: unreadCount,
+          active: routeKind === "attachments",
         },
       ]
     : [
@@ -561,6 +549,13 @@ const GlobalNavigation = () => {
           icon: EarthIcon,
           active: routeKind === "explore" || routeKind === "profile" || routeKind === "memo",
           alwaysExpanded: true,
+        },
+        {
+          id: "about",
+          label: t("common.about"),
+          path: ROUTES.ABOUT,
+          icon: InfoIcon,
+          active: Boolean(matchPath(ROUTES.ABOUT, location.pathname)),
         },
       ];
   const customIconMap: Record<string, LucideIcon> = {
@@ -850,18 +845,63 @@ const GlobalNavigation = () => {
   );
 };
 
-/** The sidebar/header brand slot: the Space switcher when signed in, the plain logo otherwise. */
+/** The sidebar/header brand slot: collection scope on collection routes, instance brand elsewhere. */
 const SidebarBrand = ({ className }: { className?: string }) => {
   const currentUser = useCurrentUser();
+  const location = useLocation();
 
-  if (currentUser) {
+  if (currentUser && routeSupportsCollectionScope(location.pathname)) {
     return <SpaceSwitcher className={className} />;
   }
 
   return (
-    <Link to={ROUTES.EXPLORE} className={cn("min-w-0 rounded-md focus-visible:outline-none", className)}>
+    <Link to={currentUser ? "/" : ROUTES.EXPLORE} className={cn("min-w-0 rounded-md focus-visible:outline-none", className)}>
       <MemosLogo compact />
     </Link>
+  );
+};
+
+const InboxFooterLink = () => {
+  const t = useTranslate();
+  const location = useLocation();
+  const { setMobileOpen } = useAppSidebar();
+  const { data: notifications = [] } = useNotifications();
+  const unreadCount = notifications.filter((notification) => notification.status === UserNotification_Status.UNREAD).length;
+  const active = getSidebarRouteKind(location.pathname) === "inbox";
+  const accessibleLabel = unreadCount > 0 ? `${t("common.inbox")}, ${unreadCount} ${t("inbox.unread")}` : t("common.inbox");
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Link
+              to={ROUTES.INBOX}
+              onClick={() => setMobileOpen(false)}
+              aria-label={accessibleLabel}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent/65 hover:text-foreground md:size-8",
+                SIDEBAR_ROW_FOCUS_CLASSES,
+                active && "bg-sidebar-accent text-sidebar-accent-foreground",
+              )}
+            />
+          }
+        >
+          <span className="relative flex">
+            <BellIcon className="size-4" strokeWidth={1.8} />
+            {unreadCount > 0 && (
+              <span
+                aria-hidden="true"
+                data-inbox-unread-indicator
+                className="absolute -end-0.5 -top-0.5 size-1.5 rounded-full bg-primary ring-2 ring-sidebar"
+              />
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">{accessibleLabel}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
@@ -897,7 +937,12 @@ const AppSidebar = ({ className }: { className?: string }) => {
       </div>
       <footer className="shrink-0 border-t border-border/70">
         {currentUser ? (
-          <UserMenu />
+          <div className="flex h-10 min-w-0 items-center pe-1">
+            <div className="min-w-0 flex-1">
+              <UserMenu />
+            </div>
+            <InboxFooterLink />
+          </div>
         ) : (
           <Link
             to={ROUTES.AUTH}

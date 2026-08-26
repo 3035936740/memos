@@ -136,6 +136,7 @@ const UserProfile = () => {
                       navigationScope={navigationScope}
                       showVisibility
                       showPinned
+                      showSpace
                       compact={compact}
                     />
                   )}

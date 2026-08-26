@@ -5,6 +5,7 @@ import { loadMemoEditor } from "@/components/MemoEditor/loader";
 import type { MemoEditorProps } from "@/components/MemoEditor/types";
 import MemoView from "@/components/MemoView";
 import { computeCommentAmount } from "@/components/MemoView/MemoViewContext";
+import type { MemoOriginScope } from "@/components/MemoView/navigation";
 import { Button } from "@/components/ui/button";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useInfiniteMemoComments } from "@/hooks/useMemoQueries";
@@ -18,6 +19,7 @@ interface Props {
   memo: Memo;
   comments: Memo[];
   parentPage?: string;
+  parentScope?: MemoOriginScope;
   hasMoreComments?: boolean;
   isFetchingMoreComments?: boolean;
   onLoadMoreComments?: () => void;
@@ -30,6 +32,7 @@ export type CommentSortOrder = "asc" | "desc";
 interface CommentThreadProps {
   comment: Memo;
   parentPage?: string;
+  parentScope?: MemoOriginScope;
   replyToMemo: string;
   renderReplyEditor: () => ReactNode;
   sortOrder: CommentSortOrder;
@@ -37,7 +40,16 @@ interface CommentThreadProps {
   depth?: number;
 }
 
-const CommentThread = ({ comment, parentPage, replyToMemo, renderReplyEditor, sortOrder, floorPath, depth = 0 }: CommentThreadProps) => {
+const CommentThread = ({
+  comment,
+  parentPage,
+  parentScope,
+  replyToMemo,
+  renderReplyEditor,
+  sortOrder,
+  floorPath,
+  depth = 0,
+}: CommentThreadProps) => {
   const t = useTranslate();
   const hasNestedReplies =
     comment.relations?.some((relation) => relation.type === MemoRelation_Type.COMMENT && relation.relatedMemo?.name === comment.name) ??
@@ -60,14 +72,24 @@ const CommentThread = ({ comment, parentPage, replyToMemo, renderReplyEditor, so
 
   return (
     <div>
-      <div className="relative w-full" id={extractMemoIdFromName(comment.name)}>
-        <span
-          data-testid={`comment-floor-${comment.name}`}
-          className="pointer-events-none absolute right-[6.75rem] top-3 z-10 rounded-full bg-muted/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-        >
-          {floorLabel}
-        </span>
-        <MemoView memo={comment} parentPage={parentPage} showCreator compact hideCommentPreview />
+      <div className="w-full" id={extractMemoIdFromName(comment.name)}>
+        <MemoView
+          memo={comment}
+          parentPage={parentPage}
+          parentScope={parentScope}
+          showCreator
+          showSpace
+          compact
+          hideCommentPreview
+          headerActionLeading={
+            <span
+              data-testid={`comment-floor-${comment.name}`}
+              className="pointer-events-none shrink-0 whitespace-nowrap rounded-full bg-muted/80 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+            >
+              {floorLabel}
+            </span>
+          }
+        />
       </div>
 
       {replyToMemo === comment.name && <div className="mt-2">{renderReplyEditor()}</div>}
@@ -79,6 +101,7 @@ const CommentThread = ({ comment, parentPage, replyToMemo, renderReplyEditor, so
               key={reply.name}
               comment={reply}
               parentPage={parentPage}
+              parentScope={parentScope}
               replyToMemo={replyToMemo}
               renderReplyEditor={renderReplyEditor}
               sortOrder={sortOrder}
@@ -105,6 +128,7 @@ const MemoCommentSection = ({
   memo,
   comments,
   parentPage,
+  parentScope,
   hasMoreComments,
   isFetchingMoreComments,
   onLoadMoreComments,
@@ -296,6 +320,7 @@ const MemoCommentSection = ({
             key={comment.name}
             comment={comment}
             parentPage={parentPage}
+            parentScope={parentScope}
             replyToMemo={replyToMemo}
             renderReplyEditor={renderEditor}
             sortOrder={sortOrder}

@@ -48,6 +48,7 @@ const Home = () => {
               navigationScope={navigationScope}
               showVisibility
               showPinned
+              showSpace={!selectedSpaceName}
               compact={compact}
             />
           )}
