@@ -12,6 +12,7 @@ const (
 	sseDataPrefix            = "data: "
 	sseClientEventBufferSize = 32
 	memoChangedSSEFrame      = "data: {\"type\":\"memo.changed\"}\n\n"
+	spaceChangedSSEFrame     = "data: {\"type\":\"space.changed\"}\n\n"
 )
 
 // SSEEventType represents the type of change event.
@@ -157,6 +158,13 @@ func (h *SSEHub) publishMemoChanged() {
 	// Identity-free subscribers use the official subject-free refresh protocol.
 	// Authenticated subscribers receive one precise event from Broadcast instead.
 	h.publishFrame([]byte(memoChangedSSEFrame), func(client *SSEClient) bool { return client.userID == 0 })
+}
+
+// publishSpaceChanged tells connected clients to refresh Space-backed caches
+// and caches whose visibility or presentation depends on Space state.
+// Like memo.changed, the event carries no authorization-sensitive data.
+func (h *SSEHub) publishSpaceChanged() {
+	h.publishFrame([]byte(spaceChangedSSEFrame), nil)
 }
 
 func (h *SSEHub) publishFrame(frame []byte, allow func(*SSEClient) bool) {
