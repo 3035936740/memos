@@ -184,6 +184,26 @@ func TestAnonymousMemoRedactsCreatorWithoutChangingOwnership(t *testing.T) {
 	require.Empty(t, visitorMemo.Creator)
 	require.False(t, visitorMemo.CreatorIsViewer)
 
+	profileFilter := `creator == "users/` + owner.Username + `"`
+	for name, viewerCtx := range map[string]context.Context{
+		"guest":   ctx,
+		"visitor": visitorCtx,
+		"owner":   ownerCtx,
+		"admin":   adminCtx,
+	} {
+		t.Run("visible on profile to "+name, func(t *testing.T) {
+			list, err := ts.Service.ListMemos(viewerCtx, &apiv1.ListMemosRequest{Filter: profileFilter})
+			require.NoError(t, err)
+			require.Len(t, list.Memos, 1)
+			require.Equal(t, memo.Name, list.Memos[0].Name)
+			if name == "admin" {
+				require.Equal(t, "users/"+owner.Username, list.Memos[0].Creator)
+			} else {
+				require.Empty(t, list.Memos[0].Creator)
+			}
+		})
+	}
+
 	adminMemo, err := ts.Service.GetMemo(adminCtx, &apiv1.GetMemoRequest{Name: memo.Name})
 	require.NoError(t, err)
 	require.Equal(t, "users/"+owner.Username, adminMemo.Creator)
