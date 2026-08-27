@@ -1,7 +1,7 @@
 import {
+  AstroidIcon,
   BanIcon,
   BarChart3Icon,
-  BoxesIcon,
   CogIcon,
   DatabaseIcon,
   HeartHandshakeIcon,
@@ -85,7 +85,7 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     key: "spaces",
     scope: "basic",
     labelKey: "setting.spaces.label",
-    icon: BoxesIcon,
+    icon: AstroidIcon,
     component: SpacesSection,
   },
   {
