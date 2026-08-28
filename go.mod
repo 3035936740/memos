@@ -13,7 +13,6 @@ require (
 	github.com/google/cel-go v0.28.1
 	github.com/google/jsonschema-go v0.4.3
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/feeds v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0
 	github.com/johannesboyne/gofakes3 v1.2.0
 	github.com/joho/godotenv v1.5.1
