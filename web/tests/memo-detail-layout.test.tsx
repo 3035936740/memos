@@ -1,10 +1,11 @@
+import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import MemoDetail from "@/pages/MemoDetail";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
 
-const memo = {
+const memo = create(MemoSchema, {
   name: "memos/test",
   content: "Test memo",
   creator: "users/test",
@@ -12,7 +13,7 @@ const memo = {
   attachments: [],
   parent: "",
   adminScript: "",
-} as Memo;
+});
 
 vi.mock("@/components/BlogSidebar", () => ({
   default: ({ parentPage }: { parentPage: string }) => <div data-testid="blog-sidebar">{parentPage}</div>,

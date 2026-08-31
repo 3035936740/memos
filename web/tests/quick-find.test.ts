@@ -53,7 +53,7 @@ describe("Quick Find", () => {
         { factor: "displayTime", value: "2026-08-03" },
         { factor: "contentSearch", value: "project" },
       ],
-      destination: "/?filter=tagSearch:work,displayTime:2026-08-03,contentSearch:project",
+      destination: "/home?filter=tagSearch:work,displayTime:2026-08-03,contentSearch:project",
       switchToAll: false,
     });
   });
@@ -65,7 +65,7 @@ describe("Quick Find", () => {
         { factor: "displayTime", value: "2026-08-03" },
         { factor: "contentSearch", value: "project" },
       ],
-      destination: "/?filter=tagSearch:work,displayTime:2026-08-03,contentSearch:project",
+      destination: "/home?filter=tagSearch:work,displayTime:2026-08-03,contentSearch:project",
       switchToAll: false,
     });
   });
@@ -93,7 +93,7 @@ describe("Quick Find", () => {
   ])("starts a clean All search from %s", (pathname) => {
     expect(resolveQuickFindSubmission(pathname, "project", scopedFilters)).toEqual({
       filters: [{ factor: "contentSearch", value: "project" }],
-      destination: "/?filter=contentSearch:project",
+      destination: "/home?filter=contentSearch:project",
       switchToAll: true,
     });
   });

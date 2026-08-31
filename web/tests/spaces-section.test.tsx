@@ -112,7 +112,8 @@ vi.mock("@/components/ConfirmDialog", () => ({
     ) : null,
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string, params?: Record<string, string>) =>
     key === "setting.spaces.delete-confirm-title" && params?.space ? `${key} ${params.space}` : key,
 }));

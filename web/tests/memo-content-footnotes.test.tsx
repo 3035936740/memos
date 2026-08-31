@@ -5,6 +5,10 @@ import { MemoMarkdownRendererCore } from "@/components/MemoContent/MemoMarkdownR
 
 const FOOTNOTE_MARKDOWN = "A statement with a note.[^1]\n\n[^1]: The footnote body.";
 
+vi.mock("@/utils/emoji", () => ({
+  useEmojiPacks: () => ({ data: [] }),
+}));
+
 const LocationProbe = () => {
   const location = useLocation();
   return (

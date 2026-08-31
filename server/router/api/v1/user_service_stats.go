@@ -126,8 +126,10 @@ func (s *APIV1Service) ListAllUserStats(ctx context.Context, request *v1pb.ListA
 				continue
 			}
 
-			stats.MemoCreatedTimestamps = append(stats.MemoCreatedTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
-			stats.MemoUpdatedTimestamps = append(stats.MemoUpdatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
+			if memo.Payload == nil || !memo.Payload.HideTime {
+				stats.MemoCreatedTimestamps = append(stats.MemoCreatedTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
+				stats.MemoUpdatedTimestamps = append(stats.MemoUpdatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
+			}
 
 			// Count memo stats
 			stats.TotalMemoCount++
@@ -218,7 +220,7 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 	if currentUser == nil {
 		memoFind.VisibilityList = []store.Visibility{store.Public}
 	} else if currentUser.ID != userID {
-		memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}
+		memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected, store.SpaceAudience}
 	}
 	if request.Filter != "" {
 		if err := s.validateMemoFilterForUser(ctx, request.Filter, currentUser); err != nil {
@@ -259,8 +261,10 @@ func (s *APIV1Service) GetUserStats(ctx context.Context, request *v1pb.GetUserSt
 			}
 
 			totalMemoCount++
-			createdTimestamps = append(createdTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
-			updatedTimestamps = append(updatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
+			if memo.Payload == nil || !memo.Payload.HideTime {
+				createdTimestamps = append(createdTimestamps, timestamppb.New(time.Unix(memo.CreatedTs, 0)))
+				updatedTimestamps = append(updatedTimestamps, timestamppb.New(time.Unix(memo.UpdatedTs, 0)))
+			}
 			// Count different memo types based on content.
 			if memo.Payload != nil {
 				incrementTagCounts(tagCount, memo.Payload.Tags)

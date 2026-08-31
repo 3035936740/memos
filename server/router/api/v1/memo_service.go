@@ -500,18 +500,28 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if user == nil {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
+	updatePaths := make(map[string]bool, len(request.UpdateMask.Paths))
+	for _, path := range request.UpdateMask.Paths {
+		updatePaths[path] = true
+	}
+	adminMaintenanceOnly := isSuperUser(user)
+	for path := range updatePaths {
+		switch path {
+		case "hidden", "hide_time", "pinned", "create_time", "update_time", "admin_script":
+		default:
+			adminMaintenanceOnly = false
+		}
+	}
 	// Application administrators are not implicit memo collaborators. Ordinary
-	// content updates remain author-controlled.
-	if memo.CreatorID != user.ID {
+	// content updates remain author-controlled, while administrator-only
+	// presentation metadata remains available for moderation and publishing.
+	adminMaintenance := memo.CreatorID != user.ID && adminMaintenanceOnly
+	if memo.CreatorID != user.ID && !adminMaintenance {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 
 	update := &store.UpdateMemo{
 		ID: memo.ID,
-	}
-	updatePaths := make(map[string]bool, len(request.UpdateMask.Paths))
-	for _, path := range request.UpdateMask.Paths {
-		updatePaths[path] = true
 	}
 	lifecycleOnly := updatePaths["space"]
 	for path := range updatePaths {
@@ -557,7 +567,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if memo.Visibility == store.SpaceAudience && nextSpaceID == nil && nextVisibility == store.SpaceAudience {
 		return nil, status.Errorf(codes.InvalidArgument, "unassigning a memo with SPACE visibility requires a replacement visibility")
 	}
-	update.Policy = memoWritePolicy(user.ID, lifecycleOnly)
+	if !adminMaintenance {
+		update.Policy = memoWritePolicy(user.ID, lifecycleOnly)
+	}
 	previousContent := memo.Content
 	contentUpdated := false
 	attachmentsUpdated := false
@@ -570,6 +582,9 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	for _, path := range request.UpdateMask.Paths {
 		if path == "hidden" && !isSuperUser(user) {
 			return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memos")
+		}
+		if path == "hide_time" && !isSuperUser(user) {
+			return nil, status.Errorf(codes.PermissionDenied, "only administrators can hide memo timestamps")
 		}
 		if path == "pinned" && !isSuperUser(user) {
 			return nil, status.Errorf(codes.PermissionDenied, "only administrators can pin memos")
@@ -658,6 +673,14 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				nextMemo.Payload = &storepb.MemoPayload{}
 			}
 			nextMemo.Payload.Hidden = request.Memo.Hidden
+			update.Payload = nextMemo.Payload
+			publicVisibility := store.Public
+			update.Visibility = &publicVisibility
+		} else if path == "hide_time" {
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextMemo.Payload.HideTime = request.Memo.HideTime
 			update.Payload = nextMemo.Payload
 		} else if path == "anonymous" {
 			if memo.ParentUID != nil {

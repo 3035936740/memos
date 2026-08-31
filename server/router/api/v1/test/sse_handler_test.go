@@ -71,6 +71,7 @@ func TestSSEHandler_Authentication(t *testing.T) {
 		<-done
 		require.Equal(t, http.StatusOK, rec.Code)
 		require.Equal(t, "text/event-stream", rec.Header().Get("Content-Type"))
+		require.Empty(t, rec.Header().Get("Connection"), "HTTP/2 forbids the hop-by-hop Connection header")
 	})
 
 	t.Run("token in query param returns 401", func(t *testing.T) {
@@ -115,7 +116,7 @@ func TestSSEHandler_Authentication(t *testing.T) {
 
 		line, err = reader.ReadString('\n')
 		require.NoError(t, err)
-		require.Equal(t, "data: {\"type\":\"memo.changed\"}\n", line)
+		require.Equal(t, "data: {\"type\":\"memo.created\",\"name\":\"memos/streamed\"}\n", line)
 		line, err = reader.ReadString('\n')
 		require.NoError(t, err)
 		require.Equal(t, "\n", line)

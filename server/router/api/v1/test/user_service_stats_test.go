@@ -137,7 +137,6 @@ func TestGetUserStats_TagCountPreservesExactIdentity(t *testing.T) {
 		},
 	})
 	require.NoError(t, err)
-
 	response, err := ts.Service.GetUserStats(userCtx, &v1pb.GetUserStatsRequest{
 		Name: fmt.Sprintf("users/%s", user.Username),
 	})
@@ -215,18 +214,12 @@ func TestGetUserStats_ReportsCommentsSeparately(t *testing.T) {
 		Visibility: store.Public,
 	})
 	require.NoError(t, err)
-	comment, err := ts.Store.CreateMemo(ctx, &store.Memo{
+	_, err = ts.Store.CreateMemoComment(ctx, &store.Memo{
 		UID:        "comment-stats-comment",
 		CreatorID:  user.ID,
 		Content:    "comment",
 		Visibility: store.Public,
-	})
-	require.NoError(t, err)
-	_, err = ts.Store.UpsertMemoRelation(ctx, &store.MemoRelation{
-		MemoID:        comment.ID,
-		RelatedMemoID: parent.ID,
-		Type:          store.MemoRelationComment,
-	})
+	}, parent.ID, user.ID)
 	require.NoError(t, err)
 
 	response, err := ts.Service.GetUserStats(userCtx, &v1pb.GetUserStatsRequest{Name: fmt.Sprintf("users/%s", user.Username)})
@@ -285,12 +278,23 @@ func TestListAllUserStats_FilterExcludesPrivateMemos(t *testing.T) {
 		Payload:    &storepb.MemoPayload{Tags: []string{"private", "private"}},
 	})
 	require.NoError(t, err)
+	_, err = ts.Store.CreateMemo(ctx, &store.Memo{
+		UID:        "stats-filter-timeless",
+		CreatorID:  user.ID,
+		Content:    "memo with hidden time",
+		Visibility: store.Public,
+		Payload:    &storepb.MemoPayload{Tags: []string{"timeless"}, HideTime: true},
+	})
+	require.NoError(t, err)
 
 	unfilteredResp, err := ts.Service.ListAllUserStats(userCtx, &v1pb.ListAllUserStatsRequest{})
 	require.NoError(t, err)
 	require.Len(t, unfilteredResp.Stats, 1)
 	require.Equal(t, int32(1), unfilteredResp.Stats[0].TagCount["public"])
 	require.Equal(t, int32(1), unfilteredResp.Stats[0].TagCount["private"])
+	require.Equal(t, int32(3), unfilteredResp.Stats[0].TotalMemoCount)
+	require.Len(t, unfilteredResp.Stats[0].MemoCreatedTimestamps, 2)
+	require.Len(t, unfilteredResp.Stats[0].MemoUpdatedTimestamps, 2)
 
 	filteredResp, err := ts.Service.ListAllUserStats(userCtx, &v1pb.ListAllUserStatsRequest{
 		Filter: `visibility in ["PUBLIC", "PROTECTED"]`,
@@ -299,6 +303,8 @@ func TestListAllUserStats_FilterExcludesPrivateMemos(t *testing.T) {
 	require.Len(t, filteredResp.Stats, 1)
 	require.Equal(t, int32(1), filteredResp.Stats[0].TagCount["public"])
 	require.NotContains(t, filteredResp.Stats[0].TagCount, "private")
+	require.Equal(t, int32(2), filteredResp.Stats[0].TotalMemoCount)
+	require.Len(t, filteredResp.Stats[0].MemoCreatedTimestamps, 1)
 }
 
 func TestUserStatsUseMemoLocalAccess(t *testing.T) {

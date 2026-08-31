@@ -1,9 +1,13 @@
 import { render, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { highlightCode } from "@/components/MemoContent/highlight";
 import MathMarkdownRenderer from "@/components/MemoContent/MathMarkdownRenderer";
 import { MemoMarkdownRenderer } from "@/components/MemoContent/MemoMarkdownRenderer";
 import { hasMathSyntax } from "@/components/MemoContent/math";
+
+vi.mock("@/utils/emoji", () => ({
+  useEmojiPacks: () => ({ data: [] }),
+}));
 
 const ISSUE_CURRENCY_CONTENT = `list of 10 houses
 $140,000 max - buffer of ~10k

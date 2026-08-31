@@ -42,7 +42,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
     });
     return selectBlogCoverMedia(memo.content, buildAttachmentVisualItems(visualAttachments));
   }, [memo.attachments, memo.content]);
-  const createTime = memo.createTime ? timestampDate(memo.createTime) : undefined;
+  const createTime = !memo.hideTime && memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
   const detailState = { from: parentPage, navigationScope };

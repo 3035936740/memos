@@ -2,13 +2,13 @@ package v1
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"uuid"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/stretchr/testify/require"

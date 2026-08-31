@@ -21,7 +21,6 @@ import (
 	"github.com/usememos/memos/server/router/fileserver"
 	"github.com/usememos/memos/server/router/frontend"
 	"github.com/usememos/memos/server/router/mcp"
-	"github.com/usememos/memos/server/runner/s3presign"
 	"github.com/usememos/memos/store"
 )
 
@@ -144,27 +143,6 @@ func (s *Server) Shutdown(ctx context.Context) {
 }
 
 func (s *Server) startBackgroundRunners(ctx context.Context) {
-	// Create a separate context for each background runner
-	// This allows us to control cancellation for each runner independently
-	s3Context, s3Cancel := context.WithCancel(ctx)
-
-	// Store the cancel function so we can properly shut down runners
-	s.backgroundRunnerCancels = append(s.backgroundRunnerCancels, s3Cancel)
-
-	// Create and start S3 presign runner
-	s3presignRunner := s3presign.NewRunner(s.Store)
-	s3presignRunner.RunOnce(ctx)
-
-	// Start continuous S3 presign runner
-	s.backgroundRunnerWG.Add(1)
-	go func() {
-		defer s.backgroundRunnerWG.Done()
-		s3presignRunner.Run(s3Context)
-		slog.Info("s3presign runner stopped")
-	}()
-
-	slog.Info("background runners started")
-
 	if s.apiV1Service != nil {
 		scheduledContext, scheduledCancel := context.WithCancel(ctx)
 		s.backgroundRunnerCancels = append(s.backgroundRunnerCancels, scheduledCancel)

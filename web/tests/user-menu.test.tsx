@@ -22,6 +22,10 @@ vi.mock("@/contexts/AuthContext", () => ({
   }),
 }));
 
+vi.mock("@/contexts/InstanceContext", () => ({
+  useInstance: () => ({ generalSetting: { firstVisitDefaultLocale: "en", firstVisitDefaultTheme: "system" } }),
+}));
+
 vi.mock("@/hooks/useCurrentUser", () => ({
   default: () => ({ name: "users/steven", username: "steven", displayName: "Steven" }),
 }));
@@ -69,6 +73,7 @@ describe("User menu", () => {
     const profile = await screen.findByRole("menuitem", { name: "common.profile" });
     const inbox = screen.getByRole("menuitem", { name: "common.inbox" });
     const archived = screen.getByRole("menuitem", { name: "common.archived" });
+    expect(screen.queryByRole("menuitem", { name: "common.about" })).not.toBeInTheDocument();
     expect(profile.compareDocumentPosition(inbox) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(inbox.compareDocumentPosition(archived) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(archived).toHaveAttribute("aria-current", "page");

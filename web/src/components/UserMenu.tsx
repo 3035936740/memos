@@ -3,7 +3,7 @@ import {
   BellIcon,
   CheckIcon,
   GlobeIcon,
-  InfoIcon,
+  // InfoIcon,
   LogOutIcon,
   MoreVerticalIcon,
   PaletteIcon,
@@ -227,10 +227,12 @@ const UserMenu = (props: Props) => {
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        {/* 官方 Memos About 页面保留，仅停用用户菜单入口；需要恢复时取消此处及 InfoIcon 导入的注释。
         <DropdownMenuItem onClick={() => navigateFromMenu(Routes.ABOUT)}>
           <InfoIcon className="size-4 text-muted-foreground" />
           {t("common.about")}
         </DropdownMenuItem>
+        */}
         <DropdownMenuItem onClick={() => navigateFromMenu(Routes.SETTING)}>
           <SettingsIcon className="size-4 text-muted-foreground" />
           {t("common.settings")}

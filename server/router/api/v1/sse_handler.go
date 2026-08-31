@@ -14,7 +14,7 @@ import (
 
 const (
 	// sseHeartbeatInterval is the interval between heartbeat pings to keep the connection alive.
-	sseHeartbeatInterval = 30 * time.Second
+	sseHeartbeatInterval = 15 * time.Second
 	sseConnectedComment  = ": connected\n\n"
 	sseHeartbeatComment  = ": heartbeat\n\n"
 )
@@ -48,8 +48,7 @@ func handleSSE(c *echo.Context, hub *SSEHub, authenticator *auth.Authenticator) 
 	// Set SSE headers.
 	w := c.Response()
 	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Cache-Control", "no-cache, no-transform")
 	w.Header().Set("X-Accel-Buffering", "no") // Disable nginx buffering
 	w.WriteHeader(http.StatusOK)
 

@@ -188,7 +188,10 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 		)`)
 	}
 	if find.OnlyComments {
-		where = append(where, "`memo_relation`.`related_memo_id` IS NOT NULL")
+		where = append(where, `EXISTS (
+			SELECT 1 FROM memo_relation AS comment_relation
+			WHERE comment_relation.memo_id = memo.id AND comment_relation.type = 'COMMENT'
+		)`)
 	}
 
 	order := "DESC"
@@ -204,8 +207,8 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 	} else {
 		orderBy = append(orderBy, "`created_ts` "+order)
 	}
-	// Add id as final tie-breaker
-	orderBy = append(orderBy, "`id` DESC")
+	// Keep insertion order stable when timestamps share the same second.
+	orderBy = append(orderBy, "`id` "+order)
 	fields := []string{
 		"`memo`.`id` AS `id`",
 		"`memo`.`uid` AS `uid`",

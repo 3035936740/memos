@@ -2,9 +2,13 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MemoMarkdownRenderer } from "@/components/MemoContent/MemoMarkdownRenderer";
 import { buildEditorExtensions } from "@/components/MemoEditor/Editor/extensions";
+
+vi.mock("@/utils/emoji", () => ({
+  useEmojiPacks: () => ({ data: [] }),
+}));
 
 function makeView(doc: string, onSubmit: () => void = () => {}) {
   return new EditorView({

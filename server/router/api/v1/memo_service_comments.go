@@ -52,12 +52,10 @@ func (s *APIV1Service) CreateMemoComment(ctx context.Context, request *v1pb.Crea
 	if !ok {
 		return nil, status.Errorf(codes.Internal, "failed to clone memo comment")
 	}
-	comment.Visibility = convertVisibilityFromStore(relatedMemo.Visibility)
 	comment.Hidden = false
 	comment.Anonymous = false
 	comment.Draft = false
 	comment.PublishTime = nil
-	comment.AdminScript = ""
 	comment.Space = nil
 	if relatedMemo.SpaceID != nil {
 		space, err := s.Store.GetSpace(ctx, &store.FindSpace{ID: relatedMemo.SpaceID})

@@ -103,6 +103,7 @@
     "input": "输入",
     "language": "语言",
     "last-updated-at": "最后更新时间",
+    "hide-time": "隐藏时间（不计入运行天数）",
     "learn-more": "了解更多",
     "link": "链接",
     "manage": "管理",

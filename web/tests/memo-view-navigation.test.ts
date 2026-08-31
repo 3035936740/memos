@@ -47,8 +47,8 @@ describe("memo view navigation", () => {
   });
 
   it("uses an All Home origin for direct and shared resource entries", () => {
-    expect(resolveMemoDetailOrigin(undefined)).toEqual({ parentPage: "/", parentScope: "all" });
-    expect(resolveMemoDetailOrigin({ unrelated: true })).toEqual({ parentPage: "/", parentScope: "all" });
+    expect(resolveMemoDetailOrigin(undefined)).toEqual({ parentPage: "/home", parentScope: "all" });
+    expect(resolveMemoDetailOrigin({ unrelated: true })).toEqual({ parentPage: "/home", parentScope: "all" });
   });
 
   it("uses a user-level Archived origin without changing the remembered Space", () => {
@@ -73,7 +73,7 @@ describe("memo view navigation", () => {
   });
 
   it.each([
-    "/",
+    "/home",
     "/explore?filter=tagSearch%3Awork",
     "/archived",
     "/attachments",
@@ -89,7 +89,7 @@ describe("memo view navigation", () => {
     "/Memos/Shares/token/",
   ])("does not treat %s as its own origin", (pathname) => {
     expect(isMemoDetailPath(pathname, "memos/123")).toBe(true);
-    expect(resolveMemoParentPage({ pathname, search: "", memoName: "memos/123" })).toBe("/");
+    expect(resolveMemoParentPage({ pathname, search: "", memoName: "memos/123" })).toBe("/home");
   });
 
   it("does not confuse a different memo route with the current memo detail", () => {

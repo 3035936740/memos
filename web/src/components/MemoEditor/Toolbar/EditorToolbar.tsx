@@ -70,8 +70,11 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-row justify-between items-center mb-2">
-      <div className="flex flex-row justify-start items-center gap-1">
+    <div data-editor-toolbar="" className="mb-2 flex w-full min-w-0 flex-row items-center gap-2">
+      <div
+        data-editor-toolbar-options=""
+        className="flex min-w-0 flex-1 flex-row items-center justify-start gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         <InsertMenu
           isUploading={isUploading}
           isSaving={isSaving}
@@ -104,7 +107,7 @@ export const EditorToolbar: FC<EditorToolbarProps> = ({
         ) : null}
       </div>
 
-      <div className="flex flex-row justify-end items-center gap-2">
+      <div data-editor-toolbar-actions="" className="flex shrink-0 flex-row items-center justify-end gap-2">
         {onCancel && (
           <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
             {t("common.cancel")}

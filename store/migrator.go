@@ -112,6 +112,9 @@ func (s *Store) Migrate(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get current schema version")
 	}
+	if err := s.applyOverlappingV031Migrations(ctx, instanceBasicSetting.SchemaVersion); err != nil {
+		return errors.Wrap(err, "failed to apply customized v0.32 compatibility migrations")
+	}
 	// Check for downgrade (but skip if schema version is empty - that means fresh/old installation)
 	if !isVersionEmpty(instanceBasicSetting.SchemaVersion) && version.IsVersionGreaterThan(instanceBasicSetting.SchemaVersion, currentSchemaVersion) {
 		slog.Error("cannot downgrade schema version",
@@ -137,6 +140,112 @@ func (s *Store) Migrate(ctx context.Context) error {
 		return errors.Wrap(err, "failed to initialize instance access setting")
 	}
 	return nil
+}
+
+// applyOverlappingV031Migrations repairs customized v0.32 installations made
+// before the upstream v0.31 reaction and space migrations were merged. Those
+// databases legitimately report v0.32.x, so the normal version comparison
+// would otherwise skip the older-numbered upstream scripts.
+func (s *Store) applyOverlappingV031Migrations(ctx context.Context, schemaVersion string) error {
+	if !version.IsVersionGreaterOrEqualThan(schemaVersion, "0.32.1") || version.IsVersionGreaterThan(schemaVersion, "0.32.5") {
+		return nil
+	}
+
+	spaceExists, err := s.tableExists(ctx, "space")
+	if err != nil {
+		return errors.Wrap(err, "failed to inspect space migration state")
+	}
+	viewCountExists, err := s.columnExists(ctx, "memo", "view_count")
+	if err != nil {
+		return errors.Wrap(err, "failed to inspect memo view-count migration state")
+	}
+	if spaceExists && viewCountExists {
+		return nil
+	}
+
+	tx, err := s.driver.GetDB().BeginTx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to start compatibility migration transaction")
+	}
+	defer tx.Rollback()
+
+	if !spaceExists {
+		filePaths, err := fs.Glob(migrationFS, fmt.Sprintf("%s0.31/*.sql", s.getMigrationBasePath()))
+		if err != nil {
+			return errors.Wrap(err, "failed to read overlapping v0.31 migrations")
+		}
+		slices.Sort(filePaths)
+		for _, filePath := range filePaths {
+			fileVersion, err := s.getSchemaVersionOfMigrateScript(filePath)
+			if err != nil {
+				return errors.Wrap(err, "failed to read compatibility migration version")
+			}
+			if !version.IsVersionGreaterThan(fileVersion, "0.31.2") {
+				continue
+			}
+			if err := s.executeMigrationFile(ctx, tx, filePath, "customized v0.32 compatibility"); err != nil {
+				return err
+			}
+		}
+		// SQLite's upstream space migration rebuilds memo from the upstream
+		// column set, so customized columns added later must be restored below.
+		viewCountExists = false
+	}
+	if !viewCountExists && version.IsVersionGreaterOrEqualThan(schemaVersion, "0.32.5") {
+		filePath := fmt.Sprintf("%s0.32/04__memo_view_count.sql", s.getMigrationBasePath())
+		if err := s.executeMigrationFile(ctx, tx, filePath, "customized memo schema repair"); err != nil {
+			return err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "failed to commit compatibility migrations")
+	}
+	return nil
+}
+
+func (s *Store) executeMigrationFile(ctx context.Context, tx *sql.Tx, filePath, description string) error {
+	bytes, err := migrationFS.ReadFile(filePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s migration %s", description, filePath)
+	}
+	slog.Info("applying "+description+" migration", slog.String("file", filePath))
+	if err := s.execute(ctx, tx, string(bytes)); err != nil {
+		return errors.Wrapf(err, "failed to execute %s migration %s", description, filePath)
+	}
+	return nil
+}
+
+func (s *Store) tableExists(ctx context.Context, tableName string) (bool, error) {
+	var exists bool
+	var err error
+	switch s.profile.Driver {
+	case "sqlite":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?)", tableName).Scan(&exists)
+	case "mysql":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?)", tableName).Scan(&exists)
+	case "postgres":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT to_regclass($1) IS NOT NULL", "public."+tableName).Scan(&exists)
+	default:
+		return false, errors.Errorf("unsupported database driver: %s", s.profile.Driver)
+	}
+	return exists, err
+}
+
+func (s *Store) columnExists(ctx context.Context, tableName, columnName string) (bool, error) {
+	var exists bool
+	var err error
+	switch s.profile.Driver {
+	case "sqlite":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM pragma_table_info(?) WHERE name = ?)", tableName, columnName).Scan(&exists)
+	case "mysql":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?)", tableName, columnName).Scan(&exists)
+	case "postgres":
+		err = s.driver.GetDB().QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2)", tableName, columnName).Scan(&exists)
+	default:
+		return false, errors.Errorf("unsupported database driver: %s", s.profile.Driver)
+	}
+	return exists, err
 }
 
 // initializeInstanceAccessSetting captures the pre-ACCESS behavior exactly once.

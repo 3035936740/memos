@@ -40,6 +40,22 @@ vi.mock("@/contexts/SpaceContext", () => ({
   useSpaceContext: () => ({ selectedSpaceName: state.selectedSpaceName, memoFilter: state.memoFilter }),
 }));
 
+vi.mock("@/components/MemoEditor", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/components/GuestMemoComposer", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({ isUserSettingsInitialized: true }),
+}));
+
+vi.mock("@/contexts/MemoFilterContext", () => ({
+  useMemoFilterContext: () => ({ filters: [] }),
+}));
+
 vi.mock("@/hooks", () => ({
   useMemoFilters: (options: Record<string, unknown>) => {
     state.filterOptions.push(options);

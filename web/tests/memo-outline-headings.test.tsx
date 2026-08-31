@@ -8,6 +8,10 @@ vi.mock("@/components/MemoContent/math", () => ({
   hasMathSyntax: vi.fn(() => false),
 }));
 
+vi.mock("@/utils/emoji", () => ({
+  useEmojiPacks: () => ({ data: [] }),
+}));
+
 /**
  * The outline and the rendered heading ids come from one pipeline run, so these cases are about
  * keeping that so: each one previously produced an outline slug that no rendered heading carried.

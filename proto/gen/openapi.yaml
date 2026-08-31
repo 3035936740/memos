@@ -1336,10 +1336,7 @@ paths:
             parameters:
                 - name: spaceId
                   in: query
-                  description: |-
-                    Optional. The space UID to use for this space.
-                     If empty, a canonical UUID v4 will be generated.
-                     Format: ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,34}[a-zA-Z0-9])?$
+                  description: "Optional. The space UID to use for this space.\r\n If empty, a canonical UUID v4 will be generated.\r\n Format: ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,34}[a-zA-Z0-9])?$"
                   schema:
                     type: string
             requestBody:
@@ -3973,6 +3970,11 @@ components:
                 space:
                     type: string
                     description: "Optional. The space in which this memo is placed. Format: spaces/{space}.\r\n Every memo, including a comment, owns its placement independently."
+                hideTime:
+                    type: boolean
+                    description: |-
+                        Optional. Hides this memo's timestamp and excludes it from time-based
+                         instance statistics. Only instance administrators may change this field.
         MemoRelation:
             required:
                 - memo
@@ -4334,16 +4336,12 @@ components:
                         - ADMIN
                         - USER
                     type: string
-                    description: |-
-                        Output only. The authenticated user's membership role in this space.
-                         ROLE_UNSPECIFIED when this Space is exposed as metadata-only.
+                    description: "Output only. The authenticated user's membership role in this space.\r\n ROLE_UNSPECIFIED when this Space is exposed as metadata-only."
                     format: enum
                 memberCount:
                     readOnly: true
                     type: integer
-                    description: |-
-                        Output only. The number of accepted members in this space. Pending
-                         invitations are excluded. Zero when this Space is exposed as metadata-only.
+                    description: "Output only. The number of accepted members in this space. Pending\r\n invitations are excluded. Zero when this Space is exposed as metadata-only."
                     format: int32
             description: Space is a collaboration boundary for placed memos.
         SpaceInvitation:

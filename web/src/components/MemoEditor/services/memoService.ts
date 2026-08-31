@@ -87,6 +87,10 @@ function buildUpdateMask(
   // a value is still added above so the server can stamp ordinary edits with
   // the current time.
   if (canCustomizeTimestamps) {
+    if (!isEqual(state.timestamps.hideTime, prevMemo.hideTime)) {
+      mask.add("hide_time");
+      patch.hideTime = state.timestamps.hideTime;
+    }
     if (state.timestamps.createTime) {
       const prevCreateTime = prevMemo.createTime ? timestampDate(prevMemo.createTime) : undefined;
       if (!isEqual(state.timestamps.createTime, prevCreateTime)) {
@@ -153,6 +157,7 @@ export const memoService = {
         options.canCustomizeTimestamps && state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
       updateTime:
         options.canCustomizeTimestamps && state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
+      hideTime: options.canCustomizeTimestamps && state.timestamps.hideTime,
       space: options.parentMemoName ? undefined : options.space,
     });
 
@@ -189,6 +194,7 @@ export const memoService = {
       timestamps: {
         createTime: memo.createTime ? timestampDate(memo.createTime) : undefined,
         updateTime: memo.updateTime ? timestampDate(memo.updateTime) : undefined,
+        hideTime: memo.hideTime,
       },
     };
   },

@@ -185,7 +185,7 @@ describe("SpaceProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: action }));
 
-    expect(screen.getByTestId("path").textContent).toBe("/");
+    expect(screen.getByTestId("path").textContent).toBe("/home");
   });
 
   it("can select All on a resource route without navigating", () => {

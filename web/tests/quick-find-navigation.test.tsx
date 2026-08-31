@@ -38,7 +38,8 @@ vi.mock("@/hooks/useUserQueries", () => ({
   useMemoViews: () => ({ data: [] }),
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 
@@ -96,7 +97,7 @@ describe("Quick Find navigation", () => {
     fireEvent.change(input, { target: { value: "roadmap" } });
     fireEvent.submit(input.closest("form")!);
 
-    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent("/?filter=contentSearch:roadmap"));
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent("/home?filter=contentSearch:roadmap"));
     expect(state.setFilters).toHaveBeenCalledWith([{ factor: "contentSearch", value: "roadmap" }]);
     expect(screen.getByTestId("scope")).toHaveTextContent("all");
     expect(sessionStorage.getItem(storageKey)).toBeNull();
@@ -190,7 +191,7 @@ describe("Quick Find navigation", () => {
     fireEvent.change(input, { target: { value: "roadmap" } });
     fireEvent.submit(input.closest("form")!);
 
-    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent("/?filter=contentSearch:roadmap"));
+    await waitFor(() => expect(screen.getByTestId("path")).toHaveTextContent("/home?filter=contentSearch:roadmap"));
 
     await act(async () => {
       await router.navigate(-1);

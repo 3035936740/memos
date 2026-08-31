@@ -150,6 +150,36 @@ describe("InsertMenu", () => {
     expect(screen.getByLabelText("editor.validation.resolve-image-uploads")).toHaveAttribute("tabindex", "0");
   });
 
+  test("keeps save actions inside the editor on narrow screens", () => {
+    const state = createInitialState();
+    state.content = "memo";
+
+    const { container } = render(
+      <EditorProvider initialEditorState={state}>
+        <EditorToolbar
+          onSave={vi.fn()}
+          onCancel={vi.fn()}
+          onAudioRecorderClick={vi.fn()}
+          viewToggles={viewToggles}
+          onInsertImages={vi.fn()}
+          onInsertVideos={vi.fn()}
+          onInsertEmoji={vi.fn()}
+          onInsertAIText={vi.fn()}
+        />
+      </EditorProvider>,
+    );
+
+    const toolbar = container.querySelector("[data-editor-toolbar]");
+    const options = container.querySelector("[data-editor-toolbar-options]");
+    const actions = container.querySelector("[data-editor-toolbar-actions]");
+
+    expect(toolbar).toHaveClass("flex-row", "min-w-0", "items-center");
+    expect(toolbar).not.toHaveClass("flex-col");
+    expect(options).toHaveClass("min-w-0", "flex-1", "overflow-x-auto", "overflow-y-hidden");
+    expect(actions).toHaveClass("shrink-0", "justify-end");
+    expect(actions).not.toHaveClass("w-full");
+  });
+
   test("lets only an administrator enable direct-link-only publishing", () => {
     authState.currentUser = { name: "users/admin", role: User_Role.ADMIN };
     const state = createInitialState();

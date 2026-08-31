@@ -324,6 +324,10 @@ message Memo {
     (google.api.resource_reference) = {type: "memos.api.v1/Space"}
   ];
 
+  // Optional. Hides this memo's timestamp and excludes it from time-based
+  // instance statistics. Only instance administrators may change this field.
+  bool hide_time = 30 [(google.api.field_behavior) = OPTIONAL];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;

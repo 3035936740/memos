@@ -137,7 +137,7 @@ func (s *FileServerService) serveStorageFile(c *echo.Context) error {
 	if contentType == "" {
 		contentType = "application/octet-stream"
 	}
-	contentType = s.sanitizeContentType(contentType)
+	contentType = sanitizeContentType(contentType)
 
 	setSecurityHeaders(c)
 	c.Response().Header().Set(echo.HeaderContentType, contentType)

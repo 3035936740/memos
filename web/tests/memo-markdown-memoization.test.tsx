@@ -7,6 +7,10 @@ vi.mock("@/components/MemoContent/math", () => ({
   hasMathSyntax: vi.fn(() => false),
 }));
 
+vi.mock("@/utils/emoji", () => ({
+  useEmojiPacks: () => ({ data: [] }),
+}));
+
 describe("<MemoMarkdownRenderer /> memoization", () => {
   beforeEach(() => {
     vi.mocked(hasMathSyntax).mockClear();

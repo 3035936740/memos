@@ -44,7 +44,10 @@ type MemoPayload struct {
 	Anonymous bool `protobuf:"varint,9,opt,name=anonymous,proto3" json:"anonymous,omitempty"`
 	// Administrator-authored JavaScript that runs only while this memo or
 	// comment is mounted on its detail page.
-	AdminScript   string `protobuf:"bytes,11,opt,name=admin_script,json=adminScript,proto3" json:"admin_script,omitempty"`
+	AdminScript string `protobuf:"bytes,11,opt,name=admin_script,json=adminScript,proto3" json:"admin_script,omitempty"`
+	// Hides the memo timestamp in the UI and excludes it from running-day and
+	// last-activity timestamp samples without excluding the memo itself.
+	HideTime      bool `protobuf:"varint,12,opt,name=hide_time,json=hideTime,proto3" json:"hide_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -147,6 +150,13 @@ func (x *MemoPayload) GetAdminScript() string {
 		return x.AdminScript
 	}
 	return ""
+}
+
+func (x *MemoPayload) GetHideTime() bool {
+	if x != nil {
+		return x.HideTime
+	}
+	return false
 }
 
 // The calculated properties from the memo content.
@@ -291,7 +301,7 @@ var File_store_memo_proto protoreflect.FileDescriptor
 
 const file_store_memo_proto_rawDesc = "" +
 	"\n" +
-	"\x10store/memo.proto\x12\vmemos.store\"\x82\x05\n" +
+	"\x10store/memo.proto\x12\vmemos.store\"\x9f\x05\n" +
 	"\vMemoPayload\x12=\n" +
 	"\bproperty\x18\x01 \x01(\v2!.memos.store.MemoPayload.PropertyR\bproperty\x12=\n" +
 	"\blocation\x18\x02 \x01(\v2!.memos.store.MemoPayload.LocationR\blocation\x12\x12\n" +
@@ -303,7 +313,8 @@ const file_store_memo_proto_rawDesc = "" +
 	"publish_ts\x18\a \x01(\x03R\tpublishTs\x12 \n" +
 	"\vquarantined\x18\b \x01(\bR\vquarantined\x12\x1c\n" +
 	"\tanonymous\x18\t \x01(\bR\tanonymous\x12!\n" +
-	"\fadmin_script\x18\v \x01(\tR\vadminScript\x1a\xac\x01\n" +
+	"\fadmin_script\x18\v \x01(\tR\vadminScript\x12\x1b\n" +
+	"\thide_time\x18\f \x01(\bR\bhideTime\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

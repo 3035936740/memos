@@ -99,7 +99,7 @@ func TestMemoCreateSharedPreparationPreservesFields(t *testing.T) {
 	require.Equal(t, commentLocation.Placeholder, comment.Location.Placeholder)
 	require.Equal(t, commentLocation.Latitude, comment.Location.Latitude)
 	require.Equal(t, commentLocation.Longitude, comment.Location.Longitude)
-	require.Equal(t, v1pb.Visibility_PRIVATE, comment.Visibility)
+	require.Equal(t, v1pb.Visibility_PROTECTED, comment.Visibility)
 	require.Len(t, comment.Attachments, 1)
 	require.Equal(t, commentAttachment.Name, comment.Attachments[0].Name)
 	requireMemoCreateRelation(t, comment, v1pb.MemoRelation_COMMENT, topMemo.Name)

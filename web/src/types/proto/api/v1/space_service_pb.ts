@@ -815,3 +815,4 @@ export const SpaceService: GenService<{
   },
 }> = /*@__PURE__*/
   serviceDesc(file_api_v1_space_service, 0);
+

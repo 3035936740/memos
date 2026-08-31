@@ -284,7 +284,10 @@ type Memo struct {
 	CreatorIsViewer bool `protobuf:"varint,28,opt,name=creator_is_viewer,json=creatorIsViewer,proto3" json:"creator_is_viewer,omitempty"`
 	// Optional. The space in which this memo is placed. Format: spaces/{space}.
 	// Every memo, including a comment, owns its placement independently.
-	Space         *string `protobuf:"bytes,29,opt,name=space,proto3,oneof" json:"space,omitempty"`
+	Space *string `protobuf:"bytes,29,opt,name=space,proto3,oneof" json:"space,omitempty"`
+	// Optional. Hides this memo's timestamp and excludes it from time-based
+	// instance statistics. Only instance administrators may change this field.
+	HideTime      bool `protobuf:"varint,30,opt,name=hide_time,json=hideTime,proto3" json:"hide_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -499,6 +502,13 @@ func (x *Memo) GetSpace() string {
 		return *x.Space
 	}
 	return ""
+}
+
+func (x *Memo) GetHideTime() bool {
+	if x != nil {
+		return x.HideTime
+	}
+	return false
 }
 
 type Location struct {
@@ -2601,7 +2611,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
 	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breactionJ\x04\b\x03\x10\x04R\n" +
-	"content_id\"\x8b\f\n" +
+	"content_id\"\xad\f\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -2637,7 +2647,8 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\fadmin_script\x18\x1b \x01(\tB\x03\xe0A\x01R\vadminScript\x12/\n" +
 	"\x11creator_is_viewer\x18\x1c \x01(\bB\x03\xe0A\x03R\x0fcreatorIsViewer\x125\n" +
 	"\x05space\x18\x1d \x01(\tB\x1a\xe0A\x01\xfaA\x14\n" +
-	"\x12memos.api.v1/SpaceH\x04R\x05space\x88\x01\x01\x1a\xac\x01\n" +
+	"\x12memos.api.v1/SpaceH\x04R\x05space\x88\x01\x01\x12 \n" +
+	"\thide_time\x18\x1e \x01(\bB\x03\xe0A\x01R\bhideTime\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +

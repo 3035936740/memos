@@ -39,6 +39,9 @@ func (s *APIV1Service) prepareMemoCreate(ctx context.Context, user *store.User, 
 	if input.Hidden && !isSuperUser(user) {
 		return nil, status.Error(codes.PermissionDenied, "only administrators can hide memos")
 	}
+	if input.HideTime && !isSuperUser(user) {
+		return nil, status.Error(codes.PermissionDenied, "only administrators can hide memo timestamps")
+	}
 	if input.AdminScript != "" && !isSuperUser(user) {
 		return nil, status.Error(codes.PermissionDenied, "only administrators can set memo scripts")
 	}
@@ -110,6 +113,7 @@ func (s *APIV1Service) prepareMemoCreate(ctx context.Context, user *store.User, 
 	}
 	memo.Payload.Anonymous = input.Anonymous
 	memo.Payload.AdminScript = input.AdminScript
+	memo.Payload.HideTime = input.HideTime
 	if input.Category != nil {
 		category, err := s.normalizeMemoCategory(ctx, *input.Category)
 		if err != nil {

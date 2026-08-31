@@ -59,6 +59,10 @@ func TestMemoAccessScopeUsesEachMemoAudience(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []int32{publicContext.ID}, memoIDs(nonComments), "ordinary feeds exclude memos with COMMENT context")
 
+	comments, err := ts.ListMemos(ctx, &store.FindMemo{OnlyComments: true})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []int32{publicComment.ID, privateComment.ID}, memoIDs(comments))
+
 	ownerRows, err := ts.ListMemos(ctx, &store.FindMemo{
 		Access: &store.MemoAccessScope{UserID: &owner.ID, AllowPublic: true, AllowProtected: true},
 	})

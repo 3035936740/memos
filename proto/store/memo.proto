@@ -37,6 +37,10 @@ message MemoPayload {
   // comment is mounted on its detail page.
   string admin_script = 11;
 
+  // Hides the memo timestamp in the UI and excludes it from running-day and
+  // last-activity timestamp samples without excluding the memo itself.
+  bool hide_time = 12;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;

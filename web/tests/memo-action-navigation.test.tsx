@@ -32,7 +32,8 @@ vi.mock("@/contexts/SpaceContext", () => ({
   useSpaceContext: () => ({ clearSelectedSpace: mocks.clearSelectedSpace }),
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 
@@ -79,7 +80,7 @@ describe("Memo detail mutation navigation", () => {
 
   it.each([
     [State.NORMAL, "/archived"],
-    [State.ARCHIVED, "/"],
+    [State.ARCHIVED, "/home"],
   ])("switches an All-origin %s memo to the user-level destination without changing the remembered Space", async (state, destination) => {
     const { result } = renderActions(state, "all");
 
@@ -109,7 +110,7 @@ describe("Memo detail mutation navigation", () => {
       await result.current.handlers.confirmDeleteMemo();
     });
 
-    await waitFor(() => expect(result.current.pathname).toBe("/"));
+    await waitFor(() => expect(result.current.pathname).toBe("/home"));
     expect(mocks.clearSelectedSpace).toHaveBeenCalledOnce();
   });
 });

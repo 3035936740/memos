@@ -28,7 +28,8 @@ vi.mock("uuid", () => ({
   v4: mocks.uuidv4,
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 

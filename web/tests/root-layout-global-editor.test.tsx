@@ -40,11 +40,16 @@ vi.mock("@/hooks/useMediaQuery", () => ({
   default: () => true,
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/components/TopToolbar", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 
-const SHELL_TEST_IDS = ["desktop-sidebar", "mobile-sidebar", "mobile-header", "quick-find"];
+const SHELL_TEST_IDS = ["desktop-sidebar", "mobile-sidebar", "quick-find"];
 
 const RouteState = () => {
   const navigate = useNavigate();

@@ -48,7 +48,7 @@ vi.mock("@/components/MemoView/hooks", () => ({
 
 vi.mock("@/components/MemoView/MemoViewContext", () => ({
   useMemoViewContext: () => ({
-    memo: { name: "memos/123", visibility: 1, pinned: false, space: "spaces/product" },
+    memo: { name: "memos/123", visibility: 1, pinned: false, space: "spaces/product", viewCount: 0 },
     creator: state.creator,
     currentUser: undefined,
     parentPage: "/explore?filter=tagSearch%3Awork",
@@ -66,7 +66,8 @@ vi.mock("@/components/MemoView/MemoViewContext", () => ({
   }),
 }));
 
-vi.mock("@/utils/i18n", () => ({
+vi.mock("@/utils/i18n", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
 }));
 

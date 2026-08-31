@@ -60,6 +60,7 @@ export const TimestampPopover: FC = () => {
   const { actions, dispatch } = useEditorContext();
   const createTime = useEditorSelector((s) => s.timestamps.createTime);
   const updateTime = useEditorSelector((s) => s.timestamps.updateTime);
+  const hideTime = useEditorSelector((s) => s.timestamps.hideTime);
 
   if (!createTime) return null;
 
@@ -86,6 +87,14 @@ export const TimestampPopover: FC = () => {
           date={updateTime}
           onChange={(d) => dispatch(actions.setTimestamps({ updateTime: d }))}
         />
+        <label className="flex cursor-pointer items-center gap-2 pt-1 text-xs font-medium text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={hideTime}
+            onChange={(event) => dispatch(actions.setTimestamps({ hideTime: event.target.checked }))}
+          />
+          {t("common.hide-time")}
+        </label>
       </PopoverContent>
     </Popover>
   );

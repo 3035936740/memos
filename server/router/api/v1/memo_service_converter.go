@@ -75,6 +75,7 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 			memoMessage.Category = &category
 		}
 		memoMessage.Hidden = memo.Payload.Hidden
+		memoMessage.HideTime = memo.Payload.HideTime
 		memoMessage.Anonymous = memo.Payload.Anonymous
 		// The script is administrator-authored, but intentionally executes for
 		// every viewer on the memo detail page. Keep the source in the response so

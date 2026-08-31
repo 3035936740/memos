@@ -171,6 +171,7 @@
     "input": "Input",
     "language": "Language",
     "last-updated-at": "Last updated at",
+    "hide-time": "Hide time (exclude from running days)",
     "learn-more": "Learn more",
     "link": "Link",
     "location": "Location",

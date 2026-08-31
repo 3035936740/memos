@@ -123,7 +123,7 @@ describe("useInlineImageUpload", () => {
     act(() => result.current.editor.dispatch(result.current.editor.actions.setLoading("saving", true)));
     act(() => {
       result.current.inlineUpload.insertLocalImages([localImage("late.png")]);
-      result.current.inlineUpload.insertRemoteImages([remoteImage("late", "late.png")]);
+      result.current.inlineUpload.insertRemoteMedia([remoteImage("late", "late.png")]);
     });
 
     expect(upload).not.toHaveBeenCalled();

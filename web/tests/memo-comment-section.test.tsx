@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { type InitialEntry, MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import MemoCommentSection from "@/components/MemoCommentSection";
@@ -19,7 +20,11 @@ vi.mock("@/hooks/useMemoQueries", () => ({
   }),
 }));
 vi.mock("@/components/MemoView", () => ({
-  default: ({ memo: comment }: { memo: Memo }) => <div data-testid={`comment-${comment.name}`} />,
+  default: ({ memo: comment, headerActionLeading }: { memo: Memo; headerActionLeading?: ReactNode }) => (
+    <div data-testid={`comment-${comment.name}`}>
+      <div data-testid={`comment-actions-${comment.name}`}>{headerActionLeading}</div>
+    </div>
+  ),
 }));
 vi.mock("@/components/MemoEditor/loader", () => ({
   loadMemoEditor: async () => ({
@@ -111,6 +116,15 @@ describe("MemoCommentSection", () => {
     expect(secondFloorView.compareDocumentPosition(replyView) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(replyView.compareDocumentPosition(firstFloorView) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(replyView.closest(".border-l")).not.toBeNull();
+  });
+
+  it("anchors the floor label in the memo header action row", () => {
+    const comment = { name: "memos/comment-1", content: "First floor" } as Memo;
+    renderSection([comment]);
+
+    const floorLabel = screen.getByTestId(`comment-floor-${comment.name}`);
+    expect(screen.getByTestId(`comment-actions-${comment.name}`)).toContainElement(floorLabel);
+    expect(floorLabel).not.toHaveClass("absolute");
   });
 
   it("flattens historical nested replies into one visual reply level", () => {

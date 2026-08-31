@@ -159,7 +159,12 @@ func TestMigrationMultiSpacesPreservesMemosAndRelations(t *testing.T) {
 	_, err = db.ExecContext(ctx, legacySchemaFixture(driver))
 	require.NoError(t, err)
 
-	basicSetting, err := protojson.Marshal(&storepb.InstanceBasicSetting{SchemaVersion: "0.31.3"})
+	// The customized distribution already used v0.32 before the upstream v0.31
+	// migrations were merged. Its databases therefore report a version newer
+	// than the upstream space migration even though they do not have its tables.
+	// Keep this fixture at that real upgrade boundary to prevent the migration
+	// from being silently skipped again.
+	basicSetting, err := protojson.Marshal(&storepb.InstanceBasicSetting{SchemaVersion: "0.32.4"})
 	require.NoError(t, err)
 	insertSetting := "INSERT INTO system_setting (name, value, description) VALUES (?, ?, '')"
 	insertMemo := "INSERT INTO memo (id, uid, content, visibility, row_status, pinned, payload) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -307,6 +312,19 @@ func TestMigrationSpaceMemberStatusBackfillsActive(t *testing.T) {
 	db := ts.GetDriver().GetDB()
 	_, err = db.ExecContext(ctx, "ALTER TABLE space_member DROP COLUMN status")
 	require.NoError(t, err)
+	for _, statement := range []string{
+		"ALTER TABLE memo DROP COLUMN view_count",
+		"DROP TABLE emoji",
+		"DROP TABLE emoji_group",
+		"DROP TABLE moderation_report_adjustment",
+		"DROP TABLE moderation_user_ban",
+		"DROP TABLE memo_bookmark",
+		"DROP TABLE moderation_quarantine",
+		"DROP TABLE moderation_report",
+	} {
+		_, err = db.ExecContext(ctx, statement)
+		require.NoError(t, err)
+	}
 
 	basicSetting, err := ts.GetInstanceBasicSetting(ctx)
 	require.NoError(t, err)

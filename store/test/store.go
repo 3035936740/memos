@@ -34,6 +34,7 @@ func NewTestingStore(ctx context.Context, t *testing.T) *store.Store {
 	if err := store.Migrate(ctx); err != nil {
 		t.Fatalf("failed to migrate db: %v", err)
 	}
+	t.Cleanup(func() { _ = store.Close() })
 	return store
 }
 
@@ -55,6 +56,7 @@ func NewTestingStoreWithDSN(_ context.Context, t *testing.T, driver, dsn string)
 	store := store.New(dbDriver, profile)
 	// Do not run Migrate() automatically, as we might be testing pre-migration state
 	// or want to run it manually.
+	t.Cleanup(func() { _ = store.Close() })
 	return store
 }
 

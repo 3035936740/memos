@@ -481,7 +481,7 @@ const NavPillLabel = ({ expanded, label, children }: { expanded: boolean; label:
     {/* Content is shrink-0 so the collapsing track clips it in place — a plain
         left-to-right reveal instead of re-truncating the label on every frame. */}
     <span className="flex min-w-0 items-center gap-2 overflow-hidden">
-      <span className="max-w-[5.5rem] shrink-0 truncate text-[12px]">{label}</span>
+      <span className="min-w-0 max-w-[5.5rem] truncate text-[12px]">{label}</span>
       {children}
     </span>
   </span>
@@ -735,14 +735,14 @@ const GlobalNavigation = () => {
               {/* The tooltip anchors to a wrapper span rather than the button: a disabled
                   tooltip stamps data-trigger-disabled on its trigger element, and Base UI's
                   shared floating logic would read that as the MENU trigger being disabled. */}
-              <TooltipTrigger render={<span className="flex min-w-0" />}>
+              <TooltipTrigger render={<span className="flex min-w-[30px] shrink" />}>
                 <DropdownMenuTrigger
                   render={
                     <button
                       type="button"
                       aria-label={activeScopeItem.label}
                       aria-current={scopeRouteActive ? "page" : undefined}
-                      className={cn("group/scope shrink-0 whitespace-nowrap", navPillClasses(scopeRouteActive))}
+                      className={cn("group/scope w-full whitespace-nowrap", navPillClasses(scopeRouteActive))}
                     />
                   }
                 >

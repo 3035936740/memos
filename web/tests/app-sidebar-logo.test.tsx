@@ -456,7 +456,9 @@ describe("App sidebar logo", () => {
     expect(screen.queryByRole("button", { name: "common.all" })).not.toBeInTheDocument();
 
     const scopeTrigger = screen.getByRole("button", { name: "common.home" });
-    expect(scopeTrigger).toHaveClass("shrink-0", "whitespace-nowrap");
+    expect(scopeTrigger).toHaveClass("w-full", "whitespace-nowrap");
+    expect(scopeTrigger.parentElement).toHaveClass("min-w-[30px]", "shrink");
+    expect(scopeTrigger.parentElement).not.toHaveClass("flex-1");
     expect(scopeTrigger).toHaveTextContent("common.home");
     fireEvent.click(scopeTrigger);
     expect(await screen.findByRole("menuitem", { name: "common.home" })).toBeInTheDocument();

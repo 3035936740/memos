@@ -49,8 +49,8 @@ export const useMemoViewDerived = () => {
   const isInMemoDetailPage = isMemoDetailPath(location.pathname, memo.name);
   const commentAmount = computeCommentAmount(memo);
 
-  const createTime = memo.createTime ? timestampDate(memo.createTime) : undefined;
-  const updateTime = memo.updateTime ? timestampDate(memo.updateTime) : undefined;
+  const createTime = !memo.hideTime && memo.createTime ? timestampDate(memo.createTime) : undefined;
+  const updateTime = !memo.hideTime && memo.updateTime ? timestampDate(memo.updateTime) : undefined;
   const displayTime = timeBasis === "update_time" ? updateTime : createTime;
   const isDisplayingUpdatedTime =
     timeBasis === "update_time" && !!createTime && !!updateTime && updateTime.getTime() !== createTime.getTime();

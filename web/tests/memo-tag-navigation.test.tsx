@@ -6,7 +6,7 @@ import { Tag } from "@/components/MemoContent/Tag";
 const navigateTo = vi.hoisted(() => vi.fn());
 const clearSelectedSpace = vi.hoisted(() => vi.fn());
 const origin = vi.hoisted(() => ({
-  parentPage: "/" as string,
+  parentPage: "/home" as string,
   parentScope: "all" as "all" | "preserve",
 }));
 
@@ -42,7 +42,7 @@ describe("Memo tag navigation", () => {
   beforeEach(() => {
     navigateTo.mockClear();
     clearSelectedSpace.mockClear();
-    origin.parentPage = "/";
+    origin.parentPage = "/home";
     origin.parentScope = "all";
   });
 
@@ -56,7 +56,7 @@ describe("Memo tag navigation", () => {
     fireEvent.click(screen.getByText("#work"));
 
     expect(clearSelectedSpace).toHaveBeenCalledOnce();
-    expect(navigateTo).toHaveBeenCalledWith("/?filter=tagSearch%3Awork");
+    expect(navigateTo).toHaveBeenCalledWith("/home?filter=tagSearch%3Awork");
   });
 
   it("returns a Profile-origin tag without clearing the remembered Space", () => {

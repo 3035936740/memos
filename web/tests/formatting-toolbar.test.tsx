@@ -30,6 +30,7 @@ function makeController(opts: { active?: Partial<ActiveFormatState> } = {}) {
     getMarkdown: () => "",
     setMarkdown: () => {},
     insertMarkdown: vi.fn(),
+    insertInlineMarkdown: vi.fn(),
     getCursor: () => 0,
     setCursor: vi.fn(),
     scrollToCursor: () => {},

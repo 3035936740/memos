@@ -67,7 +67,7 @@ describe("<AttachmentMediaGrid>", () => {
 
     fireEvent.click(memoLink);
     expect(onPreview).not.toHaveBeenCalled();
-    expect(screen.getByTestId("location-state")).toHaveTextContent('{"from":"/","fromScope":"preserve"}');
+    expect(screen.getByTestId("location-state")).toHaveTextContent('{"from":"/home","fromScope":"preserve"}');
   });
 
   it("keeps video duration inside the existing play badge", () => {
