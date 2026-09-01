@@ -13,8 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSpaceContext } from "@/contexts/SpaceContext";
+import useCurrentUser from "@/hooks/useCurrentUser";
 import { extractSpaceUidFromName, formatSpaceUidForDisplay } from "@/lib/space-display";
 import { cn } from "@/lib/utils";
+import type { Space } from "@/types/proto/api/v1/space_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 // Icons in action and status rows sit in a glyph-width slot so every label in the menu
@@ -50,18 +52,21 @@ const ContextItem = ({
   </DropdownMenuItem>
 );
 
-function SpaceSwitcher({ className }: { className?: string }) {
+function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?: string; activeSpace?: Space; activeSpaceName?: string }) {
   const t = useTranslate();
+  const currentUser = useCurrentUser();
   const { spaces, duplicateSpaceTitles, selectedSpace, selectedSpaceName, isLoadingSpaces, isSpacesError, selectMemos, selectSpace } =
     useSpaceContext();
   const [createOpen, setCreateOpen] = useState(false);
   const [menuWidth, setMenuWidth] = useState<number>();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const selectedSpaceIdentity = selectedSpace?.name || selectedSpaceName || "";
+  const currentSpace = activeSpaceName ? activeSpace : selectedSpace;
+  const currentSpaceName = activeSpaceName || selectedSpaceName;
+  const selectedSpaceIdentity = currentSpace?.name || currentSpaceName || "";
   const selectedSpaceUid = selectedSpaceIdentity ? extractSpaceUidFromName(selectedSpaceIdentity) : "";
-  const showSelectedSpaceUid = selectedSpace ? duplicateSpaceTitles.has(selectedSpace.title) : Boolean(selectedSpaceName);
-  const currentContextLabel = selectedSpaceName
-    ? `${selectedSpace?.title || t("space.current")}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
+  const showSelectedSpaceUid = currentSpace ? duplicateSpaceTitles.has(currentSpace.title) : Boolean(currentSpaceName);
+  const currentContextLabel = currentSpaceName
+    ? `${currentSpace?.title || t("space.current")}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
     : t("common.memos");
 
   const handleMenuOpenChange = (open: boolean) => {
@@ -93,12 +98,12 @@ function SpaceSwitcher({ className }: { className?: string }) {
           }
         >
           <span className="flex min-w-0 flex-1 items-center overflow-hidden">
-            {selectedSpaceName ? (
+            {currentSpaceName ? (
               <>
-                <SpaceMark />
+                <SpaceMark avatarUrl={currentSpace?.avatarUrl} />
                 <span className="ms-1.5 flex min-w-0 flex-1 flex-col justify-center overflow-hidden">
                   <span className="block truncate text-[14px] font-medium leading-4 tracking-[-0.01em] text-foreground">
-                    {selectedSpace?.title || t("space.current")}
+                    {currentSpace?.title || t("space.current")}
                   </span>
                   {showSelectedSpaceUid && selectedSpaceUid ? (
                     <span
@@ -125,7 +130,7 @@ function SpaceSwitcher({ className }: { className?: string }) {
           style={menuWidth ? { width: `${menuWidth}px` } : undefined}
         >
           <DropdownMenuGroup>
-            <ContextItem selected={!selectedSpaceName} onSelect={selectMemos}>
+            <ContextItem selected={!currentSpaceName} onSelect={selectMemos}>
               <span className="min-w-0 flex-1">
                 <MemosLogo compact size="sm" />
               </span>
@@ -140,11 +145,11 @@ function SpaceSwitcher({ className }: { className?: string }) {
                   return (
                     <ContextItem
                       key={space.name}
-                      selected={space.name === selectedSpaceName}
+                      selected={space.name === currentSpaceName}
                       onSelect={() => selectSpace(space)}
                       ariaLabel={showUid && uid ? `${space.title} (${uid})` : space.title}
                     >
-                      <SpaceMark size="sm" />
+                      <SpaceMark size="sm" avatarUrl={space.avatarUrl} />
                       <span className="min-w-0 flex-1 overflow-hidden">
                         <span className="block max-w-full truncate font-medium">{space.title}</span>
                         {showUid && uid ? (
@@ -176,14 +181,18 @@ function SpaceSwitcher({ className }: { className?: string }) {
               {t("space.load-error")}
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setCreateOpen(true)}>
-            <RowIcon icon={PlusIcon} />
-            {t("space.create")}
-          </DropdownMenuItem>
+          {currentUser && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setCreateOpen(true)}>
+                <RowIcon icon={PlusIcon} />
+                {t("space.create")}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={selectSpace} />
+      {currentUser && <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={selectSpace} />}
     </>
   );
 }

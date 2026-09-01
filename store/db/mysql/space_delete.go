@@ -63,6 +63,15 @@ func requireMySQLSpaceDeleteAdmin(ctx context.Context, tx *sql.Tx, delete *store
 		}
 		return err
 	}
+	if delete.InstanceAdmin {
+		var actorRole store.Role
+		if err := tx.QueryRowContext(ctx, "SELECT role FROM user WHERE id = ?", delete.ActorUserID).Scan(&actorRole); err != nil {
+			return err
+		}
+		if actorRole == store.RoleAdmin {
+			return nil
+		}
+	}
 	var role store.SpaceMemberRole
 	if err := tx.QueryRowContext(ctx, "SELECT role FROM space_member WHERE space_id = ? AND user_id = ? AND status = 'ACTIVE'", delete.ID, delete.ActorUserID).Scan(&role); errors.Is(err, sql.ErrNoRows) {
 		return store.ErrSpacePermissionDenied

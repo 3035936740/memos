@@ -313,6 +313,10 @@ func TestMigrationSpaceMemberStatusBackfillsActive(t *testing.T) {
 	_, err = db.ExecContext(ctx, "ALTER TABLE space_member DROP COLUMN status")
 	require.NoError(t, err)
 	for _, statement := range []string{
+		"ALTER TABLE space DROP COLUMN url_slug",
+		"ALTER TABLE space DROP COLUMN sync_to_main_feed",
+		"ALTER TABLE space DROP COLUMN access_mode",
+		"ALTER TABLE space DROP COLUMN avatar_url",
 		"ALTER TABLE memo DROP COLUMN view_count",
 		"DROP TABLE emoji",
 		"DROP TABLE emoji_group",

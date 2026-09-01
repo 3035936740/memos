@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -74,6 +74,182 @@ func TestCreateSpaceGeneratesUUIDV4WhenSpaceUIDIsEmpty(t *testing.T) {
 	}
 }
 
+func TestSpaceURLSlugAndAccessModeVisibility(t *testing.T) {
+	ctx := context.Background()
+	service := newIntegrationService(t)
+	owner := createSpaceTestUser(ctx, t, service, "space-visibility-owner", store.RoleUser)
+	viewer := createSpaceTestUser(ctx, t, service, "space-visibility-viewer", store.RoleUser)
+
+	create := func(uid, title, slug string, accessMode v1pb.Space_AccessMode) *v1pb.Space {
+		t.Helper()
+		space, err := service.CreateSpace(userCtx(ctx, owner.ID), &v1pb.CreateSpaceRequest{
+			SpaceId: uid,
+			Space: &v1pb.Space{
+				Title:      title,
+				UrlSlug:    slug,
+				AccessMode: accessMode,
+			},
+		})
+		require.NoError(t, err)
+		return space
+	}
+
+	privateSpace := create("private-space-id", "Private", "PrivateAlias", v1pb.Space_INVITE_ONLY)
+	authenticatedSpace := create("authenticated-space-id", "Authenticated", "MembersArea", v1pb.Space_AUTHENTICATED)
+	publicSpace := create("public-space-id", "Public", "MySpace", v1pb.Space_PUBLIC)
+	require.Equal(t, "myspace", publicSpace.UrlSlug)
+
+	guestSpaces, err := service.ListSpaces(ctx, &v1pb.ListSpacesRequest{})
+	require.NoError(t, err)
+	require.Equal(t, []string{publicSpace.Name}, spaceNames(guestSpaces.Spaces))
+	require.Equal(t, v1pb.SpaceMember_ROLE_UNSPECIFIED, guestSpaces.Spaces[0].CurrentUserRole)
+
+	viewerSpaces, err := service.ListSpaces(userCtx(ctx, viewer.ID), &v1pb.ListSpacesRequest{})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{authenticatedSpace.Name, publicSpace.Name}, spaceNames(viewerSpaces.Spaces))
+
+	ownerSpaces, err := service.ListSpaces(userCtx(ctx, owner.ID), &v1pb.ListSpacesRequest{})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{privateSpace.Name, authenticatedSpace.Name, publicSpace.Name}, spaceNames(ownerSpaces.Spaces))
+	for _, space := range ownerSpaces.Spaces {
+		require.Equal(t, v1pb.SpaceMember_ADMIN, space.CurrentUserRole)
+	}
+
+	byAlias, err := service.GetSpace(ctx, &v1pb.GetSpaceRequest{Name: "spaces/myspace"})
+	require.NoError(t, err)
+	require.Equal(t, publicSpace.Name, byAlias.Name, "the immutable resource name remains UUID/custom-ID based")
+	require.Equal(t, "myspace", byAlias.UrlSlug)
+
+	_, err = service.GetSpace(ctx, &v1pb.GetSpaceRequest{Name: "spaces/membersarea"})
+	require.Equal(t, codes.Unauthenticated, status.Code(err))
+	_, err = service.GetSpace(userCtx(ctx, viewer.ID), &v1pb.GetSpaceRequest{Name: "spaces/membersarea"})
+	require.NoError(t, err)
+	_, err = service.GetSpace(userCtx(ctx, viewer.ID), &v1pb.GetSpaceRequest{Name: "spaces/privatealias"})
+	require.Equal(t, codes.NotFound, status.Code(err))
+
+	updated, err := service.UpdateSpace(userCtx(ctx, owner.ID), &v1pb.UpdateSpaceRequest{
+		Space:      &v1pb.Space{Name: publicSpace.Name, UrlSlug: "NewAlias"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"url_slug"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, "newalias", updated.UrlSlug)
+	_, err = service.GetSpace(ctx, &v1pb.GetSpaceRequest{Name: "spaces/myspace"})
+	require.Equal(t, codes.NotFound, status.Code(err))
+	_, err = service.GetSpace(ctx, &v1pb.GetSpaceRequest{Name: "spaces/newalias"})
+	require.NoError(t, err)
+
+	_, err = service.UpdateSpace(userCtx(ctx, owner.ID), &v1pb.UpdateSpaceRequest{
+		Space:      &v1pb.Space{Name: publicSpace.Name, UrlSlug: "membersarea"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"url_slug"}},
+	})
+	require.Equal(t, codes.AlreadyExists, status.Code(err))
+	_, err = service.UpdateSpace(userCtx(ctx, owner.ID), &v1pb.UpdateSpaceRequest{
+		Space:      &v1pb.Space{Name: publicSpace.Name, UrlSlug: "bad-slug"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"url_slug"}},
+	})
+	require.Equal(t, codes.InvalidArgument, status.Code(err))
+	_, err = service.CreateSpace(userCtx(ctx, owner.ID), &v1pb.CreateSpaceRequest{
+		SpaceId: "newalias",
+		Space:   &v1pb.Space{Title: "Conflicts with alias"},
+	})
+	require.Equal(t, codes.AlreadyExists, status.Code(err))
+}
+
+func TestOpenSpaceMemoReadAndPublishForNonMembers(t *testing.T) {
+	ctx := context.Background()
+	service := newIntegrationService(t)
+	owner := createSpaceTestUser(ctx, t, service, "open-space-owner", store.RoleUser)
+	outsider := createSpaceTestUser(ctx, t, service, "open-space-outsider", store.RoleUser)
+	_, err := service.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
+		Key: storepb.InstanceSettingKey_ACCESS,
+		Value: &storepb.InstanceSetting_AccessSetting{AccessSetting: &storepb.InstanceAccessSetting{
+			AccessMode: storepb.InstanceAccessMode_INSTANCE_ACCESS_MODE_PUBLIC,
+		}},
+	})
+	require.NoError(t, err)
+
+	createSpace := func(id string, mode v1pb.Space_AccessMode) *v1pb.Space {
+		t.Helper()
+		space, err := service.CreateSpace(userCtx(ctx, owner.ID), &v1pb.CreateSpaceRequest{
+			SpaceId: id,
+			Space:   &v1pb.Space{Title: id, AccessMode: mode},
+		})
+		require.NoError(t, err)
+		return space
+	}
+	publicSpace := createSpace("open-public", v1pb.Space_PUBLIC)
+	authenticatedSpace := createSpace("open-authenticated", v1pb.Space_AUTHENTICATED)
+	inviteOnlySpace := createSpace("closed-invite-only", v1pb.Space_INVITE_ONLY)
+
+	createMemo := func(user *store.User, space *v1pb.Space, content string) (*v1pb.Memo, error) {
+		t.Helper()
+		spaceName := space.Name
+		return service.CreateMemo(userCtx(ctx, user.ID), &v1pb.CreateMemoRequest{Memo: &v1pb.Memo{
+			Content:    content,
+			Visibility: v1pb.Visibility_SPACE,
+			Space:      &spaceName,
+		}})
+	}
+	for _, item := range []struct {
+		space   *v1pb.Space
+		content string
+	}{
+		{publicSpace, "public Space audience"},
+		{authenticatedSpace, "authenticated Space audience"},
+		{inviteOnlySpace, "invite-only Space audience"},
+	} {
+		_, err := createMemo(owner, item.space, item.content)
+		require.NoError(t, err)
+	}
+
+	listSpace := func(callCtx context.Context, space *v1pb.Space) (*v1pb.ListMemosResponse, error) {
+		t.Helper()
+		return service.ListMemos(callCtx, &v1pb.ListMemosRequest{
+			Filter: `space == "` + space.Name + `" && visibility in ["SPACE"]`,
+		})
+	}
+
+	listed, err := listSpace(userCtx(ctx, outsider.ID), publicSpace)
+	require.NoError(t, err)
+	require.Len(t, listed.Memos, 1)
+	listed, err = listSpace(userCtx(ctx, outsider.ID), authenticatedSpace)
+	require.NoError(t, err)
+	require.Len(t, listed.Memos, 1)
+	_, err = listSpace(userCtx(ctx, outsider.ID), inviteOnlySpace)
+	require.Equal(t, codes.NotFound, status.Code(err))
+
+	listed, err = listSpace(ctx, publicSpace)
+	require.NoError(t, err)
+	require.Len(t, listed.Memos, 1)
+	_, err = listSpace(ctx, authenticatedSpace)
+	require.Equal(t, codes.Unauthenticated, status.Code(err))
+	_, err = listSpace(ctx, inviteOnlySpace)
+	require.Equal(t, codes.NotFound, status.Code(err))
+
+	publicMemo, err := createMemo(outsider, publicSpace, "outsider public Space memo")
+	require.NoError(t, err)
+	_, err = createMemo(outsider, authenticatedSpace, "outsider authenticated Space memo")
+	require.NoError(t, err)
+	_, err = createMemo(outsider, inviteOnlySpace, "outsider invite-only Space memo")
+	require.Equal(t, codes.NotFound, status.Code(err))
+
+	publicMemo.Content = "outsider updated public Space memo"
+	updated, err := service.UpdateMemo(userCtx(ctx, outsider.ID), &v1pb.UpdateMemoRequest{
+		Memo:       publicMemo,
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, publicMemo.Content, updated.Content)
+}
+
+func spaceNames(spaces []*v1pb.Space) []string {
+	names := make([]string, 0, len(spaces))
+	for _, space := range spaces {
+		names = append(names, space.Name)
+	}
+	return names
+}
+
 func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	ctx := context.Background()
 	service := newIntegrationService(t)
@@ -118,6 +294,14 @@ func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	require.Equal(t, space.Description, invitation.Space.Description)
 	require.Equal(t, v1pb.SpaceMember_ROLE_UNSPECIFIED, invitation.Space.CurrentUserRole)
 	require.Zero(t, invitation.Space.MemberCount)
+	notifications, err := service.ListUserNotifications(userCtx(ctx, member.ID), &v1pb.ListUserNotificationsRequest{Parent: BuildUserName(member.Username)})
+	require.NoError(t, err)
+	require.Len(t, notifications.Notifications, 1)
+	notification := notifications.Notifications[0]
+	require.Equal(t, v1pb.UserNotification_SPACE_INVITATION, notification.Type)
+	require.Equal(t, invitation.Name, notification.GetSpaceInvitation().Invitation)
+	require.Equal(t, space.Name, notification.GetSpaceInvitation().Space)
+	require.Equal(t, space.Title, notification.GetSpaceInvitation().SpaceTitle)
 
 	_, err = service.GetSpace(userCtx(ctx, member.ID), &v1pb.GetSpaceRequest{Name: space.Name})
 	require.Equal(t, codes.NotFound, status.Code(err), "a pending invitation must not grant Space access")
@@ -147,6 +331,9 @@ func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "spaces/team-notes/members/space-member", createdMember.Name)
 	require.Equal(t, v1pb.SpaceMember_USER, createdMember.Role)
+	notifications, err = service.ListUserNotifications(userCtx(ctx, member.ID), &v1pb.ListUserNotificationsRequest{Parent: BuildUserName(member.Username)})
+	require.NoError(t, err)
+	require.Empty(t, notifications.Notifications, "accepting an invitation must remove its notification")
 	_, err = service.GetSpaceInvitation(userCtx(ctx, owner.ID), &v1pb.GetSpaceInvitationRequest{Name: invitation.Name})
 	require.Equal(t, codes.NotFound, status.Code(err))
 
@@ -294,10 +481,7 @@ func TestSpaceServiceHardDeleteLifecycle(t *testing.T) {
 	_, err = service.DeleteSpace(userCtx(ctx, target.ID), &v1pb.DeleteSpaceRequest{Name: space.Name})
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
 	_, err = service.DeleteSpace(userCtx(ctx, applicationAdmin.ID), &v1pb.DeleteSpaceRequest{Name: space.Name})
-	require.Equal(t, codes.NotFound, status.Code(err), "application ADMIN must not bypass Space membership")
-
-	_, err = service.DeleteSpace(userCtx(ctx, owner.ID), &v1pb.DeleteSpaceRequest{Name: space.Name})
-	require.NoError(t, err)
+	require.NoError(t, err, "application ADMIN can remove any Space for moderation")
 	require.NoFileExists(t, attachmentPath)
 	_, err = service.GetSpace(userCtx(ctx, owner.ID), &v1pb.GetSpaceRequest{Name: space.Name})
 	require.Equal(t, codes.NotFound, status.Code(err))

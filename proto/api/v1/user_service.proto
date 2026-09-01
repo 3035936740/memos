@@ -835,6 +835,7 @@ message UserNotification {
   oneof payload {
     MemoCommentPayload memo_comment = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
     MemoMentionPayload memo_mention = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+    SpaceInvitationPayload space_invitation = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
   }
 
   message MemoCommentPayload {
@@ -869,6 +870,19 @@ message UserNotification {
     string related_memo_snippet = 4;
   }
 
+  message SpaceInvitationPayload {
+    // The invited Space resource.
+    // Format: spaces/{space}
+    string space = 1;
+
+    // The pending invitation resource accepted or declined by the receiver.
+    string invitation = 2;
+
+    string space_title = 3;
+    string space_avatar_url = 4;
+    string space_description = 5;
+  }
+
   enum Status {
     STATUS_UNSPECIFIED = 0;
     UNREAD = 1;
@@ -879,6 +893,7 @@ message UserNotification {
     TYPE_UNSPECIFIED = 0;
     MEMO_COMMENT = 1;
     MEMO_MENTION = 2;
+    SPACE_INVITATION = 3;
   }
 }
 

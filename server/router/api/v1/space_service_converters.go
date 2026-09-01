@@ -31,10 +31,41 @@ func convertSpaceMetadataFromStore(space *store.Space) *v1pb.Space {
 	if space == nil {
 		return nil
 	}
+	syncToMainFeed := space.SyncToMainFeed
 	return &v1pb.Space{
-		Name:        buildSpaceName(space.UID),
-		Title:       space.Title,
-		Description: space.Description,
+		Name:           buildSpaceName(space.UID),
+		UrlSlug:        space.URLSlug,
+		Title:          space.Title,
+		Description:    space.Description,
+		AvatarUrl:      space.AvatarURL,
+		AccessMode:     convertSpaceAccessModeFromStore(space.AccessMode),
+		SyncToMainFeed: &syncToMainFeed,
+	}
+}
+
+func convertSpaceAccessModeFromStore(mode store.SpaceAccessMode) v1pb.Space_AccessMode {
+	switch mode {
+	case store.SpaceAccessModeInviteOnly:
+		return v1pb.Space_INVITE_ONLY
+	case store.SpaceAccessModeAuthenticated:
+		return v1pb.Space_AUTHENTICATED
+	case store.SpaceAccessModePublic:
+		return v1pb.Space_PUBLIC
+	default:
+		return v1pb.Space_ACCESS_MODE_UNSPECIFIED
+	}
+}
+
+func convertSpaceAccessModeToStore(mode v1pb.Space_AccessMode) (store.SpaceAccessMode, bool) {
+	switch mode {
+	case v1pb.Space_INVITE_ONLY:
+		return store.SpaceAccessModeInviteOnly, true
+	case v1pb.Space_AUTHENTICATED:
+		return store.SpaceAccessModeAuthenticated, true
+	case v1pb.Space_PUBLIC:
+		return store.SpaceAccessModePublic, true
+	default:
+		return "", false
 	}
 }
 

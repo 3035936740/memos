@@ -36,7 +36,7 @@ const (
 	Protected Visibility = "PROTECTED"
 	// Private is the PRIVATE visibility.
 	Private Visibility = "PRIVATE"
-	// SpaceAudience is visible only to active members of its space.
+	// SpaceAudience follows the assigned Space's access mode.
 	SpaceAudience Visibility = "SPACE"
 )
 
@@ -80,13 +80,14 @@ type FindMemo struct {
 	CreatorID *int32
 
 	// Domain specific fields
-	VisibilityList       []Visibility
-	CommentContextMemoID *int32
-	Access               *MemoAccessScope
-	ExcludeContent       bool
-	ExcludeComments      bool
-	OnlyComments         bool
-	Filters              []string
+	VisibilityList        []Visibility
+	CommentContextMemoID  *int32
+	Access                *MemoAccessScope
+	ExcludeContent        bool
+	ExcludeComments       bool
+	OnlyComments          bool
+	ExcludeUnsyncedSpaces bool
+	Filters               []string
 
 	// Pagination
 	Limit  *int
@@ -142,15 +143,17 @@ type MemoWritePolicy struct {
 // MemoWriteSnapshot is the current database state used to validate a
 // MemoWritePolicy. Driver packages populate it in the mutation transaction.
 type MemoWriteSnapshot struct {
-	CreatorID          int32
-	RowStatus          RowStatus
-	SpaceID            *int32
-	Visibility         Visibility
-	SourceSpaceExists  bool
-	SourceMemberActive bool
-	TargetSpaceExists  bool
-	TargetMemberActive bool
-	HasActiveShare     bool
+	CreatorID             int32
+	RowStatus             RowStatus
+	SpaceID               *int32
+	Visibility            Visibility
+	SourceSpaceExists     bool
+	SourceSpaceAccessMode SpaceAccessMode
+	SourceMemberActive    bool
+	TargetSpaceExists     bool
+	TargetSpaceAccessMode SpaceAccessMode
+	TargetMemberActive    bool
+	HasActiveShare        bool
 }
 
 // MemoAccessScope is a typed, fail-closed read authorization predicate. When
@@ -293,7 +296,7 @@ func ValidateMemoWriteSnapshot(policy *MemoWritePolicy, update *UpdateMemo, snap
 		if !snapshot.SourceSpaceExists {
 			return ErrMemoSpaceNotWritable
 		}
-		if !policy.LifecycleOnly && !snapshot.SourceMemberActive {
+		if !policy.LifecycleOnly && !SpaceWriteAllowed(snapshot.SourceSpaceAccessMode, snapshot.SourceMemberActive) {
 			return ErrMemoSpaceMembershipRequired
 		}
 	}
@@ -305,7 +308,7 @@ func ValidateMemoWriteSnapshot(policy *MemoWritePolicy, update *UpdateMemo, snap
 			if !snapshot.TargetSpaceExists {
 				return ErrMemoSpaceNotWritable
 			}
-			if !snapshot.TargetMemberActive {
+			if !SpaceWriteAllowed(snapshot.TargetSpaceAccessMode, snapshot.TargetMemberActive) {
 				return ErrMemoSpaceMembershipRequired
 			}
 			resultSpaceID = update.SpaceID
@@ -339,6 +342,13 @@ func ValidateMemoWriteSnapshot(policy *MemoWritePolicy, update *UpdateMemo, snap
 		return ErrMemoShareConflict
 	}
 	return nil
+}
+
+// SpaceWriteAllowed reports whether an active signed-in user may publish to a
+// Space. Open Spaces accept any active user; invite-only Spaces require an
+// active membership.
+func SpaceWriteAllowed(accessMode SpaceAccessMode, memberActive bool) bool {
+	return memberActive || accessMode == SpaceAccessModePublic || accessMode == SpaceAccessModeAuthenticated
 }
 
 func isLifecycleOnlyMemoUpdate(update *UpdateMemo) bool {

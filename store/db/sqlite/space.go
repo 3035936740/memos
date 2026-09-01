@@ -23,12 +23,12 @@ func (d *DB) CreateSpace(ctx context.Context, create *store.Space, creatorID int
 		return nil, err
 	}
 
-	fields := []string{"uid", "title", "description"}
-	values := []string{"?", "?", "?"}
-	args := []any{create.UID, create.Title, create.Description}
-	query := "INSERT INTO space (" + strings.Join(fields, ", ") + ") VALUES (" + strings.Join(values, ", ") + ") RETURNING id, uid, title, description"
+	fields := []string{"uid", "url_slug", "title", "description", "avatar_url", "access_mode", "sync_to_main_feed"}
+	values := []string{"?", "NULLIF(?, '')", "?", "?", "?", "?", "?"}
+	args := []any{create.UID, create.URLSlug, create.Title, create.Description, create.AvatarURL, create.AccessMode, create.SyncToMainFeed}
+	query := "INSERT INTO space (" + strings.Join(fields, ", ") + ") VALUES (" + strings.Join(values, ", ") + ") RETURNING id, uid, COALESCE(url_slug, ''), title, description, avatar_url, access_mode, sync_to_main_feed"
 	space := &store.Space{}
-	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.Title, &space.Description); err != nil {
+	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed); err != nil {
 		if isSQLiteUniqueViolation(err) {
 			return nil, store.ErrSpaceAlreadyExists
 		}
@@ -47,7 +47,7 @@ func (d *DB) CreateSpace(ctx context.Context, create *store.Space, creatorID int
 
 func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Space, error) {
 	where, args := []string{"1 = 1"}, []any{}
-	selectFields := "space.id, space.uid, space.title, space.description"
+	selectFields := "space.id, space.uid, COALESCE(space.url_slug, ''), space.title, space.description, space.avatar_url, space.access_mode, space.sync_to_main_feed"
 	joins := ""
 	groupBy := ""
 	if find.ID != nil {
@@ -64,6 +64,24 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 	if find.UID != nil {
 		where, args = append(where, "space.uid = ?"), append(args, *find.UID)
 	}
+	if find.URLSlug != nil {
+		where, args = append(where, "space.url_slug = ?"), append(args, *find.URLSlug)
+	}
+	if find.UIDOrURLSlug != nil {
+		where, args = append(where, "(space.uid = ? OR space.url_slug = ?)"), append(args, *find.UIDOrURLSlug, *find.UIDOrURLSlug)
+	}
+	if len(find.AccessModes) > 0 {
+		holders := make([]string, 0, len(find.AccessModes))
+		for _, mode := range find.AccessModes {
+			holders = append(holders, "?")
+			args = append(args, mode)
+		}
+		where = append(where, "space.access_mode IN ("+strings.Join(holders, ", ")+")")
+	}
+	if find.Search != nil && strings.TrimSpace(*find.Search) != "" {
+		search := "%" + strings.ToLower(strings.TrimSpace(*find.Search)) + "%"
+		where, args = append(where, "(LOWER(space.uid) LIKE ? OR LOWER(COALESCE(space.url_slug, '')) LIKE ? OR LOWER(space.title) LIKE ? OR LOWER(space.description) LIKE ?)"), append(args, search, search, search, search)
+	}
 	if find.MemberUserID != nil {
 		selectFields += ", viewer_member.role, COUNT(active_member.user_id)"
 		joins = ` JOIN space_member viewer_member ON viewer_member.space_id = space.id
@@ -72,7 +90,7 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 			JOIN user active_user ON active_user.id = active_member.user_id AND active_user.row_status = 'NORMAL'`
 		where = append(where, "viewer_member.user_id = ?", "viewer_member.status = 'ACTIVE'", "viewer_member.role IN ('ADMIN', 'USER')", "viewer_user.row_status = 'NORMAL'")
 		args = append(args, *find.MemberUserID)
-		groupBy = " GROUP BY space.id, space.uid, space.title, space.description, viewer_member.role"
+		groupBy = " GROUP BY space.id, space.uid, space.url_slug, space.title, space.description, space.avatar_url, space.access_mode, space.sync_to_main_feed, viewer_member.role"
 	}
 	query := "SELECT " + selectFields + " FROM space" + joins + " WHERE " + strings.Join(where, " AND ") + groupBy + " ORDER BY space.id DESC"
 	query = appendSQLiteLimit(query, find.Limit, find.Offset)
@@ -84,7 +102,7 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 	spaces := []*store.Space{}
 	for rows.Next() {
 		space := &store.Space{}
-		scanTargets := []any{&space.ID, &space.UID, &space.Title, &space.Description}
+		scanTargets := []any{&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed}
 		if find.MemberUserID != nil {
 			scanTargets = append(scanTargets, &space.CurrentUserRole, &space.MemberCount)
 		}
@@ -112,11 +130,26 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 	if update.Description != nil {
 		sets, args = append(sets, "description = ?"), append(args, *update.Description)
 	}
+	if update.AvatarURL != nil {
+		sets, args = append(sets, "avatar_url = ?"), append(args, *update.AvatarURL)
+	}
+	if update.URLSlug != nil {
+		sets, args = append(sets, "url_slug = NULLIF(?, '')"), append(args, *update.URLSlug)
+	}
+	if update.AccessMode != nil {
+		sets, args = append(sets, "access_mode = ?"), append(args, *update.AccessMode)
+	}
+	if update.SyncToMainFeed != nil {
+		sets, args = append(sets, "sync_to_main_feed = ?"), append(args, *update.SyncToMainFeed)
+	}
 	args = append(args, update.ID)
 	query := `UPDATE space SET ` + strings.Join(sets, ", ") + ` WHERE id = ?
-		RETURNING id, uid, title, description`
+		RETURNING id, uid, COALESCE(url_slug, ''), title, description, avatar_url, access_mode, sync_to_main_feed`
 	space := &store.Space{}
-	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.Title, &space.Description); err != nil {
+	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed); err != nil {
+		if isSQLiteUniqueViolation(err) {
+			return nil, store.ErrSpaceURLSlugAlreadyExists
+		}
 		return nil, err
 	}
 	if err := populateSQLiteSpaceSummary(ctx, tx, space, actorUserID); err != nil {

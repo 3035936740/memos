@@ -3,6 +3,9 @@ package v1
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
+	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -11,8 +14,43 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
+	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/store"
 )
+
+const maxSpaceAvatarBytes = 10 << 20
+
+var spaceURLSlugPattern = regexp.MustCompile(`^[A-Za-z0-9]{1,64}$`)
+
+func validateSpaceURLSlug(value string) (string, error) {
+	value = strings.TrimSpace(value)
+	if value != "" && !spaceURLSlugPattern.MatchString(value) {
+		return "", status.Error(codes.InvalidArgument, "space URL alias must contain only 1 to 64 ASCII letters or digits")
+	}
+	return strings.ToLower(value), nil
+}
+
+func validateSpaceAvatar(avatarURL string) error {
+	if avatarURL == "" {
+		return nil
+	}
+	imageType, encoded, err := extractImageInfo(avatarURL)
+	if err != nil {
+		return status.Errorf(codes.InvalidArgument, "invalid space avatar format: %v", err)
+	}
+	allowedTypes := map[string]bool{"image/png": true, "image/jpeg": true, "image/jpg": true, "image/gif": true, "image/webp": true}
+	if !allowedTypes[imageType] {
+		return status.Errorf(codes.InvalidArgument, "invalid space avatar image type: %s", imageType)
+	}
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, "invalid space avatar base64 data")
+	}
+	if len(decoded) > maxSpaceAvatarBytes {
+		return status.Error(codes.InvalidArgument, "space avatar must not exceed 10 MB")
+	}
+	return nil
+}
 
 func (s *APIV1Service) requireCurrentSpaceUser(ctx context.Context) (*store.User, error) {
 	user, err := s.fetchCurrentUser(ctx)
@@ -68,6 +106,8 @@ func mapSpaceMutationError(err error, operation string) error {
 		return status.Error(codes.FailedPrecondition, "space members must be active users")
 	case errors.Is(err, store.ErrSpaceAlreadyExists):
 		return status.Error(codes.AlreadyExists, "space already exists")
+	case errors.Is(err, store.ErrSpaceURLSlugAlreadyExists):
+		return status.Error(codes.AlreadyExists, "space URL alias already exists")
 	case errors.Is(err, store.ErrSpaceMemberAlreadyExists):
 		return status.Error(codes.AlreadyExists, "space membership or invitation already exists")
 	case errors.Is(err, store.ErrSpaceInvitationNotFound):
@@ -98,10 +138,46 @@ func (s *APIV1Service) CreateSpace(ctx context.Context, request *v1pb.CreateSpac
 	if err != nil {
 		return nil, err
 	}
+	if err := validateSpaceAvatar(request.Space.AvatarUrl); err != nil {
+		return nil, err
+	}
+	urlSlug, err := validateSpaceURLSlug(request.Space.UrlSlug)
+	if err != nil {
+		return nil, err
+	}
+	if existing, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid}); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to validate space UID: %v", err)
+	} else if existing != nil {
+		return nil, status.Error(codes.AlreadyExists, "space already exists")
+	}
+	if urlSlug != "" {
+		if existing, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &urlSlug}); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to validate space URL alias: %v", err)
+		} else if existing != nil {
+			return nil, status.Error(codes.AlreadyExists, "space URL alias already exists")
+		}
+	}
+	accessMode := store.SpaceAccessModeInviteOnly
+	if request.Space.AccessMode != v1pb.Space_ACCESS_MODE_UNSPECIFIED {
+		var ok bool
+		accessMode, ok = convertSpaceAccessModeToStore(request.Space.AccessMode)
+		if !ok {
+			return nil, status.Error(codes.InvalidArgument, "invalid space access mode")
+		}
+	}
+	syncToMainFeed := true
+	if request.Space.SyncToMainFeed != nil {
+		syncToMainFeed = request.Space.GetSyncToMainFeed()
+	}
 	created, err := s.Store.CreateSpace(ctx, &store.Space{
-		UID:         uid,
-		Title:       title,
-		Description: strings.TrimSpace(request.Space.Description),
+		UID:               uid,
+		URLSlug:           urlSlug,
+		Title:             title,
+		Description:       strings.TrimSpace(request.Space.Description),
+		AvatarURL:         request.Space.AvatarUrl,
+		AccessMode:        accessMode,
+		SyncToMainFeed:    syncToMainFeed,
+		SyncToMainFeedSet: true,
 	}, currentUser.ID)
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to create space")
@@ -110,22 +186,69 @@ func (s *APIV1Service) CreateSpace(ctx context.Context, request *v1pb.CreateSpac
 	return convertSpaceFromStore(created), nil
 }
 
-// ListSpaces lists only spaces with a membership for the caller.
+// ListSpaces lists spaces visible to the caller. Guests see public spaces;
+// signed-in users additionally see authenticated spaces and their memberships.
 func (s *APIV1Service) ListSpaces(ctx context.Context, request *v1pb.ListSpacesRequest) (*v1pb.ListSpacesResponse, error) {
-	currentUser, err := s.requireCurrentSpaceUser(ctx)
+	currentUser, err := s.fetchCurrentUser(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
 	}
 	limit, offset, err := listSpacePage(request.PageSize, request.PageToken)
 	if err != nil {
 		return nil, err
 	}
 	limitPlusOne := limit + 1
-	spaces, err := s.Store.ListSpaces(ctx, &store.FindSpace{
-		MemberUserID: &currentUser.ID,
-		Limit:        &limitPlusOne,
-		Offset:       &offset,
-	})
+	find := &store.FindSpace{Limit: &limitPlusOne, Offset: &offset}
+	if filter := strings.TrimSpace(request.Filter); filter != "" {
+		find.Search = &filter
+	}
+	var spaces []*store.Space
+	if request.ShowAll {
+		if currentUser == nil || !isSuperUser(currentUser) {
+			return nil, status.Error(codes.PermissionDenied, "instance administrator permission required")
+		}
+		spaces, err = s.Store.ListSpaces(ctx, find)
+	} else if currentUser == nil {
+		find.AccessModes = []store.SpaceAccessMode{store.SpaceAccessModePublic}
+		spaces, err = s.Store.ListSpaces(ctx, find)
+	} else {
+		// Fetch enough rows from each visibility source to merge, de-duplicate,
+		// sort, and apply one stable page across both sets.
+		sourceLimit := offset + limitPlusOne
+		memberFind := &store.FindSpace{MemberUserID: &currentUser.ID, Limit: &sourceLimit}
+		visibleFind := &store.FindSpace{
+			AccessModes: []store.SpaceAccessMode{store.SpaceAccessModeAuthenticated, store.SpaceAccessModePublic},
+			Limit:       &sourceLimit,
+		}
+		if find.Search != nil {
+			memberFind.Search = find.Search
+			visibleFind.Search = find.Search
+		}
+		memberSpaces, memberErr := s.Store.ListSpaces(ctx, memberFind)
+		if memberErr != nil {
+			return nil, status.Errorf(codes.Internal, "failed to list member spaces: %v", memberErr)
+		}
+		visibleSpaces, visibleErr := s.Store.ListSpaces(ctx, visibleFind)
+		if visibleErr != nil {
+			return nil, status.Errorf(codes.Internal, "failed to list accessible spaces: %v", visibleErr)
+		}
+		spaceByID := make(map[int32]*store.Space, len(memberSpaces)+len(visibleSpaces))
+		for _, space := range visibleSpaces {
+			spaceByID[space.ID] = space
+		}
+		for _, space := range memberSpaces {
+			spaceByID[space.ID] = space
+		}
+		merged := make([]*store.Space, 0, len(spaceByID))
+		for _, space := range spaceByID {
+			merged = append(merged, space)
+		}
+		sort.Slice(merged, func(i, j int) bool { return merged[i].ID > merged[j].ID })
+		if offset < len(merged) {
+			end := min(offset+limitPlusOne, len(merged))
+			spaces = merged[offset:end]
+		}
+	}
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list spaces: %v", err)
 	}
@@ -156,17 +279,36 @@ func listSpacePage(pageSize int32, pageToken string) (int, int, error) {
 	return normalizePageSize(token.Limit), max(int(token.Offset), 0), nil
 }
 
-// GetSpace gets a space visible to the caller through membership.
+// GetSpace gets a space visible through membership or its configured access mode.
 func (s *APIV1Service) GetSpace(ctx context.Context, request *v1pb.GetSpaceRequest) (*v1pb.Space, error) {
-	currentUser, err := s.requireCurrentSpaceUser(ctx)
+	uid, err := ExtractSpaceUIDFromName(request.Name)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, "invalid space name: %v", err)
 	}
-	space, _, err := s.resolveMemberSpace(ctx, request.Name, currentUser)
+	currentUser, err := s.fetchCurrentUser(ctx)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
 	}
-	return convertSpaceFromStore(space), nil
+	if currentUser != nil {
+		memberSpace, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid, MemberUserID: &currentUser.ID})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
+		}
+		if memberSpace != nil {
+			return convertSpaceFromStore(memberSpace), nil
+		}
+	}
+	space, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
+	}
+	if space == nil || space.AccessMode == store.SpaceAccessModeInviteOnly {
+		return nil, status.Error(codes.NotFound, "space not found")
+	}
+	if space.AccessMode == store.SpaceAccessModeAuthenticated && currentUser == nil {
+		return nil, status.Error(codes.Unauthenticated, "user not authenticated")
+	}
+	return convertSpaceMetadataFromStore(space), nil
 }
 
 // UpdateSpace updates Space metadata.
@@ -201,6 +343,35 @@ func (s *APIV1Service) UpdateSpace(ctx context.Context, request *v1pb.UpdateSpac
 		case "description":
 			description := strings.TrimSpace(request.Space.Description)
 			update.Description = &description
+		case "avatar_url":
+			if err := validateSpaceAvatar(request.Space.AvatarUrl); err != nil {
+				return nil, err
+			}
+			update.AvatarURL = &request.Space.AvatarUrl
+		case "url_slug":
+			urlSlug, err := validateSpaceURLSlug(request.Space.UrlSlug)
+			if err != nil {
+				return nil, err
+			}
+			if urlSlug != "" {
+				existing, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &urlSlug})
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "failed to validate space URL alias: %v", err)
+				}
+				if existing != nil && existing.ID != space.ID {
+					return nil, status.Error(codes.AlreadyExists, "space URL alias already exists")
+				}
+			}
+			update.URLSlug = &urlSlug
+		case "access_mode":
+			accessMode, ok := convertSpaceAccessModeToStore(request.Space.AccessMode)
+			if !ok {
+				return nil, status.Error(codes.InvalidArgument, "invalid space access mode")
+			}
+			update.AccessMode = &accessMode
+		case "sync_to_main_feed":
+			syncToMainFeed := request.Space.GetSyncToMainFeed()
+			update.SyncToMainFeed = &syncToMainFeed
 		default:
 			return nil, status.Errorf(codes.InvalidArgument, "unsupported update mask path: %s", path)
 		}
@@ -223,14 +394,31 @@ func (s *APIV1Service) DeleteSpace(ctx context.Context, request *v1pb.DeleteSpac
 	if err != nil {
 		return nil, err
 	}
-	space, membership, err := s.resolveMemberSpace(ctx, request.Name, currentUser)
-	if err != nil {
-		return nil, err
+	instanceAdmin := isSuperUser(currentUser)
+	var space *store.Space
+	if instanceAdmin {
+		uid, err := ExtractSpaceUIDFromName(request.Name)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid space name: %v", err)
+		}
+		space, err = s.Store.GetSpace(ctx, &store.FindSpace{UID: &uid})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
+		}
+		if space == nil {
+			return nil, status.Error(codes.NotFound, "space not found")
+		}
+	} else {
+		var membership *store.SpaceMember
+		space, membership, err = s.resolveMemberSpace(ctx, request.Name, currentUser)
+		if err != nil {
+			return nil, err
+		}
+		if err := requireSpaceAdministrator(membership); err != nil {
+			return nil, err
+		}
 	}
-	if err := requireSpaceAdministrator(membership); err != nil {
-		return nil, err
-	}
-	deleteResult, err := s.Store.DeleteSpace(ctx, &store.DeleteSpace{ID: space.ID, ActorUserID: currentUser.ID})
+	deleteResult, err := s.Store.DeleteSpace(ctx, &store.DeleteSpace{ID: space.ID, ActorUserID: currentUser.ID, InstanceAdmin: instanceAdmin})
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to delete space")
 	}
@@ -287,6 +475,22 @@ func (s *APIV1Service) CreateSpaceInvitation(ctx context.Context, request *v1pb.
 	}, currentUser.ID)
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to create space invitation")
+	}
+	if _, err := s.Store.CreateInbox(ctx, &store.Inbox{
+		SenderID:   currentUser.ID,
+		ReceiverID: targetUser.ID,
+		Status:     store.UNREAD,
+		Message: &storepb.InboxMessage{
+			Type: storepb.InboxMessage_SPACE_INVITATION,
+			Payload: &storepb.InboxMessage_SpaceInvitation{
+				SpaceInvitation: &storepb.InboxMessage_SpaceInvitationPayload{SpaceId: space.ID},
+			},
+		},
+	}); err != nil {
+		// Keep invitation state and the notification center consistent if the
+		// second write fails.
+		_ = s.Store.RevokeSpaceInvitation(ctx, &store.RevokeSpaceInvitation{SpaceID: space.ID, UserID: targetUser.ID}, currentUser.ID)
+		return nil, status.Errorf(codes.Internal, "failed to create space invitation notification: %v", err)
 	}
 	s.SSEHub.publishSpaceChanged()
 	return convertSpaceInvitationFromStore(space, targetUser, created), nil
@@ -500,6 +704,9 @@ func (s *APIV1Service) DeleteSpaceInvitation(ctx context.Context, request *v1pb.
 	}, currentUser.ID); err != nil {
 		return nil, mapSpaceMutationError(err, "failed to revoke space invitation")
 	}
+	if err := s.deleteSpaceInvitationNotifications(ctx, targetUser.ID, invitation.SpaceID); err != nil {
+		return nil, status.Errorf(codes.Internal, "space invitation was revoked but its notification could not be removed: %v", err)
+	}
 	s.SSEHub.publishSpaceChanged()
 	return &emptypb.Empty{}, nil
 }
@@ -522,6 +729,9 @@ func (s *APIV1Service) AcceptSpaceInvitation(ctx context.Context, request *v1pb.
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to accept space invitation")
 	}
+	if err := s.deleteSpaceInvitationNotifications(ctx, currentUser.ID, invitation.SpaceID); err != nil {
+		return nil, status.Errorf(codes.Internal, "space invitation was accepted but its notification could not be removed: %v", err)
+	}
 	s.SSEHub.publishSpaceChanged()
 	return convertSpaceMemberFromStore(space, currentUser, member), nil
 }
@@ -543,8 +753,32 @@ func (s *APIV1Service) DeclineSpaceInvitation(ctx context.Context, request *v1pb
 	if err := s.Store.DeclineSpaceInvitation(ctx, &store.DeclineSpaceInvitation{SpaceID: invitation.SpaceID, UserID: currentUser.ID}, currentUser.ID); err != nil {
 		return nil, mapSpaceMutationError(err, "failed to decline space invitation")
 	}
+	if err := s.deleteSpaceInvitationNotifications(ctx, currentUser.ID, invitation.SpaceID); err != nil {
+		return nil, status.Errorf(codes.Internal, "space invitation was declined but its notification could not be removed: %v", err)
+	}
 	s.SSEHub.publishSpaceChanged()
 	return &emptypb.Empty{}, nil
+}
+
+func (s *APIV1Service) deleteSpaceInvitationNotifications(ctx context.Context, receiverID, spaceID int32) error {
+	messageType := storepb.InboxMessage_SPACE_INVITATION
+	inboxes, err := s.Store.ListInboxes(ctx, &store.FindInbox{ReceiverID: &receiverID, MessageType: &messageType})
+	if err != nil {
+		return errors.Wrap(err, "failed to list space invitation notifications")
+	}
+	for _, inbox := range inboxes {
+		if inbox.Message == nil {
+			continue
+		}
+		payload := inbox.Message.GetSpaceInvitation()
+		if payload == nil || payload.SpaceId != spaceID {
+			continue
+		}
+		if err := s.Store.DeleteInbox(ctx, &store.DeleteInbox{ID: inbox.ID}); err != nil {
+			return errors.Wrap(err, "failed to delete space invitation notification")
+		}
+	}
+	return nil
 }
 
 // ListSpaceMembers lists memberships after authorizing the caller's own

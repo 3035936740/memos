@@ -12,7 +12,7 @@ import (
 func sqliteMemoAccessPredicate(access *store.MemoAccessScope, memoAlias, memberAlias string, args *[]any) string {
 	clauses := []string{}
 	if access.AllowPublic {
-		clauses = append(clauses, memoAlias+".`visibility` = 'PUBLIC'")
+		clauses = append(clauses, memoAlias+".`visibility` = 'PUBLIC'", "("+memoAlias+".`visibility` = 'SPACE' AND EXISTS (SELECT 1 FROM `space` AS `public_space` WHERE `public_space`.`id` = "+memoAlias+".`space_id` AND `public_space`.`access_mode` = 'PUBLIC'))")
 	}
 	if access.UserID != nil {
 		*args = append(*args, *access.UserID)
@@ -25,6 +25,7 @@ func sqliteMemoAccessPredicate(access *store.MemoAccessScope, memoAlias, memberA
 		}
 		*args = append(*args, *access.UserID)
 		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".`visibility` = 'SPACE' AND EXISTS (SELECT 1 FROM `space_member` AS "+memberAlias+" WHERE "+memberAlias+".`space_id` = "+memoAlias+".`space_id` AND "+memberAlias+".`user_id` = ? AND "+memberAlias+".`status` = 'ACTIVE' AND "+memberAlias+".`role` IN ('ADMIN', 'USER')))")
+		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".`visibility` = 'SPACE' AND EXISTS (SELECT 1 FROM `space` AS `readable_space` WHERE `readable_space`.`id` = "+memoAlias+".`space_id` AND `readable_space`.`access_mode` IN ('AUTHENTICATED', 'PUBLIC')))")
 
 		clauses = append(clauses, "(EXISTS (SELECT 1 FROM `user` AS `access_user` WHERE `access_user`.`id` = ? AND `access_user`.`row_status` = 'NORMAL') AND ("+strings.Join(authenticatedClauses, " OR ")+"))")
 	}

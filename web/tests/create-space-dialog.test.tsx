@@ -2,12 +2,14 @@ import { Code, ConnectError } from "@connectrpc/connect";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CreateSpaceDialog from "@/components/CreateSpaceDialog";
+import { Space_AccessMode } from "@/types/proto/api/v1/space_service_pb";
 
 const mocks = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
   onOpenChange: vi.fn(),
   onCreated: vi.fn(),
   toastSuccess: vi.fn(),
+  convertFileToBase64: vi.fn(),
   uuidv4: vi.fn(),
   isPending: false,
 }));
@@ -28,6 +30,10 @@ vi.mock("uuid", () => ({
   v4: mocks.uuidv4,
 }));
 
+vi.mock("@/lib/browser", () => ({
+  convertFileToBase64: mocks.convertFileToBase64,
+}));
+
 vi.mock("@/utils/i18n", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,
@@ -42,6 +48,7 @@ describe("CreateSpaceDialog", () => {
     mocks.onOpenChange.mockClear();
     mocks.onCreated.mockClear();
     mocks.toastSuccess.mockClear();
+    mocks.convertFileToBase64.mockReset().mockResolvedValue("data:image/png;base64,YXZhdGFy");
     mocks.uuidv4.mockReset().mockReturnValue(FIRST_SPACE_UID);
     mocks.isPending = false;
   });
@@ -57,7 +64,37 @@ describe("CreateSpaceDialog", () => {
       expect(mocks.onCreated).toHaveBeenCalledWith({ name: "spaces/product", title: "Product", description: "Plans" });
       expect(mocks.onOpenChange).toHaveBeenCalledWith(false);
     });
-    expect(mocks.mutateAsync).toHaveBeenCalledWith({ title: "Product", description: "Plans", spaceId: FIRST_SPACE_UID });
+    expect(mocks.mutateAsync).toHaveBeenCalledWith({
+      title: "Product",
+      description: "Plans",
+      accessMode: Space_AccessMode.INVITE_ONLY,
+      syncToMainFeed: true,
+      spaceId: FIRST_SPACE_UID,
+    });
+  });
+
+  it("includes an optional selected avatar when creating the Space", async () => {
+    render(<CreateSpaceDialog open onOpenChange={mocks.onOpenChange} />);
+
+    const avatarInput = screen.getByLabelText("space.upload-avatar");
+    const avatar = new File(["avatar"], "avatar.png", { type: "image/png" });
+    Object.defineProperty(avatarInput, "files", { configurable: true, value: [avatar] });
+    fireEvent.change(avatarInput);
+    await waitFor(() => expect(mocks.convertFileToBase64).toHaveBeenCalledWith(avatar));
+    await waitFor(() => expect(document.querySelector('img[src="data:image/png;base64,YXZhdGFy"]')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText("common.name"), { target: { value: "Product" } });
+    fireEvent.click(screen.getByRole("button", { name: "common.create" }));
+
+    await waitFor(() =>
+      expect(mocks.mutateAsync).toHaveBeenCalledWith({
+        title: "Product",
+        description: undefined,
+        avatarUrl: "data:image/png;base64,YXZhdGFy",
+        accessMode: Space_AccessMode.INVITE_ONLY,
+        syncToMainFeed: true,
+        spaceId: FIRST_SPACE_UID,
+      }),
+    );
   });
 
   it("allows a valid custom Space UID and explains invalid values", async () => {
@@ -80,7 +117,13 @@ describe("CreateSpaceDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "common.create" }));
 
     await waitFor(() =>
-      expect(mocks.mutateAsync).toHaveBeenCalledWith({ title: "Product", description: undefined, spaceId: "Product-2026" }),
+      expect(mocks.mutateAsync).toHaveBeenCalledWith({
+        title: "Product",
+        description: undefined,
+        accessMode: Space_AccessMode.INVITE_ONLY,
+        syncToMainFeed: true,
+        spaceId: "Product-2026",
+      }),
     );
   });
 

@@ -58,10 +58,14 @@ func (s *APIV1Service) ListUserNotifications(ctx context.Context, request *v1pb.
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list notification memos: %v", err)
 	}
+	spacesByID, err := s.listNotificationSpacesByID(ctx, collectInboxSpaceIDs(inboxes))
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list notification spaces: %v", err)
+	}
 
 	notifications := []*v1pb.UserNotification{}
 	for _, inbox := range inboxes {
-		notification, err := s.convertInboxToUserNotificationWithUsersAndMemos(ctx, inbox, currentUser, usersByID, memosByID)
+		notification, err := s.convertInboxToUserNotificationWithResources(ctx, inbox, currentUser, usersByID, memosByID, spacesByID)
 		if err != nil {
 			if status.Code(err) == codes.NotFound {
 				slog.Warn("Skipping notification with missing user",
@@ -227,7 +231,11 @@ func (s *APIV1Service) convertInboxToUserNotification(ctx context.Context, inbox
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list notification memos: %v", err)
 	}
-	return s.convertInboxToUserNotificationWithUsersAndMemos(ctx, inbox, viewer, usersByID, memosByID)
+	spacesByID, err := s.listNotificationSpacesByID(ctx, collectInboxSpaceIDs([]*store.Inbox{inbox}))
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list notification spaces: %v", err)
+	}
+	return s.convertInboxToUserNotificationWithResources(ctx, inbox, viewer, usersByID, memosByID, spacesByID)
 }
 
 func collectInboxMemoIDs(inboxes []*store.Inbox) []int32 {
@@ -264,7 +272,35 @@ func collectInboxMemoIDs(inboxes []*store.Inbox) []int32 {
 	return memoIDs
 }
 
-func (s *APIV1Service) convertInboxToUserNotificationWithUsersAndMemos(ctx context.Context, inbox *store.Inbox, viewer *store.User, usersByID map[int32]*store.User, memosByID map[int32]*store.Memo) (*v1pb.UserNotification, error) {
+func collectInboxSpaceIDs(inboxes []*store.Inbox) []int32 {
+	spaceIDs := make([]int32, 0, len(inboxes))
+	for _, inbox := range inboxes {
+		if inbox == nil || inbox.Message == nil || inbox.Message.Type != storepb.InboxMessage_SPACE_INVITATION {
+			continue
+		}
+		if payload := inbox.Message.GetSpaceInvitation(); payload != nil && payload.SpaceId > 0 {
+			spaceIDs = append(spaceIDs, payload.SpaceId)
+		}
+	}
+	return spaceIDs
+}
+
+func (s *APIV1Service) listNotificationSpacesByID(ctx context.Context, spaceIDs []int32) (map[int32]*store.Space, error) {
+	spacesByID := make(map[int32]*store.Space)
+	if len(spaceIDs) == 0 {
+		return spacesByID, nil
+	}
+	spaces, err := s.Store.ListSpaces(ctx, &store.FindSpace{IDList: spaceIDs})
+	if err != nil {
+		return nil, err
+	}
+	for _, space := range spaces {
+		spacesByID[space.ID] = space
+	}
+	return spacesByID, nil
+}
+
+func (s *APIV1Service) convertInboxToUserNotificationWithResources(ctx context.Context, inbox *store.Inbox, viewer *store.User, usersByID map[int32]*store.User, memosByID map[int32]*store.Memo, spacesByID map[int32]*store.Space) (*v1pb.UserNotification, error) {
 	accessible, err := s.canAccessNotificationMemos(ctx, viewer, inbox, memosByID)
 	if err != nil {
 		return nil, err
@@ -323,12 +359,31 @@ func (s *APIV1Service) convertInboxToUserNotificationWithUsersAndMemos(ctx conte
 					MemoMention: payload,
 				}
 			}
+		case storepb.InboxMessage_SPACE_INVITATION:
+			payload := inbox.Message.GetSpaceInvitation()
+			if payload == nil || spacesByID[payload.SpaceId] == nil {
+				return nil, nil
+			}
+			notification.Type = v1pb.UserNotification_SPACE_INVITATION
+			notification.Payload = &v1pb.UserNotification_SpaceInvitation{
+				SpaceInvitation: convertSpaceInvitationNotificationPayload(spacesByID[payload.SpaceId], receiver),
+			}
 		default:
 			notification.Type = v1pb.UserNotification_TYPE_UNSPECIFIED
 		}
 	}
 
 	return notification, nil
+}
+
+func convertSpaceInvitationNotificationPayload(space *store.Space, receiver *store.User) *v1pb.UserNotification_SpaceInvitationPayload {
+	return &v1pb.UserNotification_SpaceInvitationPayload{
+		Space:            buildSpaceName(space.UID),
+		Invitation:       buildSpaceInvitationName(space.UID, receiver.Username),
+		SpaceTitle:       space.Title,
+		SpaceAvatarUrl:   space.AvatarURL,
+		SpaceDescription: space.Description,
+	}
 }
 
 func (s *APIV1Service) canAccessNotificationMemos(ctx context.Context, viewer *store.User, inbox *store.Inbox, memosByID map[int32]*store.Memo) (bool, error) {

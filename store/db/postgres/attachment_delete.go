@@ -99,7 +99,7 @@ func authorizePostgresAttachmentMutation(
 		snapshot.SpaceID = store.NullInt32Pointer(memoSpace)
 		if snapshot.SpaceID != nil {
 			var err error
-			snapshot.SourceSpaceExists, snapshot.SourceMemberActive, err = readPostgresMemoSpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
+			snapshot.SourceSpaceExists, snapshot.SourceMemberActive, snapshot.SourceSpaceAccessMode, err = readPostgresMemoSpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
 			if err != nil {
 				return errors.Wrap(err, "failed to read attachment memo space state")
 			}

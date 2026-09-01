@@ -251,7 +251,7 @@ describe("App sidebar logo", () => {
     "/memos/123",
     "/memos/shares/token",
     "/404",
-  ])("uses the instance brand instead of the remembered Space on %s", (path) => {
+  ])("keeps the selected Space brand on %s", (path) => {
     const product = { name: "spaces/product", title: "Product", description: "" };
     spaceState.spaces = [product];
     spaceState.selectedSpace = product;
@@ -264,8 +264,22 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "Memos logo" })).toHaveAttribute("href", "/");
-    expect(screen.queryByRole("button", { name: /^space\.switch:/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "space.switch: Product" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Memos logo" })).not.toBeInTheDocument();
+  });
+
+  it("uses the viewed Space brand on its settings detail", () => {
+    const viewedSpace = { name: "spaces/product", title: "Product", description: "" };
+    spaceState.spaces = [viewedSpace];
+
+    render(
+      <MemoryRouter initialEntries={["/setting?space=spaces%2Fproduct#spaces"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("button", { name: "space.switch: Product" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Memos logo" })).not.toBeInTheDocument();
   });
 
   it("scopes collection statistics to the selected Space", () => {
@@ -377,10 +391,9 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "Memos logo" })).toHaveAttribute("href", "/explore");
-    expect(screen.queryByRole("button", { name: /^space\.switch:/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "space.switch: common.memos" })).toHaveTextContent("Memos logo");
     expect(screen.getByRole("link", { name: "common.explore" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "editor.new-memo" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
@@ -417,11 +430,11 @@ describe("App sidebar logo", () => {
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.attachments" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.inbox" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
   });
 
-  it.each(["/about", "/About/"])("marks About active for a guest on %s", (path) => {
+  it.each(["/about", "/About/"])("keeps the About sidebar entry hidden for a guest on %s", (path) => {
     authState.currentUser = undefined;
     render(
       <MemoryRouter initialEntries={[path]}>
@@ -429,7 +442,7 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
     expect(screen.queryByText("Calendar")).not.toBeInTheDocument();
   });
 
@@ -527,6 +540,7 @@ describe("App sidebar logo", () => {
     expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/inbox");
     fireEvent.click(await screen.findByRole("menuitem", { name: /First category/ }));
     expect(screen.getByRole("status", { name: "location" })).toHaveTextContent("/categories/first");
+    expect(spaceState.clearSelectedSpace).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole("button", { name: "First category" }));
     fireEvent.click(await screen.findByRole("menuitem", { name: /Second category/ }));
@@ -575,8 +589,22 @@ describe("App sidebar logo", () => {
 
     expect(screen.queryByRole("link", { name: "Friends" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "common.custom-navigation" }));
-    expect(await screen.findByRole("menuitem", { name: "Friends" })).toBeInTheDocument();
+    const friends = await screen.findByRole("menuitem", { name: "Friends" });
+    expect(friends).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "About site" })).toBeInTheDocument();
+    fireEvent.click(friends);
+    expect(spaceState.clearSelectedSpace).not.toHaveBeenCalled();
+  });
+
+  it("keeps the Space scope when opening Read Later", () => {
+    render(
+      <MemoryRouter initialEntries={["/explore"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("link", { name: "memo.read-later.title" }));
+    expect(spaceState.clearSelectedSpace).not.toHaveBeenCalled();
   });
 
   it.each([

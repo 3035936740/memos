@@ -553,6 +553,7 @@ const GlobalNavigation = () => {
           active: routeKind === "explore" || routeKind === "profile" || routeKind === "memo",
           alwaysExpanded: true,
         },
+        /* 官方 Memos About 页面及路由保留，仅隐藏游客侧栏入口；需要恢复时取消此段注释。
         {
           id: "about",
           label: t("common.about"),
@@ -560,6 +561,7 @@ const GlobalNavigation = () => {
           icon: InfoIcon,
           active: Boolean(matchPath(ROUTES.ABOUT, location.pathname)),
         },
+        */
       ];
   const customIconMap: Record<string, LucideIcon> = {
     book: BookOpenIcon,
@@ -692,7 +694,9 @@ const GlobalNavigation = () => {
       <Link
         key={item.id}
         to={item.path}
-        onClick={() => setMobileOpen(false)}
+        onClick={() => {
+          setMobileOpen(false);
+        }}
         aria-label={item.label}
         aria-current={item.active ? "page" : undefined}
         className={itemClassName}
@@ -852,9 +856,13 @@ const GlobalNavigation = () => {
 const SidebarBrand = ({ className }: { className?: string }) => {
   const currentUser = useCurrentUser();
   const location = useLocation();
+  const { spaces, selectedSpaceName } = useSpaceContext();
+  const routeSpaceName =
+    getSidebarRouteKind(location.pathname) === "settings" ? new URLSearchParams(location.search).get("space") || undefined : undefined;
+  const routeSpace = routeSpaceName ? spaces.find((space) => space.name === routeSpaceName) : undefined;
 
-  if (currentUser && routeSupportsCollectionScope(location.pathname)) {
-    return <SpaceSwitcher className={className} />;
+  if (selectedSpaceName || routeSupportsCollectionScope(location.pathname) || routeSpaceName) {
+    return <SpaceSwitcher className={className} activeSpace={routeSpace} activeSpaceName={routeSpaceName} />;
   }
 
   return (

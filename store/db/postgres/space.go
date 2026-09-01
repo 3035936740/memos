@@ -23,11 +23,11 @@ func (d *DB) CreateSpace(ctx context.Context, create *store.Space, creatorID int
 	if err := lockPostgresActiveUser(ctx, tx, creatorID); err != nil {
 		return nil, err
 	}
-	fields := []string{"uid", "title", "description"}
-	args := []any{create.UID, create.Title, create.Description}
+	fields := []string{"uid", "url_slug", "title", "description", "avatar_url", "access_mode", "sync_to_main_feed"}
+	args := []any{create.UID, create.URLSlug, create.Title, create.Description, create.AvatarURL, create.AccessMode, create.SyncToMainFeed}
 	space := &store.Space{}
-	query := "INSERT INTO space (" + strings.Join(fields, ", ") + ") VALUES (" + placeholders(len(args)) + ") RETURNING id, uid, title, description"
-	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.Title, &space.Description); err != nil {
+	query := "INSERT INTO space (" + strings.Join(fields, ", ") + ") VALUES ($1, NULLIF($2, ''), $3, $4, $5, $6, $7) RETURNING id, uid, COALESCE(url_slug, ''), title, description, avatar_url, access_mode, sync_to_main_feed"
+	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed); err != nil {
 		if isPostgresUniqueViolation(err) {
 			return nil, store.ErrSpaceAlreadyExists
 		}
@@ -46,7 +46,7 @@ func (d *DB) CreateSpace(ctx context.Context, create *store.Space, creatorID int
 
 func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Space, error) {
 	where, args := []string{"1 = 1"}, []any{}
-	selectFields := "space.id, space.uid, space.title, space.description"
+	selectFields := "space.id, space.uid, COALESCE(space.url_slug, ''), space.title, space.description, space.avatar_url, space.access_mode, space.sync_to_main_feed"
 	joins := ""
 	groupBy := ""
 	add := func(condition string, value any) {
@@ -67,6 +67,28 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 	if find.UID != nil {
 		add("space.uid = %s", *find.UID)
 	}
+	if find.URLSlug != nil {
+		add("space.url_slug = %s", *find.URLSlug)
+	}
+	if find.UIDOrURLSlug != nil {
+		args = append(args, *find.UIDOrURLSlug)
+		holder := placeholder(len(args))
+		where = append(where, "(space.uid = "+holder+" OR space.url_slug = "+holder+")")
+	}
+	if len(find.AccessModes) > 0 {
+		holders := make([]string, 0, len(find.AccessModes))
+		for _, mode := range find.AccessModes {
+			args = append(args, mode)
+			holders = append(holders, placeholder(len(args)))
+		}
+		where = append(where, "space.access_mode IN ("+strings.Join(holders, ", ")+")")
+	}
+	if find.Search != nil && strings.TrimSpace(*find.Search) != "" {
+		search := "%" + strings.ToLower(strings.TrimSpace(*find.Search)) + "%"
+		args = append(args, search)
+		holder := placeholder(len(args))
+		where = append(where, "(LOWER(space.uid) LIKE "+holder+" OR LOWER(COALESCE(space.url_slug, '')) LIKE "+holder+" OR LOWER(space.title) LIKE "+holder+" OR LOWER(space.description) LIKE "+holder+")")
+	}
 	if find.MemberUserID != nil {
 		selectFields += ", viewer_member.role, COUNT(active_member.user_id)"
 		joins = ` JOIN space_member viewer_member ON viewer_member.space_id = space.id
@@ -75,7 +97,7 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 			JOIN "user" active_user ON active_user.id = active_member.user_id AND active_user.row_status = 'NORMAL'`
 		add("viewer_member.user_id = %s", *find.MemberUserID)
 		where = append(where, "viewer_member.status = 'ACTIVE'", "viewer_member.role IN ('ADMIN', 'USER')", "viewer_user.row_status = 'NORMAL'")
-		groupBy = " GROUP BY space.id, space.uid, space.title, space.description, viewer_member.role"
+		groupBy = " GROUP BY space.id, space.uid, space.url_slug, space.title, space.description, space.avatar_url, space.access_mode, space.sync_to_main_feed, viewer_member.role"
 	}
 	query := "SELECT " + selectFields + " FROM space" + joins + " WHERE " + strings.Join(where, " AND ") + groupBy + " ORDER BY space.id DESC"
 	query = appendPostgresLimit(query, find.Limit, find.Offset)
@@ -87,7 +109,7 @@ func (d *DB) ListSpaces(ctx context.Context, find *store.FindSpace) ([]*store.Sp
 	spaces := []*store.Space{}
 	for rows.Next() {
 		space := &store.Space{}
-		scanTargets := []any{&space.ID, &space.UID, &space.Title, &space.Description}
+		scanTargets := []any{&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed}
 		if find.MemberUserID != nil {
 			scanTargets = append(scanTargets, &space.CurrentUserRole, &space.MemberCount)
 		}
@@ -122,10 +144,26 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 	if update.Description != nil {
 		add("description", *update.Description)
 	}
+	if update.AvatarURL != nil {
+		add("avatar_url", *update.AvatarURL)
+	}
+	if update.URLSlug != nil {
+		args = append(args, *update.URLSlug)
+		sets = append(sets, "url_slug = NULLIF("+placeholder(len(args))+", '')")
+	}
+	if update.AccessMode != nil {
+		add("access_mode", *update.AccessMode)
+	}
+	if update.SyncToMainFeed != nil {
+		add("sync_to_main_feed", *update.SyncToMainFeed)
+	}
 	args = append(args, update.ID)
 	space := &store.Space{}
-	query := "UPDATE space SET " + strings.Join(sets, ", ") + " WHERE id = " + placeholder(len(args)) + " RETURNING id, uid, title, description"
-	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.Title, &space.Description); err != nil {
+	query := "UPDATE space SET " + strings.Join(sets, ", ") + " WHERE id = " + placeholder(len(args)) + " RETURNING id, uid, COALESCE(url_slug, ''), title, description, avatar_url, access_mode, sync_to_main_feed"
+	if err := tx.QueryRowContext(ctx, query, args...).Scan(&space.ID, &space.UID, &space.URLSlug, &space.Title, &space.Description, &space.AvatarURL, &space.AccessMode, &space.SyncToMainFeed); err != nil {
+		if isPostgresUniqueViolation(err) {
+			return nil, store.ErrSpaceURLSlugAlreadyExists
+		}
 		return nil, err
 	}
 	if err := populatePostgresSpaceSummary(ctx, tx, space, actorUserID); err != nil {

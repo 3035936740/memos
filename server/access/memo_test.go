@@ -73,6 +73,19 @@ func TestCheckMemoReadSpaceAudience(t *testing.T) {
 	base.SharedMemoID = &shareID
 	require.Equal(t, MemoReadDenialUnauthenticated, CheckMemoReadContext(base).Denial)
 
+	base.SharedMemoID = nil
+	base.SpaceAccessMode = store.SpaceAccessModePublic
+	base.AllowAnonymous = true
+	require.Equal(t, MemoReadClassPublic, CheckMemoReadContext(base).Class)
+	base.AllowAnonymous = false
+	require.Equal(t, MemoReadDenialUnauthenticated, CheckMemoReadContext(base).Denial)
+	base.Viewer = member
+	require.True(t, CheckMemoReadContext(base).Allowed())
+	base.SpaceAccessMode = store.SpaceAccessModeAuthenticated
+	require.True(t, CheckMemoReadContext(base).Allowed())
+	base.Viewer = nil
+	require.Equal(t, MemoReadDenialUnauthenticated, CheckMemoReadContext(base).Denial)
+
 	memo.SpaceID = nil
 	base.Viewer = member
 	base.ViewerSpaceMember = true

@@ -44,7 +44,7 @@ const RootLayoutContent = () => {
   const [searchParams] = useSearchParams();
   const currentUser = useCurrentUser();
   const md = useMediaQuery("md");
-  const { profile } = useInstance();
+  const { profile, profileLoaded } = useInstance();
   const { removeFilter } = useMemoFilterContext();
   const { pathname } = location;
   const prevPathnameRef = useRef<string | undefined>(undefined);
@@ -62,9 +62,11 @@ const RootLayoutContent = () => {
     prevPathnameRef.current = pathname;
   }, [pathname, searchParams, removeFilter]);
 
-  // Anonymous visitors to private instances may only reach share links. Treat an
-  // unspecified mode as private so a partial or older response cannot expose content.
+  // Anonymous visitors to private instances may only reach share links. Wait for
+  // the profile before deciding: the initial unspecified mode is also used while
+  // a public instance profile is still loading.
   if (
+    profileLoaded &&
     shouldGatePrivateInstance({
       isPrivateInstance: profile.accessMode !== InstanceAccessMode.PUBLIC,
       isAuthenticated: !!currentUser,

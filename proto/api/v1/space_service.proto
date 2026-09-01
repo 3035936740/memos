@@ -133,6 +133,13 @@ service SpaceService {
 
 // Space is a collaboration boundary for placed memos.
 message Space {
+  enum AccessMode {
+    ACCESS_MODE_UNSPECIFIED = 0;
+    INVITE_ONLY = 1;
+    AUTHENTICATED = 2;
+    PUBLIC = 3;
+  }
+
   option (google.api.resource) = {
     type: "memos.api.v1/Space"
     pattern: "spaces/{space}"
@@ -157,6 +164,21 @@ message Space {
   // Output only. The number of accepted members in this space. Pending
   // invitations are excluded. Zero when this Space is exposed as metadata-only.
   int32 member_count = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Optional. A data URL or external URL used as the space avatar.
+  string avatar_url = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Controls who can open the Space and read SPACE-audience memos.
+  // Members can always access their Space regardless of this setting.
+  AccessMode access_mode = 7 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Whether memos placed in this Space also appear in the main feeds.
+  // Defaults to true. Direct Space URLs remain available when disabled.
+  optional bool sync_to_main_feed = 8 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. A mutable, unique alias used by the friendly /space/{alias} URL.
+  // Only ASCII letters and digits are allowed. When empty, the immutable UID is used.
+  string url_slug = 9 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // SpaceMember is a user's membership and governance role in a space.
@@ -231,6 +253,13 @@ message ListSpacesRequest {
 
   // Optional. A token from a previous ListSpaces response.
   string page_token = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Case-insensitive search over the UID, title, and description.
+  string filter = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Lists every Space instead of only the caller's memberships.
+  // Available only to instance administrators.
+  bool show_all = 4 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message ListSpacesResponse {
@@ -250,7 +279,7 @@ message UpdateSpaceRequest {
   // Required. The space with updated values.
   Space space = 1 [(google.api.field_behavior) = REQUIRED];
 
-  // Required. The fields to update: title or description.
+  // Required. The fields to update: title, description, avatar_url, access_mode, sync_to_main_feed, or url_slug.
   google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
 }
 

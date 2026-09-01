@@ -95,26 +95,20 @@ func validateMySQLMemoCreate(ctx context.Context, tx *sql.Tx, create *store.Memo
 		return err
 	}
 	if create.SpaceID != nil {
-		return validateMySQLMemoSpaceMember(ctx, tx, *create.SpaceID, create.CreatorID)
+		return validateMySQLMemoSpaceWriter(ctx, tx, *create.SpaceID, create.CreatorID)
 	}
 	return nil
 }
 
-func validateMySQLMemoSpaceMember(ctx context.Context, tx *sql.Tx, spaceID, userID int32) error {
-	var existingSpaceID int32
-	if err := tx.QueryRowContext(ctx, "SELECT id FROM space WHERE id = ?", spaceID).Scan(&existingSpaceID); errors.Is(err, sql.ErrNoRows) {
-		return store.ErrMemoSpaceNotWritable
-	} else if err != nil {
-		return err
-	}
-	var exists bool
-	err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM space_member sm JOIN user u ON u.id = sm.user_id
-		WHERE sm.space_id = ? AND sm.user_id = ? AND sm.status = 'ACTIVE'
-			AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL')`, spaceID, userID).Scan(&exists)
+func validateMySQLMemoSpaceWriter(ctx context.Context, tx *sql.Tx, spaceID, userID int32) error {
+	spaceExists, memberActive, accessMode, err := mysqlMemoPolicySpaceState(ctx, tx, spaceID, userID)
 	if err != nil {
 		return err
 	}
-	if !exists {
+	if !spaceExists {
+		return store.ErrMemoSpaceNotWritable
+	}
+	if !store.SpaceWriteAllowed(accessMode, memberActive) {
 		return store.ErrMemoSpaceMembershipRequired
 	}
 	return nil
@@ -192,6 +186,9 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			SELECT 1 FROM memo_relation AS comment_relation
 			WHERE comment_relation.memo_id = memo.id AND comment_relation.type = 'COMMENT'
 		)`)
+	}
+	if find.ExcludeUnsyncedSpaces {
+		where = append(where, "(`memo`.`space_id` IS NULL OR NOT EXISTS (SELECT 1 FROM `space` AS `placed_space` WHERE `placed_space`.`id` = `memo`.`space_id`) OR EXISTS (SELECT 1 FROM `space` AS `feed_space` WHERE `feed_space`.`id` = `memo`.`space_id` AND `feed_space`.`sync_to_main_feed` = TRUE))")
 	}
 
 	order := "DESC"

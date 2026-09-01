@@ -19,7 +19,13 @@ import {
   useUpdateSpaceMember,
   useUserSpaceInvitations,
 } from "@/hooks/useSpaceQueries";
-import { SpaceInvitationSchema, SpaceMember_Role, SpaceMemberSchema, SpaceSchema } from "@/types/proto/api/v1/space_service_pb";
+import {
+  Space_AccessMode,
+  SpaceInvitationSchema,
+  SpaceMember_Role,
+  SpaceMemberSchema,
+  SpaceSchema,
+} from "@/types/proto/api/v1/space_service_pb";
 
 const clients = vi.hoisted(() => ({
   acceptSpaceInvitation: vi.fn(),
@@ -199,7 +205,13 @@ describe("Space queries", () => {
     );
 
     await act(async () => {
-      await result.current.create.mutateAsync({ title: "Research", description: "Notes", spaceId: "research" });
+      await result.current.create.mutateAsync({
+        title: "Research",
+        description: "Notes",
+        accessMode: Space_AccessMode.INVITE_ONLY,
+        syncToMainFeed: true,
+        spaceId: "research",
+      });
     });
     expect(clients.createSpace).toHaveBeenCalledWith({
       space: expect.objectContaining({ title: "Research", description: "Notes" }),

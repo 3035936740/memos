@@ -657,7 +657,9 @@ paths:
                     type: boolean
                 - name: space
                   in: query
-                  description: "Optional. Limit results to readable non-comment memos in a space of\r\n which the caller is an active member."
+                  description: |-
+                    Optional. Limit results to readable non-comment memos in a space the
+                     caller may access according to its access mode.
                   schema:
                     type: string
                 - name: unassigned
@@ -1315,6 +1317,18 @@ paths:
                   description: Optional. A token from a previous ListSpaces response.
                   schema:
                     type: string
+                - name: filter
+                  in: query
+                  description: Optional. Case-insensitive search over the UID, title, and description.
+                  schema:
+                    type: string
+                - name: showAll
+                  in: query
+                  description: |-
+                    Optional. Lists every Space instead of only the caller's memberships.
+                     Available only to instance administrators.
+                  schema:
+                    type: boolean
             responses:
                 "200":
                     description: OK
@@ -1420,7 +1434,7 @@ paths:
                     type: string
                 - name: updateMask
                   in: query
-                  description: 'Required. The fields to update: title or description.'
+                  description: 'Required. The fields to update: title, description, avatar_url, access_mode, sync_to_main_feed, or url_slug.'
                   schema:
                     type: string
                     format: field-mask
@@ -3892,7 +3906,7 @@ components:
                         - PUBLIC
                         - SPACE
                     type: string
-                    description: "The visibility of the memo.\r\n One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC\r\n (anonymous-eligible), or SPACE (active space members). Defaults to\r\n PRIVATE on creation when unspecified."
+                    description: "The visibility of the memo.\r\n One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC\r\n (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to\n PRIVATE on creation when unspecified."
                     format: enum
                 tags:
                     readOnly: true
@@ -4343,6 +4357,30 @@ components:
                     type: integer
                     description: "Output only. The number of accepted members in this space. Pending\r\n invitations are excluded. Zero when this Space is exposed as metadata-only."
                     format: int32
+                avatarUrl:
+                    type: string
+                    description: Optional. A data URL or external URL used as the space avatar.
+                accessMode:
+                    enum:
+                        - ACCESS_MODE_UNSPECIFIED
+                        - INVITE_ONLY
+                        - AUTHENTICATED
+                        - PUBLIC
+                    type: string
+                    description: |-
+                        Optional. Controls who can open the Space and read SPACE-audience memos.
+                         Members can always access their Space regardless of this setting.
+                    format: enum
+                syncToMainFeed:
+                    type: boolean
+                    description: |-
+                        Optional. Whether memos placed in this Space also appear in the main feeds.
+                         Defaults to true. Direct Space URLs remain available when disabled.
+                urlSlug:
+                    type: string
+                    description: |-
+                        Optional. A mutable, unique alias used by the friendly /space/{alias} URL.
+                         Only ASCII letters and digits are allowed. When empty, the immutable UID is used.
             description: Space is a collaboration boundary for placed memos.
         SpaceInvitation:
             required:
@@ -4593,6 +4631,7 @@ components:
                         - TYPE_UNSPECIFIED
                         - MEMO_COMMENT
                         - MEMO_MENTION
+                        - SPACE_INVITATION
                     type: string
                     description: The type of the notification.
                     format: enum
@@ -4604,6 +4643,10 @@ components:
                     readOnly: true
                     allOf:
                         - $ref: '#/components/schemas/UserNotification_MemoMentionPayload'
+                spaceInvitation:
+                    readOnly: true
+                    allOf:
+                        - $ref: '#/components/schemas/UserNotification_SpaceInvitationPayload'
         UserNotification_MemoCommentPayload:
             type: object
             properties:
@@ -4634,6 +4677,23 @@ components:
                 relatedMemoSnippet:
                     type: string
                     description: Preview text of the related parent memo.
+        UserNotification_SpaceInvitationPayload:
+            type: object
+            properties:
+                space:
+                    type: string
+                    description: |-
+                        The invited Space resource.
+                         Format: spaces/{space}
+                invitation:
+                    type: string
+                    description: The pending invitation resource accepted or declined by the receiver.
+                spaceTitle:
+                    type: string
+                spaceAvatarUrl:
+                    type: string
+                spaceDescription:
+                    type: string
         UserSetting:
             type: object
             properties:

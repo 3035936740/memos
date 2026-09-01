@@ -44,6 +44,7 @@ type MemoReadContext struct {
 	SharedMemoID      *int32
 	CreatorValid      bool
 	SpaceValid        bool
+	SpaceAccessMode   store.SpaceAccessMode
 	ViewerSpaceMember bool
 }
 
@@ -106,10 +107,13 @@ func CheckMemoReadContext(ctx MemoReadContext) MemoReadDecision {
 		}
 		return MemoReadDecision{Class: MemoReadClassPrivate}
 	case store.SpaceAudience:
+		if ctx.SpaceAccessMode == store.SpaceAccessModePublic && ctx.AllowAnonymous {
+			return MemoReadDecision{Class: MemoReadClassPublic}
+		}
 		if !viewerActive {
 			return MemoReadDecision{Denial: MemoReadDenialUnauthenticated}
 		}
-		if ctx.ViewerSpaceMember {
+		if ctx.ViewerSpaceMember || ctx.SpaceAccessMode == store.SpaceAccessModePublic || ctx.SpaceAccessMode == store.SpaceAccessModeAuthenticated {
 			return MemoReadDecision{Class: MemoReadClassPrivate}
 		}
 		return MemoReadDecision{Denial: MemoReadDenialPermission}

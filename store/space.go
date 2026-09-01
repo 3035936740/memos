@@ -21,6 +21,9 @@ var ErrSpaceMemberNotActive = errors.New("space member user is not active")
 // ErrSpaceAlreadyExists indicates a duplicate immutable space ID.
 var ErrSpaceAlreadyExists = errors.New("space already exists")
 
+// ErrSpaceURLSlugAlreadyExists indicates a duplicate mutable Space URL alias.
+var ErrSpaceURLSlugAlreadyExists = errors.New("space URL alias already exists")
+
 // ErrSpaceMemberAlreadyExists indicates an existing membership or invitation.
 var ErrSpaceMemberAlreadyExists = errors.New("space member already exists")
 
@@ -64,15 +67,37 @@ func (r SpaceMemberRole) IsActiveMember() bool {
 	return r == SpaceMemberRoleAdmin || r == SpaceMemberRoleUser
 }
 
+// SpaceAccessMode controls whether non-members may open a space.
+type SpaceAccessMode string
+
+const (
+	// SpaceAccessModeInviteOnly restricts access to active members.
+	SpaceAccessModeInviteOnly SpaceAccessMode = "INVITE_ONLY"
+	// SpaceAccessModeAuthenticated allows every signed-in active user.
+	SpaceAccessModeAuthenticated SpaceAccessMode = "AUTHENTICATED"
+	// SpaceAccessModePublic allows visitors and signed-in users.
+	SpaceAccessModePublic SpaceAccessMode = "PUBLIC"
+)
+
+// IsValid reports whether the access mode is recognized.
+func (m SpaceAccessMode) IsValid() bool {
+	return m == SpaceAccessModeInviteOnly || m == SpaceAccessModeAuthenticated || m == SpaceAccessModePublic
+}
+
 // Space groups memos and memberships.
 type Space struct {
 	ID int32
 
-	UID             string
-	Title           string
-	Description     string
-	CurrentUserRole SpaceMemberRole
-	MemberCount     int32
+	UID               string
+	URLSlug           string
+	Title             string
+	Description       string
+	AvatarURL         string
+	AccessMode        SpaceAccessMode
+	SyncToMainFeed    bool
+	SyncToMainFeedSet bool
+	CurrentUserRole   SpaceMemberRole
+	MemberCount       int32
 }
 
 // FindSpace selects spaces. MemberUserID restricts results to spaces where the
@@ -82,22 +107,31 @@ type FindSpace struct {
 	ID           *int32
 	IDList       []int32
 	UID          *string
+	UIDOrURLSlug *string
+	URLSlug      *string
+	AccessModes  []SpaceAccessMode
 	MemberUserID *int32
+	Search       *string
 	Limit        *int
 	Offset       *int
 }
 
 // UpdateSpace contains mutable space fields.
 type UpdateSpace struct {
-	ID          int32
-	Title       *string
-	Description *string
+	ID             int32
+	Title          *string
+	Description    *string
+	AvatarURL      *string
+	URLSlug        *string
+	AccessMode     *SpaceAccessMode
+	SyncToMainFeed *bool
 }
 
 // DeleteSpace identifies a Space to hard-delete.
 type DeleteSpace struct {
-	ID          int32
-	ActorUserID int32
+	ID            int32
+	ActorUserID   int32
+	InstanceAdmin bool
 }
 
 // DeleteSpaceResult contains external resources to clean after commit.
@@ -181,6 +215,15 @@ func (s *Store) CreateSpace(ctx context.Context, create *Space, creatorID int32)
 	if strings.TrimSpace(create.Title) == "" {
 		return nil, errors.New("space title is required")
 	}
+	if create.AccessMode == "" {
+		create.AccessMode = SpaceAccessModeInviteOnly
+	}
+	if !create.AccessMode.IsValid() {
+		return nil, errors.New("invalid space access mode")
+	}
+	if !create.SyncToMainFeedSet {
+		create.SyncToMainFeed = true
+	}
 	return s.driver.CreateSpace(ctx, create, creatorID)
 }
 
@@ -209,7 +252,10 @@ func (s *Store) UpdateSpace(ctx context.Context, update *UpdateSpace, actorUserI
 	if update.Title != nil && strings.TrimSpace(*update.Title) == "" {
 		return nil, errors.New("space title is required")
 	}
-	if update.Title == nil && update.Description == nil {
+	if update.AccessMode != nil && !update.AccessMode.IsValid() {
+		return nil, errors.New("invalid space access mode")
+	}
+	if update.Title == nil && update.Description == nil && update.AvatarURL == nil && update.URLSlug == nil && update.AccessMode == nil && update.SyncToMainFeed == nil {
 		return nil, errors.New("space update requires at least one field")
 	}
 	return s.driver.UpdateSpace(ctx, update, actorUserID)

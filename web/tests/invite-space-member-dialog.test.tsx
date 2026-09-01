@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import InviteSpaceMemberDialog from "@/components/Settings/InviteSpaceMemberDialog";
 import { State } from "@/types/proto/api/v1/common_pb";
-import { type Space, SpaceMember_Role } from "@/types/proto/api/v1/space_service_pb";
+import { type Space, Space_AccessMode, SpaceMember_Role } from "@/types/proto/api/v1/space_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 
 const state = vi.hoisted(() => ({
@@ -78,6 +78,10 @@ const productSpace: Space = {
   name: "spaces/product",
   title: "Product",
   description: "Product decisions",
+  avatarUrl: "",
+  urlSlug: "",
+  accessMode: Space_AccessMode.INVITE_ONLY,
+  syncToMainFeed: true,
   currentUserRole: SpaceMember_Role.ADMIN,
   memberCount: 1,
 };

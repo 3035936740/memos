@@ -1,15 +1,20 @@
+import { Code, ConnectError } from "@connectrpc/connect";
 import {
   ArrowLeftIcon,
+  CameraIcon,
   ChevronRightIcon,
   Clock3Icon,
+  CopyIcon,
+  ExternalLinkIcon,
   LoaderCircleIcon,
   LogOutIcon,
   PlusIcon,
   ShieldCheckIcon,
   Trash2Icon,
   UserPlusIcon,
+  XIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -19,10 +24,11 @@ import SettingSection from "@/components/Settings/SettingSection";
 import SpaceMark from "@/components/SpaceMark";
 import UserAvatar from "@/components/UserAvatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -40,15 +46,24 @@ import {
   useUserSpaceInvitations,
 } from "@/hooks/useSpaceQueries";
 import { useUsersByUsernames } from "@/hooks/useUserQueries";
+import { convertFileToBase64 } from "@/lib/browser";
 import { handleError } from "@/lib/error";
 import { extractUsernameFromName } from "@/lib/resource-names";
 import { extractSpaceUidFromName } from "@/lib/space-display";
 import { ROUTES } from "@/router/routes";
-import { type Space, type SpaceInvitation, type SpaceMember, SpaceMember_Role } from "@/types/proto/api/v1/space_service_pb";
+import {
+  type Space,
+  Space_AccessMode,
+  type SpaceInvitation,
+  type SpaceMember,
+  SpaceMember_Role,
+} from "@/types/proto/api/v1/space_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 type DetailTab = "general" | "members";
+
+const SPACE_URL_SLUG_PATTERN = /^[a-z0-9]{0,64}$/;
 
 const getSpacesSettingsLocation = (spaceName?: string) => ({
   pathname: ROUTES.SETTING,
@@ -198,7 +213,7 @@ const SpacesSection = () => {
                   return (
                     <div key={invitation.name} className="flex min-w-0 flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center">
                       <div className="flex min-w-0 flex-1 items-center gap-3">
-                        <SpaceMark size="lg" />
+                        <SpaceMark size="lg" avatarUrl={invitation.space?.avatarUrl} />
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="truncate text-sm font-medium">{title}</p>
@@ -288,7 +303,7 @@ const SpacesSection = () => {
                       onClick={() => handleOpenSpace(space.name)}
                       className="group flex w-full min-w-0 items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/35 focus-visible:bg-muted/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/45"
                     >
-                      <SpaceMark size="lg" />
+                      <SpaceMark size="lg" avatarUrl={space.avatarUrl} />
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-medium">{space.title}</p>
@@ -337,12 +352,14 @@ interface SpaceDetailProps {
 
 const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
   const t = useTranslate();
-  const membersQuery = useSpaceMembers(viewerName, space.name);
+  const membersQuery = useSpaceMembers(viewerName, space.name, { enabled: space.accessMode === Space_AccessMode.INVITE_ONLY });
   const members = membersQuery.data ?? [];
   const currentMember = members.find((member) => member.user === viewerName);
   const currentRole = currentMember?.role ?? space.currentUserRole;
   const isAdmin = currentRole === SpaceMember_Role.ADMIN;
-  const invitationsQuery = useSpaceInvitations(viewerName, space.name, { enabled: isAdmin });
+  const invitationsQuery = useSpaceInvitations(viewerName, space.name, {
+    enabled: isAdmin && space.accessMode === Space_AccessMode.INVITE_ONLY,
+  });
   const invitations = invitationsQuery.data ?? [];
   const usernames = useMemo(
     () =>
@@ -358,6 +375,10 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
   const [tab, setTab] = useState<DetailTab>("general");
   const [title, setTitle] = useState(space.title);
   const [description, setDescription] = useState(space.description);
+  const [accessMode, setAccessMode] = useState<Space_AccessMode>(space.accessMode || Space_AccessMode.INVITE_ONLY);
+  const [syncToMainFeed, setSyncToMainFeed] = useState(space.syncToMainFeed ?? true);
+  const [urlSlug, setUrlSlug] = useState(space.urlSlug);
+  const [urlSlugConflict, setUrlSlugConflict] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -376,26 +397,76 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
     { value: String(SpaceMember_Role.USER), label: t("setting.spaces.space-user") },
     { value: String(SpaceMember_Role.ADMIN), label: t("setting.spaces.space-admin") },
   ];
-  const detailsChanged = title.trim() !== space.title || description.trim() !== space.description;
+  const detailsChanged =
+    title.trim() !== space.title ||
+    description.trim() !== space.description ||
+    accessMode !== space.accessMode ||
+    urlSlug !== space.urlSlug ||
+    syncToMainFeed !== (space.syncToMainFeed ?? true);
   const spaceUid = extractSpaceUidFromName(space.name);
+  const isURLSlugValid = SPACE_URL_SLUG_PATTERN.test(urlSlug);
+  const hasURLSlugError = !isURLSlugValid || urlSlugConflict;
+  const accessPath = `/space/${urlSlug || spaceUid}`;
+  const accessLink = typeof window === "undefined" ? accessPath : `${window.location.origin}${accessPath}`;
   const disambiguatedSpaceTitle = `${space.title} (${spaceUid})`;
 
   useEffect(() => {
     setTitle(space.title);
     setDescription(space.description);
-  }, [space.description, space.title]);
+    setAccessMode(space.accessMode || Space_AccessMode.INVITE_ONLY);
+    setSyncToMainFeed(space.syncToMainFeed ?? true);
+    setUrlSlug(space.urlSlug);
+    setUrlSlugConflict(false);
+  }, [space.accessMode, space.description, space.syncToMainFeed, space.title, space.urlSlug]);
+
+  useEffect(() => {
+    if (accessMode !== Space_AccessMode.INVITE_ONLY && tab === "members") {
+      setTab("general");
+    }
+  }, [accessMode, tab]);
 
   const handleSave = async () => {
     const trimmedTitle = title.trim();
-    if (!trimmedTitle || !isAdmin || updateSpace.isPending) return;
+    if (!trimmedTitle || hasURLSlugError || !isAdmin || updateSpace.isPending) return;
     try {
+      setUrlSlugConflict(false);
       await updateSpace.mutateAsync({
-        space: { name: space.name, title: trimmedTitle, description: description.trim() },
-        updateMask: ["title", "description"],
+        space: { name: space.name, title: trimmedTitle, description: description.trim(), accessMode, syncToMainFeed, urlSlug },
+        updateMask: ["title", "description", "access_mode", "sync_to_main_feed", "url_slug"],
       });
       toast.success(t("setting.spaces.save-success"));
     } catch (error) {
+      if (error instanceof ConnectError && error.code === Code.AlreadyExists) {
+        setUrlSlugConflict(true);
+      }
       handleError(error, toast.error, { context: "Update space" });
+    }
+  };
+
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const image = event.target.files?.[0];
+    event.target.value = "";
+    if (!image || !isAdmin || updateSpace.isPending) return;
+    if (image.size > 10 * 1024 * 1024) {
+      toast.error(t("setting.spaces.avatar-too-large"));
+      return;
+    }
+    try {
+      const avatarUrl = await convertFileToBase64(image);
+      await updateSpace.mutateAsync({ space: { name: space.name, avatarUrl }, updateMask: ["avatar_url"] });
+      toast.success(t("setting.spaces.avatar-save-success"));
+    } catch (error) {
+      handleError(error, toast.error, { context: "Update space avatar" });
+    }
+  };
+
+  const handleAvatarClear = async () => {
+    if (!isAdmin || !space.avatarUrl || updateSpace.isPending) return;
+    try {
+      await updateSpace.mutateAsync({ space: { name: space.name, avatarUrl: "" }, updateMask: ["avatar_url"] });
+      toast.success(t("setting.spaces.avatar-clear-success"));
+    } catch (error) {
+      handleError(error, toast.error, { context: "Clear space avatar" });
     }
   };
 
@@ -468,7 +539,39 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
       </button>
 
       <header className="flex min-w-0 flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center">
-        <SpaceMark size="xl" />
+        <div className="group relative shrink-0">
+          {isAdmin ? (
+            <Label
+              title={t("setting.spaces.upload-avatar")}
+              aria-label={t("setting.spaces.upload-avatar")}
+              className="relative block cursor-pointer overflow-hidden rounded-lg focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+            >
+              <SpaceMark size="xl" avatarUrl={space.avatarUrl} />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100">
+                <CameraIcon className="size-4" />
+              </span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                className="sr-only"
+                onChange={(event) => void handleAvatarChange(event)}
+              />
+            </Label>
+          ) : (
+            <SpaceMark size="xl" avatarUrl={space.avatarUrl} />
+          )}
+          {isAdmin && space.avatarUrl ? (
+            <button
+              type="button"
+              aria-label={t("setting.spaces.clear-avatar")}
+              title={t("setting.spaces.clear-avatar")}
+              onClick={() => void handleAvatarClear()}
+              className="absolute right-0.5 top-0.5 z-10 flex size-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm ring-1 ring-background"
+            >
+              <XIcon className="size-3" />
+            </button>
+          ) : null}
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h3 className="truncate text-lg font-semibold tracking-tight">{space.title}</h3>
@@ -489,10 +592,12 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
           <TabsTrigger value="general" className="flex-none px-3">
             {t("setting.spaces.general")}
           </TabsTrigger>
-          <TabsTrigger value="members" className="flex-none px-3">
-            {t("setting.spaces.members")}
-            <span className="text-xs font-normal text-muted-foreground">{members.length || space.memberCount}</span>
-          </TabsTrigger>
+          {accessMode === Space_AccessMode.INVITE_ONLY ? (
+            <TabsTrigger value="members" className="flex-none px-3">
+              {t("setting.spaces.members")}
+              <span className="text-xs font-normal text-muted-foreground">{members.length || space.memberCount}</span>
+            </TabsTrigger>
+          ) : null}
         </TabsList>
       </Tabs>
 
@@ -505,10 +610,132 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
             </div>
             <div className="overflow-hidden rounded-lg border border-border bg-background">
               <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
+                <div>
+                  <span className="text-sm font-medium">{t("setting.spaces.avatar")}</span>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("setting.spaces.avatar-help")}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {isAdmin ? (
+                    <Label className="group/avatar flex cursor-pointer items-center gap-3 rounded-lg p-1 pr-3 hover:bg-accent">
+                      <span className="relative overflow-hidden rounded-lg">
+                        <SpaceMark size="xl" avatarUrl={space.avatarUrl} />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover/avatar:bg-black/45 group-hover/avatar:opacity-100">
+                          <CameraIcon className="size-4" />
+                        </span>
+                      </span>
+                      <span className="text-sm">{t("setting.spaces.click-avatar-to-change")}</span>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        className="sr-only"
+                        onChange={(event) => void handleAvatarChange(event)}
+                      />
+                    </Label>
+                  ) : (
+                    <SpaceMark size="xl" avatarUrl={space.avatarUrl} />
+                  )}
+                </div>
+              </div>
+              <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
                 <span className="text-sm font-medium">{t("space.custom-id-label")}</span>
                 <code className="min-w-0 break-all rounded-md bg-muted/35 px-3 py-2 font-mono text-xs leading-5 text-foreground/85">
                   {spaceUid}
                 </code>
+              </div>
+              <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
+                <div>
+                  <Label htmlFor="space-settings-url-slug">{t("space.url-slug")}</Label>
+                  <p className={`mt-1 text-xs leading-5 ${hasURLSlugError ? "text-destructive" : "text-muted-foreground"}`}>
+                    {t(!isURLSlugValid ? "space.url-slug-invalid" : urlSlugConflict ? "space.url-slug-conflict" : "space.url-slug-help")}
+                  </p>
+                </div>
+                <div className="flex items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/50">
+                  <span className="shrink-0 pl-3 font-mono text-xs text-muted-foreground">/space/</span>
+                  <Input
+                    id="space-settings-url-slug"
+                    value={urlSlug}
+                    onChange={(event) => {
+                      setUrlSlug(event.target.value.toLowerCase());
+                      setUrlSlugConflict(false);
+                    }}
+                    maxLength={64}
+                    readOnly={!isAdmin}
+                    spellCheck={false}
+                    aria-invalid={hasURLSlugError}
+                    className="border-0 pl-0 font-mono text-xs shadow-none focus-visible:ring-0"
+                    placeholder={spaceUid}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
+                <div>
+                  <span className="text-sm font-medium">{t("space.access-link")}</span>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("space.access-link-help")}</p>
+                </div>
+                <div className="flex min-w-0 gap-2">
+                  <Input value={accessLink} readOnly className="min-w-0 font-mono text-xs" />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    aria-label={t("space.copy-access-link")}
+                    onClick={() => {
+                      void navigator.clipboard.writeText(accessLink);
+                      toast.success(t("space.access-link-copied"));
+                    }}
+                  >
+                    <CopyIcon />
+                  </Button>
+                  <a
+                    href={accessPath}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={t("space.open-access-link")}
+                    className={buttonVariants({ size: "icon", variant: "outline" })}
+                  >
+                    <ExternalLinkIcon />
+                  </a>
+                </div>
+              </div>
+              <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
+                <div>
+                  <Label htmlFor="space-settings-access-mode">{t("space.access-mode")}</Label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("space.access-mode-help")}</p>
+                </div>
+                <Select
+                  value={String(accessMode)}
+                  disabled={!isAdmin}
+                  onValueChange={(value) => setAccessMode(Number(value) as Space_AccessMode)}
+                >
+                  <SelectTrigger id="space-settings-access-mode">
+                    <SelectValue>
+                      {t(
+                        accessMode === Space_AccessMode.PUBLIC
+                          ? "space.access-mode-public"
+                          : accessMode === Space_AccessMode.AUTHENTICATED
+                            ? "space.access-mode-authenticated"
+                            : "space.access-mode-invite-only",
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={String(Space_AccessMode.INVITE_ONLY)}>{t("space.access-mode-invite-only")}</SelectItem>
+                    <SelectItem value={String(Space_AccessMode.PUBLIC)}>{t("space.access-mode-public")}</SelectItem>
+                    <SelectItem value={String(Space_AccessMode.AUTHENTICATED)}>{t("space.access-mode-authenticated")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
+                <div>
+                  <Label htmlFor="space-settings-sync-main-feed">{t("space.sync-main-feed")}</Label>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("space.sync-main-feed-help")}</p>
+                </div>
+                <Switch
+                  id="space-settings-sync-main-feed"
+                  checked={syncToMainFeed}
+                  disabled={!isAdmin}
+                  onCheckedChange={setSyncToMainFeed}
+                />
               </div>
               <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
                 <Label htmlFor="space-settings-title">{t("common.name")}</Label>
@@ -535,7 +762,11 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
               </div>
               {isAdmin ? (
                 <div className="flex justify-end border-t border-border bg-muted/20 px-3 py-2.5">
-                  <Button size="sm" disabled={!title.trim() || !detailsChanged || updateSpace.isPending} onClick={() => void handleSave()}>
+                  <Button
+                    size="sm"
+                    disabled={!title.trim() || hasURLSlugError || !detailsChanged || updateSpace.isPending}
+                    onClick={() => void handleSave()}
+                  >
                     {t("setting.spaces.save-changes")}
                   </Button>
                 </div>

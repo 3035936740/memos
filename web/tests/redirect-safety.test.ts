@@ -71,6 +71,7 @@ describe("isPublicRoute", () => {
     expect(isPublicRoute("/memos/abc")).toBe(true);
     expect(isPublicRoute("/memos/shares/abc")).toBe(true);
     expect(isPublicRoute("/u/steven")).toBe(true);
+    expect(isPublicRoute("/space/public-space")).toBe(true);
   });
 
   it("treats authenticated-only pages as non-public", () => {

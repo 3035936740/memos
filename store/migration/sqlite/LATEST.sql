@@ -34,7 +34,11 @@ CREATE TABLE space (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   uid TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT ''
+  description TEXT NOT NULL DEFAULT '',
+  avatar_url TEXT NOT NULL DEFAULT '',
+  url_slug TEXT UNIQUE,
+  access_mode TEXT NOT NULL DEFAULT 'INVITE_ONLY' CHECK (access_mode IN ('INVITE_ONLY', 'AUTHENTICATED', 'PUBLIC')),
+  sync_to_main_feed INTEGER NOT NULL DEFAULT 1 CHECK (sync_to_main_feed IN (0, 1))
 );
 
 -- space membership

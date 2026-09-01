@@ -33,7 +33,12 @@ CREATE TABLE `space` (
   `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `uid` VARCHAR(256) NOT NULL UNIQUE,
   `title` TEXT NOT NULL,
-  `description` TEXT NOT NULL
+  `description` TEXT NOT NULL,
+  `avatar_url` LONGTEXT NOT NULL,
+  `url_slug` VARCHAR(64) NULL UNIQUE,
+  `access_mode` VARCHAR(32) NOT NULL DEFAULT 'INVITE_ONLY',
+  `sync_to_main_feed` BOOLEAN NOT NULL DEFAULT TRUE,
+  CHECK (`access_mode` IN ('INVITE_ONLY', 'AUTHENTICATED', 'PUBLIC'))
 );
 
 -- space membership

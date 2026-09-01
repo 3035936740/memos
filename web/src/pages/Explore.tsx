@@ -24,9 +24,14 @@ const Explore = () => {
 
   // Determine visibility filter based on authentication status
   // - Logged-in users: Can see every audience the backend authorizes, including SPACE memos
-  // - Visitors: Can only see PUBLIC memos
+  // - Visitors: Can see PUBLIC memos globally and the SPACE audience inside a
+  //   selected public Space. The backend validates that Space access mode.
   // Note: The backend is responsible for filtering stats based on visibility permissions.
-  const visibilities = currentUser ? [Visibility.PUBLIC, Visibility.PROTECTED, Visibility.SPACE] : [Visibility.PUBLIC];
+  const visibilities = currentUser
+    ? [Visibility.PUBLIC, Visibility.PROTECTED, Visibility.SPACE]
+    : selectedSpaceName
+      ? [Visibility.PUBLIC, Visibility.SPACE]
+      : [Visibility.PUBLIC];
 
   const memoFilter = useMemoFilters({
     includeMemoViews: true,

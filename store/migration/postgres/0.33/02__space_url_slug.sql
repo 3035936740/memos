@@ -1,0 +1,1 @@
+ALTER TABLE space ADD COLUMN url_slug TEXT UNIQUE;

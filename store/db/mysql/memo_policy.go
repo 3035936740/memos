@@ -31,28 +31,16 @@ func validateMySQLMemoWritePolicy(ctx context.Context, tx *sql.Tx, memoID int32,
 	snapshot.SpaceID = store.NullInt32Pointer(spaceID)
 	if snapshot.SpaceID != nil {
 		var err error
-		snapshot.SourceSpaceExists, err = mysqlSpaceExists(ctx, tx, *snapshot.SpaceID)
+		snapshot.SourceSpaceExists, snapshot.SourceMemberActive, snapshot.SourceSpaceAccessMode, err = mysqlMemoPolicySpaceState(ctx, tx, *snapshot.SpaceID, policy.ActorUserID)
 		if err != nil {
 			return err
-		}
-		if snapshot.SourceSpaceExists {
-			snapshot.SourceMemberActive, err = mysqlSpaceMemberActive(ctx, tx, *snapshot.SpaceID, policy.ActorUserID)
-			if err != nil {
-				return err
-			}
 		}
 	}
 	if update != nil && update.SpaceID != nil {
 		var err error
-		snapshot.TargetSpaceExists, err = mysqlSpaceExists(ctx, tx, *update.SpaceID)
+		snapshot.TargetSpaceExists, snapshot.TargetMemberActive, snapshot.TargetSpaceAccessMode, err = mysqlMemoPolicySpaceState(ctx, tx, *update.SpaceID, policy.ActorUserID)
 		if err != nil {
 			return err
-		}
-		if snapshot.TargetSpaceExists {
-			snapshot.TargetMemberActive, err = mysqlSpaceMemberActive(ctx, tx, *update.SpaceID, policy.ActorUserID)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
@@ -67,6 +55,17 @@ func validateMySQLMemoWritePolicy(ctx context.Context, tx *sql.Tx, memoID int32,
 		}
 	}
 	return store.ValidateMemoWriteSnapshot(policy, update, snapshot)
+}
+
+func mysqlMemoPolicySpaceState(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) (bool, bool, store.SpaceAccessMode, error) {
+	var accessMode store.SpaceAccessMode
+	if err := tx.QueryRowContext(ctx, "SELECT access_mode FROM space WHERE id = ?", spaceID).Scan(&accessMode); stderrors.Is(err, sql.ErrNoRows) {
+		return false, false, "", nil
+	} else if err != nil {
+		return false, false, "", err
+	}
+	member, err := mysqlSpaceMemberActive(ctx, tx, spaceID, actorUserID)
+	return true, member, accessMode, err
 }
 
 func mysqlSpaceExists(ctx context.Context, tx *sql.Tx, spaceID int32) (bool, error) {

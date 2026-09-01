@@ -37,6 +37,7 @@ vi.mock("@/hooks/useSpaceQueries", () => ({
 
 vi.mock("@/hooks/useUserQueries", () => ({
   userKeys: {
+    notifications: () => ["users", "notifications"],
     stats: () => ["users", "stats"],
   },
 }));
@@ -257,6 +258,7 @@ describe("useLiveMemoRefresh", () => {
     await waitFor(() => {
       for (const invalidate of [firstInvalidate, secondInvalidate]) {
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ["spaces"], refetchType: "active" });
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ["users", "notifications"], refetchType: "active" });
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ["memos"], refetchType: "active" });
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ["users", "stats"], refetchType: "active" });
         expect(invalidate).toHaveBeenCalledWith({ queryKey: ["attachments", "list"], refetchType: "active" });

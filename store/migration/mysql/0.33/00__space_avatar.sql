@@ -1,0 +1,1 @@
+ALTER TABLE space ADD COLUMN avatar_url LONGTEXT NOT NULL;

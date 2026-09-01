@@ -5,6 +5,7 @@ import Explore from "@/pages/Explore";
 import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 
 const state = vi.hoisted(() => ({
+  currentUser: { name: "users/test" } as { name: string } | undefined,
   selectedSpaceName: undefined as string | undefined,
   memoFilter: undefined as string | undefined,
   listProps: [] as Array<Record<string, unknown>>,
@@ -65,11 +66,12 @@ vi.mock("@/hooks", () => ({
 }));
 
 vi.mock("@/hooks/useCurrentUser", () => ({
-  default: () => ({ name: "users/test" }),
+  default: () => state.currentUser,
 }));
 
 describe("Memo feed collection scope", () => {
   beforeEach(() => {
+    state.currentUser = { name: "users/test" };
     state.selectedSpaceName = undefined;
     state.memoFilter = undefined;
     state.listProps = [];
@@ -105,6 +107,17 @@ describe("Memo feed collection scope", () => {
       visibilities: [Visibility.PUBLIC, Visibility.PROTECTED, Visibility.SPACE],
     });
     expect(state.memoViewProps[0]).toMatchObject({ showSpace: false });
+  });
+
+  it("includes the Space audience for a visitor inside a selected public Space", () => {
+    state.currentUser = undefined;
+    state.selectedSpaceName = "spaces/product";
+    state.memoFilter = 'space == "spaces/product"';
+    render(<Explore />);
+
+    expect(state.filterOptions[0]).toMatchObject({
+      visibilities: [Visibility.PUBLIC, Visibility.SPACE],
+    });
   });
 
   it("keeps Archived independent of a remembered Space", () => {

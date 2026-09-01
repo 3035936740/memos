@@ -86,15 +86,9 @@ func authorizeMySQLAttachmentMutation(
 		snapshot.SpaceID = store.NullInt32Pointer(spaceID)
 		if snapshot.SpaceID != nil {
 			var err error
-			snapshot.SourceSpaceExists, err = mysqlSpaceExists(ctx, tx, *snapshot.SpaceID)
+			snapshot.SourceSpaceExists, snapshot.SourceMemberActive, snapshot.SourceSpaceAccessMode, err = mysqlMemoPolicySpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
 			if err != nil {
 				return errors.Wrap(err, "failed to read attachment memo space")
-			}
-			if snapshot.SourceSpaceExists {
-				snapshot.SourceMemberActive, err = mysqlSpaceMemberActive(ctx, tx, *snapshot.SpaceID, actorUserID)
-				if err != nil {
-					return errors.Wrap(err, "failed to read attachment memo membership")
-				}
 			}
 		}
 		if err := store.ValidateMemoWriteSnapshot(policy, nil, snapshot); err != nil {

@@ -76,26 +76,20 @@ func validatePostgresMemoCreate(ctx context.Context, tx *sql.Tx, create *store.M
 		return err
 	}
 	if create.SpaceID != nil {
-		return validatePostgresMemoSpaceMember(ctx, tx, *create.SpaceID, create.CreatorID)
+		return validatePostgresMemoSpaceWriter(ctx, tx, *create.SpaceID, create.CreatorID)
 	}
 	return nil
 }
 
-func validatePostgresMemoSpaceMember(ctx context.Context, tx *sql.Tx, spaceID, userID int32) error {
-	var spaceExists, memberActive bool
-	err := tx.QueryRowContext(ctx, `SELECT
-		EXISTS(SELECT 1 FROM space WHERE id = $1),
-		EXISTS(SELECT 1 FROM space_member sm JOIN "user" u ON u.id = sm.user_id
-			WHERE sm.space_id = $1 AND sm.user_id = $2 AND sm.status = 'ACTIVE'
-				AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL')`,
-		spaceID, userID).Scan(&spaceExists, &memberActive)
+func validatePostgresMemoSpaceWriter(ctx context.Context, tx *sql.Tx, spaceID, userID int32) error {
+	spaceExists, memberActive, accessMode, err := readPostgresMemoSpaceState(ctx, tx, spaceID, userID)
 	if err != nil {
 		return err
 	}
 	if !spaceExists {
 		return store.ErrMemoSpaceNotWritable
 	}
-	if !memberActive {
+	if !store.SpaceWriteAllowed(accessMode, memberActive) {
 		return store.ErrMemoSpaceMembershipRequired
 	}
 	return nil
@@ -171,6 +165,9 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			SELECT 1 FROM memo_relation AS comment_relation
 			WHERE comment_relation.memo_id = memo.id AND comment_relation.type = 'COMMENT'
 		)`)
+	}
+	if find.ExcludeUnsyncedSpaces {
+		where = append(where, "(memo.space_id IS NULL OR NOT EXISTS (SELECT 1 FROM space AS placed_space WHERE placed_space.id = memo.space_id) OR EXISTS (SELECT 1 FROM space AS feed_space WHERE feed_space.id = memo.space_id AND feed_space.sync_to_main_feed = TRUE))")
 	}
 
 	order := "DESC"

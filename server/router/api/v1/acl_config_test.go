@@ -37,6 +37,9 @@ func TestPublicMethodsArePublic(t *testing.T) {
 		"/memos.api.v1.MemoService/BatchGetLinkMetadata",
 		// Attachment Service metadata follows linked memo visibility.
 		"/memos.api.v1.AttachmentService/GetAttachment",
+		// Space metadata enforces its access mode in the service layer.
+		"/memos.api.v1.SpaceService/GetSpace",
+		"/memos.api.v1.SpaceService/ListSpaces",
 	}
 
 	for _, method := range publicMethods {
@@ -63,10 +66,8 @@ func TestProtectedMethodsRequireAuth(t *testing.T) {
 		"/memos.api.v1.MemoService/CreateMemo",
 		"/memos.api.v1.MemoService/UpdateMemo",
 		"/memos.api.v1.MemoService/DeleteMemo",
-		// Space Service - every operation requires an authenticated member.
+		// Space Service - mutations and member management require authentication.
 		"/memos.api.v1.SpaceService/CreateSpace",
-		"/memos.api.v1.SpaceService/ListSpaces",
-		"/memos.api.v1.SpaceService/GetSpace",
 		"/memos.api.v1.SpaceService/UpdateSpace",
 		"/memos.api.v1.SpaceService/DeleteSpace",
 		"/memos.api.v1.SpaceService/CreateSpaceInvitation",

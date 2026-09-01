@@ -49,7 +49,8 @@ func (d *DB) DeleteSpace(ctx context.Context, delete *store.DeleteSpace) (*store
 
 func requirePostgresSpaceDeleteAdmin(ctx context.Context, tx *sql.Tx, delete *store.DeleteSpace) error {
 	var actorStatus store.RowStatus
-	if err := tx.QueryRowContext(ctx, `SELECT row_status FROM "user" WHERE id = $1`, delete.ActorUserID).Scan(&actorStatus); errors.Is(err, sql.ErrNoRows) {
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, `SELECT row_status, role FROM "user" WHERE id = $1`, delete.ActorUserID).Scan(&actorStatus, &actorRole); errors.Is(err, sql.ErrNoRows) {
 		return store.ErrSpacePermissionDenied
 	} else if err != nil {
 		return errors.Wrap(err, "failed to read space deletion actor")
@@ -63,6 +64,9 @@ func requirePostgresSpaceDeleteAdmin(ctx context.Context, tx *sql.Tx, delete *st
 			return store.ErrSpaceNotFound
 		}
 		return err
+	}
+	if delete.InstanceAdmin && actorRole == store.RoleAdmin {
+		return nil
 	}
 	var role store.SpaceMemberRole
 	if err := tx.QueryRowContext(ctx, "SELECT role FROM space_member WHERE space_id = $1 AND user_id = $2 AND status = 'ACTIVE'", delete.ID, delete.ActorUserID).Scan(&role); errors.Is(err, sql.ErrNoRows) {

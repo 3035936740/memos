@@ -55,7 +55,7 @@ func populatePostgresMemoPolicySpaceState(
 ) error {
 	if snapshot.SpaceID != nil {
 		var err error
-		snapshot.SourceSpaceExists, snapshot.SourceMemberActive, err = readPostgresMemoSpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
+		snapshot.SourceSpaceExists, snapshot.SourceMemberActive, snapshot.SourceSpaceAccessMode, err = readPostgresMemoSpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
 		if err != nil {
 			return err
 		}
@@ -64,10 +64,11 @@ func populatePostgresMemoPolicySpaceState(
 		if snapshot.SpaceID != nil && *snapshot.SpaceID == *update.SpaceID {
 			snapshot.TargetSpaceExists = snapshot.SourceSpaceExists
 			snapshot.TargetMemberActive = snapshot.SourceMemberActive
+			snapshot.TargetSpaceAccessMode = snapshot.SourceSpaceAccessMode
 			return nil
 		}
 		var err error
-		snapshot.TargetSpaceExists, snapshot.TargetMemberActive, err = readPostgresMemoSpaceState(ctx, tx, *update.SpaceID, actorUserID)
+		snapshot.TargetSpaceExists, snapshot.TargetMemberActive, snapshot.TargetSpaceAccessMode, err = readPostgresMemoSpaceState(ctx, tx, *update.SpaceID, actorUserID)
 		if err != nil {
 			return err
 		}
@@ -75,14 +76,17 @@ func populatePostgresMemoPolicySpaceState(
 	return nil
 }
 
-func readPostgresMemoSpaceState(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) (bool, bool, error) {
-	var spaceExists, memberActive bool
-	if err := tx.QueryRowContext(ctx, `SELECT
-		EXISTS(SELECT 1 FROM space WHERE id = $1),
-		EXISTS(SELECT 1 FROM space_member WHERE space_id = $1 AND user_id = $2
-			AND status = 'ACTIVE' AND role IN ('ADMIN', 'USER'))`,
-		spaceID, actorUserID).Scan(&spaceExists, &memberActive); err != nil {
-		return false, false, err
+func readPostgresMemoSpaceState(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) (bool, bool, store.SpaceAccessMode, error) {
+	var accessMode store.SpaceAccessMode
+	if err := tx.QueryRowContext(ctx, "SELECT access_mode FROM space WHERE id = $1", spaceID).Scan(&accessMode); stderrors.Is(err, sql.ErrNoRows) {
+		return false, false, "", nil
+	} else if err != nil {
+		return false, false, "", err
 	}
-	return spaceExists, memberActive, nil
+	var memberActive bool
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM space_member WHERE space_id = $1 AND user_id = $2
+		AND status = 'ACTIVE' AND role IN ('ADMIN', 'USER'))`, spaceID, actorUserID).Scan(&memberActive); err != nil {
+		return false, false, "", err
+	}
+	return true, memberActive, accessMode, nil
 }

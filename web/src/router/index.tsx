@@ -32,6 +32,7 @@ const UserProfile = lazyWithReload(() => import("@/pages/UserProfile"));
 const CustomMarkdownPage = lazyWithReload(() => import("@/pages/CustomMarkdownPage"));
 const MemoCategory = lazyWithReload(() => import("@/pages/MemoCategory"));
 const ReadLater = lazyWithReload(() => import("@/pages/ReadLater"));
+const Space = lazyWithReload(() => import("@/pages/Space"));
 
 // Backward compatibility alias.
 export const Routes = ROUTES;
@@ -85,6 +86,7 @@ export const routeConfig: RouteObject[] = [
               { path: "pages/:slug", element: <CustomMarkdownPage /> },
               { path: "categories/:slug", element: <MemoCategory /> },
               { path: "u/:username", element: <UserProfile /> },
+              { path: "space/:uid", element: <Space /> },
               {
                 element: <RequireAuthRoute />,
                 children: [

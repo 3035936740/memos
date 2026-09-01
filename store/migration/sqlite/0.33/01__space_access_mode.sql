@@ -1,0 +1,4 @@
+ALTER TABLE space ADD COLUMN access_mode TEXT NOT NULL DEFAULT 'INVITE_ONLY'
+  CHECK (access_mode IN ('INVITE_ONLY', 'AUTHENTICATED', 'PUBLIC'));
+ALTER TABLE space ADD COLUMN sync_to_main_feed INTEGER NOT NULL DEFAULT 1
+  CHECK (sync_to_main_feed IN (0, 1));

@@ -7,6 +7,7 @@ import { memoKeys } from "@/hooks/useMemoQueries";
 import { userKeys } from "@/hooks/useUserQueries";
 import {
   type Space,
+  type Space_AccessMode,
   type SpaceInvitation,
   SpaceInvitationSchema,
   type SpaceMember,
@@ -117,11 +118,19 @@ export function useSpaces(viewerName: string | undefined, options?: SpaceQueryOp
 
       return spaces;
     },
-    enabled: Boolean(viewerName) && (options?.enabled ?? true),
+    enabled: options?.enabled ?? true,
     // SpaceProvider wraps the whole route tree, so this drains every page on boot.
     // Space membership is near-static, so don't re-run that loop on each tab return.
     staleTime: SPACE_LIST_STALE_TIME,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useSpace(viewerName: string | undefined, spaceName: string | undefined, options?: SpaceQueryOptions) {
+  return useQuery({
+    queryKey: spaceKeys.space(viewerName ?? "", spaceName ?? ""),
+    queryFn: () => spaceServiceClient.getSpace({ name: spaceName! }),
+    enabled: Boolean(spaceName) && (options?.enabled ?? true),
   });
 }
 
@@ -198,9 +207,25 @@ export function useCreateSpace(viewerName: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ title, description, spaceId }: { title: string; description?: string; spaceId: string }) =>
+    mutationFn: ({
+      title,
+      description,
+      avatarUrl,
+      accessMode,
+      syncToMainFeed,
+      urlSlug,
+      spaceId,
+    }: {
+      title: string;
+      description?: string;
+      avatarUrl?: string;
+      accessMode: Space_AccessMode;
+      syncToMainFeed: boolean;
+      urlSlug?: string;
+      spaceId: string;
+    }) =>
       spaceServiceClient.createSpace({
-        space: create(SpaceSchema, { title, description }),
+        space: create(SpaceSchema, { title, description, avatarUrl, accessMode, syncToMainFeed, urlSlug }),
         spaceId,
       }),
     onSuccess: (space) => {
@@ -298,6 +323,7 @@ export function useAcceptSpaceInvitation(viewerName: string) {
       // Invitation summaries deliberately omit membership-only Space fields. Never
       // promote that summary into the member list; refresh the authoritative list.
       void queryClient.invalidateQueries({ queryKey: spaceKeys.list(viewerName), exact: true });
+      void queryClient.invalidateQueries({ queryKey: userKeys.notifications() });
       invalidateMembershipSensitiveQueries(queryClient);
     },
   });
@@ -321,6 +347,7 @@ export function useDeclineSpaceInvitation(viewerName: string) {
           removeByName(invitations, name),
         );
       }
+      void queryClient.invalidateQueries({ queryKey: userKeys.notifications() });
     },
   });
 }

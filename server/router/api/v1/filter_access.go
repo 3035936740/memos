@@ -44,17 +44,13 @@ func (s *APIV1Service) validateFilterSpaceAccess(ctx context.Context, filterText
 	if len(spaceNames) == 0 {
 		return nil
 	}
-	if user == nil {
-		return status.Error(codes.Unauthenticated, "user not authenticated")
-	}
-
 	names := make([]string, 0, len(spaceNames))
 	for name := range spaceNames {
 		names = append(names, name)
 	}
 	slices.Sort(names)
 	for _, name := range names {
-		if _, err := s.resolveWritableSpaceByName(ctx, name, user.ID); err != nil {
+		if _, err := s.resolveReadableSpaceByName(ctx, name, user); err != nil {
 			return err
 		}
 	}

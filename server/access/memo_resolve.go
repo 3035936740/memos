@@ -18,9 +18,10 @@ type MemoReadStore interface {
 // They are resolved once and reused across every viewer evaluated against the
 // same memo.
 type MemoReadFacts struct {
-	Memo         *store.Memo
-	CreatorValid bool
-	SpaceValid   bool
+	Memo            *store.Memo
+	CreatorValid    bool
+	SpaceValid      bool
+	SpaceAccessMode store.SpaceAccessMode
 }
 
 // ResolveMemoReadFacts resolves the memo-local authorization inputs that do not
@@ -48,6 +49,9 @@ func ResolveMemoReadFacts(ctx context.Context, s MemoReadStore, memo *store.Memo
 			return MemoReadFacts{}, err
 		}
 		facts.SpaceValid = space != nil
+		if space != nil {
+			facts.SpaceAccessMode = space.AccessMode
+		}
 	}
 	return facts, nil
 }
@@ -57,12 +61,13 @@ func ResolveMemoReadFacts(ctx context.Context, s MemoReadStore, memo *store.Memo
 // memo costs at most one query each.
 func (f MemoReadFacts) WithViewer(ctx context.Context, s MemoReadStore, viewer *store.User, allowAnonymous bool, sharedMemoID *int32) (MemoReadContext, error) {
 	readContext := MemoReadContext{
-		Memo:           f.Memo,
-		Viewer:         viewer,
-		AllowAnonymous: allowAnonymous,
-		SharedMemoID:   sharedMemoID,
-		CreatorValid:   f.CreatorValid,
-		SpaceValid:     f.SpaceValid,
+		Memo:            f.Memo,
+		Viewer:          viewer,
+		AllowAnonymous:  allowAnonymous,
+		SharedMemoID:    sharedMemoID,
+		CreatorValid:    f.CreatorValid,
+		SpaceValid:      f.SpaceValid,
+		SpaceAccessMode: f.SpaceAccessMode,
 	}
 	if f.Memo == nil || f.Memo.SpaceID == nil || !f.SpaceValid {
 		return readContext, nil

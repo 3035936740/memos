@@ -59,26 +59,26 @@ describe("MemoDetail layout", () => {
     expect(screen.getByText("Memo content")).toBeInTheDocument();
     const sidebars = screen.getAllByTestId("blog-sidebar");
     expect(sidebars).toHaveLength(2);
-    expect(sidebars.every((sidebar) => sidebar.textContent === "/home")).toBe(true);
+    expect(sidebars.every((sidebar) => sidebar.textContent === "/explore")).toBe(true);
     expect(sidebars.some((sidebar) => sidebar.parentElement?.classList.contains("lg:hidden"))).toBe(true);
     expect(sidebars.some((sidebar) => sidebar.parentElement?.tagName === "ASIDE")).toBe(true);
   });
 
-  it("returns a direct-link memo to Home instead of browser history", () => {
+  it("returns a direct-link memo to Explore instead of browser history", () => {
     const historyLengthSpy = vi.spyOn(window.history, "length", "get").mockReturnValue(2);
 
     render(
       <MemoryRouter initialEntries={["/previous-browser-page", "/memos/test"]} initialIndex={1}>
         <Routes>
           <Route path="/memos/:uid" element={<MemoDetail />} />
-          <Route path="/home" element={<div>Home article list</div>} />
+          <Route path="/explore" element={<div>Explore article list</div>} />
           <Route path="/previous-browser-page" element={<div>Previous browser page</div>} />
         </Routes>
       </MemoryRouter>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "memo.back-to-list" }));
-    expect(screen.getByText("Home article list")).toBeInTheDocument();
+    expect(screen.getByText("Explore article list")).toBeInTheDocument();
     expect(screen.queryByText("Previous browser page")).not.toBeInTheDocument();
 
     historyLengthSpy.mockRestore();

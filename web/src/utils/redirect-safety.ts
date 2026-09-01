@@ -62,6 +62,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   `${ROUTES.SHARED_MEMO}/`, // Shared memo pages (share-link viewer)
   "/u/", // User profile pages (dynamic)
   "/memos/", // Individual memo detail pages (dynamic)
+  "/space/", // Space pages enforce their own public/authenticated/invite access mode
 ] as const;
 
 /**

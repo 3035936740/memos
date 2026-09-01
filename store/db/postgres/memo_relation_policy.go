@@ -46,7 +46,7 @@ func validatePostgresMemoRelationEndpoints(ctx context.Context, tx *sql.Tx, muta
 			EndpointSpaceID:    state.spaceID,
 		}
 		if state.spaceID != nil {
-			snapshot.EndpointSpaceExists, snapshot.EndpointMemberActive, err = readPostgresMemoSpaceState(
+			snapshot.EndpointSpaceExists, snapshot.EndpointMemberActive, _, err = readPostgresMemoSpaceState(
 				ctx, tx, *state.spaceID, mutation.MemoCreatorID,
 			)
 			if err != nil {

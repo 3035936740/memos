@@ -56,7 +56,7 @@ export const resolveMemoDetailOrigin = (
   const value = state && typeof state === "object" ? (state as { from?: unknown; fromScope?: unknown }) : undefined;
   const explicitParentPage = typeof value?.from === "string" ? value.from : undefined;
   const hasExplicitParent = explicitParentPage !== undefined;
-  const parentPage = explicitParentPage || (options.memoArchived ? ROUTES.ARCHIVED : ROUTES.HOME);
+  const parentPage = explicitParentPage || (options.memoArchived ? ROUTES.ARCHIVED : ROUTES.EXPLORE);
   const parentScope =
     value?.fromScope === "all" || value?.fromScope === "preserve"
       ? value.fromScope

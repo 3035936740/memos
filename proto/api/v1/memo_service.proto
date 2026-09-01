@@ -167,7 +167,7 @@ enum Visibility {
   // PUBLIC: signed-in users can read the memo; anonymous visitors can read it
   // when instance policy permits.
   PUBLIC = 3;
-  // SPACE: active members of the memo's space can read it.
+  // SPACE: readers allowed by the assigned space's access mode can read it.
   SPACE = 4;
 }
 
@@ -244,7 +244,7 @@ message Memo {
 
   // The visibility of the memo.
   // One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC
-  // (anonymous-eligible), or SPACE (active space members). Defaults to
+  // (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to
   // PRIVATE on creation when unspecified.
   Visibility visibility = 9 [(google.api.field_behavior) = REQUIRED];
 
@@ -415,8 +415,8 @@ message ListMemosRequest {
   bool show_total_size = 8 [(google.api.field_behavior) = OPTIONAL];
 
   oneof scope {
-    // Optional. Limit results to readable non-comment memos in a space of
-    // which the caller is an active member.
+    // Optional. Limit results to readable non-comment memos in a space the
+    // caller may access according to its access mode.
     string space = 9 [(google.api.resource_reference) = {type: "memos.api.v1/Space"}];
 
     // Optional. Limit results to memos with no space. Must be true when set.

@@ -79,27 +79,20 @@ func validateSQLiteMemoCreate(ctx context.Context, tx dbExecutor, create *store.
 		return err
 	}
 	if create.SpaceID != nil {
-		return validateSQLiteMemoSpaceMember(ctx, tx, *create.SpaceID, create.CreatorID)
+		return validateSQLiteMemoSpaceWriter(ctx, tx, *create.SpaceID, create.CreatorID)
 	}
 	return nil
 }
 
-func validateSQLiteMemoSpaceMember(ctx context.Context, tx dbExecutor, spaceID, userID int32) error {
-	var exists bool
-	if err := tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM space WHERE id = ?)", spaceID).Scan(&exists); err != nil {
+func validateSQLiteMemoSpaceWriter(ctx context.Context, tx dbExecutor, spaceID, userID int32) error {
+	exists, memberActive, accessMode, err := sqliteMemoPolicySpaceState(ctx, tx, spaceID, userID)
+	if err != nil {
 		return err
 	}
 	if !exists {
 		return store.ErrMemoSpaceNotWritable
 	}
-	err := tx.QueryRowContext(ctx, `SELECT EXISTS(
-		SELECT 1 FROM space_member sm JOIN user u ON u.id = sm.user_id
-		WHERE sm.space_id = ? AND sm.user_id = ? AND sm.status = 'ACTIVE'
-			AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL')`, spaceID, userID).Scan(&exists)
-	if err != nil {
-		return err
-	}
-	if !exists {
+	if !store.SpaceWriteAllowed(accessMode, memberActive) {
 		return store.ErrMemoSpaceMembershipRequired
 	}
 	return nil
@@ -177,6 +170,9 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			SELECT 1 FROM memo_relation AS comment_relation
 			WHERE comment_relation.memo_id = memo.id AND comment_relation.type = 'COMMENT'
 		)`)
+	}
+	if find.ExcludeUnsyncedSpaces {
+		where = append(where, "(`memo`.`space_id` IS NULL OR NOT EXISTS (SELECT 1 FROM `space` AS `placed_space` WHERE `placed_space`.`id` = `memo`.`space_id`) OR EXISTS (SELECT 1 FROM `space` AS `feed_space` WHERE `feed_space`.`id` = `memo`.`space_id` AND `feed_space`.`sync_to_main_feed` = 1))")
 	}
 
 	order := "DESC"

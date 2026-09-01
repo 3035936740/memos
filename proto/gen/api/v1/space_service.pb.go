@@ -24,6 +24,58 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Space_AccessMode int32
+
+const (
+	Space_ACCESS_MODE_UNSPECIFIED Space_AccessMode = 0
+	Space_INVITE_ONLY             Space_AccessMode = 1
+	Space_AUTHENTICATED           Space_AccessMode = 2
+	Space_PUBLIC                  Space_AccessMode = 3
+)
+
+// Enum value maps for Space_AccessMode.
+var (
+	Space_AccessMode_name = map[int32]string{
+		0: "ACCESS_MODE_UNSPECIFIED",
+		1: "INVITE_ONLY",
+		2: "AUTHENTICATED",
+		3: "PUBLIC",
+	}
+	Space_AccessMode_value = map[string]int32{
+		"ACCESS_MODE_UNSPECIFIED": 0,
+		"INVITE_ONLY":             1,
+		"AUTHENTICATED":           2,
+		"PUBLIC":                  3,
+	}
+)
+
+func (x Space_AccessMode) Enum() *Space_AccessMode {
+	p := new(Space_AccessMode)
+	*p = x
+	return p
+}
+
+func (x Space_AccessMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Space_AccessMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_v1_space_service_proto_enumTypes[0].Descriptor()
+}
+
+func (Space_AccessMode) Type() protoreflect.EnumType {
+	return &file_api_v1_space_service_proto_enumTypes[0]
+}
+
+func (x Space_AccessMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Space_AccessMode.Descriptor instead.
+func (Space_AccessMode) EnumDescriptor() ([]byte, []int) {
+	return file_api_v1_space_service_proto_rawDescGZIP(), []int{0, 0}
+}
+
 type SpaceMember_Role int32
 
 const (
@@ -57,11 +109,11 @@ func (x SpaceMember_Role) String() string {
 }
 
 func (SpaceMember_Role) Descriptor() protoreflect.EnumDescriptor {
-	return file_api_v1_space_service_proto_enumTypes[0].Descriptor()
+	return file_api_v1_space_service_proto_enumTypes[1].Descriptor()
 }
 
 func (SpaceMember_Role) Type() protoreflect.EnumType {
-	return &file_api_v1_space_service_proto_enumTypes[0]
+	return &file_api_v1_space_service_proto_enumTypes[1]
 }
 
 func (x SpaceMember_Role) Number() protoreflect.EnumNumber {
@@ -87,7 +139,18 @@ type Space struct {
 	CurrentUserRole SpaceMember_Role `protobuf:"varint,4,opt,name=current_user_role,json=currentUserRole,proto3,enum=memos.api.v1.SpaceMember_Role" json:"current_user_role,omitempty"`
 	// Output only. The number of accepted members in this space. Pending
 	// invitations are excluded. Zero when this Space is exposed as metadata-only.
-	MemberCount   int32 `protobuf:"varint,5,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`
+	MemberCount int32 `protobuf:"varint,5,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`
+	// Optional. A data URL or external URL used as the space avatar.
+	AvatarUrl string `protobuf:"bytes,6,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	// Optional. Controls who can open the Space and read SPACE-audience memos.
+	// Members can always access their Space regardless of this setting.
+	AccessMode Space_AccessMode `protobuf:"varint,7,opt,name=access_mode,json=accessMode,proto3,enum=memos.api.v1.Space_AccessMode" json:"access_mode,omitempty"`
+	// Optional. Whether memos placed in this Space also appear in the main feeds.
+	// Defaults to true. Direct Space URLs remain available when disabled.
+	SyncToMainFeed *bool `protobuf:"varint,8,opt,name=sync_to_main_feed,json=syncToMainFeed,proto3,oneof" json:"sync_to_main_feed,omitempty"`
+	// Optional. A mutable, unique alias used by the friendly /space/{alias} URL.
+	// Only ASCII letters and digits are allowed. When empty, the immutable UID is used.
+	UrlSlug       string `protobuf:"bytes,9,opt,name=url_slug,json=urlSlug,proto3" json:"url_slug,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -155,6 +218,34 @@ func (x *Space) GetMemberCount() int32 {
 		return x.MemberCount
 	}
 	return 0
+}
+
+func (x *Space) GetAvatarUrl() string {
+	if x != nil {
+		return x.AvatarUrl
+	}
+	return ""
+}
+
+func (x *Space) GetAccessMode() Space_AccessMode {
+	if x != nil {
+		return x.AccessMode
+	}
+	return Space_ACCESS_MODE_UNSPECIFIED
+}
+
+func (x *Space) GetSyncToMainFeed() bool {
+	if x != nil && x.SyncToMainFeed != nil {
+		return *x.SyncToMainFeed
+	}
+	return false
+}
+
+func (x *Space) GetUrlSlug() string {
+	if x != nil {
+		return x.UrlSlug
+	}
+	return ""
 }
 
 // SpaceMember is a user's membership and governance role in a space.
@@ -356,7 +447,12 @@ type ListSpacesRequest struct {
 	// Optional. The maximum number of spaces to return.
 	PageSize int32 `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// Optional. A token from a previous ListSpaces response.
-	PageToken     string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	PageToken string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	// Optional. Case-insensitive search over the UID, title, and description.
+	Filter string `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
+	// Optional. Lists every Space instead of only the caller's memberships.
+	// Available only to instance administrators.
+	ShowAll       bool `protobuf:"varint,4,opt,name=show_all,json=showAll,proto3" json:"show_all,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -403,6 +499,20 @@ func (x *ListSpacesRequest) GetPageToken() string {
 		return x.PageToken
 	}
 	return ""
+}
+
+func (x *ListSpacesRequest) GetFilter() string {
+	if x != nil {
+		return x.Filter
+	}
+	return ""
+}
+
+func (x *ListSpacesRequest) GetShowAll() bool {
+	if x != nil {
+		return x.ShowAll
+	}
+	return false
 }
 
 type ListSpacesResponse struct {
@@ -506,7 +616,7 @@ type UpdateSpaceRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Required. The space with updated values.
 	Space *Space `protobuf:"bytes,1,opt,name=space,proto3" json:"space,omitempty"`
-	// Required. The fields to update: title or description.
+	// Required. The fields to update: title, description, avatar_url, access_mode, sync_to_main_feed, or url_slug.
 	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1328,14 +1438,28 @@ var File_api_v1_space_service_proto protoreflect.FileDescriptor
 
 const file_api_v1_space_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/v1/space_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\"\x99\x02\n" +
+	"\x1aapi/v1/space_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a google/protobuf/field_mask.proto\"\xc9\x04\n" +
 	"\x05Space\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12\x19\n" +
 	"\x05title\x18\x02 \x01(\tB\x03\xe0A\x02R\x05title\x12%\n" +
 	"\vdescription\x18\x03 \x01(\tB\x03\xe0A\x01R\vdescription\x12O\n" +
 	"\x11current_user_role\x18\x04 \x01(\x0e2\x1e.memos.api.v1.SpaceMember.RoleB\x03\xe0A\x03R\x0fcurrentUserRole\x12&\n" +
-	"\fmember_count\x18\x05 \x01(\x05B\x03\xe0A\x03R\vmemberCount:<\xeaA9\n" +
-	"\x12memos.api.v1/Space\x12\x0espaces/{space}\x1a\x04name*\x06spaces2\x05space\"\xa2\x02\n" +
+	"\fmember_count\x18\x05 \x01(\x05B\x03\xe0A\x03R\vmemberCount\x12\"\n" +
+	"\n" +
+	"avatar_url\x18\x06 \x01(\tB\x03\xe0A\x01R\tavatarUrl\x12D\n" +
+	"\vaccess_mode\x18\a \x01(\x0e2\x1e.memos.api.v1.Space.AccessModeB\x03\xe0A\x01R\n" +
+	"accessMode\x123\n" +
+	"\x11sync_to_main_feed\x18\b \x01(\bB\x03\xe0A\x01H\x00R\x0esyncToMainFeed\x88\x01\x01\x12\x1e\n" +
+	"\burl_slug\x18\t \x01(\tB\x03\xe0A\x01R\aurlSlug\"Y\n" +
+	"\n" +
+	"AccessMode\x12\x1b\n" +
+	"\x17ACCESS_MODE_UNSPECIFIED\x10\x00\x12\x0f\n" +
+	"\vINVITE_ONLY\x10\x01\x12\x11\n" +
+	"\rAUTHENTICATED\x10\x02\x12\n" +
+	"\n" +
+	"\x06PUBLIC\x10\x03:<\xeaA9\n" +
+	"\x12memos.api.v1/Space\x12\x0espaces/{space}\x1a\x04name*\x06spaces2\x05spaceB\x14\n" +
+	"\x12_sync_to_main_feed\"\xa2\x02\n" +
 	"\vSpaceMember\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12-\n" +
 	"\x04user\x18\x02 \x01(\tB\x19\xe0A\x02\xfaA\x13\n" +
@@ -1355,11 +1479,13 @@ const file_api_v1_space_service_proto_rawDesc = "" +
 	"\x1cmemos.api.v1/SpaceInvitation\x12'spaces/{space}/invitations/{invitation}\x1a\x04name*\x10spaceInvitations2\x0fspaceInvitation\"d\n" +
 	"\x12CreateSpaceRequest\x12.\n" +
 	"\x05space\x18\x01 \x01(\v2\x13.memos.api.v1.SpaceB\x03\xe0A\x02R\x05space\x12\x1e\n" +
-	"\bspace_id\x18\x02 \x01(\tB\x03\xe0A\x01R\aspaceId\"Y\n" +
+	"\bspace_id\x18\x02 \x01(\tB\x03\xe0A\x01R\aspaceId\"\x96\x01\n" +
 	"\x11ListSpacesRequest\x12 \n" +
 	"\tpage_size\x18\x01 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
 	"\n" +
-	"page_token\x18\x02 \x01(\tB\x03\xe0A\x01R\tpageToken\"i\n" +
+	"page_token\x18\x02 \x01(\tB\x03\xe0A\x01R\tpageToken\x12\x1b\n" +
+	"\x06filter\x18\x03 \x01(\tB\x03\xe0A\x01R\x06filter\x12\x1e\n" +
+	"\bshow_all\x18\x04 \x01(\bB\x03\xe0A\x01R\ashowAll\"i\n" +
 	"\x12ListSpacesResponse\x12+\n" +
 	"\x06spaces\x18\x01 \x03(\v2\x13.memos.api.v1.SpaceR\x06spaces\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"A\n" +
@@ -1455,88 +1581,90 @@ func file_api_v1_space_service_proto_rawDescGZIP() []byte {
 	return file_api_v1_space_service_proto_rawDescData
 }
 
-var file_api_v1_space_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_api_v1_space_service_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_api_v1_space_service_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_api_v1_space_service_proto_goTypes = []any{
-	(SpaceMember_Role)(0),                    // 0: memos.api.v1.SpaceMember.Role
-	(*Space)(nil),                            // 1: memos.api.v1.Space
-	(*SpaceMember)(nil),                      // 2: memos.api.v1.SpaceMember
-	(*SpaceInvitation)(nil),                  // 3: memos.api.v1.SpaceInvitation
-	(*CreateSpaceRequest)(nil),               // 4: memos.api.v1.CreateSpaceRequest
-	(*ListSpacesRequest)(nil),                // 5: memos.api.v1.ListSpacesRequest
-	(*ListSpacesResponse)(nil),               // 6: memos.api.v1.ListSpacesResponse
-	(*GetSpaceRequest)(nil),                  // 7: memos.api.v1.GetSpaceRequest
-	(*UpdateSpaceRequest)(nil),               // 8: memos.api.v1.UpdateSpaceRequest
-	(*DeleteSpaceRequest)(nil),               // 9: memos.api.v1.DeleteSpaceRequest
-	(*CreateSpaceInvitationRequest)(nil),     // 10: memos.api.v1.CreateSpaceInvitationRequest
-	(*ListSpaceInvitationsRequest)(nil),      // 11: memos.api.v1.ListSpaceInvitationsRequest
-	(*ListSpaceInvitationsResponse)(nil),     // 12: memos.api.v1.ListSpaceInvitationsResponse
-	(*ListUserSpaceInvitationsRequest)(nil),  // 13: memos.api.v1.ListUserSpaceInvitationsRequest
-	(*ListUserSpaceInvitationsResponse)(nil), // 14: memos.api.v1.ListUserSpaceInvitationsResponse
-	(*GetSpaceInvitationRequest)(nil),        // 15: memos.api.v1.GetSpaceInvitationRequest
-	(*DeleteSpaceInvitationRequest)(nil),     // 16: memos.api.v1.DeleteSpaceInvitationRequest
-	(*AcceptSpaceInvitationRequest)(nil),     // 17: memos.api.v1.AcceptSpaceInvitationRequest
-	(*DeclineSpaceInvitationRequest)(nil),    // 18: memos.api.v1.DeclineSpaceInvitationRequest
-	(*ListSpaceMembersRequest)(nil),          // 19: memos.api.v1.ListSpaceMembersRequest
-	(*ListSpaceMembersResponse)(nil),         // 20: memos.api.v1.ListSpaceMembersResponse
-	(*GetSpaceMemberRequest)(nil),            // 21: memos.api.v1.GetSpaceMemberRequest
-	(*UpdateSpaceMemberRequest)(nil),         // 22: memos.api.v1.UpdateSpaceMemberRequest
-	(*DeleteSpaceMemberRequest)(nil),         // 23: memos.api.v1.DeleteSpaceMemberRequest
-	(*fieldmaskpb.FieldMask)(nil),            // 24: google.protobuf.FieldMask
-	(*emptypb.Empty)(nil),                    // 25: google.protobuf.Empty
+	(Space_AccessMode)(0),                    // 0: memos.api.v1.Space.AccessMode
+	(SpaceMember_Role)(0),                    // 1: memos.api.v1.SpaceMember.Role
+	(*Space)(nil),                            // 2: memos.api.v1.Space
+	(*SpaceMember)(nil),                      // 3: memos.api.v1.SpaceMember
+	(*SpaceInvitation)(nil),                  // 4: memos.api.v1.SpaceInvitation
+	(*CreateSpaceRequest)(nil),               // 5: memos.api.v1.CreateSpaceRequest
+	(*ListSpacesRequest)(nil),                // 6: memos.api.v1.ListSpacesRequest
+	(*ListSpacesResponse)(nil),               // 7: memos.api.v1.ListSpacesResponse
+	(*GetSpaceRequest)(nil),                  // 8: memos.api.v1.GetSpaceRequest
+	(*UpdateSpaceRequest)(nil),               // 9: memos.api.v1.UpdateSpaceRequest
+	(*DeleteSpaceRequest)(nil),               // 10: memos.api.v1.DeleteSpaceRequest
+	(*CreateSpaceInvitationRequest)(nil),     // 11: memos.api.v1.CreateSpaceInvitationRequest
+	(*ListSpaceInvitationsRequest)(nil),      // 12: memos.api.v1.ListSpaceInvitationsRequest
+	(*ListSpaceInvitationsResponse)(nil),     // 13: memos.api.v1.ListSpaceInvitationsResponse
+	(*ListUserSpaceInvitationsRequest)(nil),  // 14: memos.api.v1.ListUserSpaceInvitationsRequest
+	(*ListUserSpaceInvitationsResponse)(nil), // 15: memos.api.v1.ListUserSpaceInvitationsResponse
+	(*GetSpaceInvitationRequest)(nil),        // 16: memos.api.v1.GetSpaceInvitationRequest
+	(*DeleteSpaceInvitationRequest)(nil),     // 17: memos.api.v1.DeleteSpaceInvitationRequest
+	(*AcceptSpaceInvitationRequest)(nil),     // 18: memos.api.v1.AcceptSpaceInvitationRequest
+	(*DeclineSpaceInvitationRequest)(nil),    // 19: memos.api.v1.DeclineSpaceInvitationRequest
+	(*ListSpaceMembersRequest)(nil),          // 20: memos.api.v1.ListSpaceMembersRequest
+	(*ListSpaceMembersResponse)(nil),         // 21: memos.api.v1.ListSpaceMembersResponse
+	(*GetSpaceMemberRequest)(nil),            // 22: memos.api.v1.GetSpaceMemberRequest
+	(*UpdateSpaceMemberRequest)(nil),         // 23: memos.api.v1.UpdateSpaceMemberRequest
+	(*DeleteSpaceMemberRequest)(nil),         // 24: memos.api.v1.DeleteSpaceMemberRequest
+	(*fieldmaskpb.FieldMask)(nil),            // 25: google.protobuf.FieldMask
+	(*emptypb.Empty)(nil),                    // 26: google.protobuf.Empty
 }
 var file_api_v1_space_service_proto_depIdxs = []int32{
-	0,  // 0: memos.api.v1.Space.current_user_role:type_name -> memos.api.v1.SpaceMember.Role
-	0,  // 1: memos.api.v1.SpaceMember.role:type_name -> memos.api.v1.SpaceMember.Role
-	0,  // 2: memos.api.v1.SpaceInvitation.role:type_name -> memos.api.v1.SpaceMember.Role
-	1,  // 3: memos.api.v1.SpaceInvitation.space:type_name -> memos.api.v1.Space
-	1,  // 4: memos.api.v1.CreateSpaceRequest.space:type_name -> memos.api.v1.Space
-	1,  // 5: memos.api.v1.ListSpacesResponse.spaces:type_name -> memos.api.v1.Space
-	1,  // 6: memos.api.v1.UpdateSpaceRequest.space:type_name -> memos.api.v1.Space
-	24, // 7: memos.api.v1.UpdateSpaceRequest.update_mask:type_name -> google.protobuf.FieldMask
-	3,  // 8: memos.api.v1.CreateSpaceInvitationRequest.space_invitation:type_name -> memos.api.v1.SpaceInvitation
-	3,  // 9: memos.api.v1.ListSpaceInvitationsResponse.space_invitations:type_name -> memos.api.v1.SpaceInvitation
-	3,  // 10: memos.api.v1.ListUserSpaceInvitationsResponse.space_invitations:type_name -> memos.api.v1.SpaceInvitation
-	2,  // 11: memos.api.v1.ListSpaceMembersResponse.space_members:type_name -> memos.api.v1.SpaceMember
-	2,  // 12: memos.api.v1.UpdateSpaceMemberRequest.space_member:type_name -> memos.api.v1.SpaceMember
-	24, // 13: memos.api.v1.UpdateSpaceMemberRequest.update_mask:type_name -> google.protobuf.FieldMask
-	4,  // 14: memos.api.v1.SpaceService.CreateSpace:input_type -> memos.api.v1.CreateSpaceRequest
-	5,  // 15: memos.api.v1.SpaceService.ListSpaces:input_type -> memos.api.v1.ListSpacesRequest
-	7,  // 16: memos.api.v1.SpaceService.GetSpace:input_type -> memos.api.v1.GetSpaceRequest
-	8,  // 17: memos.api.v1.SpaceService.UpdateSpace:input_type -> memos.api.v1.UpdateSpaceRequest
-	9,  // 18: memos.api.v1.SpaceService.DeleteSpace:input_type -> memos.api.v1.DeleteSpaceRequest
-	10, // 19: memos.api.v1.SpaceService.CreateSpaceInvitation:input_type -> memos.api.v1.CreateSpaceInvitationRequest
-	11, // 20: memos.api.v1.SpaceService.ListSpaceInvitations:input_type -> memos.api.v1.ListSpaceInvitationsRequest
-	13, // 21: memos.api.v1.SpaceService.ListUserSpaceInvitations:input_type -> memos.api.v1.ListUserSpaceInvitationsRequest
-	15, // 22: memos.api.v1.SpaceService.GetSpaceInvitation:input_type -> memos.api.v1.GetSpaceInvitationRequest
-	16, // 23: memos.api.v1.SpaceService.DeleteSpaceInvitation:input_type -> memos.api.v1.DeleteSpaceInvitationRequest
-	17, // 24: memos.api.v1.SpaceService.AcceptSpaceInvitation:input_type -> memos.api.v1.AcceptSpaceInvitationRequest
-	18, // 25: memos.api.v1.SpaceService.DeclineSpaceInvitation:input_type -> memos.api.v1.DeclineSpaceInvitationRequest
-	19, // 26: memos.api.v1.SpaceService.ListSpaceMembers:input_type -> memos.api.v1.ListSpaceMembersRequest
-	21, // 27: memos.api.v1.SpaceService.GetSpaceMember:input_type -> memos.api.v1.GetSpaceMemberRequest
-	22, // 28: memos.api.v1.SpaceService.UpdateSpaceMember:input_type -> memos.api.v1.UpdateSpaceMemberRequest
-	23, // 29: memos.api.v1.SpaceService.DeleteSpaceMember:input_type -> memos.api.v1.DeleteSpaceMemberRequest
-	1,  // 30: memos.api.v1.SpaceService.CreateSpace:output_type -> memos.api.v1.Space
-	6,  // 31: memos.api.v1.SpaceService.ListSpaces:output_type -> memos.api.v1.ListSpacesResponse
-	1,  // 32: memos.api.v1.SpaceService.GetSpace:output_type -> memos.api.v1.Space
-	1,  // 33: memos.api.v1.SpaceService.UpdateSpace:output_type -> memos.api.v1.Space
-	25, // 34: memos.api.v1.SpaceService.DeleteSpace:output_type -> google.protobuf.Empty
-	3,  // 35: memos.api.v1.SpaceService.CreateSpaceInvitation:output_type -> memos.api.v1.SpaceInvitation
-	12, // 36: memos.api.v1.SpaceService.ListSpaceInvitations:output_type -> memos.api.v1.ListSpaceInvitationsResponse
-	14, // 37: memos.api.v1.SpaceService.ListUserSpaceInvitations:output_type -> memos.api.v1.ListUserSpaceInvitationsResponse
-	3,  // 38: memos.api.v1.SpaceService.GetSpaceInvitation:output_type -> memos.api.v1.SpaceInvitation
-	25, // 39: memos.api.v1.SpaceService.DeleteSpaceInvitation:output_type -> google.protobuf.Empty
-	2,  // 40: memos.api.v1.SpaceService.AcceptSpaceInvitation:output_type -> memos.api.v1.SpaceMember
-	25, // 41: memos.api.v1.SpaceService.DeclineSpaceInvitation:output_type -> google.protobuf.Empty
-	20, // 42: memos.api.v1.SpaceService.ListSpaceMembers:output_type -> memos.api.v1.ListSpaceMembersResponse
-	2,  // 43: memos.api.v1.SpaceService.GetSpaceMember:output_type -> memos.api.v1.SpaceMember
-	2,  // 44: memos.api.v1.SpaceService.UpdateSpaceMember:output_type -> memos.api.v1.SpaceMember
-	25, // 45: memos.api.v1.SpaceService.DeleteSpaceMember:output_type -> google.protobuf.Empty
-	30, // [30:46] is the sub-list for method output_type
-	14, // [14:30] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	1,  // 0: memos.api.v1.Space.current_user_role:type_name -> memos.api.v1.SpaceMember.Role
+	0,  // 1: memos.api.v1.Space.access_mode:type_name -> memos.api.v1.Space.AccessMode
+	1,  // 2: memos.api.v1.SpaceMember.role:type_name -> memos.api.v1.SpaceMember.Role
+	1,  // 3: memos.api.v1.SpaceInvitation.role:type_name -> memos.api.v1.SpaceMember.Role
+	2,  // 4: memos.api.v1.SpaceInvitation.space:type_name -> memos.api.v1.Space
+	2,  // 5: memos.api.v1.CreateSpaceRequest.space:type_name -> memos.api.v1.Space
+	2,  // 6: memos.api.v1.ListSpacesResponse.spaces:type_name -> memos.api.v1.Space
+	2,  // 7: memos.api.v1.UpdateSpaceRequest.space:type_name -> memos.api.v1.Space
+	25, // 8: memos.api.v1.UpdateSpaceRequest.update_mask:type_name -> google.protobuf.FieldMask
+	4,  // 9: memos.api.v1.CreateSpaceInvitationRequest.space_invitation:type_name -> memos.api.v1.SpaceInvitation
+	4,  // 10: memos.api.v1.ListSpaceInvitationsResponse.space_invitations:type_name -> memos.api.v1.SpaceInvitation
+	4,  // 11: memos.api.v1.ListUserSpaceInvitationsResponse.space_invitations:type_name -> memos.api.v1.SpaceInvitation
+	3,  // 12: memos.api.v1.ListSpaceMembersResponse.space_members:type_name -> memos.api.v1.SpaceMember
+	3,  // 13: memos.api.v1.UpdateSpaceMemberRequest.space_member:type_name -> memos.api.v1.SpaceMember
+	25, // 14: memos.api.v1.UpdateSpaceMemberRequest.update_mask:type_name -> google.protobuf.FieldMask
+	5,  // 15: memos.api.v1.SpaceService.CreateSpace:input_type -> memos.api.v1.CreateSpaceRequest
+	6,  // 16: memos.api.v1.SpaceService.ListSpaces:input_type -> memos.api.v1.ListSpacesRequest
+	8,  // 17: memos.api.v1.SpaceService.GetSpace:input_type -> memos.api.v1.GetSpaceRequest
+	9,  // 18: memos.api.v1.SpaceService.UpdateSpace:input_type -> memos.api.v1.UpdateSpaceRequest
+	10, // 19: memos.api.v1.SpaceService.DeleteSpace:input_type -> memos.api.v1.DeleteSpaceRequest
+	11, // 20: memos.api.v1.SpaceService.CreateSpaceInvitation:input_type -> memos.api.v1.CreateSpaceInvitationRequest
+	12, // 21: memos.api.v1.SpaceService.ListSpaceInvitations:input_type -> memos.api.v1.ListSpaceInvitationsRequest
+	14, // 22: memos.api.v1.SpaceService.ListUserSpaceInvitations:input_type -> memos.api.v1.ListUserSpaceInvitationsRequest
+	16, // 23: memos.api.v1.SpaceService.GetSpaceInvitation:input_type -> memos.api.v1.GetSpaceInvitationRequest
+	17, // 24: memos.api.v1.SpaceService.DeleteSpaceInvitation:input_type -> memos.api.v1.DeleteSpaceInvitationRequest
+	18, // 25: memos.api.v1.SpaceService.AcceptSpaceInvitation:input_type -> memos.api.v1.AcceptSpaceInvitationRequest
+	19, // 26: memos.api.v1.SpaceService.DeclineSpaceInvitation:input_type -> memos.api.v1.DeclineSpaceInvitationRequest
+	20, // 27: memos.api.v1.SpaceService.ListSpaceMembers:input_type -> memos.api.v1.ListSpaceMembersRequest
+	22, // 28: memos.api.v1.SpaceService.GetSpaceMember:input_type -> memos.api.v1.GetSpaceMemberRequest
+	23, // 29: memos.api.v1.SpaceService.UpdateSpaceMember:input_type -> memos.api.v1.UpdateSpaceMemberRequest
+	24, // 30: memos.api.v1.SpaceService.DeleteSpaceMember:input_type -> memos.api.v1.DeleteSpaceMemberRequest
+	2,  // 31: memos.api.v1.SpaceService.CreateSpace:output_type -> memos.api.v1.Space
+	7,  // 32: memos.api.v1.SpaceService.ListSpaces:output_type -> memos.api.v1.ListSpacesResponse
+	2,  // 33: memos.api.v1.SpaceService.GetSpace:output_type -> memos.api.v1.Space
+	2,  // 34: memos.api.v1.SpaceService.UpdateSpace:output_type -> memos.api.v1.Space
+	26, // 35: memos.api.v1.SpaceService.DeleteSpace:output_type -> google.protobuf.Empty
+	4,  // 36: memos.api.v1.SpaceService.CreateSpaceInvitation:output_type -> memos.api.v1.SpaceInvitation
+	13, // 37: memos.api.v1.SpaceService.ListSpaceInvitations:output_type -> memos.api.v1.ListSpaceInvitationsResponse
+	15, // 38: memos.api.v1.SpaceService.ListUserSpaceInvitations:output_type -> memos.api.v1.ListUserSpaceInvitationsResponse
+	4,  // 39: memos.api.v1.SpaceService.GetSpaceInvitation:output_type -> memos.api.v1.SpaceInvitation
+	26, // 40: memos.api.v1.SpaceService.DeleteSpaceInvitation:output_type -> google.protobuf.Empty
+	3,  // 41: memos.api.v1.SpaceService.AcceptSpaceInvitation:output_type -> memos.api.v1.SpaceMember
+	26, // 42: memos.api.v1.SpaceService.DeclineSpaceInvitation:output_type -> google.protobuf.Empty
+	21, // 43: memos.api.v1.SpaceService.ListSpaceMembers:output_type -> memos.api.v1.ListSpaceMembersResponse
+	3,  // 44: memos.api.v1.SpaceService.GetSpaceMember:output_type -> memos.api.v1.SpaceMember
+	3,  // 45: memos.api.v1.SpaceService.UpdateSpaceMember:output_type -> memos.api.v1.SpaceMember
+	26, // 46: memos.api.v1.SpaceService.DeleteSpaceMember:output_type -> google.protobuf.Empty
+	31, // [31:47] is the sub-list for method output_type
+	15, // [15:31] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_space_service_proto_init() }
@@ -1544,12 +1672,13 @@ func file_api_v1_space_service_proto_init() {
 	if File_api_v1_space_service_proto != nil {
 		return
 	}
+	file_api_v1_space_service_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_space_service_proto_rawDesc), len(file_api_v1_space_service_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,

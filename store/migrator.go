@@ -278,6 +278,10 @@ func (s *Store) applyMigrations(ctx context.Context, currentSchemaVersion, targe
 		return errors.Wrap(err, "failed to read migration files")
 	}
 	slices.Sort(filePaths)
+	spaceAvatarExists, err := s.columnExists(ctx, "space", "avatar_url")
+	if err != nil {
+		return errors.Wrap(err, "failed to inspect space avatar migration state")
+	}
 
 	// Start a transaction to apply migrations atomically
 	tx, err := s.driver.GetDB().Begin()
@@ -305,6 +309,9 @@ func (s *Store) applyMigrations(ctx context.Context, currentSchemaVersion, targe
 		}
 
 		if shouldApplyMigration(fileSchemaVersion, currentSchemaVersion, targetSchemaVersion) {
+			if spaceAvatarExists && strings.HasSuffix(filepath.ToSlash(filePath), "/0.33/00__space_avatar.sql") {
+				continue
+			}
 			// Validate migration filename before applying
 			filename := filepath.Base(filePath)
 			if err := validateMigrationFileName(filename); err != nil {

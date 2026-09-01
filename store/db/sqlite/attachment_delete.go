@@ -99,18 +99,13 @@ func authorizeSQLiteAttachmentMutation(
 			return store.ErrMemoMutationConflict
 		}
 		if snapshot.SpaceID != nil {
-			var exists bool
-			if err := tx.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM space WHERE id = ?)", *snapshot.SpaceID).Scan(&exists); err != nil {
+			exists, active, accessMode, err := sqliteMemoPolicySpaceState(ctx, tx, *snapshot.SpaceID, actorUserID)
+			if err != nil {
 				return errors.Wrap(err, "failed to read attachment memo space")
 			}
 			snapshot.SourceSpaceExists = exists
-			if exists {
-				active, err := sqliteSpaceMemberActive(ctx, tx, *snapshot.SpaceID, actorUserID)
-				if err != nil {
-					return errors.Wrap(err, "failed to read attachment memo membership")
-				}
-				snapshot.SourceMemberActive = active
-			}
+			snapshot.SourceMemberActive = active
+			snapshot.SourceSpaceAccessMode = accessMode
 		}
 		if err := store.ValidateMemoWriteSnapshot(&store.MemoWritePolicy{ActorUserID: actorUserID}, nil, snapshot); err != nil {
 			return err

@@ -47,8 +47,8 @@ describe("memo view navigation", () => {
   });
 
   it("uses an All Home origin for direct and shared resource entries", () => {
-    expect(resolveMemoDetailOrigin(undefined)).toEqual({ parentPage: "/home", parentScope: "all" });
-    expect(resolveMemoDetailOrigin({ unrelated: true })).toEqual({ parentPage: "/home", parentScope: "all" });
+    expect(resolveMemoDetailOrigin(undefined)).toEqual({ parentPage: "/explore", parentScope: "all" });
+    expect(resolveMemoDetailOrigin({ unrelated: true })).toEqual({ parentPage: "/explore", parentScope: "all" });
   });
 
   it("uses a user-level Archived origin without changing the remembered Space", () => {

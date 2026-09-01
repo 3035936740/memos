@@ -42,7 +42,7 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	memoSpaceID := store.NullInt32Pointer(memoSpace)
 	spaceExists, actorMember := false, false
 	if memoSpaceID != nil {
-		spaceExists, actorMember, err = readPostgresMemoSpaceState(ctx, tx, *memoSpaceID, delete.ActorUserID)
+		spaceExists, actorMember, _, err = readPostgresMemoSpaceState(ctx, tx, *memoSpaceID, delete.ActorUserID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read memo space state")
 		}

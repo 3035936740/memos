@@ -247,13 +247,16 @@ func (s *APIV1Service) ListMemos(ctx context.Context, request *v1pb.ListMemosReq
 		}
 		memoFind.Filters = append(memoFind.Filters, request.Filter)
 	}
+	if !isSuperUser(currentUser) && !strings.Contains(request.Filter, `space == "spaces/`) {
+		memoFind.ExcludeUnsyncedSpaces = true
+	}
 	hideAnonymousOwnership := strings.Contains(request.Filter, "creator ==")
 
 	if currentUser == nil {
-		memoFind.VisibilityList = []store.Visibility{store.Public}
+		memoFind.VisibilityList = []store.Visibility{store.Public, store.SpaceAudience}
 	} else if !isSuperUser(currentUser) {
 		if memoFind.CreatorID == nil {
-			filter := fmt.Sprintf(`creator_id == %d || visibility in ["PUBLIC", "PROTECTED"]`, currentUser.ID)
+			filter := fmt.Sprintf(`creator_id == %d || visibility in ["PUBLIC", "PROTECTED", "SPACE"]`, currentUser.ID)
 			memoFind.Filters = append(memoFind.Filters, filter)
 		} else if *memoFind.CreatorID != currentUser.ID {
 			memoFind.VisibilityList = []store.Visibility{store.Public, store.Protected}

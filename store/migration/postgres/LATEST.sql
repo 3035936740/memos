@@ -33,7 +33,11 @@ CREATE TABLE space (
   id SERIAL PRIMARY KEY,
   uid TEXT NOT NULL UNIQUE,
   title TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT ''
+  description TEXT NOT NULL DEFAULT '',
+  avatar_url TEXT NOT NULL DEFAULT '',
+  url_slug TEXT UNIQUE,
+  access_mode TEXT NOT NULL DEFAULT 'INVITE_ONLY' CHECK (access_mode IN ('INVITE_ONLY', 'AUTHENTICATED', 'PUBLIC')),
+  sync_to_main_feed BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- space membership

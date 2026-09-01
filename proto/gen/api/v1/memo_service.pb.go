@@ -37,7 +37,7 @@ const (
 	// PUBLIC: signed-in users can read the memo; anonymous visitors can read it
 	// when instance policy permits.
 	Visibility_PUBLIC Visibility = 3
-	// SPACE: active members of the memo's space can read it.
+	// SPACE: readers allowed by the assigned space's access mode can read it.
 	Visibility_SPACE Visibility = 4
 )
 
@@ -231,7 +231,7 @@ type Memo struct {
 	Content string `protobuf:"bytes,7,opt,name=content,proto3" json:"content,omitempty"`
 	// The visibility of the memo.
 	// One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC
-	// (anonymous-eligible), or SPACE (active space members). Defaults to
+	// (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to
 	// PRIVATE on creation when unspecified.
 	Visibility Visibility `protobuf:"varint,9,opt,name=visibility,proto3,enum=memos.api.v1.Visibility" json:"visibility,omitempty"`
 	// Output only. The tags extracted from the content.
@@ -802,8 +802,8 @@ type isListMemosRequest_Scope interface {
 }
 
 type ListMemosRequest_Space struct {
-	// Optional. Limit results to readable non-comment memos in a space of
-	// which the caller is an active member.
+	// Optional. Limit results to readable non-comment memos in a space the
+	// caller may access according to its access mode.
 	Space string `protobuf:"bytes,9,opt,name=space,proto3,oneof"`
 }
 

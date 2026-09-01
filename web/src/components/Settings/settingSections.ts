@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { type ComponentType } from "react";
 import AccessTokenSection from "@/components/Settings/AccessTokenSection";
+import AdminSpacesSection from "@/components/Settings/AdminSpacesSection";
 import AISection from "@/components/Settings/AISection";
 import CommentsSection from "@/components/Settings/CommentsSection";
 import EmojiSection from "@/components/Settings/EmojiSection";
@@ -60,7 +61,8 @@ export type SettingSectionKey =
   | "security"
   | "moderation"
   | "quarantine"
-  | "comments";
+  | "comments"
+  | "space-management";
 
 type SettingSectionScope = "basic" | "admin";
 
@@ -115,6 +117,13 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     labelKey: "setting.member.label",
     icon: UsersIcon,
     component: MemberSection,
+  },
+  {
+    key: "space-management",
+    scope: "admin",
+    labelKey: "setting.space-management.label",
+    icon: AstroidIcon,
+    component: AdminSpacesSection,
   },
   {
     key: "system",

@@ -13,6 +13,10 @@ const spaceState = vi.hoisted(() => ({
   selectSpace: vi.fn(),
 }));
 
+const authState = vi.hoisted(() => ({
+  currentUser: { name: "users/alice" } as { name: string } | undefined,
+}));
+
 vi.mock("@/components/MemosLogo", () => ({
   default: () => <span>Memos</span>,
 }));
@@ -45,12 +49,17 @@ vi.mock("@/contexts/SpaceContext", () => ({
   },
 }));
 
+vi.mock("@/hooks/useCurrentUser", () => ({
+  default: () => authState.currentUser,
+}));
+
 vi.mock("@/utils/i18n", () => ({
   useTranslate: () => (key: string) => key,
 }));
 
 describe("SpaceSwitcher", () => {
   beforeEach(() => {
+    authState.currentUser = { name: "users/alice" };
     spaceState.spaces = [
       { name: "spaces/product", title: "Product", description: "" },
       { name: "spaces/research", title: "Research", description: "" },
@@ -59,6 +68,16 @@ describe("SpaceSwitcher", () => {
     spaceState.selectedSpaceName = undefined;
     spaceState.selectMemos.mockClear();
     spaceState.selectSpace.mockClear();
+  });
+
+  it("lets guests switch among public Spaces without exposing creation", async () => {
+    authState.currentUser = undefined;
+    render(<SpaceSwitcher />);
+
+    fireEvent.click(screen.getByRole("button", { name: "space.switch: common.memos" }));
+
+    expect(await screen.findByRole("menuitemradio", { name: "Product" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "space.create" })).not.toBeInTheDocument();
   });
 
   it("lists Memos, every available Space, and the create entry", async () => {

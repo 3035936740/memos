@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import RootLayout from "@/layouts/RootLayout";
 
 const authState = vi.hoisted(() => ({ currentUser: { name: "users/test" } as { name: string } | undefined }));
-const instanceState = vi.hoisted(() => ({ accessMode: 2, instanceUrl: "https://example.com", demo: true }));
+const instanceState = vi.hoisted(() => ({ accessMode: 2, instanceUrl: "https://example.com", demo: true, profileLoaded: true }));
 
 vi.mock("@/components/AppSidebar", () => ({
   default: () => <aside data-testid="desktop-sidebar">Desktop sidebar</aside>,
@@ -24,7 +24,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({
-  useInstance: () => ({ profile: instanceState }),
+  useInstance: () => ({ profile: instanceState, profileLoaded: instanceState.profileLoaded }),
 }));
 
 vi.mock("@/contexts/SpaceContext", () => ({
@@ -68,6 +68,7 @@ describe("RootLayout global editor shell", () => {
   beforeEach(() => {
     authState.currentUser = { name: "users/test" };
     instanceState.accessMode = 2;
+    instanceState.profileLoaded = true;
   });
 
   it("mounts the composer provider inside the sidebar provider and keeps the shell across routes", () => {
@@ -112,5 +113,25 @@ describe("RootLayout global editor shell", () => {
     );
 
     expect(screen.getByTestId("route")).toHaveTextContent("/auth");
+  });
+
+  it("does not redirect an anonymous visitor before the instance profile is loaded", () => {
+    authState.currentUser = undefined;
+    instanceState.accessMode = 0;
+    instanceState.profileLoaded = false;
+
+    render(
+      <MemoryRouter initialEntries={["/space/public-space"]}>
+        <Routes>
+          <Route element={<RootLayout />}>
+            <Route path="space/:uid" element={<div>Public space</div>} />
+          </Route>
+          <Route path="auth" element={<RouteState />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Public space")).toBeInTheDocument();
+    expect(screen.queryByTestId("route")).not.toBeInTheDocument();
   });
 });

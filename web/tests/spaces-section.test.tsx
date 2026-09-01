@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SpacesSection from "@/components/Settings/SpacesSection";
-import type { Space, SpaceInvitation, SpaceMember } from "@/types/proto/api/v1/space_service_pb";
+import { type Space, Space_AccessMode, type SpaceInvitation, type SpaceMember } from "@/types/proto/api/v1/space_service_pb";
 
 const state = vi.hoisted(() => ({
   viewerName: "users/alice",
@@ -73,6 +73,10 @@ vi.mock("@/components/CreateSpaceDialog", () => ({
               name: "spaces/created",
               title: "Created",
               description: "",
+              avatarUrl: "",
+              urlSlug: "",
+              accessMode: Space_AccessMode.INVITE_ONLY,
+              syncToMainFeed: true,
               currentUserRole: 1,
               memberCount: 1,
             };
@@ -123,6 +127,10 @@ const adminSpace: Space = {
   name: "spaces/product",
   title: "Product",
   description: "Product decisions",
+  avatarUrl: "",
+  urlSlug: "",
+  accessMode: Space_AccessMode.INVITE_ONLY,
+  syncToMainFeed: true,
   currentUserRole: 1,
   memberCount: 2,
 };
@@ -156,6 +164,10 @@ const receivedInvitation: SpaceInvitation = {
     name: "spaces/research",
     title: "Research",
     description: "Research notes",
+    avatarUrl: "",
+    urlSlug: "",
+    accessMode: Space_AccessMode.INVITE_ONLY,
+    syncToMainFeed: true,
     currentUserRole: 0,
     memberCount: 0,
   },
@@ -310,6 +322,16 @@ describe("SpacesSection", () => {
     expect(screen.queryByRole("button", { name: "setting.spaces.invite-member" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "setting.spaces.remove" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "setting.spaces.pending-invitations" })).not.toBeInTheDocument();
+  });
+
+  it("hides member management outside invite-only mode", () => {
+    state.spaces = [{ ...adminSpace, accessMode: Space_AccessMode.PUBLIC }];
+    state.members = [adminMember, ordinaryMember];
+
+    renderSection("/setting?space=spaces%2Fproduct#spaces");
+
+    expect(screen.queryByRole("tab", { name: /setting\.spaces\.members/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "setting.spaces.invite-member" })).not.toBeInTheDocument();
   });
 
   it("navigates to a newly created Space for management without switching ambient Space", async () => {

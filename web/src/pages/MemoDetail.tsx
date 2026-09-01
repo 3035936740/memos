@@ -256,10 +256,14 @@ const MemoDetail = () => {
         >
           <main className="min-w-0">
             <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
-              <Button variant="ghost" className="-ml-2 text-muted-foreground" onClick={handleBack}>
-                <ArrowLeftIcon />
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={handleBack}
+              >
+                <ArrowLeftIcon className="size-4" />
                 {t("memo.back-to-list")}
-              </Button>
+              </button>
               {!isShareMode && currentCategory ? (
                 <Button
                   render={<Link to={`/categories/${currentCategory.slug}`} />}

@@ -119,7 +119,7 @@ export type Memo = Message<"memos.api.v1.Memo"> & {
   /**
    * The visibility of the memo.
    * One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC
-   * (anonymous-eligible), or SPACE (active space members). Defaults to
+   * (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to
    * PRIVATE on creation when unspecified.
    *
    * @generated from field: memos.api.v1.Visibility visibility = 9;
@@ -484,8 +484,8 @@ export type ListMemosRequest = Message<"memos.api.v1.ListMemosRequest"> & {
    */
   scope: {
     /**
-     * Optional. Limit results to readable non-comment memos in a space of
-     * which the caller is an active member.
+     * Optional. Limit results to readable non-comment memos in a space the
+     * caller may access according to its access mode.
      *
      * @generated from field: string space = 9;
      */
@@ -1406,7 +1406,7 @@ export enum Visibility {
   PUBLIC = 3,
 
   /**
-   * SPACE: active members of the memo's space can read it.
+   * SPACE: readers allowed by the assigned space's access mode can read it.
    *
    * @generated from enum value: SPACE = 4;
    */

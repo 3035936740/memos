@@ -54,32 +54,33 @@ func populateSQLiteMemoPolicySpaceState(
 	snapshot *store.MemoWriteSnapshot,
 ) error {
 	if snapshot.SpaceID != nil {
-		exists, member, err := sqliteMemoPolicySpaceState(ctx, executor, *snapshot.SpaceID, actorUserID)
+		exists, member, accessMode, err := sqliteMemoPolicySpaceState(ctx, executor, *snapshot.SpaceID, actorUserID)
 		if err != nil {
 			return err
 		}
 		snapshot.SourceSpaceExists = exists
 		snapshot.SourceMemberActive = member
+		snapshot.SourceSpaceAccessMode = accessMode
 	}
 	if update != nil && update.SpaceID != nil {
-		exists, member, err := sqliteMemoPolicySpaceState(ctx, executor, *update.SpaceID, actorUserID)
+		exists, member, accessMode, err := sqliteMemoPolicySpaceState(ctx, executor, *update.SpaceID, actorUserID)
 		if err != nil {
 			return err
 		}
 		snapshot.TargetSpaceExists = exists
 		snapshot.TargetMemberActive = member
+		snapshot.TargetSpaceAccessMode = accessMode
 	}
 	return nil
 }
 
-func sqliteMemoPolicySpaceState(ctx context.Context, executor dbExecutor, spaceID, actorUserID int32) (bool, bool, error) {
-	var exists bool
-	if err := executor.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM space WHERE id = ?)", spaceID).Scan(&exists); err != nil {
-		return false, false, err
-	}
-	if !exists {
-		return false, false, nil
+func sqliteMemoPolicySpaceState(ctx context.Context, executor dbExecutor, spaceID, actorUserID int32) (bool, bool, store.SpaceAccessMode, error) {
+	var accessMode store.SpaceAccessMode
+	if err := executor.QueryRowContext(ctx, "SELECT access_mode FROM space WHERE id = ?", spaceID).Scan(&accessMode); stderrors.Is(err, sql.ErrNoRows) {
+		return false, false, "", nil
+	} else if err != nil {
+		return false, false, "", err
 	}
 	member, err := sqliteSpaceMemberActive(ctx, executor, spaceID, actorUserID)
-	return true, member, err
+	return true, member, accessMode, err
 }
