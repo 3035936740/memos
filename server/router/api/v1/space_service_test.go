@@ -160,6 +160,7 @@ func TestOpenSpaceMemoReadAndPublishForNonMembers(t *testing.T) {
 	service := newIntegrationService(t)
 	owner := createSpaceTestUser(ctx, t, service, "open-space-owner", store.RoleUser)
 	outsider := createSpaceTestUser(ctx, t, service, "open-space-outsider", store.RoleUser)
+	admin := createSpaceTestUser(ctx, t, service, "open-space-admin", store.RoleAdmin)
 	_, err := service.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
 		Key: storepb.InstanceSettingKey_ACCESS,
 		Value: &storepb.InstanceSetting_AccessSetting{AccessSetting: &storepb.InstanceAccessSetting{
@@ -180,6 +181,16 @@ func TestOpenSpaceMemoReadAndPublishForNonMembers(t *testing.T) {
 	publicSpace := createSpace("open-public", v1pb.Space_PUBLIC)
 	authenticatedSpace := createSpace("open-authenticated", v1pb.Space_AUTHENTICATED)
 	inviteOnlySpace := createSpace("closed-invite-only", v1pb.Space_INVITE_ONLY)
+	syncDisabled := false
+	unsyncedSpace, err := service.CreateSpace(userCtx(ctx, owner.ID), &v1pb.CreateSpaceRequest{
+		SpaceId: "open-unsynced",
+		Space: &v1pb.Space{
+			Title:          "open-unsynced",
+			AccessMode:     v1pb.Space_PUBLIC,
+			SyncToMainFeed: &syncDisabled,
+		},
+	})
+	require.NoError(t, err)
 
 	createMemo := func(user *store.User, space *v1pb.Space, content string) (*v1pb.Memo, error) {
 		t.Helper()
@@ -201,6 +212,15 @@ func TestOpenSpaceMemoReadAndPublishForNonMembers(t *testing.T) {
 		_, err := createMemo(owner, item.space, item.content)
 		require.NoError(t, err)
 	}
+	unsyncedMemo, err := createMemo(owner, unsyncedSpace, "unsynced Space audience")
+	require.NoError(t, err)
+
+	mainFeed, err := service.ListMemos(userCtx(ctx, outsider.ID), &v1pb.ListMemosRequest{})
+	require.NoError(t, err)
+	require.NotContains(t, memoNames(mainFeed.Memos), unsyncedMemo.Name)
+	mainFeed, err = service.ListMemos(userCtx(ctx, admin.ID), &v1pb.ListMemosRequest{})
+	require.NoError(t, err)
+	require.Contains(t, memoNames(mainFeed.Memos), unsyncedMemo.Name)
 
 	listSpace := func(callCtx context.Context, space *v1pb.Space) (*v1pb.ListMemosResponse, error) {
 		t.Helper()
@@ -212,6 +232,9 @@ func TestOpenSpaceMemoReadAndPublishForNonMembers(t *testing.T) {
 	listed, err := listSpace(userCtx(ctx, outsider.ID), publicSpace)
 	require.NoError(t, err)
 	require.Len(t, listed.Memos, 1)
+	listed, err = listSpace(userCtx(ctx, outsider.ID), unsyncedSpace)
+	require.NoError(t, err)
+	require.Equal(t, []string{unsyncedMemo.Name}, memoNames(listed.Memos))
 	listed, err = listSpace(userCtx(ctx, outsider.ID), authenticatedSpace)
 	require.NoError(t, err)
 	require.Len(t, listed.Memos, 1)
@@ -246,6 +269,14 @@ func spaceNames(spaces []*v1pb.Space) []string {
 	names := make([]string, 0, len(spaces))
 	for _, space := range spaces {
 		names = append(names, space.Name)
+	}
+	return names
+}
+
+func memoNames(memos []*v1pb.Memo) []string {
+	names := make([]string, 0, len(memos))
+	for _, memo := range memos {
+		names = append(names, memo.Name)
 	}
 	return names
 }

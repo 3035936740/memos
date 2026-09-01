@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import MemoView from "@/components/MemoView";
 import PagedMemoList, { getMemoKey } from "@/components/PagedMemoList";
 import { useInstance } from "@/contexts/InstanceContext";
+import { useSpaceContext } from "@/contexts/SpaceContext";
 import { useMemoSorting } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { canAccessInstanceContent, parseInstanceCategories } from "@/lib/instance-content";
@@ -14,6 +15,7 @@ const MemoCategory = () => {
   const { slug = "" } = useParams();
   const { generalSetting } = useInstance();
   const currentUser = useCurrentUser();
+  const { memoFilter: contextFilter, selectedSpaceName } = useSpaceContext();
   const category = parseInstanceCategories(generalSetting.memoCategoriesJson).find((item) => item.slug === slug);
   const allowed = !!category && canAccessInstanceContent(category.access, currentUser);
   const { listSort, orderBy } = useMemoSorting({
@@ -36,12 +38,14 @@ const MemoCategory = () => {
             parentPage={parentPage}
             navigationScope={navigationScope}
             showCreator
+            showSpace={!selectedSpaceName}
             compact={compact}
           />
         )}
         listSort={listSort}
         orderBy={orderBy}
         filter={filter}
+        contextFilter={contextFilter}
         showCreator
         renderLeading={() => (
           <div className="mb-4">

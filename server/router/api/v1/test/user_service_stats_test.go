@@ -498,7 +498,7 @@ func TestUserStatsSpaceFilter(t *testing.T) {
 	_, err = ts.Service.ListAllUserStats(ctx, &v1pb.ListAllUserStatsRequest{
 		Filter: fmt.Sprintf(`space == %q`, spaceAName),
 	})
-	require.Equal(t, codes.Unauthenticated, status.Code(err))
+	require.Equal(t, codes.NotFound, status.Code(err))
 
 	_, err = ts.Service.GetUserStats(ownerCtx, &v1pb.GetUserStatsRequest{
 		Name:   ownerName,

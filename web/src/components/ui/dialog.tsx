@@ -51,8 +51,9 @@ const DialogContent = React.forwardRef<
   DialogPrimitive.Popup.Props &
     VariantProps<typeof dialogContentVariants> & {
       showCloseButton?: boolean;
+      scrollContainerClassName?: string;
     }
->(({ className, children, showCloseButton = true, size, ...props }, ref) => (
+>(({ className, children, showCloseButton = true, scrollContainerClassName, size, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Popup
@@ -62,7 +63,7 @@ const DialogContent = React.forwardRef<
       finalFocus={false}
       {...props}
     >
-      <div className="overflow-y-auto overflow-x-hidden flex-1 flex flex-col gap-4">{children}</div>
+      <div className={cn("overflow-y-auto overflow-x-hidden flex-1 flex flex-col gap-4", scrollContainerClassName)}>{children}</div>
       {showCloseButton && (
         <DialogPrimitive.Close className="ring-offset-background absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
           <XIcon />

@@ -1,7 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { routeSupportsCollectionScope } from "@/components/AppSidebar/routes";
-import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useSpaces } from "@/hooks/useSpaceQueries";
 import { buildCollectionScopeFilter, type CollectionScope } from "@/lib/cel-filter";
@@ -61,7 +60,6 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   // change identity whenever the user navigates.
   const location = useLocation();
   const navigate = useNavigate();
-  const { generalSetting } = useInstance();
   const pathnameRef = useRef(location.pathname);
   const navigateRef = useRef(navigate);
   pathnameRef.current = location.pathname;
@@ -98,17 +96,6 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
     writeSelectedSpaceName(sessionKey, undefined);
     setSelectedSpaceName(undefined);
   }, [selectedSpace, selectedSpaceName, sessionKey, spacesQuery.isSuccess]);
-
-  useEffect(() => {
-    const instanceTitle = generalSetting.customProfile?.title || "Memos";
-    const instanceIcon = generalSetting.customProfile?.logoUrl || "/logo.webp";
-    document.title = selectedSpace?.title || instanceTitle;
-
-    const icon = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-    if (icon) {
-      icon.href = selectedSpace?.avatarUrl || instanceIcon;
-    }
-  }, [generalSetting.customProfile, selectedSpace]);
 
   const navigateAfterScopeChange = useCallback((destination?: string) => {
     if (destination) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pkg/errors"
@@ -65,6 +66,12 @@ func RegisterBlogSidebarRoutes(router *echo.Group, service *APIV1Service, author
 		if limit > blogRecentCommentMaxLimit {
 			limit = blogRecentCommentMaxLimit
 		}
+		filter := c.QueryParam("filter")
+		if filter != "" {
+			if err := service.validateMemoFilterForUser(ctx, filter, currentUser); err != nil {
+				return moderationError(c, http.StatusBadRequest, errors.New("invalid memo filter"))
+			}
+		}
 
 		normal := store.Normal
 		items := make([]blogRecentCommentItem, 0, limit)
@@ -89,8 +96,19 @@ func RegisterBlogSidebarRoutes(router *echo.Group, service *APIV1Service, author
 				if comment.ParentUID == nil || !memoVisibleInCollection(comment, currentUser) {
 					continue
 				}
-				parent, err := service.Store.GetMemo(ctx, &store.FindMemo{UID: comment.ParentUID})
-				if err != nil || parent == nil || parent.RowStatus != store.Normal || !memoVisibleInCollection(parent, currentUser) {
+				parentFind := &store.FindMemo{UID: comment.ParentUID, RowStatus: &normal}
+				if filter != "" {
+					parentFind.Filters = []string{filter}
+				}
+				if !isSuperUser(currentUser) && !strings.Contains(filter, `space == "spaces/`) {
+					parentFind.ExcludeUnsyncedSpaces = true
+				}
+				parents, err := service.Store.ListMemos(ctx, parentFind)
+				if err != nil || len(parents) == 0 {
+					continue
+				}
+				parent := parents[0]
+				if !memoVisibleInCollection(parent, currentUser) {
 					continue
 				}
 				if err := service.checkMemoReadAccessWithParent(ctx, comment, parent); err != nil {

@@ -5,13 +5,18 @@ import { describe, expect, it, vi } from "vitest";
 import { ViewProvider } from "@/contexts/ViewContext";
 import MemoCategory from "@/pages/MemoCategory";
 
+const requests = vi.hoisted(() => ({ memo: {} as Record<string, unknown>, sidebarFilters: [] as Array<string | undefined> }));
+
 vi.mock("@tanstack/react-query", async () => {
   const actual = await vi.importActual<typeof import("@tanstack/react-query")>("@tanstack/react-query");
   return { ...actual, useQueries: () => [] };
 });
 
 vi.mock("@/components/BlogSidebar", () => ({
-  default: ({ parentPage }: { parentPage: string }) => <div data-testid="blog-sidebar">{parentPage}</div>,
+  default: ({ parentPage, filter }: { parentPage: string; filter?: string }) => {
+    requests.sidebarFilters.push(filter);
+    return <div data-testid="blog-sidebar">{parentPage}</div>;
+  },
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({
@@ -24,8 +29,15 @@ vi.mock("@/contexts/InstanceContext", () => ({
 
 vi.mock("@/hooks/useCurrentUser", () => ({ default: () => undefined }));
 
+vi.mock("@/contexts/SpaceContext", () => ({
+  useSpaceContext: () => ({ memoFilter: 'space == "spaces/music"', selectedSpaceName: "spaces/music" }),
+}));
+
 vi.mock("@/hooks/useMemoQueries", () => ({
-  useMemos: () => ({ data: { memos: [], totalSize: 0 }, isLoading: false }),
+  useMemos: (request: Record<string, unknown>) => {
+    requests.memo = request;
+    return { data: { memos: [], totalSize: 0 }, isLoading: false };
+  },
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
@@ -42,6 +54,7 @@ vi.mock("@/contexts/NewMemoContext", () => ({
 
 describe("MemoCategory layout", () => {
   it("shows the blog sidebar on desktop and mobile placements", () => {
+    requests.sidebarFilters = [];
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
@@ -61,5 +74,9 @@ describe("MemoCategory layout", () => {
     expect(sidebars.every((sidebar) => sidebar.textContent === "/categories/music")).toBe(true);
     expect(sidebars.some((sidebar) => sidebar.parentElement?.classList.contains("lg:hidden"))).toBe(true);
     expect(sidebars.some((sidebar) => sidebar.parentElement?.tagName === "ASIDE")).toBe(true);
+    const expectedFilter = '(space == "spaces/music") && (category == "music")';
+    expect(requests.memo).toEqual(expect.objectContaining({ filter: expectedFilter }));
+    expect(requests.sidebarFilters.length).toBeGreaterThanOrEqual(2);
+    expect(requests.sidebarFilters.every((filter) => filter === expectedFilter)).toBe(true);
   });
 });

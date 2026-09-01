@@ -58,11 +58,11 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
   const pinnedFilter = filter ? `(${filter}) && pinned` : "pinned";
   const { data: pinnedData } = useMemos({ state, orderBy, filter: pinnedFilter, pageSize: PINNED_ARTICLE_SIZE });
   const { data: userStats = [] } = useAllUserStats({ state, filter });
-  const { data: recentComments = [] } = useRecentBlogComments(viewerKey);
-  const randomMemo = useRandomBlogMemo(viewerKey);
+  const { data: recentComments = [] } = useRecentBlogComments(viewerKey, filter);
+  const randomMemo = useRandomBlogMemo(viewerKey, filter);
   const stats = deriveBlogSidebarStats(userStats);
   const navigationScope: MemoNavigationScope = { state, orderBy, filter };
-  const randomNavigationScope: MemoNavigationScope = { state: State.NORMAL, orderBy: "create_time desc" };
+  const randomNavigationScope: MemoNavigationScope = { state: State.NORMAL, orderBy: "create_time desc", filter };
 
   const statRows = [
     { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(), icon: NotebookTextIcon },

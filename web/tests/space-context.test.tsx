@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSelectedSpaceStorageKey, SpaceProvider, useSpaceContext } from "@/contexts/SpaceContext";
 import { SpaceSchema } from "@/types/proto/api/v1/space_service_pb";
 
@@ -15,10 +15,6 @@ const state = vi.hoisted(() => ({
     isPending: false,
     isError: false,
   },
-}));
-
-vi.mock("@/contexts/InstanceContext", () => ({
-  useInstance: () => ({ generalSetting: { customProfile: { title: "Instance", logoUrl: "/instance.png" } } }),
 }));
 
 vi.mock("@/hooks/useCurrentUser", () => ({
@@ -89,29 +85,6 @@ describe("SpaceProvider", () => {
     sessionStorage.clear();
     state.currentUser = { name: "users/alice" };
     state.query = { data: [], isSuccess: true, isPending: false, isError: false };
-  });
-
-  afterEach(() => {
-    document.querySelector("link[data-space-context-test]")?.remove();
-    document.title = "";
-  });
-
-  it("updates the browser title and favicon when switching Space and restores the instance brand for All", () => {
-    const product = { name: "spaces/product", title: "Product", description: "", avatarUrl: "/product.png" };
-    state.query.data = [product];
-    const icon = document.createElement("link");
-    icon.rel = "icon";
-    icon.dataset.spaceContextTest = "true";
-    document.head.appendChild(icon);
-    renderProvider();
-
-    fireEvent.click(screen.getByRole("button", { name: "Select first Space" }));
-    expect(document.title).toBe("Product");
-    expect(icon.getAttribute("href")).toBe("/product.png");
-
-    fireEvent.click(screen.getByRole("button", { name: "Select Memos" }));
-    expect(document.title).toBe("Instance");
-    expect(icon.getAttribute("href")).toBe("/instance.png");
   });
 
   it("uses the All collection when the user has no stored Space selection", () => {

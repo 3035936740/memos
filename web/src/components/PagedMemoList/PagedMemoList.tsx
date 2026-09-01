@@ -68,13 +68,14 @@ const PagedMemoList = (props: Props) => {
   const parsedPage = Number.parseInt(searchParams.get("page") ?? "1", 10);
   const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   const parentPage = `${location.pathname}${location.search}`;
+  const effectiveFilter = useMemo(() => combineCELFilters(props.contextFilter, props.filter), [props.contextFilter, props.filter]);
   const navigationScope = useMemo<MemoNavigationScope>(
     () => ({
       state: props.state ?? State.NORMAL,
       orderBy: props.orderBy ?? "create_time desc",
-      filter: props.filter,
+      filter: effectiveFilter,
     }),
-    [props.filter, props.orderBy, props.state],
+    [effectiveFilter, props.orderBy, props.state],
   );
 
   const goToPage = useCallback(
@@ -89,7 +90,7 @@ const PagedMemoList = (props: Props) => {
     [searchParams, setSearchParams],
   );
 
-  const paginationScope = `${props.state ?? State.NORMAL}|${props.orderBy ?? "create_time desc"}|${props.filter ?? ""}|${pageSize}`;
+  const paginationScope = `${props.state ?? State.NORMAL}|${props.orderBy ?? "create_time desc"}|${effectiveFilter ?? ""}|${pageSize}`;
   const previousPaginationScopeRef = useRef(paginationScope);
   useEffect(() => {
     if (previousPaginationScopeRef.current === paginationScope) return;
@@ -139,7 +140,7 @@ const PagedMemoList = (props: Props) => {
     {
       state: props.state || State.NORMAL,
       orderBy: props.orderBy || "create_time desc",
-      filter: combineCELFilters(props.contextFilter, props.filter),
+      filter: effectiveFilter,
       pageSize,
       pageOffset: (currentPage - 1) * pageSize,
       showTotalSize: true,
@@ -221,7 +222,7 @@ const PagedMemoList = (props: Props) => {
       <MemoPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
       {isBlogFeed && (
         <div className="mt-4 lg:hidden">
-          <BlogSidebar state={props.state} orderBy={props.orderBy} filter={props.filter} parentPage={parentPage} />
+          <BlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
         </div>
       )}
       {displayMemoList.length > 0 && (
@@ -266,7 +267,7 @@ const PagedMemoList = (props: Props) => {
               {!isDisplayPending && footer}
             </main>
             <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
-              <BlogSidebar state={props.state} orderBy={props.orderBy} filter={props.filter} parentPage={parentPage} />
+              <BlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
             </aside>
           </div>
         ) : (

@@ -9,6 +9,7 @@ import AppSidebar, {
   SidebarResizeHandle,
   useSidebarWidth,
 } from "@/components/AppSidebar";
+import SpaceDocumentBrand from "@/components/SpaceDocumentBrand";
 import TopToolbar from "@/components/TopToolbar";
 import { AppSidebarProvider } from "@/contexts/AppSidebarContext";
 import { GlobalMemoEditorProvider } from "@/contexts/GlobalMemoEditorContext";
@@ -109,6 +110,7 @@ const RootLayoutContent = () => {
 
 const RootLayout = () => (
   <SpaceProvider>
+    <SpaceDocumentBrand />
     <MemoFilterProvider>
       <AppSidebarProvider>
         <GlobalMemoEditorProvider>

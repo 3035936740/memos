@@ -53,6 +53,17 @@ describe("CreateSpaceDialog", () => {
     mocks.isPending = false;
   });
 
+  it("keeps long translations scrollable while the mobile action footer remains visible", () => {
+    render(<CreateSpaceDialog open onOpenChange={mocks.onOpenChange} />);
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveClass("max-h-[calc(100dvh-1rem)]", "p-0", "md:max-w-md");
+    expect(dialog.firstElementChild).toHaveClass("overflow-hidden", "gap-0");
+    expect(dialog.querySelector("form > .overflow-y-auto")).toBeInTheDocument();
+    const footer = screen.getByRole("button", { name: "common.create" }).parentElement;
+    expect(footer).toHaveClass("shrink-0", "flex-row", "border-t");
+  });
+
   it("creates and reports the new Space to the caller", async () => {
     render(<CreateSpaceDialog open onOpenChange={mocks.onOpenChange} onCreated={mocks.onCreated} />);
 
