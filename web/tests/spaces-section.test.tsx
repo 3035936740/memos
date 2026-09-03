@@ -9,6 +9,7 @@ const state = vi.hoisted(() => ({
   viewerName: "users/alice",
   viewerInstanceRole: 3,
   spaces: [] as Space[],
+  adminSpaces: [] as Space[],
   receivedInvitations: [] as SpaceInvitation[],
   members: [] as SpaceMember[],
   managedInvitations: [] as SpaceInvitation[],
@@ -32,7 +33,13 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 }));
 
 vi.mock("@/hooks/useSpaceQueries", () => ({
-  useSpaces: () => ({ data: state.spaces, isError: false, isLoading: false, isSuccess: true }),
+  usePagedSpaces: () => ({ data: { spaces: state.spaces, nextPageToken: "" }, isError: false, isLoading: false, isSuccess: true }),
+  useAdminSpaces: () => ({
+    data: { spaces: state.adminSpaces, nextPageToken: "" },
+    isError: false,
+    isLoading: false,
+    isSuccess: true,
+  }),
   useUserSpaceInvitations: () => ({ data: state.receivedInvitations, isLoading: false }),
   useAcceptSpaceInvitation: () => ({ isPending: false, mutateAsync: state.acceptInvitation }),
   useDeclineSpaceInvitation: () => ({ isPending: false, mutateAsync: state.declineInvitation }),
@@ -197,6 +204,7 @@ const renderSection = (entry = "/setting#spaces") =>
 describe("SpacesSection", () => {
   beforeEach(() => {
     state.spaces = [];
+    state.adminSpaces = [];
     state.viewerInstanceRole = 3;
     state.receivedInvitations = [];
     state.members = [];
@@ -232,6 +240,17 @@ describe("SpacesSection", () => {
 
     fireEvent.click(within(invitationsSection!).getByRole("button", { name: "setting.spaces.decline Research (research)" }));
     await waitFor(() => expect(state.declineInvitation).toHaveBeenCalledWith({ name: "spaces/research/invitations/alice" }));
+  });
+
+  it("shows instance administrators the unified all-spaces management list", () => {
+    state.viewerInstanceRole = 2;
+    state.adminSpaces = [adminSpace];
+
+    renderSection();
+
+    expect(screen.getByPlaceholderText("setting.space-management.search-placeholder")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "setting.space-management.label" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "setting.spaces.manage-space (product)" })).toBeInTheDocument();
   });
 
   it("shows the full Space UID for every joined Space", () => {
@@ -305,8 +324,7 @@ describe("SpacesSection", () => {
   });
 
   it("keeps ordinary Space members read-only and hides governance controls", () => {
-    // Instance administrators do not implicitly receive Space governance rights.
-    state.viewerInstanceRole = 2;
+    state.viewerInstanceRole = 3;
     state.spaces = [userSpace];
     state.members = [{ ...ordinaryMember, name: "spaces/product/members/alice", user: "users/alice" }, adminMember];
     state.managedInvitations = [pendingInvitation];

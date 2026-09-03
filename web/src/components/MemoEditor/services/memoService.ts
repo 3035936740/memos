@@ -1,12 +1,13 @@
-import { create } from "@bufbuild/protobuf";
+import { create, equals } from "@bufbuild/protobuf";
 import { FieldMaskSchema, timestampDate, timestampFromDate } from "@bufbuild/protobuf/wkt";
 import { isEqual } from "lodash-es";
 import { getEditorReferenceRelations } from "@/components/MemoMetadata/Relation/relationHelpers";
 import { memoServiceClient } from "@/connect";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
-import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
+import type { Memo, Poll } from "@/types/proto/api/v1/memo_service_pb";
+import { MemoSchema, PollOptionSchema, PollSchema } from "@/types/proto/api/v1/memo_service_pb";
+import { ensureMemoPollMarker } from "@/utils/memo-poll";
 import type { EditorState } from "../state";
 import { uploadService } from "./uploadService";
 
@@ -18,17 +19,40 @@ function toAttachmentReferences(attachments: Attachment[]): Attachment[] {
   return attachments.map((a) => create(AttachmentSchema, { name: a.name }));
 }
 
+function editablePoll(poll?: Poll): Poll | undefined {
+  if (!poll) return undefined;
+  return create(PollSchema, {
+    ...poll,
+    totalVotes: 0,
+    selectedOptionIds: [],
+    resultsHidden: false,
+    voters: [],
+    votersVisible: false,
+    hasMoreVoters: false,
+    options: poll.options.map((option) => create(PollOptionSchema, { ...option, voteCount: 0 })),
+  });
+}
+
 function buildUpdateMask(
   prevMemo: Memo,
   state: EditorState,
   allAttachments: typeof state.metadata.attachments,
   canCustomizeTimestamps: boolean,
+  poll?: Poll,
 ): { mask: Set<string>; patch: Partial<Memo> } {
   const mask = new Set<string>();
   const patch: Partial<Memo> = {
     name: prevMemo.name,
     content: state.content,
   };
+
+  const nextPoll = editablePoll(poll);
+  const previousPoll = editablePoll(prevMemo.poll);
+  const pollUnchanged = nextPoll && previousPoll ? equals(PollSchema, nextPoll, previousPoll) : nextPoll === previousPoll;
+  if (!pollUnchanged) {
+    mask.add("poll");
+    patch.poll = poll;
+  }
 
   if (!isEqual(state.content, prevMemo.content)) {
     mask.add("content");
@@ -123,11 +147,30 @@ export const memoService = {
     // 1. Upload local files first
     const newAttachments = await uploadService.uploadFiles(state.localFiles);
     const allAttachments = [...state.metadata.attachments, ...newAttachments];
+    const localAttachments = new Map(state.localFiles.map((file, index) => [file.previewUrl, newAttachments[index]]));
+    const poll = state.metadata.poll
+      ? create(PollSchema, {
+          ...state.metadata.poll,
+          image:
+            state.metadata.poll.image ??
+            (state.metadata.pollImageLocalFileURL ? localAttachments.get(state.metadata.pollImageLocalFileURL) : undefined),
+          options: state.metadata.poll.options.map((option) =>
+            create(PollOptionSchema, {
+              ...option,
+              image:
+                option.image ??
+                (state.metadata.pollOptionImageLocalFileURLs?.[option.id]
+                  ? localAttachments.get(state.metadata.pollOptionImageLocalFileURLs[option.id])
+                  : undefined),
+            }),
+          ),
+        })
+      : undefined;
 
     // 2. Update existing memo
     if (options.memoName) {
       const prevMemo = await memoServiceClient.getMemo({ name: options.memoName });
-      const { mask, patch } = buildUpdateMask(prevMemo, state, allAttachments, options.canCustomizeTimestamps ?? false);
+      const { mask, patch } = buildUpdateMask(prevMemo, state, allAttachments, options.canCustomizeTimestamps ?? false, poll);
 
       if (mask.size === 0) {
         return { memoName: prevMemo.name, hasChanges: false };
@@ -146,6 +189,7 @@ export const memoService = {
       visibility: state.metadata.visibility,
       attachments: toAttachmentReferences(allAttachments),
       relations: state.metadata.relations,
+      poll,
       location: state.metadata.location,
       ...(options.parentMemoName ? {} : { category: state.metadata.category }),
       ...(options.parentMemoName ? {} : { hidden: state.metadata.hidden }),
@@ -178,11 +222,14 @@ export const memoService = {
    */
   fromMemo(memo: Memo): Pick<EditorState, "content" | "metadata" | "timestamps"> {
     return {
-      content: memo.content,
+      content: memo.poll ? ensureMemoPollMarker(memo.content) : memo.content,
       metadata: {
         visibility: memo.visibility,
         attachments: memo.attachments,
         relations: memo.relations,
+        poll: memo.poll,
+        pollImageLocalFileURL: undefined,
+        pollOptionImageLocalFileURLs: undefined,
         location: memo.location,
         category: memo.category || undefined,
         hidden: memo.hidden,

@@ -16,6 +16,7 @@ import {
 } from "@/types/proto/api/v1/space_service_pb";
 
 const SPACE_LIST_PAGE_SIZE = 1000;
+const ADMIN_SPACE_LIST_PAGE_SIZE = 10;
 const SPACE_LIST_STALE_TIME = 1000 * 60 * 5;
 
 export interface SpaceQueryOptions {
@@ -53,6 +54,9 @@ export const spaceKeys = {
   all: ["spaces"] as const,
   lists: () => [...spaceKeys.all, "list"] as const,
   list: (viewerName: string) => [...spaceKeys.lists(), viewerName] as const,
+  pagedList: (viewerName: string, filter: string, pageToken: string) => [...spaceKeys.lists(), viewerName, filter, pageToken] as const,
+  adminLists: () => [...spaceKeys.all, "admin-list"] as const,
+  adminList: (filter: string, pageToken: string) => [...spaceKeys.adminLists(), filter, pageToken] as const,
   space: (viewerName: string, spaceName: string) => [...spaceKeys.all, "space", viewerName, spaceName] as const,
   members: (viewerName: string, spaceName: string) => [...spaceKeys.space(viewerName, spaceName), "members"] as const,
   spaceInvitations: (viewerName: string, spaceName: string) => [...spaceKeys.space(viewerName, spaceName), "invitations"] as const,
@@ -123,6 +127,29 @@ export function useSpaces(viewerName: string | undefined, options?: SpaceQueryOp
     // Space membership is near-static, so don't re-run that loop on each tab return.
     staleTime: SPACE_LIST_STALE_TIME,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function usePagedSpaces(viewerName: string | undefined, filter: string, pageToken: string, options?: SpaceQueryOptions) {
+  return useQuery({
+    queryKey: spaceKeys.pagedList(viewerName ?? "", filter, pageToken),
+    queryFn: () => spaceServiceClient.listSpaces({ pageSize: ADMIN_SPACE_LIST_PAGE_SIZE, pageToken, filter }),
+    enabled: Boolean(viewerName) && (options?.enabled ?? true),
+    staleTime: SPACE_LIST_STALE_TIME,
+  });
+}
+
+export function useAdminSpaces(filter: string, pageToken: string, options?: SpaceQueryOptions) {
+  return useQuery({
+    queryKey: spaceKeys.adminList(filter, pageToken),
+    queryFn: () =>
+      spaceServiceClient.listSpaces({
+        pageSize: ADMIN_SPACE_LIST_PAGE_SIZE,
+        pageToken,
+        filter,
+        showAll: true,
+      }),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -230,6 +257,7 @@ export function useCreateSpace(viewerName: string) {
       }),
     onSuccess: (space) => {
       queryClient.setQueryData<Space[]>(spaceKeys.list(viewerName), (spaces = []) => upsertByName(spaces, space));
+      void queryClient.invalidateQueries({ queryKey: spaceKeys.adminLists() });
     },
   });
 }
@@ -245,6 +273,7 @@ export function useUpdateSpace(viewerName: string) {
       }),
     onSuccess: (space) => {
       updateCachedList<Space>(queryClient, spaceKeys.list(viewerName), (spaces) => upsertByName(spaces, space));
+      void queryClient.invalidateQueries({ queryKey: spaceKeys.adminLists() });
     },
   });
 }
@@ -259,6 +288,7 @@ export function useDeleteSpace(viewerName: string) {
     },
     onSuccess: (spaceName) => {
       removeSpaceFromViewerCache(queryClient, viewerName, spaceName);
+      void queryClient.invalidateQueries({ queryKey: spaceKeys.adminLists() });
       invalidateMembershipSensitiveQueries(queryClient);
     },
   });

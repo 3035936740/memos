@@ -20,6 +20,9 @@ func postgresMemoAccessPredicate(access *store.MemoAccessScope, memoAlias, membe
 		*args = append(*args, *access.UserID)
 		authenticatedClauses := []string{}
 
+		archivedAuthorHolder := placeholder(len(*args) + 1)
+		*args = append(*args, *access.UserID)
+		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".row_status = 'ARCHIVED' AND "+memoAlias+".creator_id = "+archivedAuthorHolder+")")
 		privateHolder := placeholder(len(*args) + 1)
 		*args = append(*args, *access.UserID)
 		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".visibility = 'PRIVATE' AND "+memoAlias+".creator_id = "+privateHolder+")")

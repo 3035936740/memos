@@ -101,6 +101,14 @@ type Driver interface {
 	GetReaction(ctx context.Context, find *FindReaction) (*Reaction, error)
 	DeleteReaction(ctx context.Context, delete *DeleteReaction) error
 
+	// Poll vote model related methods.
+	ListPollVotes(ctx context.Context, memoID int32) ([]*PollVote, error)
+	ListPollVotesByVoter(ctx context.Context, memoID, userID int32, deviceID string) ([]*PollVote, error)
+	CountPollVotes(ctx context.Context, memoID int32) (map[string]int32, error)
+	SamplePollVoters(ctx context.Context, memoID int32, limit int) ([]*PollVoter, error)
+	ReplacePollVotes(ctx context.Context, replace *ReplacePollVotes) error
+	ClearPollVotes(ctx context.Context, memoID int32) error
+
 	// MemoShare model related methods.
 	CreateMemoShare(ctx context.Context, create *MemoShare) (*MemoShare, error)
 	ListMemoShares(ctx context.Context, find *FindMemoShare) ([]*MemoShare, error)

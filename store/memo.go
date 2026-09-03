@@ -18,8 +18,8 @@ var ErrMemoSpaceNotWritable = errors.New("memo space is not writable")
 // active member of its assigned space.
 var ErrMemoSpaceMembershipRequired = errors.New("active space membership required")
 
-// ErrMemoPermissionDenied indicates that the actor no longer owns the memo
-// being mutated.
+// ErrMemoPermissionDenied indicates that the actor is not authorized to
+// mutate the memo.
 var ErrMemoPermissionDenied = errors.New("memo mutation permission denied")
 
 // ErrMemoShareConflict indicates that an active share conflicts with a
@@ -131,6 +131,10 @@ type UpdateMemo struct {
 // Space, membership, and share state in the write transaction.
 type MemoWritePolicy struct {
 	ActorUserID int32
+	// AdminOverride permits an instance administrator or an active ADMIN of
+	// the memo's Space to mutate a memo owned by another user. Drivers
+	// revalidate the role in the mutation transaction.
+	AdminOverride bool
 	// LifecycleOnly permits an author who is no longer a member of the source
 	// Space to move or withdraw the memo. It never permits content, metadata,
 	// attachment, relation, or share mutations.
@@ -144,12 +148,14 @@ type MemoWritePolicy struct {
 // MemoWritePolicy. Driver packages populate it in the mutation transaction.
 type MemoWriteSnapshot struct {
 	CreatorID             int32
+	ActorInstanceAdmin    bool
 	RowStatus             RowStatus
 	SpaceID               *int32
 	Visibility            Visibility
 	SourceSpaceExists     bool
 	SourceSpaceAccessMode SpaceAccessMode
 	SourceMemberActive    bool
+	SourceMemberAdmin     bool
 	TargetSpaceExists     bool
 	TargetSpaceAccessMode SpaceAccessMode
 	TargetMemberActive    bool
@@ -274,7 +280,8 @@ func ValidateMemoWriteSnapshot(policy *MemoWritePolicy, update *UpdateMemo, snap
 	if policy == nil || snapshot == nil {
 		return errors.New("memo write policy snapshot is required")
 	}
-	if snapshot.CreatorID != policy.ActorUserID {
+	adminOverride := policy.AdminOverride && (snapshot.ActorInstanceAdmin || snapshot.SourceMemberAdmin)
+	if snapshot.CreatorID != policy.ActorUserID && !adminOverride {
 		return ErrMemoPermissionDenied
 	}
 	if snapshot.RowStatus != Normal && snapshot.RowStatus != Archived {
@@ -296,7 +303,7 @@ func ValidateMemoWriteSnapshot(policy *MemoWritePolicy, update *UpdateMemo, snap
 		if !snapshot.SourceSpaceExists {
 			return ErrMemoSpaceNotWritable
 		}
-		if !policy.LifecycleOnly && !SpaceWriteAllowed(snapshot.SourceSpaceAccessMode, snapshot.SourceMemberActive) {
+		if !policy.LifecycleOnly && !adminOverride && !SpaceWriteAllowed(snapshot.SourceSpaceAccessMode, snapshot.SourceMemberActive) {
 			return ErrMemoSpaceMembershipRequired
 		}
 	}

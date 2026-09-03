@@ -127,7 +127,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 	if err := requireMySQLActiveUsers(ctx, tx, actorUserID); err != nil {
 		return nil, err
 	}
-	if err := authorizeMySQLSpaceAdmin(ctx, tx, update.ID, actorUserID); err != nil {
+	if err := authorizeMySQLSpaceAdmin(ctx, tx, update.ID, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	sets, args := []string{}, []any{}
@@ -160,7 +160,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 	if err != nil {
 		return nil, err
 	}
-	if err := populateMySQLSpaceSummary(ctx, tx, space, actorUserID); err != nil {
+	if err := populateMySQLSpaceSummary(ctx, tx, space, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -432,7 +432,7 @@ func (d *DB) DeleteSpaceMember(ctx context.Context, delete *store.DeleteSpaceMem
 		}
 		return err
 	}
-	if actorUserID != delete.UserID {
+	if actorUserID != delete.UserID && !delete.InstanceAdmin {
 		var role store.SpaceMemberRole
 		if err := tx.QueryRowContext(ctx, "SELECT role FROM space_member WHERE space_id = ? AND user_id = ? AND status = ?", delete.SpaceID, actorUserID, store.SpaceMemberStatusActive).Scan(&role); errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpacePermissionDenied
@@ -481,7 +481,10 @@ func scanMySQLSpaceSummary(row mysqlRowScanner, space *store.Space) error {
 	return errors.Wrap(row.Scan(&space.CurrentUserRole, &space.MemberCount), "failed to populate MySQL space summary")
 }
 
-func populateMySQLSpaceSummary(ctx context.Context, tx *sql.Tx, space *store.Space, userID int32) error {
+func populateMySQLSpaceSummary(ctx context.Context, tx *sql.Tx, space *store.Space, userID int32, instanceAdmin bool) error {
+	if instanceAdmin {
+		return tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM space_member sm JOIN user u ON u.id = sm.user_id WHERE sm.space_id = ? AND sm.status = 'ACTIVE' AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL'", space.ID).Scan(&space.MemberCount)
+	}
 	row := tx.QueryRowContext(ctx, `SELECT viewer_member.role, COUNT(active_member.user_id)
 		FROM space_member viewer_member
 		JOIN user viewer_user ON viewer_user.id = viewer_member.user_id
@@ -510,12 +513,21 @@ func getMySQLSpaceInvitation(ctx context.Context, tx *sql.Tx, spaceID, userID in
 	return invitation, err
 }
 
-func authorizeMySQLSpaceAdmin(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) error {
+func authorizeMySQLSpaceAdmin(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32, instanceAdmin ...bool) error {
 	var existingSpaceID int32
 	if err := tx.QueryRowContext(ctx, "SELECT id FROM space WHERE id = ?", spaceID).Scan(&existingSpaceID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpaceNotFound
 		}
+		return err
+	}
+	if len(instanceAdmin) > 0 && instanceAdmin[0] {
+		return nil
+	}
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, "SELECT role FROM user WHERE id = ? AND row_status = 'NORMAL'", actorUserID).Scan(&actorRole); err == nil && actorRole == store.RoleAdmin {
+		return nil
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 	var role store.SpaceMemberRole

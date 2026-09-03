@@ -78,7 +78,7 @@ describe("CreateSpaceDialog", () => {
     expect(mocks.mutateAsync).toHaveBeenCalledWith({
       title: "Product",
       description: "Plans",
-      accessMode: Space_AccessMode.INVITE_ONLY,
+      accessMode: Space_AccessMode.PUBLIC,
       syncToMainFeed: true,
       spaceId: FIRST_SPACE_UID,
     });
@@ -101,7 +101,7 @@ describe("CreateSpaceDialog", () => {
         title: "Product",
         description: undefined,
         avatarUrl: "data:image/png;base64,YXZhdGFy",
-        accessMode: Space_AccessMode.INVITE_ONLY,
+        accessMode: Space_AccessMode.PUBLIC,
         syncToMainFeed: true,
         spaceId: FIRST_SPACE_UID,
       }),
@@ -131,7 +131,7 @@ describe("CreateSpaceDialog", () => {
       expect(mocks.mutateAsync).toHaveBeenCalledWith({
         title: "Product",
         description: undefined,
-        accessMode: Space_AccessMode.INVITE_ONLY,
+        accessMode: Space_AccessMode.PUBLIC,
         syncToMainFeed: true,
         spaceId: "Product-2026",
       }),

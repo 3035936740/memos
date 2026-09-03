@@ -1272,6 +1272,114 @@ func TestUpdateMemoPlacementAndAudienceContract(t *testing.T) {
 	require.Equal(t, apiv1.Visibility_PUBLIC, withdrawn.Visibility)
 }
 
+func TestMemoAdministratorsCanUpdateAndDeleteWithinTheirScope(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	instanceAdmin, err := ts.CreateHostUser(ctx, "memo-permission-instance-admin")
+	require.NoError(t, err)
+	owner, err := ts.CreateRegularUser(ctx, "memo-permission-owner")
+	require.NoError(t, err)
+	spaceAdmin, err := ts.CreateRegularUser(ctx, "memo-permission-space-admin")
+	require.NoError(t, err)
+	spaceMember, err := ts.CreateRegularUser(ctx, "memo-permission-space-member")
+	require.NoError(t, err)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+	instanceAdminCtx := ts.CreateUserContext(ctx, instanceAdmin.ID)
+	spaceAdminCtx := ts.CreateUserContext(ctx, spaceAdmin.ID)
+	spaceMemberCtx := ts.CreateUserContext(ctx, spaceMember.ID)
+
+	space, err := ts.Service.CreateSpace(ownerCtx, &apiv1.CreateSpaceRequest{
+		SpaceId: "memo-permission-space",
+		Space:   &apiv1.Space{Title: "Memo permissions"},
+	})
+	require.NoError(t, err)
+	spaceUID := space.Name[len("spaces/"):]
+	storedSpace, err := ts.Store.GetSpace(ctx, &store.FindSpace{UID: &spaceUID})
+	require.NoError(t, err)
+	require.NotNil(t, storedSpace)
+	_, err = ts.InviteAndAcceptSpaceMember(ctx, &store.SpaceMember{
+		SpaceID: storedSpace.ID, UserID: spaceAdmin.ID, Role: store.SpaceMemberRoleAdmin,
+	}, owner.ID)
+	require.NoError(t, err)
+	_, err = ts.InviteAndAcceptSpaceMember(ctx, &store.SpaceMember{
+		SpaceID: storedSpace.ID, UserID: spaceMember.ID, Role: store.SpaceMemberRoleUser,
+	}, owner.ID)
+	require.NoError(t, err)
+
+	spaceName := space.Name
+	spaceMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content: "before administrator edit", Visibility: apiv1.Visibility_SPACE, Space: &spaceName,
+	}})
+	require.NoError(t, err)
+	updated, err := ts.Service.UpdateMemo(spaceAdminCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: spaceMemo.Name, Content: "edited by space administrator"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, "edited by space administrator", updated.Content)
+
+	_, err = ts.Service.UpdateMemo(spaceMemberCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: spaceMemo.Name, Content: "unauthorized edit"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content"}},
+	})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+
+	deletableSpaceMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content: "delete by space administrator", Visibility: apiv1.Visibility_PUBLIC, Space: &spaceName,
+	}})
+	require.NoError(t, err)
+	_, err = ts.Service.DeleteMemo(spaceAdminCtx, &apiv1.DeleteMemoRequest{Name: deletableSpaceMemo.Name})
+	require.NoError(t, err)
+	deletedUID := deletableSpaceMemo.Name[len("memos/"):]
+	deleted, err := ts.Store.GetMemo(ctx, &store.FindMemo{UID: &deletedUID})
+	require.NoError(t, err)
+	require.Nil(t, deleted)
+
+	instanceMemo, err := ts.Service.CreateMemo(ownerCtx, &apiv1.CreateMemoRequest{Memo: &apiv1.Memo{
+		Content: "instance administrator target", Visibility: apiv1.Visibility_PRIVATE,
+	}})
+	require.NoError(t, err)
+	_, err = ts.Service.UpdateMemo(instanceAdminCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: instanceMemo.Name, Content: "edited by instance administrator"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"content"}},
+	})
+	require.NoError(t, err)
+	archived, err := ts.Service.UpdateMemo(instanceAdminCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: instanceMemo.Name, State: apiv1.State_ARCHIVED},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"state"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, apiv1.State_ARCHIVED, archived.State)
+	ownerArchived, err := ts.Service.ListMemos(ownerCtx, &apiv1.ListMemosRequest{
+		State:         apiv1.State_ARCHIVED,
+		Filter:        `creator == "users/memo-permission-owner"`,
+		ShowTotalSize: true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, int32(1), ownerArchived.TotalSize)
+	require.Len(t, ownerArchived.Memos, 1)
+	require.Equal(t, instanceMemo.Name, ownerArchived.Memos[0].Name)
+	_, err = ts.Service.DeleteMemo(instanceAdminCtx, &apiv1.DeleteMemoRequest{Name: instanceMemo.Name})
+	require.NoError(t, err)
+	archivedSpaceMemo, err := ts.Service.UpdateMemo(spaceAdminCtx, &apiv1.UpdateMemoRequest{
+		Memo:       &apiv1.Memo{Name: spaceMemo.Name, State: apiv1.State_ARCHIVED},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"state"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, apiv1.State_ARCHIVED, archivedSpaceMemo.State)
+	ownerArchived, err = ts.Service.ListMemos(ownerCtx, &apiv1.ListMemosRequest{
+		State:         apiv1.State_ARCHIVED,
+		Filter:        `creator == "users/memo-permission-owner"`,
+		ShowTotalSize: true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, int32(1), ownerArchived.TotalSize)
+	require.Len(t, ownerArchived.Memos, 1)
+	require.Equal(t, spaceMemo.Name, ownerArchived.Memos[0].Name)
+}
+
 func TestListMemoCommentsPaginates(t *testing.T) {
 	ctx := context.Background()
 

@@ -2,6 +2,7 @@ import { FolderIcon, LoaderCircleIcon, PaperclipIcon, Trash2Icon, UploadIcon } f
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { getAccessToken } from "@/auth-state";
+import MemoPagination from "@/components/PagedMemoList/MemoPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,8 @@ interface StorageFileInfo {
   modTime: string;
   url: string;
 }
+
+const PAGE_SIZE = 20;
 
 const authHeaders = (): HeadersInit => {
   const token = getAccessToken();
@@ -30,10 +33,17 @@ const StorageStaticFiles = () => {
   const t = useTranslate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [directory, setDirectory] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File>();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [files, setFiles] = useState<StorageFileInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [uploadedCount, setUploadedCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(files.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const visibleFiles = files.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(() => setPage((previous) => Math.min(previous, totalPages)), [totalPages]);
 
   const loadFiles = useCallback(async () => {
     setLoading(true);
@@ -60,34 +70,41 @@ const StorageStaticFiles = () => {
   }, [loadFiles]);
 
   const handleUpload = async () => {
-    if (!selectedFile) {
+    if (selectedFiles.length === 0 || uploading) {
       toast.error(t("setting.storage.static-files-select-file"));
       return;
     }
     setUploading(true);
+    setUploadedCount(0);
+    const failedFiles: File[] = [];
+    let successCount = 0;
     try {
-      const form = new FormData();
-      form.set("path", directory.trim());
-      form.set("file", selectedFile);
-      const response = await fetch("/api/v1/admin/storage-files", {
-        method: "POST",
-        headers: authHeaders(),
-        credentials: "include",
-        body: form,
-      });
-      if (!response.ok) {
-        throw new Error(await response.text());
+      for (const file of selectedFiles) {
+        try {
+          const form = new FormData();
+          form.set("path", directory.trim());
+          form.set("file", file);
+          const response = await fetch("/api/v1/admin/storage-files", {
+            method: "POST",
+            headers: authHeaders(),
+            credentials: "include",
+            body: form,
+          });
+          if (!response.ok) throw new Error(await response.text());
+          successCount++;
+        } catch (error) {
+          console.error(error);
+          failedFiles.push(file);
+        }
+        setUploadedCount(successCount + failedFiles.length);
       }
-      const uploaded = (await response.json()) as StorageFileInfo;
-      toast.success(t("setting.storage.static-files-uploaded", { path: uploaded.path }));
-      setSelectedFile(undefined);
+      if (successCount > 0) toast.success(t("setting.storage.static-files-batch-uploaded", { count: successCount }));
+      if (failedFiles.length > 0) toast.error(t("setting.storage.static-files-batch-failed", { count: failedFiles.length }));
+      setSelectedFiles(failedFiles);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
       await loadFiles();
-    } catch (error) {
-      console.error(error);
-      toast.error(t("setting.storage.static-files-upload-failed"));
     } finally {
       setUploading(false);
     }
@@ -111,9 +128,10 @@ const StorageStaticFiles = () => {
     }
   };
 
-  const previewURL = selectedFile
-    ? `/storage/${[directory.trim().replace(/^\/+|\/+$/g, ""), selectedFile.name].filter(Boolean).join("/")}`
-    : undefined;
+  const previewURL =
+    selectedFiles.length === 1
+      ? `/storage/${[directory.trim().replace(/^\/+|\/+$/g, ""), selectedFiles[0].name].filter(Boolean).join("/")}`
+      : undefined;
 
   return (
     <div className="space-y-4">
@@ -123,6 +141,7 @@ const StorageStaticFiles = () => {
           <Input
             className="rounded-none border-0 font-mono shadow-none focus-visible:ring-0"
             value={directory}
+            disabled={uploading}
             placeholder="5/path1"
             onChange={(event) => setDirectory(event.target.value.replace(/\\/g, "/"))}
           />
@@ -134,16 +153,34 @@ const StorageStaticFiles = () => {
           <input
             ref={fileInputRef}
             type="file"
+            multiple
+            disabled={uploading}
+            aria-label={t("setting.storage.static-files-choose")}
             className="hidden"
-            onChange={(event) => setSelectedFile(event.target.files?.[0])}
+            onChange={(event) => setSelectedFiles(Array.from(event.target.files ?? []))}
           />
-          <Button type="button" variant="outline" className="min-w-0 flex-1 justify-start" onClick={() => fileInputRef.current?.click()}>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-w-0 flex-1 justify-start"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+          >
             <PaperclipIcon className="size-4 shrink-0" />
-            <span className="truncate">{selectedFile?.name || t("setting.storage.static-files-choose")}</span>
+            <span className="truncate" title={selectedFiles.map((file) => file.name).join(", ")}>
+              {selectedFiles.length > 1
+                ? t("setting.storage.static-files-selected", { count: selectedFiles.length })
+                : selectedFiles[0]?.name || t("setting.storage.static-files-choose")}
+            </span>
           </Button>
-          <Button type="button" className="shrink-0" disabled={!selectedFile || uploading} onClick={() => void handleUpload()}>
+          <Button type="button" className="shrink-0" disabled={selectedFiles.length === 0 || uploading} onClick={() => void handleUpload()}>
             {uploading ? <LoaderCircleIcon className="size-4 animate-spin" /> : <UploadIcon className="size-4" />}
             {t("setting.storage.static-files-upload")}
+            {uploading && (
+              <span aria-live="polite">
+                {uploadedCount}/{selectedFiles.length}
+              </span>
+            )}
           </Button>
         </div>
       </SettingRow>
@@ -163,7 +200,7 @@ const StorageStaticFiles = () => {
           <p className="px-3 py-8 text-center text-sm text-muted-foreground">{t("setting.storage.static-files-empty")}</p>
         ) : (
           <ul className="divide-y">
-            {files.map((file) => (
+            {visibleFiles.map((file) => (
               <li key={file.path} className="flex items-start gap-3 px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <a
@@ -192,6 +229,7 @@ const StorageStaticFiles = () => {
             ))}
           </ul>
         )}
+        {!loading && <MemoPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />}
       </div>
     </div>
   );

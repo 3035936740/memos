@@ -31,6 +31,7 @@ type APIV1Service struct {
 	v1pb.UnimplementedAuthServiceServer
 	v1pb.UnimplementedUserServiceServer
 	v1pb.UnimplementedMemoServiceServer
+	v1pb.UnimplementedPollServiceServer
 	v1pb.UnimplementedSpaceServiceServer
 	v1pb.UnimplementedAttachmentServiceServer
 	v1pb.UnimplementedAIServiceServer
@@ -49,8 +50,8 @@ type APIV1Service struct {
 	imageProcessingSemaphore *semaphore.Weighted
 
 	// instanceStatsCache memoizes GetInstanceStats results for instanceStatsCacheTTL.
-	instanceStatsCache instanceStatsCache
-	contentModeration  contentModerationCache
+	instanceStatsCache  instanceStatsCache
+	contentModeration   contentModerationCache
 	linkMetadataFetcher linkMetadataFetcher
 }
 
@@ -157,6 +158,9 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 		return err
 	}
 	if err := v1pb.RegisterMemoServiceHandlerServer(ctx, gwMux, s); err != nil {
+		return err
+	}
+	if err := v1pb.RegisterPollServiceHandlerServer(ctx, gwMux, s); err != nil {
 		return err
 	}
 	if err := v1pb.RegisterSpaceServiceHandlerServer(ctx, gwMux, s); err != nil {

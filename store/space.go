@@ -125,6 +125,7 @@ type UpdateSpace struct {
 	URLSlug        *string
 	AccessMode     *SpaceAccessMode
 	SyncToMainFeed *bool
+	InstanceAdmin  bool
 }
 
 // DeleteSpace identifies a Space to hard-delete.
@@ -164,8 +165,9 @@ type UpdateSpaceMember struct {
 
 // DeleteSpaceMember identifies a membership to delete.
 type DeleteSpaceMember struct {
-	SpaceID int32
-	UserID  int32
+	SpaceID       int32
+	UserID        int32
+	InstanceAdmin bool
 }
 
 // SpaceInvitation is a pending offer for an existing user to join a space.

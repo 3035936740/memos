@@ -407,6 +407,22 @@ func (s *ConnectServiceHandler) ListMemoReactions(ctx context.Context, req *conn
 	return connect.NewResponse(resp), nil
 }
 
+func (s *ConnectServiceHandler) VoteMemo(ctx context.Context, req *connect.Request[v1pb.VoteMemoRequest]) (*connect.Response[v1pb.Poll], error) {
+	resp, err := s.APIV1Service.VoteMemo(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *ConnectServiceHandler) GetMemoPoll(ctx context.Context, req *connect.Request[v1pb.GetMemoPollRequest]) (*connect.Response[v1pb.Poll], error) {
+	resp, err := s.APIV1Service.GetMemoPoll(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
 func (s *ConnectServiceHandler) UpsertMemoReaction(ctx context.Context, req *connect.Request[v1pb.UpsertMemoReactionRequest]) (*connect.Response[v1pb.Reaction], error) {
 	resp, err := s.APIV1Service.UpsertMemoReaction(ctx, req.Msg)
 	if err != nil {

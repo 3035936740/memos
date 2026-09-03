@@ -222,3 +222,16 @@ CREATE TABLE emoji (
   UNIQUE(group_id, name)
 );
 CREATE INDEX idx_emoji_group_id ON emoji(group_id, id);
+
+-- poll votes
+CREATE TABLE poll_vote (
+  id SERIAL PRIMARY KEY,
+  memo_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL DEFAULT 0,
+  option_id TEXT NOT NULL,
+  device_id TEXT NOT NULL DEFAULT '',
+  created_ts BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+  UNIQUE (memo_id, user_id, device_id, option_id)
+);
+CREATE INDEX idx_poll_vote_memo ON poll_vote(memo_id);
+CREATE INDEX idx_poll_vote_user ON poll_vote(user_id, memo_id);

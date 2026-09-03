@@ -1,8 +1,19 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { BanIcon, CalendarClockIcon, EyeIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
+import {
+  BanIcon,
+  CalendarClockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  FilePenLineIcon,
+  ListChecksIcon,
+  MessageCircleIcon,
+  PaperclipIcon,
+  PinIcon,
+} from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
+import PollCard from "@/components/MemoView/components/PollCard";
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import VideoPoster from "@/components/VideoPoster";
@@ -14,6 +25,7 @@ import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
 import { useTranslate } from "@/utils/i18n";
 import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
+import { removeMemoPollMarkers } from "@/utils/memo-poll";
 import { stripMemoRichTextMarkers } from "@/utils/memo-rich-text";
 import { isSuperUser } from "@/utils/user";
 import { computeCommentAmount } from "./MemoView/MemoViewContext";
@@ -38,9 +50,11 @@ const markdownToPlainText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-export const deriveBlogMemoText = (content: string, propertyTitle?: string) => {
-  const lines = content.replace(/```[\s\S]*?```/g, " ").split(/\r?\n/);
-  const explicitTitle = propertyTitle?.trim();
+export const deriveBlogMemoText = (content: string, propertyTitle?: string, pollQuestion?: string) => {
+  const lines = removeMemoPollMarkers(content)
+    .replace(/```[\s\S]*?```/g, " ")
+    .split(/\r?\n/);
+  const explicitTitle = removeMemoPollMarkers(propertyTitle ?? "").trim();
   let titleLineIndex = -1;
   let title = explicitTitle ?? "";
 
@@ -63,7 +77,7 @@ export const deriveBlogMemoText = (content: string, propertyTitle?: string) => {
   if (title && excerpt.startsWith(title)) excerpt = excerpt.slice(title.length).trim();
 
   return {
-    title: truncateText(title, TITLE_LIMIT),
+    title: truncateText(title || pollQuestion?.trim() || "", TITLE_LIMIT),
     excerpt: truncateText(excerpt, EXCERPT_LIMIT),
   };
 };
@@ -81,14 +95,19 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
   const anonymousForViewer = memo.anonymous && !isSuperUser(currentUser);
   const shouldShowCreator = !anonymousForViewer && (showCreator || Boolean(memo.creator));
   const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
-  const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
+  const { title, excerpt } = useMemo(
+    () => deriveBlogMemoText(memo.content, memo.property?.title, memo.poll?.question),
+    [memo.content, memo.property?.title, memo.poll?.question],
+  );
   const cover = useMemo(() => {
+    const pollImages = new Set([memo.poll?.image?.name, ...(memo.poll?.options.map((option) => option.image?.name) ?? [])]);
     const visualAttachments = memo.attachments.filter((attachment) => {
+      if (pollImages.has(attachment.name)) return false;
       const type = getAttachmentType(attachment);
       return type === "image/*" || type === "video/*" || isMotionAttachment(attachment);
     });
     return selectBlogCoverMedia(memo.content, buildAttachmentVisualItems(visualAttachments));
-  }, [memo.attachments, memo.content]);
+  }, [memo.attachments, memo.content, memo.poll]);
   const createTime = !memo.hideTime && memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
@@ -130,7 +149,13 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
                   #{tag}
                 </span>
               ))}
-              {memo.tags.length === 0 && (
+              {memo.poll && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  <ListChecksIcon className="size-3" />
+                  投票
+                </span>
+              )}
+              {memo.tags.length === 0 && !memo.poll && (
                 <span className="rounded-full bg-muted/70 px-2 py-0.5 text-[11px] text-muted-foreground">{t("memo.blog-dynamic")}</span>
               )}
             </div>
@@ -172,6 +197,12 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
             </Link>
           )}
         </div>
+
+        {memo.poll && (
+          <div className="mt-4">
+            <PollCard memo={memo} compact />
+          </div>
+        )}
 
         <footer className="mt-4 flex min-h-9 flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-muted/45 px-3 py-2 text-xs text-muted-foreground">
           {shouldShowCreator && creatorLabel && (

@@ -993,6 +993,67 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}/poll:
+        get:
+            tags:
+                - PollService
+            operationId: PollService_GetMemoPoll
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+                - name: deviceId
+                  in: query
+                  description: Existing browser identifier, used to recover a guest's voting state.
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Poll'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}/poll:vote:
+        post:
+            tags:
+                - PollService
+            operationId: PollService_VoteMemo
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/VoteMemoRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Poll'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/memos/{memo}/reactions:
         get:
             tags:
@@ -3989,6 +4050,10 @@ components:
                     description: |-
                         Optional. Hides this memo's timestamp and excludes it from time-based
                          instance statistics. Only instance administrators may change this field.
+                poll:
+                    allOf:
+                        - $ref: '#/components/schemas/Poll'
+                    description: Optional. A poll attached to this memo.
         MemoRelation:
             required:
                 - memo
@@ -4191,6 +4256,131 @@ components:
                 focalLengthMm:
                     type: number
                     format: double
+        Poll:
+            required:
+                - question
+                - options
+            type: object
+            properties:
+                question:
+                    type: string
+                    description: The poll question.
+                image:
+                    allOf:
+                        - $ref: '#/components/schemas/Attachment'
+                    description: Optional image attached to the poll question.
+                options:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/PollOption'
+                    description: The poll choices.
+                allowMultiple:
+                    type: boolean
+                    description: Whether a voter may select more than one choice.
+                maxSelections:
+                    type: integer
+                    description: |-
+                        Maximum choices a voter may select when allow_multiple is true.
+                         It must be between 2 and the number of options. Single-choice polls use 1.
+                    format: int32
+                voterType:
+                    enum:
+                        - VOTER_TYPE_UNSPECIFIED
+                        - AUTHENTICATED
+                        - ANYONE
+                    type: string
+                    description: |-
+                        Who may vote. AUTHENTICATED requires a signed-in user; ANYONE also allows
+                         guests to vote with a browser device identifier.
+                    format: enum
+                startTime:
+                    type: string
+                    description: Optional time at which voting starts. Empty means immediately.
+                    format: date-time
+                endTime:
+                    type: string
+                    description: Optional time at which voting ends. Empty means never.
+                    format: date-time
+                totalVotes:
+                    readOnly: true
+                    type: integer
+                    description: Output only. Total number of submitted choices.
+                    format: int32
+                selectedOptionIds:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+                    description: Output only. Choices selected by the current viewer.
+                hideResultsUntilVoted:
+                    type: boolean
+                    description: Hide counts and percentages until the current viewer has voted.
+                showVotersBeforeVoting:
+                    type: boolean
+                    description: For authenticated-only polls, reveal participants before the viewer votes.
+                showVotersAfterVoting:
+                    type: boolean
+                    description: For authenticated-only polls, reveal participants after the viewer votes.
+                resultsHidden:
+                    readOnly: true
+                    type: boolean
+                    description: Output only. True when counts are withheld for this viewer.
+                voters:
+                    readOnly: true
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/PollVoter'
+                    description: Output only. Random sample of at most ten unique participants, only when visible.
+                votersVisible:
+                    readOnly: true
+                    type: boolean
+                    description: Output only. Whether the participant list is visible to this viewer.
+                showVoterChoices:
+                    type: boolean
+                    description: Reveal selected choices for visible participants. Authenticated-only polls.
+                hasMoreVoters:
+                    readOnly: true
+                    type: boolean
+                    description: Output only. More participants exist than the random sample of at most ten.
+        PollOption:
+            required:
+                - text
+            type: object
+            properties:
+                id:
+                    readOnly: true
+                    type: string
+                    description: Output only. Stable choice identifier.
+                text:
+                    type: string
+                    description: The choice text.
+                image:
+                    allOf:
+                        - $ref: '#/components/schemas/Attachment'
+                    description: Optional image attached to this choice.
+                voteCount:
+                    readOnly: true
+                    type: integer
+                    description: Output only. Number of submitted choices for this option.
+                    format: int32
+        PollVoter:
+            type: object
+            properties:
+                name:
+                    type: string
+                username:
+                    type: string
+                displayName:
+                    type: string
+                avatarUrl:
+                    type: string
+                selectedOptionIds:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+                    description: Output only. Present only when participant choices are visible.
+            description: Public profile and optionally visible choices for a sampled poll participant.
         Reaction:
             required:
                 - reactionType
@@ -4847,6 +5037,21 @@ components:
                 durationSeconds:
                     type: number
                     format: double
+        VoteMemoRequest:
+            required:
+                - name
+                - optionIds
+            type: object
+            properties:
+                name:
+                    type: string
+                optionIds:
+                    type: array
+                    items:
+                        type: string
+                deviceId:
+                    type: string
+                    description: Required for guest voting. The web client stores a random opaque value.
 tags:
     - name: AIService
     - name: AttachmentService
@@ -4855,6 +5060,7 @@ tags:
     - name: InstanceService
     - name: MemoService
     - name: MemoViewService
+    - name: PollService
     - name: SpaceService
       description: SpaceService manages collaborative spaces and their memberships.
     - name: UserService

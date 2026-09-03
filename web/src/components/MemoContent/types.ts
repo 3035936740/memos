@@ -4,6 +4,8 @@ import type { MemoOriginScope } from "../MemoView/navigation";
 
 export interface MemoContentProps {
   content: string;
+  /** Interactive poll rendered at the first standalone [[vote]] marker. */
+  pollContent?: React.ReactNode;
   /** Attachments bound to this memo, used to resolve managed image URLs in share/S3 modes. */
   attachments?: Attachment[];
   /** Resource name of the memo (e.g. `memos/abc123`). Enables footnote links to target the memo detail page. */

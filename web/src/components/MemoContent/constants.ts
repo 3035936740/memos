@@ -48,6 +48,7 @@ export const SANITIZE_SCHEMA = {
     span: [
       ...(defaultSchema.attributes?.span || []),
       ["className", ...SPAN_CLASS_NAMES],
+      "dataTag",
       ["aria*"],
       ["dataMemoColor", /^rgba\((?:\d{1,3}, ){3}(?:0(?:\.\d+)?|1(?:\.0+)?)\)$/],
       ["dataMemoSize", /^(?:[89]|[1-8]\d|9[0-6])px$/],

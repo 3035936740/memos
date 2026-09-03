@@ -120,7 +120,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 		return nil, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	if err := authorizeSQLiteSpaceAdmin(ctx, tx, update.ID, actorUserID); err != nil {
+	if err := authorizeSQLiteSpaceAdmin(ctx, tx, update.ID, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	sets, args := []string{}, []any{}
@@ -152,7 +152,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 		}
 		return nil, err
 	}
-	if err := populateSQLiteSpaceSummary(ctx, tx, space, actorUserID); err != nil {
+	if err := populateSQLiteSpaceSummary(ctx, tx, space, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -167,7 +167,10 @@ func scanSQLiteSpaceSummary(row sqliteSpaceSummaryRowScanner, space *store.Space
 	return errors.Wrap(row.Scan(&space.CurrentUserRole, &space.MemberCount), "failed to populate SQLite space summary")
 }
 
-func populateSQLiteSpaceSummary(ctx context.Context, tx dbExecutor, space *store.Space, userID int32) error {
+func populateSQLiteSpaceSummary(ctx context.Context, tx dbExecutor, space *store.Space, userID int32, instanceAdmin bool) error {
+	if instanceAdmin {
+		return populateSQLiteSpaceMemberCount(ctx, tx, space)
+	}
 	row := tx.QueryRowContext(ctx, `SELECT viewer_member.role, COUNT(active_member.user_id)
 		FROM space_member viewer_member
 		JOIN user viewer_user ON viewer_user.id = viewer_member.user_id
@@ -177,6 +180,10 @@ func populateSQLiteSpaceSummary(ctx context.Context, tx dbExecutor, space *store
 			AND viewer_member.role IN ('ADMIN', 'USER') AND viewer_user.row_status = 'NORMAL'
 		GROUP BY viewer_member.role`, space.ID, userID)
 	return scanSQLiteSpaceSummary(row, space)
+}
+
+func populateSQLiteSpaceMemberCount(ctx context.Context, tx dbExecutor, space *store.Space) error {
+	return tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM space_member sm JOIN user u ON u.id = sm.user_id WHERE sm.space_id = ? AND sm.status = 'ACTIVE' AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL'", space.ID).Scan(&space.MemberCount)
 }
 
 func (d *DB) CreateSpaceInvitation(ctx context.Context, create *store.SpaceInvitation, actorUserID int32) (*store.SpaceInvitation, error) {
@@ -422,7 +429,7 @@ func (d *DB) DeleteSpaceMember(ctx context.Context, delete *store.DeleteSpaceMem
 		}
 		return err
 	}
-	if actorUserID != delete.UserID {
+	if actorUserID != delete.UserID && !delete.InstanceAdmin {
 		var actorRole store.SpaceMemberRole
 		if err := tx.QueryRowContext(ctx, "SELECT sm.role FROM space_member sm JOIN user u ON u.id = sm.user_id WHERE sm.space_id = ? AND sm.user_id = ? AND sm.status = ? AND u.row_status = 'NORMAL'", delete.SpaceID, actorUserID, store.SpaceMemberStatusActive).Scan(&actorRole); errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpacePermissionDenied
@@ -465,12 +472,21 @@ func appendSQLiteLimit(query string, limit, offset *int) string {
 	return query
 }
 
-func authorizeSQLiteSpaceAdmin(ctx context.Context, tx dbExecutor, spaceID, actorUserID int32) error {
+func authorizeSQLiteSpaceAdmin(ctx context.Context, tx dbExecutor, spaceID, actorUserID int32, instanceAdmin ...bool) error {
 	var existingSpaceID int32
 	if err := tx.QueryRowContext(ctx, "SELECT id FROM space WHERE id = ?", spaceID).Scan(&existingSpaceID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpaceNotFound
 		}
+		return err
+	}
+	if len(instanceAdmin) > 0 && instanceAdmin[0] {
+		return nil
+	}
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, "SELECT role FROM user WHERE id = ? AND row_status = 'NORMAL'", actorUserID).Scan(&actorRole); err == nil && actorRole == store.RoleAdmin {
+		return nil
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 	var role store.SpaceMemberRole

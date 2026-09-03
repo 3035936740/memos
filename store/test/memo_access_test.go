@@ -132,6 +132,15 @@ func TestMemoAccessScopeSpaceAudienceHasNoAuthorBypass(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, []int32{membersMemo.ID}, memoIDs(adminRows), "membership reads SPACE but does not expand PRIVATE")
+
+	archived := store.Archived
+	require.NoError(t, ts.UpdateMemo(ctx, &store.UpdateMemo{ID: membersMemo.ID, RowStatus: &archived}))
+	archivedAuthorRows, err := ts.ListMemos(ctx, &store.FindMemo{
+		RowStatus: &archived,
+		Access:    &store.MemoAccessScope{UserID: &author.ID, AllowPublic: true, AllowProtected: true},
+	})
+	require.NoError(t, err)
+	require.Equal(t, []int32{membersMemo.ID}, memoIDs(archivedAuthorRows), "an archived author retains access to their Space memo")
 }
 
 func TestMemoAccessScopeArchivedRowsRemainAuthorOnly(t *testing.T) {

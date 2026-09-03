@@ -507,22 +507,16 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	for _, path := range request.UpdateMask.Paths {
 		updatePaths[path] = true
 	}
-	adminMaintenanceOnly := isSuperUser(user)
-	for path := range updatePaths {
-		switch path {
-		case "hidden", "hide_time", "pinned", "create_time", "update_time", "admin_script":
-		default:
-			adminMaintenanceOnly = false
-		}
+	canManage, err := s.canManageMemo(ctx, user, memo)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to resolve memo administrator permission")
 	}
-	// Application administrators are not implicit memo collaborators. Ordinary
-	// content updates remain author-controlled, while administrator-only
-	// presentation metadata remains available for moderation and publishing.
-	adminMaintenance := memo.CreatorID != user.ID && adminMaintenanceOnly
-	if memo.CreatorID != user.ID && !adminMaintenance {
+	if !canManage {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
-
+	if memo.CreatorID != user.ID && !isSuperUser(user) && updatePaths["space"] {
+		return nil, status.Errorf(codes.PermissionDenied, "only the memo creator or instance administrator can change memo placement")
+	}
 	update := &store.UpdateMemo{
 		ID: memo.ID,
 	}
@@ -570,13 +564,16 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	if memo.Visibility == store.SpaceAudience && nextSpaceID == nil && nextVisibility == store.SpaceAudience {
 		return nil, status.Errorf(codes.InvalidArgument, "unassigning a memo with SPACE visibility requires a replacement visibility")
 	}
-	if !adminMaintenance {
+	if memo.CreatorID != user.ID {
+		update.Policy = memoAdminWritePolicy(user.ID, lifecycleOnly)
+	} else {
 		update.Policy = memoWritePolicy(user.ID, lifecycleOnly)
 	}
 	previousContent := memo.Content
 	contentUpdated := false
 	attachmentsUpdated := false
 	relationsUpdated := false
+	pollUpdated := false
 	nextMemo := *memo
 	if memo.Payload != nil {
 		nextMemo.Payload = &storepb.MemoPayload{}
@@ -731,6 +728,17 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 				nextMemo.Payload.Draft = nextMemo.Payload.PublishTs > time.Now().Unix()
 			}
 			update.Payload = nextMemo.Payload
+		} else if path == "poll" {
+			if err := validatePoll(request.Memo.Poll); err != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+			}
+			if nextMemo.Payload == nil {
+				nextMemo.Payload = &storepb.MemoPayload{}
+			}
+			nextPoll := pollToStore(request.Memo.Poll)
+			pollUpdated = pollVotingRulesChanged(nextMemo.Payload.Poll, nextPoll)
+			nextMemo.Payload.Poll = nextPoll
+			update.Payload = nextMemo.Payload
 		} else if path == "attachments" {
 			attachmentsUpdated = true
 		} else if path == "relations" {
@@ -790,6 +798,11 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	} else if err = s.Store.UpdateMemo(ctx, update); err != nil {
 		return nil, mapMemoWriteError(err, "failed to update memo")
 	}
+	if pollUpdated {
+		if err := s.Store.ClearPollVotes(ctx, memo.ID); err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to reset poll votes: %v", err)
+		}
+	}
 
 	memo, commentContext, memoMessage, err := s.buildUpdatedMemoState(ctx, memo.ID)
 	if err != nil {
@@ -847,9 +860,11 @@ func (s *APIV1Service) DeleteMemo(ctx context.Context, request *v1pb.DeleteMemoR
 	if user == nil {
 		return nil, status.Errorf(codes.Unauthenticated, "user not authenticated")
 	}
-	// Application administrators do not receive ordinary content-deletion
-	// authority merely from their instance role.
-	if memo.CreatorID != user.ID {
+	canManage, err := s.canManageMemo(ctx, user, memo)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to resolve memo administrator permission")
+	}
+	if !canManage {
 		return nil, status.Errorf(codes.PermissionDenied, "permission denied")
 	}
 	var deletedMemoMessage *v1pb.Memo
@@ -872,7 +887,11 @@ func (s *APIV1Service) DeleteMemo(ctx context.Context, request *v1pb.DeleteMemoR
 		}
 	}
 
-	deleteResult, err := s.Store.DeleteMemoWithPolicy(ctx, &store.DeleteMemoWithPolicy{MemoID: memo.ID, ActorUserID: user.ID})
+	deleteResult, err := s.Store.DeleteMemoWithPolicy(ctx, &store.DeleteMemoWithPolicy{
+		MemoID:        memo.ID,
+		ActorUserID:   user.ID,
+		AdminOverride: memo.CreatorID != user.ID,
+	})
 	if err != nil {
 		switch {
 		case stderrors.Is(err, store.ErrMemoPermissionDenied):

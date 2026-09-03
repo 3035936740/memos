@@ -36,6 +36,8 @@ var PublicMethods = map[string]struct{}{
 	"/memos.api.v1.MemoService/ListMemoComments":     {},
 	"/memos.api.v1.MemoService/ListMemoAttachments":  {},
 	"/memos.api.v1.MemoService/ListMemoReactions":    {},
+	"/memos.api.v1.PollService/VoteMemo":             {},
+	"/memos.api.v1.PollService/GetMemoPoll":          {},
 	"/memos.api.v1.MemoService/ListMemoRelations":    {},
 	"/memos.api.v1.MemoService/GetLinkMetadata":      {},
 	"/memos.api.v1.MemoService/BatchGetLinkMetadata": {},

@@ -78,6 +78,12 @@ func CheckMemoReadContext(ctx MemoReadContext) MemoReadDecision {
 	if memo.RowStatus != store.Normal && memo.RowStatus != store.Archived {
 		return MemoReadDecision{Denial: MemoReadDenialNotFound}
 	}
+	// An archived memo remains available to its author even when its audience
+	// would otherwise require current Space membership. The memo has already
+	// been removed from normal feeds, so this does not grant it to other users.
+	if memo.RowStatus == store.Archived && viewerIsAuthor {
+		return MemoReadDecision{Class: MemoReadClassPrivate}
+	}
 
 	shareApplies := ctx.SharedMemoID != nil && memo.ID == *ctx.SharedMemoID && memo.Visibility != store.SpaceAudience
 	if shareApplies {

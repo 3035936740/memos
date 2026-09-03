@@ -238,6 +238,34 @@ func memoWritePolicy(actorUserID int32, lifecycleOnly bool) *store.MemoWritePoli
 	}
 }
 
+func memoAdminWritePolicy(actorUserID int32, lifecycleOnly bool) *store.MemoWritePolicy {
+	return &store.MemoWritePolicy{
+		ActorUserID:   actorUserID,
+		AdminOverride: true,
+		LifecycleOnly: lifecycleOnly,
+	}
+}
+
+// canManageMemo grants memo administration to the instance administrator and
+// to administrators of the Space containing the memo. Space administrators do
+// not gain authority over unassigned memos or memos in another Space.
+func (s *APIV1Service) canManageMemo(ctx context.Context, user *store.User, memo *store.Memo) (bool, error) {
+	if user == nil || memo == nil {
+		return false, nil
+	}
+	if memo.CreatorID == user.ID || isSuperUser(user) {
+		return true, nil
+	}
+	if memo.SpaceID == nil {
+		return false, nil
+	}
+	membership, err := s.Store.GetSpaceMember(ctx, &store.FindSpaceMember{SpaceID: memo.SpaceID, UserID: &user.ID})
+	if err != nil {
+		return false, err
+	}
+	return membership != nil && membership.Role == store.SpaceMemberRoleAdmin, nil
+}
+
 func mapMemoWriteError(err error, operation string) error {
 	switch {
 	case stderrors.Is(err, store.ErrMemoMutationConflict):

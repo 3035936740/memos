@@ -5,6 +5,17 @@ import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { buildAttachmentVisualItems, selectBlogCoverMedia } from "@/utils/media-item";
 
 describe("deriveBlogMemoText", () => {
+  it("uses the poll question when there is no title and omits the placement marker", () => {
+    expect(deriveBlogMemoText("[[vote]]", undefined, "Which option?")).toEqual({ title: "Which option?", excerpt: "" });
+    expect(deriveBlogMemoText("[[vote]]", "[[vote]]", "Which option?")).toEqual({ title: "Which option?", excerpt: "" });
+    expect(deriveBlogMemoText("", undefined, "Legacy poll")).toEqual({ title: "Legacy poll", excerpt: "" });
+    expect(deriveBlogMemoText("[[vote]]", "My title", "Which option?")).toEqual({ title: "My title", excerpt: "" });
+    expect(deriveBlogMemoText("# Heading\n[[vote]]\nDetails", undefined, "Which option?")).toEqual({
+      title: "Heading",
+      excerpt: "Details",
+    });
+  });
+
   it("uses the first heading as the title and turns the remainder into a plain-text excerpt", () => {
     expect(deriveBlogMemoText("# 我的文章\n\n这里有 **重点** 和 [链接](https://example.com)。", "我的文章")).toEqual({
       title: "我的文章",

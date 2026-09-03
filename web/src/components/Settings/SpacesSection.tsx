@@ -9,6 +9,7 @@ import {
   LoaderCircleIcon,
   LogOutIcon,
   PlusIcon,
+  SearchIcon,
   ShieldCheckIcon,
   Trash2Icon,
   UserPlusIcon,
@@ -34,13 +35,14 @@ import { Textarea } from "@/components/ui/textarea";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import {
   useAcceptSpaceInvitation,
+  useAdminSpaces,
   useDeclineSpaceInvitation,
   useDeleteSpace,
   useDeleteSpaceInvitation,
   useDeleteSpaceMember,
+  usePagedSpaces,
   useSpaceInvitations,
   useSpaceMembers,
-  useSpaces,
   useUpdateSpace,
   useUpdateSpaceMember,
   useUserSpaceInvitations,
@@ -58,7 +60,7 @@ import {
   type SpaceMember,
   SpaceMember_Role,
 } from "@/types/proto/api/v1/space_service_pb";
-import type { User } from "@/types/proto/api/v1/user_service_pb";
+import { type User, User_Role } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
 type DetailTab = "general" | "members";
@@ -121,21 +123,29 @@ const SpacesSection = () => {
   const [searchParams] = useSearchParams();
   const currentUser = useCurrentUser();
   const viewerName = currentUser?.name ?? "";
+  const isHost = currentUser?.role === User_Role.ADMIN;
   const managedSpaceName = searchParams.get("space") ?? "";
-  const spacesQuery = useSpaces(viewerName);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageTokens, setPageTokens] = useState<string[]>([""]);
+  const pageToken = pageTokens[page - 1] ?? "";
+  const pagedSpacesQuery = usePagedSpaces(viewerName, search.trim(), pageToken, { enabled: !isHost });
+  const adminSpacesQuery = useAdminSpaces(search.trim(), pageToken, { enabled: isHost });
   const receivedInvitationsQuery = useUserSpaceInvitations(viewerName);
-  const spaces = spacesQuery.data ?? [];
+  const spaces = isHost ? (adminSpacesQuery.data?.spaces ?? []) : (pagedSpacesQuery.data?.spaces ?? []);
   const receivedInvitations = receivedInvitationsQuery.data ?? [];
   const managedSpace = spaces.find((space) => space.name === managedSpaceName);
+  const activeSpacesQuery = isHost ? adminSpacesQuery : pagedSpacesQuery;
+  const nextPageToken = activeSpacesQuery.data?.nextPageToken ?? "";
   const [createOpen, setCreateOpen] = useState(false);
   const acceptInvitation = useAcceptSpaceInvitation(viewerName);
   const declineInvitation = useDeclineSpaceInvitation(viewerName);
 
   useEffect(() => {
-    if (managedSpaceName && spacesQuery.isSuccess && !managedSpace) {
+    if (managedSpaceName && activeSpacesQuery.isSuccess && !managedSpace) {
       navigate(getSpacesSettingsLocation(), { replace: true });
     }
-  }, [managedSpace, managedSpaceName, navigate, spacesQuery.isSuccess]);
+  }, [activeSpacesQuery.isSuccess, managedSpace, managedSpaceName, navigate]);
 
   const handleOpenSpace = (spaceName: string) => {
     navigate(getSpacesSettingsLocation(spaceName));
@@ -163,7 +173,7 @@ const SpacesSection = () => {
     }
   };
 
-  if (managedSpaceName && !managedSpace && spacesQuery.isLoading) {
+  if (managedSpaceName && !managedSpace && activeSpacesQuery.isLoading) {
     return (
       <SettingSection title={t("setting.spaces.title")} description={t("setting.spaces.description")}>
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -179,6 +189,7 @@ const SpacesSection = () => {
       key={managedSpace.name}
       space={managedSpace}
       viewerName={viewerName}
+      isHost={isHost}
       onBack={() => navigate(getSpacesSettingsLocation())}
     />
   ) : (
@@ -259,9 +270,22 @@ const SpacesSection = () => {
           ) : null}
 
           <section aria-labelledby="your-spaces-heading" className="space-y-2.5">
+            <div className="relative max-w-md">
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                className="pl-9"
+                placeholder={t("setting.space-management.search-placeholder")}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                  setPageTokens([""]);
+                }}
+              />
+            </div>
             <div className="flex items-center justify-between">
               <h4 id="your-spaces-heading" className="text-sm font-medium">
-                {t("setting.spaces.your-spaces")}
+                {isHost ? t("setting.space-management.label") : t("setting.spaces.your-spaces")}
               </h4>
               {spaces.length > 0 ? (
                 <span className="text-xs text-muted-foreground">
@@ -271,12 +295,12 @@ const SpacesSection = () => {
                 </span>
               ) : null}
             </div>
-            {spacesQuery.isLoading ? (
+            {activeSpacesQuery.isLoading ? (
               <div className="flex items-center justify-center gap-2 rounded-lg border border-border py-10 text-sm text-muted-foreground">
                 <LoaderCircleIcon className="size-4 animate-spin" />
                 {t("setting.spaces.loading")}
               </div>
-            ) : spacesQuery.isError ? (
+            ) : activeSpacesQuery.isError ? (
               <div className="rounded-lg border border-border px-3 py-8 text-center text-sm text-muted-foreground">
                 {t("setting.spaces.load-error")}
               </div>
@@ -294,6 +318,12 @@ const SpacesSection = () => {
                 {spaces.map((space) => {
                   const uid = extractSpaceUidFromName(space.name);
                   const manageLabel = t("setting.spaces.manage-space", { space: space.title });
+                  const accessLabel =
+                    space.accessMode === Space_AccessMode.PUBLIC
+                      ? t("space.access-mode-public")
+                      : space.accessMode === Space_AccessMode.AUTHENTICATED
+                        ? t("space.access-mode-authenticated")
+                        : t("space.access-mode-invite-only");
 
                   return (
                     <button
@@ -307,7 +337,18 @@ const SpacesSection = () => {
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-medium">{space.title}</p>
-                          <SpaceRoleBadge role={space.currentUserRole} />
+                          {isHost ? (
+                            <Badge variant="secondary" shape="pill" className="font-normal">
+                              {accessLabel}
+                            </Badge>
+                          ) : (
+                            <SpaceRoleBadge role={space.currentUserRole} />
+                          )}
+                          {isHost && !space.syncToMainFeed ? (
+                            <Badge variant="outline" shape="pill" className="font-normal">
+                              {t("setting.space-management.not-synced")}
+                            </Badge>
+                          ) : null}
                         </div>
                         <p className="mt-0.5 flex min-w-0 items-baseline gap-1 text-[11px] text-muted-foreground">
                           <span className="shrink-0">{t("space.custom-id-label")}:</span>
@@ -330,6 +371,29 @@ const SpacesSection = () => {
                 })}
               </div>
             )}
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>{t("setting.space-management.page", { page })}</span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
+                  {t("memo.pagination-previous")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!nextPageToken}
+                  onClick={() => {
+                    setPageTokens((tokens) => {
+                      const next = [...tokens];
+                      next[page] = nextPageToken;
+                      return next;
+                    });
+                    setPage((value) => value + 1);
+                  }}
+                >
+                  {t("memo.pagination-next")}
+                </Button>
+              </div>
+            </div>
           </section>
         </div>
       </SettingSection>
@@ -347,16 +411,17 @@ const SpacesSection = () => {
 interface SpaceDetailProps {
   space: Space;
   viewerName: string;
+  isHost: boolean;
   onBack: () => void;
 }
 
-const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
+const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) => {
   const t = useTranslate();
   const membersQuery = useSpaceMembers(viewerName, space.name, { enabled: space.accessMode === Space_AccessMode.INVITE_ONLY });
   const members = membersQuery.data ?? [];
   const currentMember = members.find((member) => member.user === viewerName);
   const currentRole = currentMember?.role ?? space.currentUserRole;
-  const isAdmin = currentRole === SpaceMember_Role.ADMIN;
+  const isAdmin = isHost || currentRole === SpaceMember_Role.ADMIN;
   const invitationsQuery = useSpaceInvitations(viewerName, space.name, {
     enabled: isAdmin && space.accessMode === Space_AccessMode.INVITE_ONLY,
   });
@@ -539,12 +604,12 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
       </button>
 
       <header className="flex min-w-0 flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center">
-        <div className="group relative shrink-0">
+        <div className="group relative size-11 shrink-0">
           {isAdmin ? (
             <Label
               title={t("setting.spaces.upload-avatar")}
               aria-label={t("setting.spaces.upload-avatar")}
-              className="relative block cursor-pointer overflow-hidden rounded-lg focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+              className="relative block size-11 cursor-pointer overflow-hidden rounded-lg focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
             >
               <SpaceMark size="xl" avatarUrl={space.avatarUrl} />
               <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100">
@@ -566,7 +631,7 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
               aria-label={t("setting.spaces.clear-avatar")}
               title={t("setting.spaces.clear-avatar")}
               onClick={() => void handleAvatarClear()}
-              className="absolute right-0.5 top-0.5 z-10 flex size-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm ring-1 ring-background"
+              className="absolute -right-1 -top-1 z-10 flex size-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm ring-1 ring-background"
             >
               <XIcon className="size-3" />
             </button>
@@ -575,7 +640,7 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h3 className="truncate text-lg font-semibold tracking-tight">{space.title}</h3>
-            <SpaceRoleBadge role={currentRole} />
+            <SpaceRoleBadge role={isHost ? SpaceMember_Role.ADMIN : currentRole} />
           </div>
           <p className="mt-1 flex min-w-0 items-baseline gap-1 text-xs text-muted-foreground">
             <span className="shrink-0">{t("space.custom-id-label")}:</span>
@@ -786,7 +851,7 @@ const SpaceDetail = ({ space, viewerName, onBack }: SpaceDetailProps) => {
                   </p>
                 </div>
               </div>
-              <SpaceRoleBadge role={currentRole} />
+              <SpaceRoleBadge role={isHost ? SpaceMember_Role.ADMIN : currentRole} />
             </div>
           </section>
 

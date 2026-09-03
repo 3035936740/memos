@@ -68,6 +68,16 @@ func (s *APIV1Service) resolveMemberSpace(ctx context.Context, name string, curr
 	if err != nil {
 		return nil, nil, status.Errorf(codes.InvalidArgument, "invalid space name: %v", err)
 	}
+	if isSuperUser(currentUser) {
+		space, err := s.Store.GetSpace(ctx, &store.FindSpace{UID: &uid})
+		if err != nil {
+			return nil, nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
+		}
+		if space == nil {
+			return nil, nil, status.Error(codes.NotFound, "space not found")
+		}
+		return space, &store.SpaceMember{SpaceID: space.ID, UserID: currentUser.ID, Role: store.SpaceMemberRoleAdmin}, nil
+	}
 	space, err := s.Store.GetSpace(ctx, &store.FindSpace{UID: &uid, MemberUserID: &currentUser.ID})
 	if err != nil {
 		return nil, nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
@@ -290,6 +300,16 @@ func (s *APIV1Service) GetSpace(ctx context.Context, request *v1pb.GetSpaceReque
 		return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)
 	}
 	if currentUser != nil {
+		if isSuperUser(currentUser) {
+			space, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid})
+			if err != nil {
+				return nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
+			}
+			if space == nil {
+				return nil, status.Error(codes.NotFound, "space not found")
+			}
+			return convertSpaceFromStore(space), nil
+		}
 		memberSpace, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid, MemberUserID: &currentUser.ID})
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "failed to get space: %v", err)
@@ -376,6 +396,7 @@ func (s *APIV1Service) UpdateSpace(ctx context.Context, request *v1pb.UpdateSpac
 			return nil, status.Errorf(codes.InvalidArgument, "unsupported update mask path: %s", path)
 		}
 	}
+	update.InstanceAdmin = isSuperUser(currentUser)
 	updated, err := s.Store.UpdateSpace(ctx, update, currentUser.ID)
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to update space")
@@ -515,12 +536,11 @@ func (s *APIV1Service) ListSpaceInvitations(ctx context.Context, request *v1pb.L
 		return nil, err
 	}
 	limitPlusOne := limit + 1
-	invitations, err := s.Store.ListSpaceInvitations(ctx, &store.FindSpaceInvitation{
-		SpaceID:      &space.ID,
-		ViewerUserID: &currentUser.ID,
-		Limit:        &limitPlusOne,
-		Offset:       &offset,
-	})
+	findInvitations := &store.FindSpaceInvitation{SpaceID: &space.ID, Limit: &limitPlusOne, Offset: &offset}
+	if !isSuperUser(currentUser) {
+		findInvitations.ViewerUserID = &currentUser.ID
+	}
+	invitations, err := s.Store.ListSpaceInvitations(ctx, findInvitations)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list space invitations: %v", err)
 	}
@@ -652,15 +672,15 @@ func (s *APIV1Service) resolveSpaceInvitationResource(ctx context.Context, name 
 		return nil, nil, nil, nil, status.Errorf(codes.Internal, "failed to resolve caller space membership: %v", err)
 	}
 	isInvitee := targetUser.ID == currentUser.ID
-	isAdministrator := callerMembership != nil && callerMembership.Role == store.SpaceMemberRoleAdmin
+	isAdministrator := isSuperUser(currentUser) || (callerMembership != nil && callerMembership.Role == store.SpaceMemberRoleAdmin)
 	if !isInvitee && !isAdministrator {
 		return nil, nil, nil, nil, status.Error(codes.NotFound, "space invitation not found")
 	}
-	invitation, err := s.Store.GetSpaceInvitation(ctx, &store.FindSpaceInvitation{
-		SpaceID:      &space.ID,
-		UserID:       &targetUser.ID,
-		ViewerUserID: &currentUser.ID,
-	})
+	findInvitation := &store.FindSpaceInvitation{SpaceID: &space.ID, UserID: &targetUser.ID}
+	if !isSuperUser(currentUser) {
+		findInvitation.ViewerUserID = &currentUser.ID
+	}
+	invitation, err := s.Store.GetSpaceInvitation(ctx, findInvitation)
 	if err != nil {
 		return nil, nil, nil, nil, status.Errorf(codes.Internal, "failed to get space invitation: %v", err)
 	}
@@ -797,12 +817,11 @@ func (s *APIV1Service) ListSpaceMembers(ctx context.Context, request *v1pb.ListS
 		return nil, err
 	}
 	limitPlusOne := limit + 1
-	members, err := s.Store.ListSpaceMembers(ctx, &store.FindSpaceMember{
-		SpaceID:      &space.ID,
-		ViewerUserID: &currentUser.ID,
-		Limit:        &limitPlusOne,
-		Offset:       &offset,
-	})
+	findMembers := &store.FindSpaceMember{SpaceID: &space.ID, Limit: &limitPlusOne, Offset: &offset}
+	if !isSuperUser(currentUser) {
+		findMembers.ViewerUserID = &currentUser.ID
+	}
+	members, err := s.Store.ListSpaceMembers(ctx, findMembers)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list space members: %v", err)
 	}
@@ -861,11 +880,11 @@ func (s *APIV1Service) resolveSpaceMemberResource(ctx context.Context, name stri
 	if targetUser.RowStatus != store.Normal {
 		return nil, nil, nil, nil, status.Error(codes.NotFound, "space member not found")
 	}
-	targetMembership, err := s.Store.GetSpaceMember(ctx, &store.FindSpaceMember{
-		SpaceID:      &space.ID,
-		UserID:       &targetUser.ID,
-		ViewerUserID: &currentUser.ID,
-	})
+	findTargetMembership := &store.FindSpaceMember{SpaceID: &space.ID, UserID: &targetUser.ID}
+	if !isSuperUser(currentUser) {
+		findTargetMembership.ViewerUserID = &currentUser.ID
+	}
+	targetMembership, err := s.Store.GetSpaceMember(ctx, findTargetMembership)
 	if err != nil {
 		return nil, nil, nil, nil, status.Errorf(codes.Internal, "failed to get space membership: %v", err)
 	}
@@ -967,8 +986,9 @@ func (s *APIV1Service) DeleteSpaceMember(ctx context.Context, request *v1pb.Dele
 		}
 	}
 	if err := s.Store.DeleteSpaceMember(ctx, &store.DeleteSpaceMember{
-		SpaceID: targetMembership.SpaceID,
-		UserID:  targetMembership.UserID,
+		SpaceID:       targetMembership.SpaceID,
+		UserID:        targetMembership.UserID,
+		InstanceAdmin: isSuperUser(currentUser),
 	}, currentUser.ID); err != nil {
 		return nil, mapSpaceMutationError(err, "failed to delete space member")
 	}

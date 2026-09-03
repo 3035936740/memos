@@ -36,6 +36,7 @@ const MemoContent = (props: MemoContentProps) => {
       >
         <MemoMarkdownRenderer
           content={content}
+          pollContent={props.pollContent}
           attachments={attachments}
           resolvedMentionUsernames={resolvedMentionUsernames}
           memoName={props.memoName}

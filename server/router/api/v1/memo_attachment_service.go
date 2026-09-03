@@ -204,7 +204,7 @@ func (s *APIV1Service) applyMemoMutation(
 	if user == nil {
 		return status.Error(codes.Unauthenticated, "user not authenticated")
 	}
-	if memo.CreatorID != user.ID {
+	if memo.CreatorID != user.ID && (memoUpdate == nil || memoUpdate.Policy == nil || !memoUpdate.Policy.AdminOverride) {
 		return status.Error(codes.PermissionDenied, "permission denied")
 	}
 	policy := memoWritePolicy(user.ID, false)

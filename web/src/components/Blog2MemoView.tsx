@@ -1,9 +1,20 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { BanIcon, CalendarClockIcon, EyeIcon, EyeOffIcon, FilePenLineIcon, MessageCircleIcon, PaperclipIcon, PinIcon } from "lucide-react";
+import {
+  BanIcon,
+  CalendarClockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  FilePenLineIcon,
+  ListChecksIcon,
+  MessageCircleIcon,
+  PaperclipIcon,
+  PinIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import { useResolvedUser } from "@/components/MemoContent/MentionResolutionContext";
+import PollCard from "@/components/MemoView/components/PollCard";
 import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import VideoPoster from "@/components/VideoPoster";
@@ -34,14 +45,19 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
   const anonymousForViewer = memo.anonymous && !isSuperUser(currentUser);
   const shouldShowCreator = !anonymousForViewer && (showCreator || Boolean(memo.creator));
   const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
-  const { title, excerpt } = useMemo(() => deriveBlogMemoText(memo.content, memo.property?.title), [memo.content, memo.property?.title]);
+  const { title, excerpt } = useMemo(
+    () => deriveBlogMemoText(memo.content, memo.property?.title, memo.poll?.question),
+    [memo.content, memo.property?.title, memo.poll?.question],
+  );
   const cover = useMemo(() => {
+    const pollImages = new Set([memo.poll?.image?.name, ...(memo.poll?.options.map((option) => option.image?.name) ?? [])]);
     const visualAttachments = memo.attachments.filter((attachment) => {
+      if (pollImages.has(attachment.name)) return false;
       const type = getAttachmentType(attachment);
       return type === "image/*" || type === "video/*" || isMotionAttachment(attachment);
     });
     return selectBlogCoverMedia(memo.content, buildAttachmentVisualItems(visualAttachments));
-  }, [memo.attachments, memo.content]);
+  }, [memo.attachments, memo.content, memo.poll]);
   const createTime = !memo.hideTime && memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const detailPath = `/${memo.name}`;
@@ -88,7 +104,13 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
           #{tag}
         </span>
       ))}
-      {memo.tags.length === 0 && (
+      {memo.poll && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+          <ListChecksIcon className="size-3" />
+          投票
+        </span>
+      )}
+      {memo.tags.length === 0 && !memo.poll && (
         <span className="rounded-full bg-muted/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">{t("memo.blog-dynamic")}</span>
       )}
     </div>
@@ -126,6 +148,41 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
     </Link>
   ) : null;
 
+  const footer = (
+    <footer
+      className={cn(
+        "mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border/60 pt-3 text-xs text-muted-foreground",
+        hasFlowingCover && "clear-both mt-3",
+        memo.poll && "mx-4 mb-4",
+      )}
+    >
+      {shouldShowCreator && creatorLabel && (
+        <Link
+          to={`/u/${encodeURIComponent(creatorUsername)}`}
+          className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-foreground"
+        >
+          <UserAvatar avatarUrl={creator?.avatarUrl} className="size-5 rounded-md" />
+          <span className="max-w-28 truncate">{creatorLabel}</span>
+        </Link>
+      )}
+      {createTime && <RelativeTime date={createTime} />}
+      <span className="inline-flex items-center gap-1" title={t("common.view-count")}>
+        <EyeIcon className="size-3.5" />
+        {memo.viewCount.toLocaleString(i18n.language)}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <MessageCircleIcon className="size-3.5" />
+        {t("memo.blog-comments", { n: commentAmount })}
+      </span>
+      {memo.attachments.length > 0 && (
+        <span className="inline-flex items-center gap-1">
+          <PaperclipIcon className="size-3.5" />
+          {t("memo.blog-attachments", { n: memo.attachments.length })}
+        </span>
+      )}
+    </footer>
+  );
+
   return (
     <article
       data-blog2-card=""
@@ -135,7 +192,8 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
     >
       <div
         className={cn(
-          "h-full min-w-0",
+          "min-w-0",
+          !memo.poll && "h-full",
           hasFlowingCover ? "flow-root p-4" : cn("grid", hasTitleOnlyCover ? "grid-cols-[minmax(0,1fr)_9rem] gap-4 pr-4" : "grid-cols-1"),
         )}
       >
@@ -170,40 +228,16 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
             </p>
           )}
 
-          <footer
-            className={cn(
-              "mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-t border-border/60 pt-3 text-xs text-muted-foreground",
-              hasFlowingCover && "clear-both mt-3",
-            )}
-          >
-            {shouldShowCreator && creatorLabel && (
-              <Link
-                to={`/u/${encodeURIComponent(creatorUsername)}`}
-                className="flex min-w-0 items-center gap-1.5 transition-colors hover:text-foreground"
-              >
-                <UserAvatar avatarUrl={creator?.avatarUrl} className="size-5 rounded-md" />
-                <span className="max-w-28 truncate">{creatorLabel}</span>
-              </Link>
-            )}
-            {createTime && <RelativeTime date={createTime} />}
-            <span className="inline-flex items-center gap-1" title={t("common.view-count")}>
-              <EyeIcon className="size-3.5" />
-              {memo.viewCount.toLocaleString(i18n.language)}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <MessageCircleIcon className="size-3.5" />
-              {t("memo.blog-comments", { n: commentAmount })}
-            </span>
-            {memo.attachments.length > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <PaperclipIcon className="size-3.5" />
-                {t("memo.blog-attachments", { n: memo.attachments.length })}
-              </span>
-            )}
-          </footer>
+          {!memo.poll && footer}
         </div>
         {!hasFlowingCover && coverLink}
       </div>
+      {memo.poll && (
+        <div className="px-4 pb-4">
+          <PollCard memo={memo} compact />
+        </div>
+      )}
+      {memo.poll && footer}
     </article>
   );
 };

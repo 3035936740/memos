@@ -130,7 +130,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 	if err := requirePostgresActiveUsers(ctx, tx, actorUserID); err != nil {
 		return nil, err
 	}
-	if err := authorizePostgresSpaceAdmin(ctx, tx, update.ID, actorUserID); err != nil {
+	if err := authorizePostgresSpaceAdmin(ctx, tx, update.ID, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	sets, args := []string{}, []any{}
@@ -166,7 +166,7 @@ func (d *DB) UpdateSpace(ctx context.Context, update *store.UpdateSpace, actorUs
 		}
 		return nil, err
 	}
-	if err := populatePostgresSpaceSummary(ctx, tx, space, actorUserID); err != nil {
+	if err := populatePostgresSpaceSummary(ctx, tx, space, actorUserID, update.InstanceAdmin); err != nil {
 		return nil, err
 	}
 	if err := tx.Commit(); err != nil {
@@ -181,7 +181,10 @@ func scanPostgresSpaceSummary(row postgresSpaceSummaryRowScanner, space *store.S
 	return errors.Wrap(row.Scan(&space.CurrentUserRole, &space.MemberCount), "failed to populate PostgreSQL space summary")
 }
 
-func populatePostgresSpaceSummary(ctx context.Context, tx *sql.Tx, space *store.Space, userID int32) error {
+func populatePostgresSpaceSummary(ctx context.Context, tx *sql.Tx, space *store.Space, userID int32, instanceAdmin bool) error {
+	if instanceAdmin {
+		return tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM space_member sm JOIN "user" u ON u.id = sm.user_id WHERE sm.space_id = $1 AND sm.status = 'ACTIVE' AND sm.role IN ('ADMIN', 'USER') AND u.row_status = 'NORMAL'`, space.ID).Scan(&space.MemberCount)
+	}
 	row := tx.QueryRowContext(ctx, `SELECT viewer_member.role, COUNT(active_member.user_id)
 		FROM space_member viewer_member
 		JOIN "user" viewer_user ON viewer_user.id = viewer_member.user_id
@@ -460,7 +463,7 @@ func (d *DB) DeleteSpaceMember(ctx context.Context, delete *store.DeleteSpaceMem
 		}
 		return err
 	}
-	if actorUserID != delete.UserID {
+	if actorUserID != delete.UserID && !delete.InstanceAdmin {
 		var role store.SpaceMemberRole
 		if err := tx.QueryRowContext(ctx, "SELECT role FROM space_member WHERE space_id = $1 AND user_id = $2 AND status = $3", delete.SpaceID, actorUserID, store.SpaceMemberStatusActive).Scan(&role); errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpacePermissionDenied
@@ -492,12 +495,21 @@ func (d *DB) DeleteSpaceMember(ctx context.Context, delete *store.DeleteSpaceMem
 	return tx.Commit()
 }
 
-func authorizePostgresSpaceAdmin(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) error {
+func authorizePostgresSpaceAdmin(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32, instanceAdmin ...bool) error {
 	var storedSpaceID int32
 	if err := tx.QueryRowContext(ctx, "SELECT id FROM space WHERE id = $1", spaceID).Scan(&storedSpaceID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return store.ErrSpaceNotFound
 		}
+		return err
+	}
+	if len(instanceAdmin) > 0 && instanceAdmin[0] {
+		return nil
+	}
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, `SELECT role FROM "user" WHERE id = $1 AND row_status = 'NORMAL'`, actorUserID).Scan(&actorRole); err == nil && actorRole == store.RoleAdmin {
+		return nil
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 	var role store.SpaceMemberRole

@@ -17,7 +17,8 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	defer func() { _ = tx.Rollback() }()
 
 	var actorStatus store.RowStatus
-	if err := tx.QueryRowContext(ctx, "SELECT row_status FROM user WHERE id = ?", delete.ActorUserID).Scan(&actorStatus); errors.Is(err, sql.ErrNoRows) {
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, "SELECT row_status, role FROM user WHERE id = ?", delete.ActorUserID).Scan(&actorStatus, &actorRole); errors.Is(err, sql.ErrNoRows) {
 		return nil, store.ErrMemoPermissionDenied
 	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to read memo deletion actor")
@@ -36,9 +37,6 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to read memo")
 	}
-	if creatorID != delete.ActorUserID {
-		return nil, store.ErrMemoPermissionDenied
-	}
 	spaceID := store.NullInt32Pointer(space)
 	spaceExists := false
 	actorMember := false
@@ -52,6 +50,21 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 		actorMember, err = mysqlSpaceMemberActive(ctx, tx, *spaceID, delete.ActorUserID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read memo membership")
+		}
+	}
+	if creatorID != delete.ActorUserID {
+		allowed := delete.AdminOverride && actorRole == store.RoleAdmin
+		if !allowed && delete.AdminOverride && spaceID != nil && spaceExists {
+			var role store.SpaceMemberRole
+			err = tx.QueryRowContext(ctx, `SELECT role FROM space_member
+				WHERE space_id = ? AND user_id = ? AND status = 'ACTIVE' AND role IN ('ADMIN', 'USER')`, *spaceID, delete.ActorUserID).Scan(&role)
+			allowed = err == nil && role == store.SpaceMemberRoleAdmin
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return nil, errors.Wrap(err, "failed to read memo space administrator")
+			}
+		}
+		if !allowed {
+			return nil, store.ErrMemoPermissionDenied
 		}
 	}
 	actorCanRead := store.MemoDeleteActorCanRead(rowStatus, visibility, spaceID, spaceExists, actorMember)

@@ -121,6 +121,10 @@ func (s *APIV1Service) prepareMemoCreate(ctx context.Context, user *store.User, 
 		}
 		memo.Payload.Category = category
 	}
+	if err := validatePoll(input.Poll); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	memo.Payload.Poll = pollToStore(input.Poll)
 
 	attachments, err := s.prepareMemoAttachments(ctx, user, memo, input.Attachments)
 	if err != nil {

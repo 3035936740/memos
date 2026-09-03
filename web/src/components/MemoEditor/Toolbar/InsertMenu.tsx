@@ -4,6 +4,7 @@ import {
   Code2Icon,
   ImageIcon,
   LinkIcon,
+  ListChecksIcon,
   LoaderIcon,
   MapPinIcon,
   Maximize2Icon,
@@ -30,7 +31,7 @@ import {
 import { useDebouncedEffect } from "@/hooks";
 import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
-import { AdminScriptDialog, LocalScriptDialog } from "../components";
+import { AdminScriptDialog, LocalScriptDialog, PollDialog } from "../components";
 import AIGenerateDialog from "../components/AIGenerateDialog";
 import EmojiPickerDialog from "../components/EmojiPickerDialog";
 import { useFileUpload, useLinkMemo, useLocation } from "../hooks";
@@ -42,6 +43,7 @@ const InsertMenu = (props: InsertMenuProps) => {
   const t = useTranslate();
   const { actions, dispatch, getState } = useEditorContext();
   const relations = useEditorSelector((s) => s.metadata.relations);
+  const poll = useEditorSelector((s) => s.metadata.poll);
   const {
     location: initialLocation,
     onLocationChange,
@@ -59,6 +61,7 @@ const InsertMenu = (props: InsertMenuProps) => {
   const [aiDialogOpen, setAIDialogOpen] = useState(false);
   const [adminScriptDialogOpen, setAdminScriptDialogOpen] = useState(false);
   const [localScriptDialogOpen, setLocalScriptDialogOpen] = useState(false);
+  const [pollDialogOpen, setPollDialogOpen] = useState(false);
   const [aiContext, setAIContext] = useState("");
   const inlineImageInputRef = useRef<HTMLInputElement>(null);
   const inlineVideoInputRef = useRef<HTMLInputElement>(null);
@@ -194,6 +197,7 @@ const InsertMenu = (props: InsertMenuProps) => {
     { key: "audio", label: t("editor.audio-recorder.trigger"), icon: MicIcon, onClick: props.onAudioRecorderClick },
     { key: "link", label: t("editor.insert-menu.link-memo"), icon: LinkIcon, onClick: handleOpenLinkDialog },
     { key: "location", label: t("editor.insert-menu.add-location"), icon: MapPinIcon, onClick: handleLocationClick },
+    { key: "poll", label: poll ? "编辑投票" : "添加投票", icon: ListChecksIcon, onClick: () => setPollDialogOpen(true) },
   ];
   if (canUseAdminScript)
     insertItems.push({
@@ -308,6 +312,7 @@ const InsertMenu = (props: InsertMenuProps) => {
         onOpenChange={setLocalScriptDialogOpen}
         onInsert={onInsertLocalScript ?? (() => undefined)}
       />
+      <PollDialog open={pollDialogOpen} onOpenChange={setPollDialogOpen} />
     </>
   );
 };

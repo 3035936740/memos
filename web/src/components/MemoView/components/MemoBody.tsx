@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 import { filterInlineManagedAttachments } from "@/utils/managed-attachment";
+import { findMemoPollMarkers } from "@/utils/memo-poll";
 import MemoContent from "../../MemoContent";
 import { MemoReactionListView } from "../../MemoReactionListView";
 import { useMemoHandlers } from "../hooks";
 import { useMemoViewContext } from "../MemoViewContext";
 import type { MemoBodyProps } from "../types";
+import PollCard from "./PollCard";
 
 const BlurOverlay: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
   const t = useTranslate();
@@ -48,10 +50,15 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
   const { handleMemoContentClick, handleMemoContentDoubleClick } = useMemoHandlers({ readonly, openEditor, openPreview });
 
   const referencedMemos = memo.relations.filter(isReferenceRelation);
+  const hasInlinePoll = useMemo(() => Boolean(memo.poll && findMemoPollMarkers(memo.content).length > 0), [memo.content, memo.poll]);
   // Memoized so AttachmentListView's own useMemo chain keeps its cache across body renders.
+  const pollAttachmentNames = useMemo(() => {
+    const names = [memo.poll?.image?.name, ...(memo.poll?.options.map((option) => option.image?.name) ?? [])];
+    return new Set(names.filter((name): name is string => Boolean(name)));
+  }, [memo.poll]);
   const attachmentOnlyItems = useMemo(
-    () => filterInlineManagedAttachments(memo.content, memo.attachments),
-    [memo.content, memo.attachments],
+    () => filterInlineManagedAttachments(memo.content, memo.attachments).filter((attachment) => !pollAttachmentNames.has(attachment.name)),
+    [memo.content, memo.attachments, pollAttachmentNames],
   );
 
   return (
@@ -70,6 +77,7 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
             parentPage={parentPage}
             parentScope={parentScope}
             content={memo.content}
+            pollContent={hasInlinePoll ? <PollCard memo={memo} /> : undefined}
             attachments={memo.attachments}
             onClick={handleMemoContentClick}
             onDoubleClick={handleMemoContentDoubleClick}
@@ -80,6 +88,7 @@ const MemoBody: React.FC<MemoBodyProps> = ({ compact }) => {
           <RelationListView relations={referencedMemos} currentMemoName={memo.name} parentPage={parentPage} parentScope={parentScope} />
           {memo.location && <LocationDisplayView location={memo.location} />}
         </ClampedSection>
+        {memo.poll && !hasInlinePoll && <PollCard memo={memo} />}
         <MemoReactionListView memo={memo} reactions={memo.reactions} />
       </div>
 

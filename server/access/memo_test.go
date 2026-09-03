@@ -126,9 +126,9 @@ func TestCheckMemoReadInvalidStateFailsClosed(t *testing.T) {
 	require.Equal(t, MemoReadDenialNotFound, CheckMemoReadContext(MemoReadContext{Memo: memo, AllowAnonymous: true, CreatorValid: true, SpaceValid: true}).Denial)
 	memo.Visibility = store.SpaceAudience
 	memo.SpaceID = &spaceID
-	require.Equal(t, MemoReadDenialPermission, CheckMemoReadContext(MemoReadContext{
+	require.True(t, CheckMemoReadContext(MemoReadContext{
 		Memo: memo, Viewer: owner, CreatorValid: true, SpaceValid: true,
-	}).Denial, "an archived SPACE memo still requires active membership")
+	}).Allowed(), "the archived author keeps access to their SPACE memo")
 	require.True(t, CheckMemoReadContext(MemoReadContext{
 		Memo: memo, Viewer: owner, CreatorValid: true, SpaceValid: true, ViewerSpaceMember: true,
 	}).Allowed())

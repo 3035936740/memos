@@ -36,7 +36,7 @@ function CreateSpaceDialog({ open, onOpenChange, onCreated, note }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [accessMode, setAccessMode] = useState(Space_AccessMode.INVITE_ONLY);
+  const [accessMode, setAccessMode] = useState(Space_AccessMode.PUBLIC);
   const [syncToMainFeed, setSyncToMainFeed] = useState(true);
   const [urlSlug, setUrlSlug] = useState("");
   const [urlSlugConflict, setUrlSlugConflict] = useState(false);
@@ -53,7 +53,7 @@ function CreateSpaceDialog({ open, onOpenChange, onCreated, note }: Props) {
       setTitle("");
       setDescription("");
       setAvatarUrl("");
-      setAccessMode(Space_AccessMode.INVITE_ONLY);
+      setAccessMode(Space_AccessMode.PUBLIC);
       setSyncToMainFeed(true);
       setUrlSlug("");
       setUrlSlugConflict(false);

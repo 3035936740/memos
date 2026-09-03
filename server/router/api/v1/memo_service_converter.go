@@ -87,6 +87,11 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 			memoMessage.PublishTime = timestamppb.New(time.Unix(memo.Payload.PublishTs, 0))
 		}
 	}
+	poll, err := s.convertPoll(ctx, memo, attachments, viewer, "")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert poll")
+	}
+	memoMessage.Poll = poll
 	if memoMessage.Anonymous {
 		// Anonymous publication hides the creator from everyone except admins,
 		// including the author. The stored CreatorID remains untouched for

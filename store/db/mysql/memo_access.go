@@ -19,6 +19,8 @@ func mysqlMemoAccessPredicate(access *store.MemoAccessScope, memoAlias, memberAl
 		authenticatedClauses := []string{}
 
 		*args = append(*args, *access.UserID)
+		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".`row_status` = 'ARCHIVED' AND "+memoAlias+".`creator_id` = ?)")
+		*args = append(*args, *access.UserID)
 		authenticatedClauses = append(authenticatedClauses, "("+memoAlias+".`visibility` = 'PRIVATE' AND "+memoAlias+".`creator_id` = ?)")
 		if access.AllowProtected {
 			authenticatedClauses = append(authenticatedClauses, memoAlias+".`visibility` = 'PROTECTED'")

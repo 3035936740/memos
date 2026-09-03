@@ -11,6 +11,7 @@ import { useEmojiPacks } from "@/utils/emoji";
 import { useTranslate } from "@/utils/i18n";
 import { lazyWithReload } from "@/utils/lazy";
 import { resolveManagedAttachmentImageSource, resolveManagedAttachmentVideoSource } from "@/utils/managed-attachment";
+import { prepareMemoPollContent } from "@/utils/memo-poll";
 import { isMemoTextAlignment, normalizeMemoAlignmentBlocks, normalizeMemoTextColor, normalizeMemoTextSize } from "@/utils/memo-rich-text";
 import type { MemoOriginScope } from "../MemoView/navigation";
 import { CodeBlock } from "./CodeBlock";
@@ -25,6 +26,7 @@ import { TrustedIframe } from "./TrustedIframe";
 
 export interface MemoMarkdownRendererProps {
   content: string;
+  pollContent?: ReactNode;
   attachments?: Attachment[];
   resolvedMentionUsernames: Set<string>;
   /** Resource name of the memo (e.g. `memos/abc123`), used to target footnote links at the detail page. */
@@ -117,6 +119,7 @@ const MemoSpoiler = ({ children, className, color, style, ...props }: MemoSpoile
 
 export const MemoMarkdownRendererCore = ({
   content,
+  pollContent,
   attachments = [],
   resolvedMentionUsernames,
   memoName,
@@ -130,7 +133,7 @@ export const MemoMarkdownRendererCore = ({
 }: MemoMarkdownRendererCoreProps) => {
   const { data: emojiGroups = [] } = useEmojiPacks();
   const emojis = useMemo(() => emojiGroups.flatMap((group) => group.emojis), [emojiGroups]);
-  const normalizedContent = useMemo(() => normalizeMemoAlignmentBlocks(content), [content]);
+  const preparedContent = useMemo(() => prepareMemoPollContent(normalizeMemoAlignmentBlocks(content)), [content]);
   const markdownComponents: Components = {
     div: ({ node, className, ...divProps }) => {
       const alignment = elementDataAttribute(node, "data-memo-align", "dataMemoAlign");
@@ -225,7 +228,27 @@ export const MemoMarkdownRendererCore = ({
         {children}
       </Heading>
     ),
-    p: ({ children, ...props }) => <Paragraph {...props}>{children}</Paragraph>,
+    p: ({ children, node, ...props }) => {
+      const offset = node?.position?.start.offset;
+      if (offset !== undefined && preparedContent.markerOffsets.includes(offset)) {
+        if (offset !== preparedContent.markerOffsets[0]) return null;
+        return (
+          <div
+            data-memo-poll=""
+            className="my-3 flex w-full justify-center"
+            onMouseUp={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+          >
+            {pollContent ?? <span className="rounded-md border px-3 py-2 text-sm text-muted-foreground">投票</span>}
+          </div>
+        );
+      }
+      return (
+        <Paragraph {...props} node={node}>
+          {children}
+        </Paragraph>
+      );
+    },
     blockquote: ({ children, ...props }) => <Blockquote {...props}>{children}</Blockquote>,
     hr: (props) => <HorizontalRule {...props} />,
     ul: ({ children, ...props }) => <List {...props}>{children}</List>,
@@ -294,7 +317,7 @@ export const MemoMarkdownRendererCore = ({
         rehypePlugins={buildRehypePlugins(mathRehypePlugins, allowLocalScripts)}
         components={markdownComponents}
       >
-        {normalizedContent}
+        {preparedContent.content}
       </ReactMarkdown>
     </MarkdownRenderContext.Provider>
   );
@@ -322,6 +345,7 @@ export const MemoMarkdownRenderer = memo(
   MemoMarkdownRendererComponent,
   (previous, next) =>
     previous.content === next.content &&
+    previous.pollContent === next.pollContent &&
     previous.attachments === next.attachments &&
     previous.memoName === next.memoName &&
     previous.parentPage === next.parentPage &&

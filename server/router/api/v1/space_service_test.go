@@ -308,11 +308,16 @@ func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	require.Len(t, members.SpaceMembers, 1)
 	require.Equal(t, v1pb.SpaceMember_ADMIN, members.SpaceMembers[0].Role)
 
-	_, err = service.GetSpace(userCtx(ctx, applicationAdmin.ID), &v1pb.GetSpaceRequest{Name: space.Name})
-	require.Equal(t, codes.NotFound, status.Code(err), "application ADMIN must not bypass space membership")
+	adminSpace, err := service.GetSpace(userCtx(ctx, applicationAdmin.ID), &v1pb.GetSpaceRequest{Name: space.Name})
+	require.NoError(t, err, "instance ADMIN may inspect any space")
+	require.Equal(t, space.Name, adminSpace.Name)
+	require.Equal(t, v1pb.SpaceMember_ROLE_UNSPECIFIED, adminSpace.CurrentUserRole)
 	adminSpaces, err := service.ListSpaces(userCtx(ctx, applicationAdmin.ID), &v1pb.ListSpacesRequest{})
 	require.NoError(t, err)
 	require.Empty(t, adminSpaces.Spaces)
+	adminSpaces, err = service.ListSpaces(userCtx(ctx, applicationAdmin.ID), &v1pb.ListSpacesRequest{ShowAll: true})
+	require.NoError(t, err)
+	require.Equal(t, []string{space.Name}, spaceNames(adminSpaces.Spaces))
 
 	invitation, err := service.CreateSpaceInvitation(userCtx(ctx, owner.ID), &v1pb.CreateSpaceInvitationRequest{
 		Parent:          space.Name,
@@ -346,6 +351,12 @@ func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	spaceInvitations, err := service.ListSpaceInvitations(userCtx(ctx, owner.ID), &v1pb.ListSpaceInvitationsRequest{Parent: space.Name})
 	require.NoError(t, err)
 	require.Equal(t, []*v1pb.SpaceInvitation{invitation}, spaceInvitations.SpaceInvitations)
+	adminMembers, err := service.ListSpaceMembers(userCtx(ctx, applicationAdmin.ID), &v1pb.ListSpaceMembersRequest{Parent: space.Name})
+	require.NoError(t, err)
+	require.Len(t, adminMembers.SpaceMembers, 1)
+	adminInvitations, err := service.ListSpaceInvitations(userCtx(ctx, applicationAdmin.ID), &v1pb.ListSpaceInvitationsRequest{Parent: space.Name})
+	require.NoError(t, err)
+	require.Equal(t, []*v1pb.SpaceInvitation{invitation}, adminInvitations.SpaceInvitations)
 	userInvitations, err := service.ListUserSpaceInvitations(userCtx(ctx, member.ID), &v1pb.ListUserSpaceInvitationsRequest{Parent: BuildUserName(member.Username)})
 	require.NoError(t, err)
 	require.Equal(t, []*v1pb.SpaceInvitation{invitation}, userInvitations.SpaceInvitations)
@@ -384,6 +395,12 @@ func TestSpaceServiceMembershipVisibilityAndGovernance(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, v1pb.SpaceMember_ADMIN, updatedSpace.CurrentUserRole)
 	require.Equal(t, int32(2), updatedSpace.MemberCount)
+	adminUpdatedSpace, err := service.UpdateSpace(userCtx(ctx, applicationAdmin.ID), &v1pb.UpdateSpaceRequest{
+		Space:      &v1pb.Space{Name: space.Name, Description: "Updated by instance admin"},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"description"}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, "Updated by instance admin", adminUpdatedSpace.Description)
 	_, err = service.UpdateSpace(userCtx(ctx, member.ID), &v1pb.UpdateSpaceRequest{
 		Space:      &v1pb.Space{Name: space.Name, Title: "not allowed"},
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"title"}},

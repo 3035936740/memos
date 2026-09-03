@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package memos.api.v1;
+
+import "api/v1/memo_service.proto";
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/api/resource.proto";
+
+option go_package = "gen/api/v1";
+
+service PollService {
+  rpc GetMemoPoll(GetMemoPollRequest) returns (Poll) {
+    option (google.api.http) = {get: "/api/v1/{name=memos/*}/poll"};
+    option (google.api.method_signature) = "name";
+  }
+  rpc VoteMemo(VoteMemoRequest) returns (Poll) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}/poll:vote"
+      body: "*"
+    };
+    option (google.api.method_signature) = "name,option_ids";
+  }
+}
+
+message GetMemoPollRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
+  ];
+  // Existing browser identifier, used to recover a guest's voting state.
+  string device_id = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+message VoteMemoRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {type: "memos.api.v1/Memo"}
+  ];
+  repeated string option_ids = 2 [(google.api.field_behavior) = REQUIRED];
+  // Required for guest voting. The web client stores a random opaque value.
+  string device_id = 3 [(google.api.field_behavior) = OPTIONAL];
+}

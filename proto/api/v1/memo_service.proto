@@ -328,6 +328,9 @@ message Memo {
   // instance statistics. Only instance administrators may change this field.
   bool hide_time = 30 [(google.api.field_behavior) = OPTIONAL];
 
+  // Optional. A poll attached to this memo.
+  Poll poll = 31 [(google.api.field_behavior) = OPTIONAL];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;
@@ -422,6 +425,87 @@ message ListMemosRequest {
     // Optional. Limit results to memos with no space. Must be true when set.
     bool unassigned = 10;
   }
+}
+
+message Poll {
+  // The poll question.
+  string question = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional image attached to the poll question.
+  Attachment image = 2 [(google.api.field_behavior) = OPTIONAL];
+
+  // The poll choices.
+  repeated PollOption options = 3 [(google.api.field_behavior) = REQUIRED];
+
+  // Whether a voter may select more than one choice.
+  bool allow_multiple = 4 [(google.api.field_behavior) = OPTIONAL];
+
+  // Maximum choices a voter may select when allow_multiple is true.
+  // It must be between 2 and the number of options. Single-choice polls use 1.
+  int32 max_selections = 9 [(google.api.field_behavior) = OPTIONAL];
+
+  // Who may vote. AUTHENTICATED requires a signed-in user; ANYONE also allows
+  // guests to vote with a browser device identifier.
+  VoterType voter_type = 10 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional time at which voting starts. Empty means immediately.
+  google.protobuf.Timestamp start_time = 5 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional time at which voting ends. Empty means never.
+  google.protobuf.Timestamp end_time = 6 [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. Total number of submitted choices.
+  int32 total_votes = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Choices selected by the current viewer.
+  repeated string selected_option_ids = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Hide counts and percentages until the current viewer has voted.
+  bool hide_results_until_voted = 11 [(google.api.field_behavior) = OPTIONAL];
+  // For authenticated-only polls, reveal participants before the viewer votes.
+  bool show_voters_before_voting = 12 [(google.api.field_behavior) = OPTIONAL];
+  // For authenticated-only polls, reveal participants after the viewer votes.
+  bool show_voters_after_voting = 13 [(google.api.field_behavior) = OPTIONAL];
+  // Output only. True when counts are withheld for this viewer.
+  bool results_hidden = 14 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. Random sample of at most ten unique participants, only when visible.
+  repeated PollVoter voters = 15 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. Whether the participant list is visible to this viewer.
+  bool voters_visible = 16 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Reveal selected choices for visible participants. Authenticated-only polls.
+  bool show_voter_choices = 17 [(google.api.field_behavior) = OPTIONAL];
+  // Output only. More participants exist than the random sample of at most ten.
+  bool has_more_voters = 18 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Public profile and optionally visible choices for a sampled poll participant.
+message PollVoter {
+  string name = 1;
+  string username = 2;
+  string display_name = 3;
+  string avatar_url = 4;
+  // Output only. Present only when participant choices are visible.
+  repeated string selected_option_ids = 5 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+message PollOption {
+  // Output only. Stable choice identifier.
+  string id = 1 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // The choice text.
+  string text = 2 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional image attached to this choice.
+  Attachment image = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. Number of submitted choices for this option.
+  int32 vote_count = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+enum VoterType {
+  VOTER_TYPE_UNSPECIFIED = 0;
+  AUTHENTICATED = 1;
+  ANYONE = 2;
 }
 
 message ListMemosResponse {

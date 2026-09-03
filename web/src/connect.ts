@@ -8,6 +8,7 @@ import { AuthService } from "./types/proto/api/v1/auth_service_pb";
 import { IdentityProviderService } from "./types/proto/api/v1/idp_service_pb";
 import { InstanceService } from "./types/proto/api/v1/instance_service_pb";
 import { MemoService } from "./types/proto/api/v1/memo_service_pb";
+import { PollService } from "./types/proto/api/v1/poll_service_pb";
 import { MemoViewService } from "./types/proto/api/v1/memo_view_service_pb";
 import { SpaceService } from "./types/proto/api/v1/space_service_pb";
 import { UserService } from "./types/proto/api/v1/user_service_pb";
@@ -196,6 +197,7 @@ export const userServiceClient = createClient(UserService, transport);
 
 // Content service clients
 export const memoServiceClient = createClient(MemoService, transport);
+export const pollServiceClient = createClient(PollService, transport);
 export const attachmentServiceClient = createClient(AttachmentService, transport);
 export const aiServiceClient = createClient(AIService, transport);
 export const memoViewServiceClient = createClient(MemoViewService, transport);

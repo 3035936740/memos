@@ -41,6 +41,9 @@ message MemoPayload {
   // last-activity timestamp samples without excluding the memo itself.
   bool hide_time = 12;
 
+  // Optional poll attached to the memo.
+  Poll poll = 13;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;
@@ -57,4 +60,24 @@ message MemoPayload {
     double longitude = 3;
   }
 
+  message Poll {
+    string question = 1;
+    string image_name = 2;
+    repeated PollOption options = 3;
+    bool allow_multiple = 4;
+    int64 start_ts = 5;
+    int64 end_ts = 6;
+    int32 max_selections = 7;
+    string voter_type = 8;
+    bool hide_results_until_voted = 9;
+    bool show_voters_before_voting = 10;
+    bool show_voters_after_voting = 11;
+    bool show_voter_choices = 12;
+  }
+
+  message PollOption {
+    string id = 1;
+    string text = 2;
+    string image_name = 3;
+  }
 }

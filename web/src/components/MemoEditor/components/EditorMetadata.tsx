@@ -11,6 +11,13 @@ export const EditorMetadata: FC<EditorMetadataProps> = ({ memoName, uploadingLoc
   const relations = useEditorSelector((s) => s.metadata.relations);
   const location = useEditorSelector((s) => s.metadata.location);
   const content = useEditorSelector((s) => s.content);
+  const poll = useEditorSelector((s) => s.metadata.poll);
+  const pollImageLocalFileURL = useEditorSelector((s) => s.metadata.pollImageLocalFileURL);
+  const pollOptionImageLocalFileURLs = useEditorSelector((s) => s.metadata.pollOptionImageLocalFileURLs);
+  const pollAttachmentNames = new Set([poll?.image?.name, ...(poll?.options.map((option) => option.image?.name) ?? [])]);
+  const pollLocalURLs = new Set(poll ? [pollImageLocalFileURL, ...Object.values(pollOptionImageLocalFileURLs ?? {})] : []);
+  const pollAttachments = attachments.filter((attachment) => pollAttachmentNames.has(attachment.name));
+  const pollLocalFiles = localFiles.filter((file) => pollLocalURLs.has(file.previewUrl));
   const placementActionsDisabled = useEditorSelector(
     (s) => s.ui.isLoading.saving || s.ui.isLoading.uploading || s.ui.pendingInlineImageInsertions > 0,
   );
@@ -19,10 +26,10 @@ export const EditorMetadata: FC<EditorMetadataProps> = ({ memoName, uploadingLoc
   return (
     <div className="w-full flex flex-col gap-2">
       <AttachmentListEditor
-        attachments={attachments}
-        localFiles={localFiles}
-        onAttachmentsChange={(next) => dispatch(actions.setMetadata({ attachments: next }))}
-        onLocalFilesChange={(next) => dispatch(actions.setLocalFiles(next))}
+        attachments={attachments.filter((attachment) => !pollAttachmentNames.has(attachment.name))}
+        localFiles={localFiles.filter((file) => !pollLocalURLs.has(file.previewUrl))}
+        onAttachmentsChange={(next) => dispatch(actions.setMetadata({ attachments: [...next, ...pollAttachments] }))}
+        onLocalFilesChange={(next) => dispatch(actions.setLocalFiles([...next, ...pollLocalFiles]))}
         onRemoveLocalFile={(previewUrl) => dispatch(actions.removeLocalFile(previewUrl))}
         inlineAttachmentUIDs={inlineAttachmentUIDs}
         onInsertAttachments={onInsertAttachments}

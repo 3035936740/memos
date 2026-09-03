@@ -10,7 +10,8 @@ import (
 
 func validatePostgresMemoWritePolicy(ctx context.Context, tx *sql.Tx, memoID int32, policy *store.MemoWritePolicy, update *store.UpdateMemo) error {
 	var actorStatus store.RowStatus
-	if err := tx.QueryRowContext(ctx, `SELECT row_status FROM "user" WHERE id = $1`, policy.ActorUserID).Scan(&actorStatus); stderrors.Is(err, sql.ErrNoRows) {
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, `SELECT row_status, role FROM "user" WHERE id = $1`, policy.ActorUserID).Scan(&actorStatus, &actorRole); stderrors.Is(err, sql.ErrNoRows) {
 		return store.ErrMemoSpaceMembershipRequired
 	} else if err != nil {
 		return err
@@ -19,6 +20,7 @@ func validatePostgresMemoWritePolicy(ctx context.Context, tx *sql.Tx, memoID int
 	}
 
 	snapshot := new(store.MemoWriteSnapshot)
+	snapshot.ActorInstanceAdmin = actorRole == store.RoleAdmin
 	var sourceSpace sql.NullInt64
 	if err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, space_id, visibility FROM memo WHERE id = $1`, memoID).Scan(
 		&snapshot.CreatorID, &snapshot.RowStatus, &sourceSpace, &snapshot.Visibility,
@@ -59,6 +61,10 @@ func populatePostgresMemoPolicySpaceState(
 		if err != nil {
 			return err
 		}
+		snapshot.SourceMemberAdmin, err = postgresMemoSpaceMemberAdmin(ctx, tx, *snapshot.SpaceID, actorUserID)
+		if err != nil {
+			return err
+		}
 	}
 	if update != nil && update.SpaceID != nil {
 		if snapshot.SpaceID != nil && *snapshot.SpaceID == *update.SpaceID {
@@ -74,6 +80,19 @@ func populatePostgresMemoPolicySpaceState(
 		}
 	}
 	return nil
+}
+
+func postgresMemoSpaceMemberAdmin(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) (bool, error) {
+	var role store.SpaceMemberRole
+	err := tx.QueryRowContext(ctx, `SELECT role FROM space_member
+		WHERE space_id = $1 AND user_id = $2 AND status = 'ACTIVE' AND role IN ('ADMIN', 'USER')`, spaceID, actorUserID).Scan(&role)
+	if stderrors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return role == store.SpaceMemberRoleAdmin, nil
 }
 
 func readPostgresMemoSpaceState(ctx context.Context, tx *sql.Tx, spaceID, actorUserID int32) (bool, bool, store.SpaceAccessMode, error) {

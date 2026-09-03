@@ -1,5 +1,5 @@
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
-import type { Location, MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
+import type { Location, MemoRelation, Poll } from "@/types/proto/api/v1/memo_service_pb";
 import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { LocalFile } from "../types/attachment";
 
@@ -18,6 +18,9 @@ export interface EditorState {
     hidden: boolean;
     anonymous: boolean;
     adminScript: string;
+    poll?: Poll;
+    pollImageLocalFileURL?: string;
+    pollOptionImageLocalFileURLs?: Record<string, string>;
     draft: boolean;
     publishTime?: Date;
   };
@@ -68,6 +71,9 @@ const defaultState: EditorState = {
     hidden: false,
     anonymous: false,
     adminScript: "",
+    poll: undefined,
+    pollImageLocalFileURL: undefined,
+    pollOptionImageLocalFileURLs: undefined,
     draft: false,
     publishTime: undefined,
   },

@@ -6,11 +6,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DeleteMemoWithPolicy identifies one author-owned memo to delete atomically.
+// DeleteMemoWithPolicy identifies one memo to delete atomically.
 // Relations do not confer lifecycle authority, so no related memo is deleted.
 type DeleteMemoWithPolicy struct {
 	MemoID      int32
 	ActorUserID int32
+	// AdminOverride permits an instance administrator or an active ADMIN of
+	// the memo's Space to delete a memo owned by another user. Drivers
+	// revalidate the role in the deletion transaction.
+	AdminOverride bool
 }
 
 // DeleteMemoWithPolicyResult contains authorization state captured by the

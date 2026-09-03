@@ -17,7 +17,8 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	defer func() { _ = tx.Rollback() }()
 
 	var actorStatus store.RowStatus
-	if err := tx.QueryRowContext(ctx, `SELECT row_status FROM "user" WHERE id = $1`, delete.ActorUserID).Scan(&actorStatus); errors.Is(err, sql.ErrNoRows) {
+	var actorRole store.Role
+	if err := tx.QueryRowContext(ctx, `SELECT row_status, role FROM "user" WHERE id = $1`, delete.ActorUserID).Scan(&actorStatus, &actorRole); errors.Is(err, sql.ErrNoRows) {
 		return nil, store.ErrMemoPermissionDenied
 	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to read memo deletion actor")
@@ -36,15 +37,27 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	} else if err != nil {
 		return nil, errors.Wrap(err, "failed to read memo")
 	}
-	if creatorID != delete.ActorUserID {
-		return nil, store.ErrMemoPermissionDenied
-	}
 	memoSpaceID := store.NullInt32Pointer(memoSpace)
 	spaceExists, actorMember := false, false
 	if memoSpaceID != nil {
 		spaceExists, actorMember, _, err = readPostgresMemoSpaceState(ctx, tx, *memoSpaceID, delete.ActorUserID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read memo space state")
+		}
+	}
+	if creatorID != delete.ActorUserID {
+		allowed := delete.AdminOverride && actorRole == store.RoleAdmin
+		if !allowed && delete.AdminOverride && memoSpaceID != nil && spaceExists {
+			var role store.SpaceMemberRole
+			err = tx.QueryRowContext(ctx, `SELECT role FROM space_member
+				WHERE space_id = $1 AND user_id = $2 AND status = 'ACTIVE' AND role IN ('ADMIN', 'USER')`, *memoSpaceID, delete.ActorUserID).Scan(&role)
+			allowed = err == nil && role == store.SpaceMemberRoleAdmin
+			if err != nil && !errors.Is(err, sql.ErrNoRows) {
+				return nil, errors.Wrap(err, "failed to read memo space administrator")
+			}
+		}
+		if !allowed {
+			return nil, store.ErrMemoPermissionDenied
 		}
 	}
 	actorCanRead := store.MemoDeleteActorCanRead(rowStatus, visibility, memoSpaceID, spaceExists, actorMember)
