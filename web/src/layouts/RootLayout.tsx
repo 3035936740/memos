@@ -10,11 +10,14 @@ import AppSidebar, {
   useSidebarWidth,
 } from "@/components/AppSidebar";
 import SpaceDocumentBrand from "@/components/SpaceDocumentBrand";
+import StyleEasterEggs from "@/components/StyledBlog/StyleEasterEggs";
+import StyleReactionEngine from "@/components/StyledBlog/StyleReactionEngine";
 import TopToolbar from "@/components/TopToolbar";
 import { AppSidebarProvider } from "@/contexts/AppSidebarContext";
 import { GlobalMemoEditorProvider } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { MemoFilterProvider, useMemoFilterContext } from "@/contexts/MemoFilterContext";
+import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { SpaceProvider } from "@/contexts/SpaceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
@@ -86,7 +89,7 @@ const RootLayoutContent = () => {
       style={{ [SIDEBAR_WIDTH_VAR]: `${sidebarWidth}px` } as CSSProperties}
     >
       {md && (
-        <div className="fixed inset-y-0 start-0 z-30 w-(--app-sidebar-width) border-e border-border/70">
+        <div data-app-sidebar-frame="" className="fixed inset-y-0 start-0 z-30 w-(--app-sidebar-width) border-e border-border/70">
           <AppSidebar />
           <SidebarResizeHandle
             width={sidebarWidth}
@@ -104,6 +107,8 @@ const RootLayoutContent = () => {
         <Outlet />
       </main>
       <QuickFindDialog />
+      <StyleEasterEggs />
+      <StyleReactionEngine />
     </div>
   );
 };
@@ -114,7 +119,9 @@ const RootLayout = () => (
     <MemoFilterProvider>
       <AppSidebarProvider>
         <GlobalMemoEditorProvider>
-          <RootLayoutContent />
+          <MusicPlayerProvider>
+            <RootLayoutContent />
+          </MusicPlayerProvider>
         </GlobalMemoEditorProvider>
       </AppSidebarProvider>
     </MemoFilterProvider>

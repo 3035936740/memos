@@ -1031,8 +1031,14 @@ type InstanceSetting_GeneralSetting struct {
 	DefaultMemberMemoVisibility string `protobuf:"bytes,17,opt,name=default_member_memo_visibility,json=defaultMemberMemoVisibility,proto3" json:"default_member_memo_visibility,omitempty"`
 	// default_member_save_media_metadata is assigned to newly created accounts.
 	DefaultMemberSaveMediaMetadata bool `protobuf:"varint,18,opt,name=default_member_save_media_metadata,json=defaultMemberSaveMediaMetadata,proto3" json:"default_member_save_media_metadata,omitempty"`
-	unknownFields                  protoimpl.UnknownFields
-	sizeCache                      protoimpl.SizeCache
+	// first_visit_default_style is the Blog 2 visual style used before a browser saves a preference.
+	FirstVisitDefaultStyle string `protobuf:"bytes,19,opt,name=first_visit_default_style,json=firstVisitDefaultStyle,proto3" json:"first_visit_default_style,omitempty"`
+	// preferences_reset_at is advanced by an administrator to make browsers reapply instance defaults once.
+	PreferencesResetAt int64 `protobuf:"varint,20,opt,name=preferences_reset_at,json=preferencesResetAt,proto3" json:"preferences_reset_at,omitempty"`
+	// music_config_json stores the administrator-managed public site playlist.
+	MusicConfigJson string `protobuf:"bytes,21,opt,name=music_config_json,json=musicConfigJson,proto3" json:"music_config_json,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1182,6 +1188,27 @@ func (x *InstanceSetting_GeneralSetting) GetDefaultMemberSaveMediaMetadata() boo
 		return x.DefaultMemberSaveMediaMetadata
 	}
 	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetFirstVisitDefaultStyle() string {
+	if x != nil {
+		return x.FirstVisitDefaultStyle
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetPreferencesResetAt() int64 {
+	if x != nil {
+		return x.PreferencesResetAt
+	}
+	return 0
+}
+
+func (x *InstanceSetting_GeneralSetting) GetMusicConfigJson() string {
+	if x != nil {
+		return x.MusicConfigJson
+	}
+	return ""
 }
 
 // Storage is a configured attachment storage instance.
@@ -2302,7 +2329,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\vaccess_mode\x18\n" +
 	" \x01(\x0e2 .memos.api.v1.InstanceAccessModeR\n" +
 	"accessMode\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\x88'\n" +
+	"\x19GetInstanceProfileRequest\"\xa1(\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2312,7 +2339,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
 	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x12T\n" +
-	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xc1\b\n" +
+	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xda\t\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -2331,7 +2358,10 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x19first_visit_default_theme\x18\x0f \x01(\tR\x16firstVisitDefaultTheme\x12?\n" +
 	"\x1cdefault_background_image_url\x18\x10 \x01(\tR\x19defaultBackgroundImageUrl\x12C\n" +
 	"\x1edefault_member_memo_visibility\x18\x11 \x01(\tR\x1bdefaultMemberMemoVisibility\x12J\n" +
-	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\x1ab\n" +
+	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\x129\n" +
+	"\x19first_visit_default_style\x18\x13 \x01(\tR\x16firstVisitDefaultStyle\x120\n" +
+	"\x14preferences_reset_at\x18\x14 \x01(\x03R\x12preferencesResetAt\x12*\n" +
+	"\x11music_config_json\x18\x15 \x01(\tR\x0fmusicConfigJson\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

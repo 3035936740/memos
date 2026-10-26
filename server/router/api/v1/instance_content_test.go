@@ -34,6 +34,9 @@ func TestInstanceContentSettingsRoundTrip(t *testing.T) {
 		MemoPageSize:                   12,
 		FirstVisitDefaultLocale:        "zh-Hans",
 		FirstVisitDefaultTheme:         "cosmic-dark",
+		FirstVisitDefaultStyle:         "magazine",
+		PreferencesResetAt:             1_798_000_000_000,
+		MusicConfigJson:                `{"enabled":true,"defaultVolume":0.2,"mode":"random","tracks":[{"id":"track-1","title":"Song","url":"/file/attachments/audio-1"}]}`,
 		DefaultBackgroundImageUrl:      "https://example.com/background.webp",
 		DefaultMemberMemoVisibility:    "PUBLIC",
 		DefaultMemberSaveMediaMetadata: true,
@@ -46,6 +49,9 @@ func TestInstanceContentSettingsRoundTrip(t *testing.T) {
 	require.Equal(t, original.MemoPageSize, stored.MemoPageSize)
 	require.Equal(t, original.FirstVisitDefaultLocale, stored.FirstVisitDefaultLocale)
 	require.Equal(t, original.FirstVisitDefaultTheme, stored.FirstVisitDefaultTheme)
+	require.Equal(t, original.FirstVisitDefaultStyle, stored.FirstVisitDefaultStyle)
+	require.Equal(t, original.PreferencesResetAt, stored.PreferencesResetAt)
+	require.Equal(t, original.MusicConfigJson, stored.MusicConfigJson)
 	require.Equal(t, original.DefaultBackgroundImageUrl, stored.DefaultBackgroundImageUrl)
 	require.Equal(t, original.DefaultMemberMemoVisibility, stored.DefaultMemberMemoVisibility)
 	require.Equal(t, original.DefaultMemberSaveMediaMetadata, stored.DefaultMemberSaveMediaMetadata)
@@ -57,6 +63,9 @@ func TestInstanceContentSettingsRoundTrip(t *testing.T) {
 	require.Equal(t, original.MemoPageSize, roundTripped.MemoPageSize)
 	require.Equal(t, original.FirstVisitDefaultLocale, roundTripped.FirstVisitDefaultLocale)
 	require.Equal(t, original.FirstVisitDefaultTheme, roundTripped.FirstVisitDefaultTheme)
+	require.Equal(t, original.FirstVisitDefaultStyle, roundTripped.FirstVisitDefaultStyle)
+	require.Equal(t, original.PreferencesResetAt, roundTripped.PreferencesResetAt)
+	require.Equal(t, original.MusicConfigJson, roundTripped.MusicConfigJson)
 	require.Equal(t, original.DefaultBackgroundImageUrl, roundTripped.DefaultBackgroundImageUrl)
 	require.Equal(t, original.DefaultMemberMemoVisibility, roundTripped.DefaultMemberMemoVisibility)
 	require.Equal(t, original.DefaultMemberSaveMediaMetadata, roundTripped.DefaultMemberSaveMediaMetadata)

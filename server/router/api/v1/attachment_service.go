@@ -572,6 +572,15 @@ func attachmentsIncludeMemo(attachments []*store.Attachment) bool {
 func (s *APIV1Service) checkAttachmentAccess(ctx context.Context, attachment *store.Attachment) error {
 	// For unlinked attachments, only the creator can access.
 	if attachment.MemoID == nil {
+		if strings.HasPrefix(attachment.Type, "audio/") {
+			publicMusic, err := s.Store.IsAttachmentInPublicMusicConfig(ctx, attachment.UID)
+			if err != nil {
+				return status.Errorf(codes.Internal, "failed to check site music attachment: %v", err)
+			}
+			if publicMusic {
+				return nil
+			}
+		}
 		user, err := s.fetchCurrentUser(ctx)
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to get current user")

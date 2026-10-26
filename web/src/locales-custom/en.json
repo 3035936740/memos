@@ -25,6 +25,47 @@
     "editorial": "Editorial",
     "editorial-dark": "Editorial Dark"
   },
+  "theme-group": {
+    "basic": "Basic",
+    "light": "Light",
+    "dark": "Dark",
+    "retro": "Retro & editorial",
+    "other": "Other"
+  },
+  "blog-extra": {
+    "reading-time": "{{n}} min read",
+    "music": "Music",
+    "music-play": "Play",
+    "music-pause": "Pause",
+    "music-previous": "Previous",
+    "music-next": "Next",
+    "music-progress": "Playback position",
+    "calendar-month": "Month",
+    "calendar-year": "Year",
+    "previous-year": "Previous year",
+    "next-year": "Next year",
+    "year-total": "{{n}} this year",
+    "konami": "1UP! Pixel retro unlocked",
+    "must-read": "Must read!",
+    "music-mute": "Mute",
+    "music-volume": "Volume",
+    "music-unmute": "Unmute",
+    "music-off": "Turn music off",
+    "preferences-reset": "The admin reset everyone's preferences; your display settings are back to the site defaults."
+  },
+  "blog-style": {
+    "title": "Style",
+    "default": "Default",
+    "handdrawn": "Hand-drawn",
+    "aero": "Frutiger Aero",
+    "y2k": "Y2K Web",
+    "glass": "Glass",
+    "terminal": "Developer",
+    "pixel": "Pixel retro",
+    "neumorphism": "Neumorphism",
+    "vaporwave": "Vaporwave",
+    "golden": "Golden Legend"
+  },
   "common": {
     "loading": "Loading…",
     "saving": "Saving…",
@@ -236,7 +277,212 @@
       "ban-description": "Set a temporary ban, or leave the number of days empty for a permanent ban.",
       "unban": "Unban",
       "ban-days-placeholder": "Ban days (empty means permanent)",
-      "ban": "Ban"
+      "ban": "Ban",
+      "initialize-all-preferences-description": "Overwrite every member's language, theme, memo visibility and media metadata preferences with the current site defaults? Each browser will also return its style, layout and music settings to the site defaults the next time it opens the site (codex progress is kept)."
+    },
+    "instance": {
+      "first-visit-default-theme": "First-visit default color theme"
     }
+  },
+  "music-admin": {
+    "title-group": "Music",
+    "description": "Background music for the whole site, played from the top bar. Visitors can skip, change the order, mute or turn it off there.",
+    "enabled": "Enable music",
+    "enabled-description": "When off, the top bar shows no player.",
+    "no-playable": "Music is on, but no track has a link yet, so the top bar shows no player. Changes apply after you save.",
+    "autoplay": "Play on arrival",
+    "autoplay-description": "Browsers usually allow only muted autoplay; with sound it starts on the visitor's first click or key press.",
+    "default-muted": "Start muted",
+    "default-muted-description": "Visitors who have not changed it themselves start muted.",
+    "default-volume": "Default playback volume",
+    "default-volume-description": "Used until a visitor chooses their own volume. Saving applies it across the site; 0% is silent.",
+    "mode": "Play order",
+    "mode-description": "Visitors can pick their own in the top bar; every order loops.",
+    "mode-random": "Shuffle, looping",
+    "mode-sequential": "In order, looping",
+    "mode-reverse": "Reverse order, looping",
+    "tracks-description": "Add music links, or import the audio of public memos tagged #音乐, #music or #bgm.",
+    "import": "Import from memos",
+    "upload": "Upload audio",
+    "uploaded": "Uploaded {{n}}",
+    "upload-failed": "Audio upload failed",
+    "add": "Add music",
+    "empty": "No music yet.",
+    "new-track": "New track",
+    "untitled": "Untitled",
+    "title": "Title",
+    "artist": "Artist",
+    "url": "Music link",
+    "url-description": "Use an external link, audio from a public memo, or upload a local file above. Saved local tracks become playable by visitors while the site playlist is enabled.",
+    "imported": "Imported {{n}}",
+    "import-failed": "Import failed",
+    "first-visit-style": "First-visit default Blog 2 style",
+    "first-visit-style-description": "Applies only when this browser has not picked a style yet (Blog 2).",
+    "preview": "Preview",
+    "preview-failed": "This link would not play. Check the address and who can access it."
+  },
+  "fusion": {
+    "codex": "Reaction codex",
+    "codex-progress": "Found {{found}} / {{total}}",
+    "tab-legend": "Legendary",
+    "tab-element": "Elements",
+    "tab-achievement": "Achievements",
+    "tab-record": "Record",
+    "new-reaction": "New reaction",
+    "new-legend": "Legendary reaction!",
+    "midnight": "It's late. Still up?",
+    "boss": "Pixel boss",
+    "boss-defeated": "Boss down! +1 coin",
+    "achievement-unlocked": "Achievement unlocked",
+    "unlocked": "Unlocked",
+    "locked": "Locked",
+    "secret-achievement": "Secret achievement",
+    "record-reads": "Posts read through",
+    "record-streak": "Visit streak (days)",
+    "record-bosses": "Bosses beaten",
+    "record-shinies": "Shinies met",
+    "record-glitches": "Glitches witnessed",
+    "transform-traveler": "Transformation: Traveller",
+    "transform-regular": "Transformation: Regular",
+    "transform-mastery": "Mastery ({{n}} posts in one style)",
+    "element": {
+      "flower": "Flower",
+      "sea": "Sea",
+      "rain": "Rain",
+      "night": "Night",
+      "space": "Space",
+      "aurora": "Aurora",
+      "warm": "Sun",
+      "nature": "Nature",
+      "retro": "Retro",
+      "ink": "Ink",
+      "candy": "Candy",
+      "paper": "Paper"
+    },
+    "element-flavor": {
+      "flower": "Petals drift down.",
+      "sea": "Bubbles rise from below.",
+      "rain": "It's raining.",
+      "night": "The stars are out.",
+      "space": "A comet streaks past.",
+      "aurora": "The sky starts to glow.",
+      "warm": "Embers drift up.",
+      "nature": "Leaves on the wind.",
+      "retro": "The grain of old times.",
+      "ink": "Ink drops on paper.",
+      "candy": "Sprinkles!",
+      "paper": "The feel of paper."
+    },
+    "legend": {
+      "matrix": {
+        "name": "The Matrix",
+        "flavor": "Follow the white rabbit.",
+        "hint": "Let the terminal stand in the rain"
+      },
+      "crt": {
+        "name": "CRT",
+        "flavor": "Hitting it won't make it sharper.",
+        "hint": "Take the developer back to where it was born"
+      },
+      "outrun": {
+        "name": "Outrun Sunset",
+        "flavor": "Floor it all the way to 1986.",
+        "hint": "Vaporwave is at its best at dusk"
+      },
+      "invaders": {
+        "name": "Space Invaders",
+        "flavor": "Click them!",
+        "hint": "Pixels lost in space"
+      },
+      "yozakura": {
+        "name": "Night Sakura",
+        "flavor": "Lanterns on, petals still falling.",
+        "hint": "Cherry blossoms at night, in pixels"
+      },
+      "sumi": {
+        "name": "Ink Wash",
+        "flavor": "One stroke, and the ink spreads.",
+        "hint": "Hand-drawn meets ink night"
+      },
+      "scrapbook": {
+        "name": "Scrapbook",
+        "flavor": "Cut it out, stick it in, that's today.",
+        "hint": "Hand-drawn opens the old newspaper"
+      },
+      "aquarium": {
+        "name": "Aquarium",
+        "flavor": "Fish swim past your posts.",
+        "hint": "Bubbles love the ocean breeze"
+      },
+      "borealis": {
+        "name": "Northern Lights",
+        "flavor": "Look up, the sky is glowing.",
+        "hint": "Glossy bubbles want to see the aurora"
+      },
+      "cyber": {
+        "name": "Millennium Cyber",
+        "flavor": "The future, as seen from 2000.",
+        "hint": "Send the millennium into space"
+      }
+    },
+    "achievement": {
+      "first-reaction": {
+        "name": "First Reaction",
+        "desc": "Make any style react with a theme"
+      },
+      "first-legend": {
+        "name": "A Legend Begins",
+        "desc": "Find your first legendary reaction"
+      },
+      "five-legends": {
+        "name": "Half the Codex",
+        "desc": "Find 5 legendary reactions"
+      },
+      "all-flowers": {
+        "name": "In Full Bloom",
+        "desc": "Make every style react with Flower"
+      },
+      "night-reader": {
+        "name": "Night Reader",
+        "desc": "Read a post through between midnight and 5 am"
+      },
+      "boss-slayer": {
+        "name": "Boss Slayer",
+        "desc": "Beat 10 pixel bosses"
+      },
+      "shiny": {
+        "name": "Shiny!",
+        "desc": "Open a shiny card"
+      },
+      "glitch": {
+        "name": "Glitch",
+        "desc": "Witness the page glitch"
+      },
+      "konami": {
+        "name": "Cheat Code",
+        "desc": "Enter the legendary sequence"
+      },
+      "traveler": {
+        "name": "Traveller",
+        "desc": "Read 3 posts tagged #travel"
+      },
+      "regular": {
+        "name": "Regular",
+        "desc": "Visit 7 days in a row"
+      },
+      "mastery": {
+        "name": "Mastery",
+        "desc": "Read 10 posts in one style"
+      },
+      "golden": {
+        "name": "Golden Legend",
+        "desc": "Find all 10 legendary reactions to unlock the secret Golden Legend style"
+      }
+    },
+    "current": "Reacting now: {{combo}} → {{reaction}}",
+    "current-none": "Nothing is reacting. Pick a reactive style (Aero, Y2K, Vaporwave, Pixel, Hand-drawn, Developer) and a theme other than the stock ones.",
+    "golden-unlocked": "A secret style is unlocked. Find it in the style menu.",
+    "try-themes": "Try the theme",
+    "element-hint": "Hover a “?” to see which themes to pair it with."
   }
 }

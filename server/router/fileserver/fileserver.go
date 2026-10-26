@@ -601,6 +601,15 @@ func (s *FileServerService) getMotionPath(attachment *store.Attachment) (string,
 func (s *FileServerService) checkAttachmentPermission(ctx context.Context, c *echo.Context, attachment *store.Attachment) (access.MemoReadClass, error) {
 	// For unlinked attachments, only the creator can access.
 	if attachment.MemoID == nil {
+		if strings.HasPrefix(attachment.Type, "audio/") {
+			publicMusic, err := s.Store.IsAttachmentInPublicMusicConfig(ctx, attachment.UID)
+			if err != nil {
+				return access.MemoReadClassPrivate, echo.NewHTTPError(http.StatusInternalServerError, "failed to check site music attachment").Wrap(err)
+			}
+			if publicMusic {
+				return access.MemoReadClassPublic, nil
+			}
+		}
 		user, err := s.getCurrentUser(ctx, c)
 		if err != nil {
 			return access.MemoReadClassPrivate, echo.NewHTTPError(http.StatusInternalServerError, "failed to get current user").Wrap(err)

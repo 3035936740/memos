@@ -90,6 +90,12 @@ message InstanceGeneralSetting {
   string default_member_memo_visibility = 17;
   // default_member_save_media_metadata is assigned to newly created accounts.
   bool default_member_save_media_metadata = 18;
+  // first_visit_default_style is the Blog 2 visual style used before a browser saves a preference.
+  string first_visit_default_style = 19;
+  // preferences_reset_at is advanced by an administrator to make browsers reapply instance defaults once.
+  int64 preferences_reset_at = 20;
+  // music_config_json stores the administrator-managed public site playlist.
+  string music_config_json = 21;
 }
 
 message InstanceCustomProfile {

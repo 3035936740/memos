@@ -49,7 +49,7 @@ const ReadLater = () => {
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <section className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
+    <section data-page-panel="" className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
       <header className="mb-5 flex items-center gap-2">
         <BookmarkIcon className="size-5" />
         <h1 className="text-xl font-semibold">{t("memo.read-later.title")}</h1>

@@ -17,7 +17,7 @@ const CustomMarkdownPage = () => {
 
   return (
     <section className="min-h-full w-full">
-      <div className="mx-auto w-full max-w-2xl py-6 sm:py-8">
+      <div data-page-panel="" className="mx-auto w-full max-w-2xl py-6 sm:py-8">
         <h1 className="mb-5 text-3xl font-bold tracking-tight text-foreground">{page.title}</h1>
         <MemoMarkdownRenderer content={page.markdown} resolvedMentionUsernames={new Set()} standalone />
       </div>

@@ -22,10 +22,19 @@ import {
   Waves,
   Wind,
 } from "lucide-react";
-import type { ReactElement } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Fragment, type ReactElement } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useTranslate } from "@/utils/i18n";
+import { type Translations, useTranslate } from "@/utils/i18n";
 import { loadTheme, THEME_OPTIONS } from "@/utils/theme";
 
 interface ThemeSelectProps {
@@ -63,11 +72,42 @@ const THEME_ICONS: Record<string, ReactElement> = {
   "editorial-dark": <BookOpen className="w-4 h-4" />,
 };
 
+// The menu groups themes by mood; a theme missing from every group still shows, under "other".
+const THEME_GROUPS: Array<{ labelKey: Translations; values: string[] }> = [
+  { labelKey: "theme-group.basic", values: ["system", "default", "default-dark"] },
+  {
+    labelKey: "theme-group.light",
+    values: ["paper", "dawn", "ocean-breeze", "matcha", "lavender", "sakura-day", "desert-sand", "porcelain", "candy-pop"],
+  },
+  {
+    labelKey: "theme-group.dark",
+    values: [
+      "cosmic-dark",
+      "twilight-dark",
+      "aurora-dark",
+      "abyss-dark",
+      "neon-rain-dark",
+      "moonlit-forest-dark",
+      "ink-night-dark",
+      "sakura-night-dark",
+    ],
+  },
+  { labelKey: "theme-group.retro", values: ["retro-terminal-dark", "retro-newspaper", "editorial", "editorial-dark"] },
+];
+
 const ThemeSelect = ({ value, onValueChange, className, compact = false, iconOnly = false }: ThemeSelectProps = {}) => {
   const t = useTranslate();
   const currentTheme = value || "system";
   const themeOptions = THEME_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) }));
   const triggerLabel = themeOptions.find((option) => option.value === currentTheme)?.label ?? t("theme.system");
+  const grouped = new Set(THEME_GROUPS.flatMap((group) => group.values));
+  const themeGroups = [
+    ...THEME_GROUPS.map((group) => ({
+      labelKey: group.labelKey,
+      options: themeOptions.filter((option) => group.values.includes(option.value)),
+    })),
+    { labelKey: "theme-group.other" as Translations, options: themeOptions.filter((option) => !grouped.has(option.value)) },
+  ].filter((group) => group.options.length > 0);
 
   const handleThemeChange = (newTheme: string) => {
     // Apply theme globally immediately
@@ -100,13 +140,21 @@ const ThemeSelect = ({ value, onValueChange, className, compact = false, iconOnl
         )}
       </SelectTrigger>
       <SelectContent>
-        {themeOptions.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            <div className="flex items-center gap-2">
-              {THEME_ICONS[option.value]}
-              <span>{option.label}</span>
-            </div>
-          </SelectItem>
+        {themeGroups.map((group, index) => (
+          <Fragment key={group.labelKey}>
+            {index > 0 && <SelectSeparator />}
+            <SelectGroup>
+              <SelectLabel>{t(group.labelKey)}</SelectLabel>
+              {group.options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  <div className="flex items-center gap-2">
+                    {THEME_ICONS[option.value]}
+                    <span>{option.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </Fragment>
         ))}
       </SelectContent>
     </Select>

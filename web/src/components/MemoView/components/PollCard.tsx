@@ -75,6 +75,7 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
 
   return (
     <section
+      data-sb-subcard=""
       className={cn("w-full self-center rounded-lg border border-border bg-card", compact ? "p-3" : "max-w-xl p-4")}
       aria-label="Poll"
     >
@@ -107,7 +108,7 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
           const checked = selected.includes(option.id);
           const imageURL = option.image ? getAttachmentUrl(option.image) : undefined;
           return (
-            <div key={option.id} className="relative overflow-hidden rounded-md border border-border p-3 text-left">
+            <div key={option.id} data-sb-subitem="" className="relative overflow-hidden rounded-md border border-border p-3 text-left">
               {!activePoll.resultsHidden && (
                 <span className="absolute inset-y-0 left-0 bg-primary/10" style={{ width: `${percentage}%` }} />
               )}

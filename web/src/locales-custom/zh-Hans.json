@@ -25,6 +25,47 @@
     "editorial": "编辑部",
     "editorial-dark": "编辑部·夜"
   },
+  "theme-group": {
+    "basic": "基础",
+    "light": "浅色",
+    "dark": "深色",
+    "retro": "复古与排版",
+    "other": "其他"
+  },
+  "blog-extra": {
+    "reading-time": "约 {{n}} 分钟",
+    "music": "音乐",
+    "music-play": "播放",
+    "music-pause": "暂停",
+    "music-previous": "上一首",
+    "music-next": "下一首",
+    "music-progress": "播放进度",
+    "calendar-month": "月",
+    "calendar-year": "年",
+    "previous-year": "上一年",
+    "next-year": "下一年",
+    "year-total": "全年 {{n}} 篇",
+    "konami": "1UP！已解锁像素复古",
+    "must-read": "必看!",
+    "music-mute": "静音",
+    "music-volume": "音量",
+    "music-unmute": "取消静音",
+    "music-off": "关闭音乐",
+    "preferences-reset": "管理员已初始化偏好，显示设置已恢复为站点默认。"
+  },
+  "blog-style": {
+    "title": "风格",
+    "default": "默认",
+    "handdrawn": "手绘涂鸦",
+    "aero": "Frutiger Aero",
+    "y2k": "Y2K Web",
+    "glass": "玻璃拟态",
+    "terminal": "开发者",
+    "pixel": "像素复古",
+    "neumorphism": "新拟物",
+    "vaporwave": "蒸汽波",
+    "golden": "金色传说"
+  },
   "common": {
     "loading": "加载中…",
     "saving": "保存中…",
@@ -236,7 +277,212 @@
       "ban-description": "设置临时封禁，或将天数留空以进行永久封禁。",
       "unban": "解封",
       "ban-days-placeholder": "封禁天数（留空表示永久封禁）",
-      "ban": "封禁"
+      "ban": "封禁",
+      "initialize-all-preferences-description": "确定用当前站点默认值覆盖所有成员的语言、主题、备忘录可见性和媒体元数据偏好吗？每个浏览器下次打开时，也会把样式风格、版式和音乐设置恢复为站点默认（反应图鉴等游玩进度保留）。"
+    },
+    "instance": {
+      "first-visit-default-theme": "初次访问默认上色风格"
     }
+  },
+  "music-admin": {
+    "title-group": "音乐播放",
+    "description": "为全站配置背景音乐，播放器显示在顶栏。访客可以在顶栏切歌、换播放顺序、静音或关闭音乐。",
+    "enabled": "启用音乐播放",
+    "enabled-description": "关闭后顶栏不显示播放器。",
+    "no-playable": "已开启音乐，但还没有填写了链接的音乐，所以顶栏暂不显示播放器。改动在点击保存后生效。",
+    "autoplay": "进入网站自动播放",
+    "autoplay-description": "浏览器通常只允许静音自动播放；不静音时会在访客第一次点击或按键后开始。",
+    "default-muted": "默认静音",
+    "default-muted-description": "访客没有自己调整过时，以静音状态开始。",
+    "default-volume": "默认播放音量",
+    "default-volume-description": "访客没有自己调整过音量时使用。保存后全站生效；0% 为无声。",
+    "mode": "播放顺序",
+    "mode-description": "访客可以在顶栏改成自己的偏好；三种顺序都会循环。",
+    "mode-random": "随机循环",
+    "mode-sequential": "顺序循环",
+    "mode-reverse": "逆序循环",
+    "tracks-description": "填写音乐链接，或从带 #音乐 / #music / #bgm 标签的公开备忘录导入音频附件。",
+    "import": "从备忘录导入",
+    "upload": "上传音频",
+    "uploaded": "已上传 {{n}} 首",
+    "upload-failed": "音频上传失败",
+    "add": "添加音乐",
+    "empty": "还没有音乐。",
+    "new-track": "新音乐",
+    "untitled": "未命名",
+    "title": "标题",
+    "artist": "歌手",
+    "url": "音乐链接",
+    "url-description": "可以是外部链接、公开备忘录里的音频附件，或上方直接上传的本地音频。保存并启用后，播放列表里的本地音频可供访客播放。",
+    "imported": "导入了 {{n}} 首",
+    "import-failed": "导入失败",
+    "first-visit-style": "初次访问默认样式风格",
+    "first-visit-style-description": "仅在当前浏览器还没选过样式风格时应用（博客 2）。",
+    "preview": "试听",
+    "preview-failed": "无法播放这个链接，请检查地址或访问权限。"
+  },
+  "fusion": {
+    "codex": "反应图鉴",
+    "codex-progress": "已发现 {{found}} / {{total}}",
+    "tab-legend": "传说反应",
+    "tab-element": "属性反应",
+    "tab-achievement": "成就",
+    "tab-record": "记录",
+    "new-reaction": "发现新反应",
+    "new-legend": "传说反应！",
+    "midnight": "夜深了，还不睡？",
+    "boss": "像素 Boss",
+    "boss-defeated": "打爆了 Boss！+1 金币",
+    "achievement-unlocked": "成就解锁",
+    "unlocked": "已解锁",
+    "locked": "未解锁",
+    "secret-achievement": "隐藏成就",
+    "record-reads": "读完的文章",
+    "record-streak": "连续到访（天）",
+    "record-bosses": "击败 Boss",
+    "record-shinies": "遇见闪光",
+    "record-glitches": "见证故障",
+    "transform-traveler": "变身 · 旅行者",
+    "transform-regular": "变身 · 常客",
+    "transform-mastery": "专精（同一风格读完 {{n}} 篇）",
+    "element": {
+      "flower": "花",
+      "sea": "海",
+      "rain": "雨",
+      "night": "夜",
+      "space": "宇宙",
+      "aurora": "极光",
+      "warm": "暖阳",
+      "nature": "自然",
+      "retro": "复古",
+      "ink": "墨",
+      "candy": "糖果",
+      "paper": "纸"
+    },
+    "element-flavor": {
+      "flower": "花瓣随风落下。",
+      "sea": "水下冒出了气泡。",
+      "rain": "下雨了。",
+      "night": "星星出来了。",
+      "space": "一颗彗星划过。",
+      "aurora": "天边泛起极光。",
+      "warm": "余烬在升腾。",
+      "nature": "叶子在飘。",
+      "retro": "旧时光的颗粒感。",
+      "ink": "墨滴落在纸上。",
+      "candy": "撒糖啦！",
+      "paper": "纸张的纹理。"
+    },
+    "legend": {
+      "matrix": {
+        "name": "黑客帝国",
+        "flavor": "跟着白兔走。",
+        "hint": "试试让终端淋一场雨"
+      },
+      "crt": {
+        "name": "CRT 显像管",
+        "flavor": "别拍了，它真的不会更清楚。",
+        "hint": "让开发者回到它出生的年代"
+      },
+      "outrun": {
+        "name": "Outrun 落日",
+        "flavor": "油门踩到底，一路开进 1986。",
+        "hint": "蒸汽波在黄昏里最美"
+      },
+      "invaders": {
+        "name": "太空侵略者",
+        "flavor": "点它们！",
+        "hint": "像素在宇宙里迷了路"
+      },
+      "yozakura": {
+        "name": "夜樱",
+        "flavor": "灯笼亮起，樱花还在落。",
+        "hint": "夜晚的樱花，配上像素"
+      },
+      "sumi": {
+        "name": "水墨",
+        "flavor": "一笔落下，墨色晕开。",
+        "hint": "手绘遇见墨夜"
+      },
+      "scrapbook": {
+        "name": "剪报手账",
+        "flavor": "剪下来，贴上去，就是今天。",
+        "hint": "手绘翻开了旧报纸"
+      },
+      "aquarium": {
+        "name": "水族箱",
+        "flavor": "小鱼游过你的文章。",
+        "hint": "泡泡和海风是好朋友"
+      },
+      "borealis": {
+        "name": "北极光",
+        "flavor": "抬头，天在发光。",
+        "hint": "玻璃泡泡想看极光"
+      },
+      "cyber": {
+        "name": "千禧赛博",
+        "flavor": "2000 年的未来，镭射闪闪。",
+        "hint": "千禧年飞向宇宙"
+      }
+    },
+    "achievement": {
+      "first-reaction": {
+        "name": "第一次反应",
+        "desc": "让任意风格和主题起一次反应"
+      },
+      "first-legend": {
+        "name": "传说的开始",
+        "desc": "发现第一个传说反应"
+      },
+      "five-legends": {
+        "name": "半本图鉴",
+        "desc": "发现 5 个传说反应"
+      },
+      "all-flowers": {
+        "name": "百花齐放",
+        "desc": "让所有风格都和「花」起一次反应"
+      },
+      "night-reader": {
+        "name": "深夜读者",
+        "desc": "在凌晨 0 点到 5 点读完一篇文章"
+      },
+      "boss-slayer": {
+        "name": "Boss 杀手",
+        "desc": "打爆 10 个像素 Boss"
+      },
+      "shiny": {
+        "name": "闪光！",
+        "desc": "打开一张闪光卡片"
+      },
+      "glitch": {
+        "name": "故障",
+        "desc": "见证一次页面故障"
+      },
+      "konami": {
+        "name": "秘技",
+        "desc": "输入那串传说中的按键"
+      },
+      "traveler": {
+        "name": "旅行者",
+        "desc": "读完 3 篇带 #旅行 标签的文章"
+      },
+      "regular": {
+        "name": "常客",
+        "desc": "连续 7 天来看博客"
+      },
+      "mastery": {
+        "name": "专精",
+        "desc": "用同一个风格读完 10 篇文章"
+      },
+      "golden": {
+        "name": "金色传说",
+        "desc": "发现全部 10 个传说反应，解锁隐藏风格「金色传说」"
+      }
+    },
+    "current": "当前反应：{{combo}} → {{reaction}}",
+    "current-none": "现在没有反应。选一个会反应的风格（Aero、Y2K、蒸汽波、像素、手绘、开发者），再换一个默认以外的主题试试。",
+    "golden-unlocked": "隐藏风格已解锁，去风格菜单里看看。",
+    "try-themes": "试试主题",
+    "element-hint": "把鼠标移到「?」上，可以看到该和哪些主题搭配。"
   }
 }

@@ -44,6 +44,18 @@ vi.mock("@/components/TopToolbar", () => ({
   default: () => null,
 }));
 
+vi.mock("@/components/StyledBlog/StyleEasterEggs", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/components/StyledBlog/StyleReactionEngine", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/contexts/MusicPlayerContext", () => ({
+  MusicPlayerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock("@/utils/i18n", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/utils/i18n")>()),
   useTranslate: () => (key: string) => key,

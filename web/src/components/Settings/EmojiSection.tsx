@@ -46,7 +46,7 @@ const EmojiGroupEditor = ({ group }: { group: EmojiGroup }) => {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-background">
+    <div data-settings-surface="" className="overflow-hidden rounded-lg border border-border bg-background">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h3 className="truncate font-medium">{group.name}</h3>

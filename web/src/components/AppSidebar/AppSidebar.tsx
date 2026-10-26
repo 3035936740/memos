@@ -25,17 +25,20 @@ import {
   PlusIcon,
   SearchIcon,
   SquarePenIcon,
+  TagsIcon,
   Trash2Icon,
   UserRoundIcon,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Link, matchPath, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { MemoDetailSidebar } from "@/components/MemoDetailSidebar";
 import MemoDisplaySettingMenu from "@/components/MemoDisplaySettingMenu";
 import { DEFAULT_SETTING_SECTION, SETTINGS_SECTIONS } from "@/components/Settings/settingSections";
 import StatisticsView from "@/components/StatisticsView";
+import ToolbarCalendar from "@/components/ToolbarCalendar";
+import ToolbarMusicPlayer from "@/components/ToolbarMusicPlayer";
 import { ToolbarClock, ToolbarPreferences } from "@/components/TopToolbar";
 import UserMenu from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
@@ -44,16 +47,15 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { memoViewServiceClient } from "@/connect";
 import { type AttachmentSection, type InboxFilter, useAppSidebar } from "@/contexts/AppSidebarContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { useGlobalMemoEditor } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { stringifyFilters, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { useSpaceContext } from "@/contexts/SpaceContext";
+import { useView } from "@/contexts/ViewContext";
 import { useAttachmentLibraryStats } from "@/hooks/useAttachmentLibrary";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { type MemoStatsContext, useFilteredMemoStats } from "@/hooks/useFilteredMemoStats";
-import useMediaQuery from "@/hooks/useMediaQuery";
-import { useMemoViews, useNotifications, userKeys, useUser } from "@/hooks/useUserQueries";
+import type { MemoStatsContext } from "@/hooks/useFilteredMemoStats";
+import { useMemoViews, useNotifications, userKeys } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
 import { canAccessInstanceContent, parseInstanceCategories, parseInstanceNavigation } from "@/lib/instance-content";
 import {
@@ -71,6 +73,7 @@ import type { MemoView } from "@/types/proto/api/v1/memo_view_service_pb";
 import { User_Role, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import MemosLogo from "../MemosLogo";
+import { BLOG_NAV_ROW_CLASSES, BlogCategoryNav, BlogNavGroup } from "./BlogNav";
 import { getSidebarRouteKind, routeSupportsCollectionScope } from "./routes";
 import SidebarRow, { SIDEBAR_ROW_CLASSES, SIDEBAR_ROW_FOCUS_CLASSES, SIDEBAR_ROW_ICON_CLASSES, sidebarRowStateClasses } from "./SidebarRow";
 import SidebarSection, {
@@ -79,7 +82,9 @@ import SidebarSection, {
   SIDEBAR_SECTION_STACK_CLASSES,
 } from "./SidebarSection";
 import SpaceSwitcher from "./SpaceSwitcher";
+import TagCloud from "./TagCloud";
 import TagsSection from "./TagsSection";
+import useCollectionSidebarData from "./useCollectionSidebarData";
 
 const SIDEBAR_HORIZONTAL_PADDING = "px-3";
 const LAST_CATEGORY_STORAGE_KEY = "memos-last-instance-category";
@@ -257,49 +262,58 @@ const ProfileMode = () => {
 
 const CollectionSidebarContent = ({ context }: { context: MemoStatsContext }) => {
   const t = useTranslate();
-  const location = useLocation();
   const currentUser = useCurrentUser();
-  const { memoFilter, selectedSpaceName } = useSpaceContext();
-  const md = useMediaQuery("md");
-  const { mobileOpen, setMobileOpen } = useAppSidebar();
-  const { isInitialized: authInitialized } = useAuth();
-  const { isInitialized: instanceInitialized } = useInstance();
-  const profileMatch = matchPath("/u/:username", location.pathname);
-  const { data: profileUser } = useUser(profileMatch?.params.username ? `users/${profileMatch.params.username}` : "", {
-    enabled: context === "profile" && !!profileMatch?.params.username,
-  });
-  const statsUserName = context === "home" ? currentUser?.name : context === "profile" ? profileUser?.name : undefined;
-  // User-level collections stay aligned with their unscoped feeds even when a Space is remembered.
-  const isUserLevelCollection = context === "profile" || context === "archived";
-  const statsFilter = isUserLevelCollection ? undefined : memoFilter;
-  const { statistics, tags } = useFilteredMemoStats({
-    context,
-    userName: statsUserName,
-    filter: statsFilter,
-    enabled: authInitialized && instanceInitialized && (md || mobileOpen),
-  });
+  const { setMobileOpen } = useAppSidebar();
+  const { statistics, tags, filterTarget, tagStateScope } = useCollectionSidebarData(context);
+  const { feedLayout } = useView();
+  // Blog 2 keeps the calendar behind a toolbar button and the tags in a cloud under its widgets.
+  const showCalendarAndTags = feedLayout !== "blog2";
 
   const showViews = currentUser
     ? context === "home" || context === "archived" || context === "explore"
     : context === "explore" || context === "profile";
 
-  // Off the collection routes (the library shown as fallback content), calendar and tag
-  // clicks must land somewhere that renders the filtered feed.
-  const onCollectionRoute = isMemoScopeRoute(location.pathname) || !!profileMatch;
-  const filterTarget = onCollectionRoute ? undefined : context === "explore" ? ROUTES.EXPLORE : ROUTES.HOME;
-  const tagStateScope = isUserLevelCollection
-    ? (statsUserName ?? context)
-    : `${statsUserName ?? context}${selectedSpaceName ? `:${selectedSpaceName}` : ""}`;
-
   return (
     <div className={SIDEBAR_SECTION_STACK_CLASSES}>
       {context === "profile" && <ProfileMode />}
-      <SidebarSection ariaLabel={t("common.statistics")}>
-        <StatisticsView statisticsData={statistics} navigationTarget={filterTarget} onDateSelect={() => setMobileOpen(false)} />
-      </SidebarSection>
+      {showCalendarAndTags && (
+        <SidebarSection ariaLabel={t("common.statistics")}>
+          <StatisticsView statisticsData={statistics} navigationTarget={filterTarget} onDateSelect={() => setMobileOpen(false)} />
+        </SidebarSection>
+      )}
       {showViews && <ViewsSection />}
-      <TagsSection tagCount={tags} navigationTarget={filterTarget} scope={tagStateScope} onSelect={() => setMobileOpen(false)} />
+      {showCalendarAndTags && (
+        <TagsSection tagCount={tags} navigationTarget={filterTarget} scope={tagStateScope} onSelect={() => setMobileOpen(false)} />
+      )}
     </div>
+  );
+};
+
+interface BlogWidgetClasses {
+  widgetClassName: string;
+  titleClassName: string;
+}
+
+/** The tag cloud as a Blog 2 widget card. Renders nothing off the collection routes. */
+export const BlogTagCloudWidget = (props: BlogWidgetClasses) => {
+  const location = useLocation();
+  const kind = getSidebarRouteKind(location.pathname);
+  if (kind !== "home" && kind !== "archived" && kind !== "explore" && kind !== "profile") return null;
+  return <BlogTagCloudCard context={kind} {...props} />;
+};
+
+const BlogTagCloudCard = ({ context, widgetClassName, titleClassName }: BlogWidgetClasses & { context: MemoStatsContext }) => {
+  const t = useTranslate();
+  const { tags, filterTarget } = useCollectionSidebarData(context);
+  if (Object.keys(tags).length === 0) return null;
+  return (
+    <section data-sb-widget="" className={widgetClassName}>
+      <h2 data-sb-widget-title="" className={titleClassName}>
+        <TagsIcon className="size-3.5" />
+        {t("common.tags")}
+      </h2>
+      <TagCloud tagCount={tags} navigationTarget={filterTarget} />
+    </section>
   );
 };
 
@@ -487,7 +501,7 @@ const NavPillLabel = ({ expanded, label, children }: { expanded: boolean; label:
   </span>
 );
 
-const GlobalNavigation = () => {
+const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
   const t = useTranslate();
   const location = useLocation();
   const navigate = useNavigate();
@@ -715,6 +729,67 @@ const GlobalNavigation = () => {
   const itemsBeforeCategory = currentUser ? [] : builtinItems.filter((item) => item.id === "explore");
   const itemsAfterCategory = currentUser ? builtinItems : builtinItems.filter((item) => item.id !== "explore");
 
+  if (vertical) {
+    // Blog 2 lists every destination as its own row, the way a blog theme's side menu does. Explore comes
+    // first: it is the blog's front page, while home is the signed-in user's own feed.
+    const rows: GlobalNavItem[] = [
+      ...(currentUser
+        ? [...scopeItems]
+            .reverse()
+            .map((item) => ({ ...item, path: getMemoScopePath(item.id), active: scopeRouteActive && item.id === primaryScope }))
+        : []),
+      ...builtinItems,
+    ];
+    const renderRow = (item: GlobalNavItem) => {
+      const Icon = item.icon;
+      const className = cn(SIDEBAR_ROW_CLASSES, sidebarRowStateClasses(item.active), BLOG_NAV_ROW_CLASSES);
+      const content = (
+        <>
+          {item.iconUrl ? (
+            <img src={item.iconUrl} alt="" className="size-4 shrink-0 object-contain" />
+          ) : (
+            <Icon className="size-4 shrink-0 opacity-80" strokeWidth={1.8} />
+          )}
+          <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
+        </>
+      );
+      if (/^https?:\/\//i.test(item.path)) {
+        return (
+          <a key={item.id} href={item.path} target="_blank" rel="noreferrer" className={className} onClick={() => setMobileOpen(false)}>
+            {content}
+          </a>
+        );
+      }
+      return (
+        <Link
+          key={item.id}
+          to={item.path}
+          aria-current={item.active ? "page" : undefined}
+          className={className}
+          onClick={() => setMobileOpen(false)}
+        >
+          {content}
+        </Link>
+      );
+    };
+
+    return (
+      <nav data-blog-nav="" aria-label="Primary" className={cn("flex flex-col gap-0.5 pt-1", SIDEBAR_HORIZONTAL_PADDING)}>
+        {rows.map(renderRow)}
+        {categories.length > 0 && (
+          <BlogNavGroup id="categories" label={t("setting.category.title")}>
+            <BlogCategoryNav categories={categories} activeSlug={activeCategory?.slug} />
+          </BlogNavGroup>
+        )}
+        {customItems.length > 0 && (
+          <BlogNavGroup id="custom" label={t("common.custom-navigation")}>
+            {customItems.map(renderRow)}
+          </BlogNavGroup>
+        )}
+      </nav>
+    );
+  }
+
   return (
     <TooltipProvider>
       <nav
@@ -852,6 +927,9 @@ const GlobalNavigation = () => {
   );
 };
 
+/** Blog 2 keeps its menu everywhere a reader browses; only the settings pages keep the pill row. */
+const isBlogPageRoute = (path: string) => getSidebarRouteKind(path) !== "settings";
+
 /** The sidebar/header brand slot: collection scope on collection routes, instance brand elsewhere. */
 const SidebarBrand = ({ className }: { className?: string }) => {
   const currentUser = useCurrentUser();
@@ -877,8 +955,12 @@ const AppSidebar = ({ className }: { className?: string }) => {
   const currentUser = useCurrentUser();
   const { setMobileOpen, setQuickFindOpen } = useAppSidebar();
   const { canOpen: canCompose, openEditor } = useGlobalMemoEditor();
+  const location = useLocation();
+  const { feedLayout } = useView();
+  // Blog 2 gets a vertical menu in place of the pill row, on phones too; other layouts keep the pills.
+  const blogNav = feedLayout === "blog2" && isBlogPageRoute(location.pathname);
   return (
-    <aside className={cn("flex h-full w-full select-none flex-col bg-sidebar text-sidebar-foreground", className)}>
+    <aside data-app-sidebar="" className={cn("flex h-full w-full select-none flex-col bg-sidebar text-sidebar-foreground", className)}>
       <div className={cn("flex h-13 shrink-0 items-center justify-between gap-2", SIDEBAR_HORIZONTAL_PADDING)}>
         <SidebarBrand className="w-full flex-1" />
         <div className="flex shrink-0 items-center gap-1">
@@ -897,7 +979,7 @@ const AppSidebar = ({ className }: { className?: string }) => {
           {canCompose && <NewMemoAction onClick={openEditor} />}
         </div>
       </div>
-      <GlobalNavigation />
+      <GlobalNavigation vertical={blogNav} />
       <div className="mx-3 mt-2 border-t border-border/70" />
       <div className={cn("min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-2 pb-3 [scrollbar-width:thin]", SIDEBAR_HORIZONTAL_PADDING)}>
         <RouteSidebarContent />
@@ -929,7 +1011,10 @@ const AppSidebar = ({ className }: { className?: string }) => {
 export const MobileAppHeader = () => {
   const { setMobileOpen } = useAppSidebar();
   return (
-    <header className="sticky top-0 z-20 flex h-12 w-full items-center justify-start gap-1 border-b border-border/70 bg-background/90 px-2 backdrop-blur-md md:hidden">
+    <header
+      data-app-toolbar=""
+      className="sticky top-0 z-20 flex h-12 w-full items-center justify-start gap-1 border-b border-border/70 bg-background/90 px-2 backdrop-blur-md md:hidden"
+    >
       <Button
         variant="ghost"
         size="icon-sm"
@@ -940,10 +1025,13 @@ export const MobileAppHeader = () => {
       >
         <MenuIcon className="size-[18px]" />
       </Button>
-      <SidebarBrand className="max-w-[12rem]" />
+      {/* The brand gives way first, and on the narrowest phones the clock steps aside for the buttons. */}
+      <SidebarBrand className="min-w-0 max-w-[12rem] shrink" />
       <div className="ml-auto flex shrink-0 items-center gap-0.5">
+        <ToolbarMusicPlayer />
+        <ToolbarCalendar />
         <ToolbarPreferences />
-        <ToolbarClock compact />
+        <ToolbarClock compact className="max-[420px]:hidden" />
       </div>
     </header>
   );

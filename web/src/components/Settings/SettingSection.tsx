@@ -11,7 +11,7 @@ interface SettingSectionProps {
 
 const SettingSection: React.FC<SettingSectionProps> = ({ title, description, children, className, actions }) => {
   return (
-    <div className={cn("mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 py-1 sm:py-2", className)}>
+    <div data-settings-section="" className={cn("mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-5 py-1 sm:py-2", className)}>
       {(title || description || actions) && (
         <div className="flex min-w-0 flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0 flex-1">

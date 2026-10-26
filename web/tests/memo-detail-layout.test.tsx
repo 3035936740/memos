@@ -17,6 +17,7 @@ const memo = create(MemoSchema, {
 
 vi.mock("@/components/BlogSidebar", () => ({
   default: ({ parentPage }: { parentPage: string }) => <div data-testid="blog-sidebar">{parentPage}</div>,
+  deriveBlogSidebarStats: () => ({ articleCount: 0, commentCount: 0, runningDays: 0, lastActiveAt: undefined }),
 }));
 
 vi.mock("@/components/MemoView", () => ({ default: () => <article>Memo content</article> }));
@@ -27,7 +28,7 @@ vi.mock("@/components/MemoContent/MentionResolutionContext", () => ({
 vi.mock("@/contexts/AppSidebarContext", () => ({ useAppSidebar: () => ({ setMemoDetail: vi.fn() }) }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ isInitialized: true }) }));
 vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ isInitialized: true }) }));
-vi.mock("@/contexts/ViewContext", () => ({ useView: () => ({ feedLayout: "blog-classic" }) }));
+vi.mock("@/contexts/ViewContext", () => ({ MAX_COLUMNS_VALUES: [0, 1, 2, 3], useView: () => ({ feedLayout: "blog-classic" }) }));
 vi.mock("@/hooks/useMemoDetailError", () => ({ default: () => undefined }));
 vi.mock("@/hooks/useMemoQueries", () => ({
   useMemo: (name: string) => ({ data: name === memo.name ? memo : undefined, error: null, isLoading: false }),
@@ -44,7 +45,10 @@ vi.mock("@/hooks/useMemoShareQueries", () => ({
   useSharedMemo: () => ({ data: undefined, error: null, isLoading: false }),
   withShareAttachmentLinks: (attachments: unknown[]) => attachments,
 }));
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
+  useTranslate: () => (key: string) => key,
+}));
 
 describe("MemoDetail layout", () => {
   it("shows the blog sidebar in desktop and mobile placements", () => {

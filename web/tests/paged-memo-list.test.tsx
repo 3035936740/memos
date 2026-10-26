@@ -44,6 +44,7 @@ vi.mock("@/contexts/AuthContext", () => ({
 }));
 
 vi.mock("@/contexts/ViewContext", () => ({
+  MAX_COLUMNS_VALUES: [0, 1, 2, 3],
   useView: () => view,
 }));
 
@@ -74,6 +75,7 @@ vi.mock("@/components/Blog2MemoView", () => ({
 
 vi.mock("@/components/BlogSidebar", () => ({
   default: () => <div data-testid="blog-sidebar" />,
+  deriveBlogSidebarStats: () => ({ articleCount: 0, commentCount: 0, runningDays: 0, lastActiveAt: undefined }),
 }));
 
 const memo = { name: "memos/1", content: "hello", updateTime: undefined } as unknown as Memo;
@@ -206,8 +208,8 @@ describe("<PagedMemoList>", () => {
     expect(pagination.compareDocumentPosition(mobileSidebar as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("renders Blog2 as one continuous single-column feed", () => {
-    view.feedLayout = "blog2";
+  it("renders Blog 1 as one continuous single-column feed of Blog 2 cards", () => {
+    view.feedLayout = "blog-classic";
     feed.memos = [memo, { ...memo, name: "memos/2" }];
 
     const { container } = renderList();

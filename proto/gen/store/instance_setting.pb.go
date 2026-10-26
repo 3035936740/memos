@@ -602,8 +602,14 @@ type InstanceGeneralSetting struct {
 	DefaultMemberMemoVisibility string `protobuf:"bytes,17,opt,name=default_member_memo_visibility,json=defaultMemberMemoVisibility,proto3" json:"default_member_memo_visibility,omitempty"`
 	// default_member_save_media_metadata is assigned to newly created accounts.
 	DefaultMemberSaveMediaMetadata bool `protobuf:"varint,18,opt,name=default_member_save_media_metadata,json=defaultMemberSaveMediaMetadata,proto3" json:"default_member_save_media_metadata,omitempty"`
-	unknownFields                  protoimpl.UnknownFields
-	sizeCache                      protoimpl.SizeCache
+	// first_visit_default_style is the Blog 2 visual style used before a browser saves a preference.
+	FirstVisitDefaultStyle string `protobuf:"bytes,19,opt,name=first_visit_default_style,json=firstVisitDefaultStyle,proto3" json:"first_visit_default_style,omitempty"`
+	// preferences_reset_at is advanced by an administrator to make browsers reapply instance defaults once.
+	PreferencesResetAt int64 `protobuf:"varint,20,opt,name=preferences_reset_at,json=preferencesResetAt,proto3" json:"preferences_reset_at,omitempty"`
+	// music_config_json stores the administrator-managed public site playlist.
+	MusicConfigJson string `protobuf:"bytes,21,opt,name=music_config_json,json=musicConfigJson,proto3" json:"music_config_json,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -753,6 +759,27 @@ func (x *InstanceGeneralSetting) GetDefaultMemberSaveMediaMetadata() bool {
 		return x.DefaultMemberSaveMediaMetadata
 	}
 	return false
+}
+
+func (x *InstanceGeneralSetting) GetFirstVisitDefaultStyle() string {
+	if x != nil {
+		return x.FirstVisitDefaultStyle
+	}
+	return ""
+}
+
+func (x *InstanceGeneralSetting) GetPreferencesResetAt() int64 {
+	if x != nil {
+		return x.PreferencesResetAt
+	}
+	return 0
+}
+
+func (x *InstanceGeneralSetting) GetMusicConfigJson() string {
+	if x != nil {
+		return x.MusicConfigJson
+	}
+	return ""
 }
 
 type InstanceCustomProfile struct {
@@ -1706,7 +1733,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xcd\a\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xe6\b\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -1725,7 +1752,10 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x19first_visit_default_theme\x18\x0f \x01(\tR\x16firstVisitDefaultTheme\x12?\n" +
 	"\x1cdefault_background_image_url\x18\x10 \x01(\tR\x19defaultBackgroundImageUrl\x12C\n" +
 	"\x1edefault_member_memo_visibility\x18\x11 \x01(\tR\x1bdefaultMemberMemoVisibility\x12J\n" +
-	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\"j\n" +
+	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\x129\n" +
+	"\x19first_visit_default_style\x18\x13 \x01(\tR\x16firstVisitDefaultStyle\x120\n" +
+	"\x14preferences_reset_at\x18\x14 \x01(\x03R\x12preferencesResetAt\x12*\n" +
+	"\x11music_config_json\x18\x15 \x01(\tR\x0fmusicConfigJson\"j\n" +
 	"\x15InstanceCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

@@ -9,7 +9,12 @@ interface SettingListProps {
 
 export const SettingList = ({ children, className }: SettingListProps) => {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border bg-background divide-y divide-border", className)}>{children}</div>
+    <div
+      data-settings-surface=""
+      className={cn("overflow-hidden rounded-lg border border-border bg-background divide-y divide-border", className)}
+    >
+      {children}
+    </div>
   );
 };
 
@@ -57,7 +62,7 @@ interface SettingPanelProps {
 
 export const SettingPanel = ({ children, className, header, footer }: SettingPanelProps) => {
   return (
-    <div className={cn("overflow-hidden rounded-lg border border-border bg-background", className)}>
+    <div data-settings-surface="" className={cn("overflow-hidden rounded-lg border border-border bg-background", className)}>
       {header && <div className="border-b border-border px-3 py-2">{header}</div>}
       {children}
       {footer && <div className="border-t border-border bg-muted/20 px-3 py-2">{footer}</div>}

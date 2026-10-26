@@ -428,7 +428,7 @@ const MemoViews = () => {
   };
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-10">
+    <section data-page-panel="" className="mx-auto flex w-full max-w-6xl flex-col gap-6 pb-10">
       <div className="flex flex-col gap-2 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-muted-foreground">

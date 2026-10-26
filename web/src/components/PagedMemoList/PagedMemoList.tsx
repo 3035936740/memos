@@ -2,9 +2,12 @@ import { ArrowUpIcon, LoaderCircleIcon } from "lucide-react";
 import { Fragment, type ReactElement, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import Blog2MemoView from "@/components/Blog2MemoView";
-import BlogMemoView from "@/components/BlogMemoView";
 import BlogSidebar from "@/components/BlogSidebar";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
+import BlogHero from "@/components/StyledBlog/BlogHero";
+import SketchFilters from "@/components/StyledBlog/SketchFilters";
+import StyledBlogCard from "@/components/StyledBlog/StyledBlogCard";
+import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
@@ -20,6 +23,7 @@ import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { isStyledBlog } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
 import ColumnGrid, { columnCountForWidth, GRID_GAP } from "../ColumnGrid";
 import MemoFilters from "../MemoFilters";
@@ -31,6 +35,9 @@ import { estimateMemoCardHeight } from "./memoCardHeight";
 // so flow-list and grid identity can never drift apart. Deliberately name-only: content updates
 // reconcile in place (updateTime is a protobuf Timestamp object, not usable in a template string).
 export const getMemoKey = (memo: Memo) => memo.name;
+
+/** How often a list load turns one Blog 2 card shiny. */
+const SHINY_CHANCE = 0.01;
 
 // Columns never stretch past this, so 2 columns on a wide monitor stay readable and the
 // grid centers in the leftover space instead of filling it.
@@ -54,6 +61,8 @@ interface Props {
   enabled?: boolean;
   /** Route-owned content rendered before the list and inside column one in grid mode. */
   renderLeading?: (options: { useGrid: boolean }) => ReactNode;
+  /** Show the site title above the feed when a Blog 2 style is active (the default style has none). */
+  blogHero?: boolean;
 }
 
 const PagedMemoList = (props: Props) => {
@@ -123,12 +132,16 @@ const PagedMemoList = (props: Props) => {
   // pages don't each repeat the policy.
   const effectiveCompact = compactMode || useGrid;
   const isBlogFeed = feedLayout === "blog-classic" || feedLayout === "blog2";
+  // Blog 2 is the styled layout: site title on top, cards that each style dresses in CSS, and the
+  // widget column as separate cards. Blog 1 keeps the earlier Blog 2 cards with the plain sidebar.
+  const styledBlog = isStyledBlog(feedLayout);
+  // Once in a hundred list loads one card comes up shiny (Blog 2 only).
+  const [shinyIndex] = useState(() => (Math.random() < SHINY_CHANCE ? Math.floor(Math.random() * 10) : -1));
+  const SidebarComponent = styledBlog ? StyledBlogSidebar : BlogSidebar;
 
   const renderMemo = (memo: Memo) => (
     <Fragment key={getMemoKey(memo)}>
-      {feedLayout === "blog-classic" ? (
-        <BlogMemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
-      ) : feedLayout === "blog2" ? (
+      {isBlogFeed ? (
         <Blog2MemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
       ) : (
         props.renderer(memo, { compact: effectiveCompact, parentPage, navigationScope })
@@ -222,7 +235,7 @@ const PagedMemoList = (props: Props) => {
       <MemoPagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} />
       {isBlogFeed && (
         <div className="mt-4 lg:hidden">
-          <BlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
+          <SidebarComponent state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
         </div>
       )}
       {displayMemoList.length > 0 && (
@@ -236,19 +249,50 @@ const PagedMemoList = (props: Props) => {
   const children = (
     <MentionResolutionProvider contents={contents} userNames={userNames}>
       <div ref={layoutMeasureRef} className="w-full">
-        {isBlogFeed && !useGrid ? (
+        {styledBlog && !useGrid ? (
+          <div data-feed-layout="blog2" data-styled-blog="" className="mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-8">
+            <SketchFilters />
+            {props.blogHero && (
+              <BlogHero title={generalSetting.customProfile?.title || "Memos"} description={generalSetting.customProfile?.description} />
+            )}
+            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
+              <main className="flex min-w-0 flex-col justify-start">
+                {leadingContent}
+                <MemoFilters className="mb-2" />
+                {initialLoader}
+                <div className="flex flex-col gap-[1.125rem]">
+                  {displayMemoList.map((memo, index) => (
+                    <StyledBlogCard
+                      key={getMemoKey(memo)}
+                      memo={memo}
+                      showCreator={props.showCreator}
+                      parentPage={parentPage}
+                      navigationScope={navigationScope}
+                      shiny={index === shinyIndex}
+                    />
+                  ))}
+                </div>
+                {emptyPlaceholder}
+                {!isDisplayPending && footer}
+              </main>
+              <aside className="hidden min-w-0 lg:block">
+                <StyledBlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
+              </aside>
+            </div>
+          </div>
+        ) : isBlogFeed && !useGrid ? (
           <div
-            data-feed-layout={feedLayout}
+            data-feed-layout="blog2"
             className={cn(
               "mx-auto w-full lg:grid lg:items-start lg:gap-5",
-              feedLayout === "blog2" ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]" : "max-w-6xl lg:grid-cols-[minmax(0,1fr)_15rem]",
+              "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]",
             )}
           >
             <main className="flex min-w-0 flex-col justify-start">
               {leadingContent}
               <MemoFilters className="mb-2" />
               {initialLoader}
-              {feedLayout === "blog2" ? (
+              {isBlogFeed ? (
                 <div className="flex flex-col gap-4">
                   {displayMemoList.map((memo) => (
                     <Blog2MemoView

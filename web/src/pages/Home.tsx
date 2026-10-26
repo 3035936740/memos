@@ -56,6 +56,7 @@ const Home = () => {
           orderBy={orderBy}
           filter={memoFilter}
           contextFilter={contextFilter}
+          blogHero
           renderLeading={({ useGrid }) => {
             if (!isUserSettingsInitialized) return null;
 

@@ -1,11 +1,12 @@
-import { ArrowDownIcon, ArrowUpIcon, FolderIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon, FolderIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { type InstanceContentAccess, type InstanceMemoCategory, parseInstanceCategories } from "@/lib/instance-content";
+import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 
 interface Props {
@@ -24,6 +25,8 @@ const normalizeCategories = (value: string): InstanceMemoCategory[] =>
 const InstanceCategoryEditor = ({ value, onChange }: Props) => {
   const t = useTranslate();
   const categories = useMemo(() => normalizeCategories(value), [value]);
+  // One category is open at a time, which keeps a long list short.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const accessOptions: Array<{ value: InstanceContentAccess; label: string }> = [
     { value: "public", label: t("setting.content.access-public") },
     { value: "authenticated", label: t("setting.content.access-authenticated") },
@@ -40,10 +43,17 @@ const InstanceCategoryEditor = ({ value, onChange }: Props) => {
     const nextCategories = [...categories];
     [nextCategories[index], nextCategories[target]] = [nextCategories[target], nextCategories[index]];
     commit(nextCategories);
+    // The open category travels with its row.
+    setOpenIndex((current) => (current === index ? target : current === target ? index : current));
+  };
+  const remove = (index: number) => {
+    commit(categories.filter((_, categoryIndex) => categoryIndex !== index));
+    setOpenIndex((current) => (current === null || current === index ? null : current > index ? current - 1 : current));
   };
   const addCategory = () => {
     const slug = `category-${Date.now().toString(36)}`;
     commit([...categories, { slug, title: t("setting.category.new-category"), description: "", access: "public" }]);
+    setOpenIndex(categories.length);
   };
 
   return (
@@ -62,94 +72,110 @@ const InstanceCategoryEditor = ({ value, onChange }: Props) => {
         </div>
       )}
 
-      {categories.map((category, index) => (
-        <section key={`category-${index}`} className="space-y-4 rounded-lg border bg-card/50 p-4">
-          <div className="flex items-center gap-2">
-            <FolderIcon className="size-4 text-muted-foreground" />
-            <h4 className="min-w-0 flex-1 truncate text-sm font-medium">{category.title || t("setting.category.untitled")}</h4>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              disabled={index === 0}
-              onClick={() => move(index, -1)}
-              aria-label={t("common.move-up")}
-            >
-              <ArrowUpIcon className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              disabled={index === categories.length - 1}
-              onClick={() => move(index, 1)}
-              aria-label={t("common.move-down")}
-            >
-              <ArrowDownIcon className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => commit(categories.filter((_, categoryIndex) => categoryIndex !== index))}
-              aria-label={t("common.delete")}
-            >
-              <Trash2Icon className="size-4" />
-            </Button>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>{t("setting.category.name")}</Label>
-              <Input
-                value={category.title}
-                onChange={(event) => update(index, { title: event.target.value })}
-                placeholder={t("setting.category.name-placeholder")}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>{t("setting.category.path")}</Label>
-              <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
-                <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/categories/</span>
-                <Input
-                  value={category.slug}
-                  onChange={(event) => update(index, { slug: event.target.value.replace(/[^a-zA-Z0-9_-]/g, "") })}
-                  className="rounded-none border-0 shadow-none focus-visible:ring-0"
-                  placeholder="design"
-                />
+      <div className="space-y-2">
+        {categories.map((category, index) => {
+          const open = openIndex === index;
+          return (
+            <section key={`category-${index}`} className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setOpenIndex(open ? null : index)}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <ChevronRightIcon className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")} />
+                  <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 truncate text-sm font-medium">{category.title || t("setting.category.untitled")}</span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">/categories/{category.slug}</span>
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                  aria-label={t("common.move-up")}
+                >
+                  <ArrowUpIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={index === categories.length - 1}
+                  onClick={() => move(index, 1)}
+                  aria-label={t("common.move-down")}
+                >
+                  <ArrowDownIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => remove(index)}
+                  aria-label={t("common.delete")}
+                >
+                  <Trash2Icon className="size-4" />
+                </Button>
               </div>
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>{t("setting.category.optional-description")}</Label>
-              <Textarea
-                value={category.description || ""}
-                onChange={(event) => update(index, { description: event.target.value })}
-                rows={2}
-                placeholder={t("setting.category.description-placeholder")}
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>{t("setting.content.access")}</Label>
-              <Select
-                value={category.access || "public"}
-                onValueChange={(access) => update(index, { access: access as InstanceContentAccess })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accessOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </section>
-      ))}
+
+              {open && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>{t("setting.category.name")}</Label>
+                    <Input
+                      value={category.title}
+                      onChange={(event) => update(index, { title: event.target.value })}
+                      placeholder={t("setting.category.name-placeholder")}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("setting.category.path")}</Label>
+                    <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
+                      <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/categories/</span>
+                      <Input
+                        value={category.slug}
+                        onChange={(event) => update(index, { slug: event.target.value.replace(/[^a-zA-Z0-9_-]/g, "") })}
+                        className="rounded-none border-0 shadow-none focus-visible:ring-0"
+                        placeholder="design"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>{t("setting.category.optional-description")}</Label>
+                    <Textarea
+                      value={category.description || ""}
+                      onChange={(event) => update(index, { description: event.target.value })}
+                      rows={2}
+                      placeholder={t("setting.category.description-placeholder")}
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>{t("setting.content.access")}</Label>
+                    <Select
+                      value={category.access || "public"}
+                      onValueChange={(access) => update(index, { access: access as InstanceContentAccess })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accessOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 };

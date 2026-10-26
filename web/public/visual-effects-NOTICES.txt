@@ -1,0 +1,17 @@
+Third-party visual assets used by Memos
+
+Twemoji - Candy
+Copyright 2019 Twitter, Inc and other contributors.
+Source: https://github.com/twitter/twemoji/blob/master/assets/svg/1f36c.svg
+Graphics licensed under Creative Commons Attribution 4.0 International:
+https://creativecommons.org/licenses/by/4.0/
+Memos preserves the original SVG geometry, recolors it into five palettes and
+rasterizes each variant once for animated canvas particles.
+
+Codrops RainEffect - Lucas Bebber, Copyright Codrops 2015
+Source: https://github.com/codrops/RainEffect
+License: https://tympanus.net/codrops/licensing/
+The original project permits integration and modification in personal and commercial projects,
+and prohibits redistribution or sale of the original project as-is.
+Memos integrates the original simulation, water textures and refraction shader with lifecycle
+management and transparent compositing over its interactive article pages.

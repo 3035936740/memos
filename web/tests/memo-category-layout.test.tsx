@@ -17,6 +17,14 @@ vi.mock("@/components/BlogSidebar", () => ({
     requests.sidebarFilters.push(filter);
     return <div data-testid="blog-sidebar">{parentPage}</div>;
   },
+  deriveBlogSidebarStats: () => ({ articleCount: 0, commentCount: 0, runningDays: 0, lastActiveAt: undefined }),
+}));
+
+vi.mock("@/components/StyledBlog/StyledBlogSidebar", () => ({
+  default: ({ parentPage, filter }: { parentPage: string; filter?: string }) => {
+    requests.sidebarFilters.push(filter);
+    return <div data-testid="blog-sidebar">{parentPage}</div>;
+  },
 }));
 
 vi.mock("@/contexts/InstanceContext", () => ({

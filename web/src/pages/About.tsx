@@ -76,7 +76,7 @@ const About = () => {
 
   return (
     <section className="min-h-full w-full">
-      <div className="mx-auto w-full max-w-2xl py-6 sm:py-8">
+      <div data-page-panel="" className="mx-auto w-full max-w-2xl py-6 sm:py-8">
         <header>
           <img className="size-10 shrink-0 select-none rounded-md" src={instanceLogo} alt="" draggable={false} />
           <div className="mt-4 flex flex-wrap items-center gap-2">

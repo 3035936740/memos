@@ -2,7 +2,9 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"math"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -30,6 +32,8 @@ func validateInstanceSetting(setting *v1pb.InstanceSetting) error {
 		return err
 	}
 	switch key {
+	case storepb.InstanceSettingKey_GENERAL.String():
+		return validateInstanceGeneralSetting(setting.GetGeneralSetting())
 	case storepb.InstanceSettingKey_MEMO_RELATED.String():
 		return validateInstanceMemoRelatedSetting(setting.GetMemoRelatedSetting())
 	case storepb.InstanceSettingKey_TAGS.String():
@@ -39,6 +43,71 @@ func validateInstanceSetting(setting *v1pb.InstanceSetting) error {
 	default:
 		return nil
 	}
+}
+
+const (
+	maxFirstVisitStyleLength = 64
+	maxMusicConfigJSONLength = 256 * 1024
+	maxMusicTrackCount       = 200
+)
+
+type musicConfigForValidation struct {
+	Mode          string   `json:"mode"`
+	DefaultVolume *float64 `json:"defaultVolume"`
+	Tracks        []struct {
+		ID     string `json:"id"`
+		Title  string `json:"title"`
+		Artist string `json:"artist"`
+		URL    string `json:"url"`
+	} `json:"tracks"`
+}
+
+func validateInstanceGeneralSetting(setting *v1pb.InstanceSetting_GeneralSetting) error {
+	if setting == nil {
+		return errors.New("general setting is required")
+	}
+	if len(setting.FirstVisitDefaultStyle) > maxFirstVisitStyleLength {
+		return errors.Errorf("first_visit_default_style is too long; maximum length is %d characters", maxFirstVisitStyleLength)
+	}
+	if setting.PreferencesResetAt < 0 {
+		return errors.New("preferences_reset_at cannot be negative")
+	}
+	if len(setting.MusicConfigJson) > maxMusicConfigJSONLength {
+		return errors.Errorf("music_config_json is too long; maximum length is %d bytes", maxMusicConfigJSONLength)
+	}
+	if strings.TrimSpace(setting.MusicConfigJson) == "" {
+		return nil
+	}
+
+	var config musicConfigForValidation
+	if err := json.Unmarshal([]byte(setting.MusicConfigJson), &config); err != nil {
+		return errors.Wrap(err, "music_config_json must be valid JSON")
+	}
+	if config.Mode != "" && config.Mode != "random" && config.Mode != "sequential" && config.Mode != "reverse" {
+		return errors.New("music mode must be random, sequential, or reverse")
+	}
+	if config.DefaultVolume != nil && (*config.DefaultVolume < 0 || *config.DefaultVolume > 1) {
+		return errors.New("music default volume must be between 0 and 1")
+	}
+	if len(config.Tracks) > maxMusicTrackCount {
+		return errors.Errorf("music playlist cannot contain more than %d tracks", maxMusicTrackCount)
+	}
+	for index, track := range config.Tracks {
+		if len(track.ID) > 128 || len(track.Title) > 512 || len(track.Artist) > 512 || len(track.URL) > 4096 {
+			return errors.Errorf("music track %d contains a field that is too long", index+1)
+		}
+		if strings.TrimSpace(track.URL) == "" {
+			continue
+		}
+		parsed, err := url.Parse(track.URL)
+		if err != nil || (parsed.Scheme != "" && parsed.Scheme != "http" && parsed.Scheme != "https") {
+			return errors.Errorf("music track %d has an invalid URL", index+1)
+		}
+		if parsed.Scheme == "" && !strings.HasPrefix(parsed.Path, "/") {
+			return errors.Errorf("music track %d must use an HTTP(S) URL or an absolute site path", index+1)
+		}
+	}
+	return nil
 }
 
 func validateInstanceMemoRelatedSetting(setting *v1pb.InstanceSetting_MemoRelatedSetting) error {

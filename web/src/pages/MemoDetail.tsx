@@ -7,6 +7,9 @@ import MemoCommentSection, { type CommentSortOrder } from "@/components/MemoComm
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import MemoView from "@/components/MemoView";
 import { createMemoNavigationState, type MemoOriginScope, resolveMemoDetailOrigin } from "@/components/MemoView/navigation";
+import ReadingProgress from "@/components/StyledBlog/ReadingProgress";
+import SketchFilters from "@/components/StyledBlog/SketchFilters";
+import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
 import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +26,7 @@ import { cn } from "@/lib/utils";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
+import { isStyledBlog } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
 import { findMemoAnchorTarget } from "@/utils/markdown-manipulation";
 
@@ -94,9 +98,11 @@ const MemoDetail = () => {
   const { isInitialized: authInitialized } = useAuth();
   const { isInitialized: instanceInitialized, generalSetting } = useInstance();
   const currentUser = useCurrentUser();
-  const { feedLayout } = useView();
-  const isBlog2 = feedLayout === "blog2";
-  const isBlog = feedLayout === "blog-classic";
+  const { feedLayout, blogStyle } = useView();
+  // Blog 1 keeps the earlier Blog 2 article frame; Blog 2 uses the styled layout's widths and widget cards.
+  const isBlog2 = feedLayout === "blog2" || feedLayout === "blog-classic";
+  const styledBlog = isStyledBlog(feedLayout);
+  const SidebarComponent = styledBlog ? StyledBlogSidebar : BlogSidebar;
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
   const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
@@ -231,11 +237,14 @@ const MemoDetail = () => {
   return (
     <section
       data-feed-layout={isBlog2 ? "blog2" : undefined}
+      data-styled-blog={styledBlog ? "" : undefined}
       data-memo-detail=""
       className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4"
     >
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
         <MemoDetailScript memo={displayMemo} />
+        {styledBlog && <SketchFilters />}
+        {styledBlog && <ReadingProgress memoName={displayMemo.name} tags={displayMemo.tags} style={blogStyle} />}
         <MemoSidebarRegistration
           memo={displayMemo}
           from={resolvedParentPage}
@@ -246,11 +255,11 @@ const MemoDetail = () => {
         <div
           className={cn(
             "w-full lg:grid lg:items-start",
-            isBlog2 ? "px-2 sm:px-3" : "px-4 sm:px-6",
-            isBlog2
-              ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
-              : isBlog
-                ? "max-w-6xl lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-4"
+            isBlog2 && !styledBlog ? "px-2 sm:px-3" : "px-4 sm:px-6",
+            styledBlog
+              ? "max-w-[90rem] lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6 lg:px-8"
+              : isBlog2
+                ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
                 : "max-w-6xl lg:grid-cols-[minmax(0,48rem)_15rem] lg:gap-4",
           )}
         >
@@ -301,9 +310,11 @@ const MemoDetail = () => {
               showPinned
               showSpace
               className={
-                isBlog2
-                  ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                  : undefined
+                styledBlog
+                  ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                  : isBlog2
+                    ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                    : undefined
               }
               onShareImageDialogOpenChange={setShareImageDialogOpen}
             />
@@ -319,6 +330,7 @@ const MemoDetail = () => {
                   <Link
                     to={`/${previousMemo.name}`}
                     state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
+                    data-sb-nav-link={styledBlog ? "" : undefined}
                     className={cn(
                       isBlog2
                         ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
@@ -347,6 +359,7 @@ const MemoDetail = () => {
                   <Link
                     to={`/${nextMemo.name}`}
                     state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
+                    data-sb-nav-link={styledBlog ? "" : undefined}
                     className={cn(
                       isBlog2
                         ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
@@ -385,7 +398,7 @@ const MemoDetail = () => {
               />
             )}
             <div className="mt-4 lg:hidden">
-              <BlogSidebar
+              <SidebarComponent
                 state={navigationScope.state}
                 orderBy={navigationScope.orderBy}
                 filter={navigationScope.filter}
@@ -393,8 +406,10 @@ const MemoDetail = () => {
               />
             </div>
           </main>
-          <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
-            <BlogSidebar
+          <aside
+            className={cn("hidden min-w-0 lg:block", !styledBlog && "sticky top-16 max-h-[calc(100dvh-5rem)] self-start overflow-y-auto")}
+          >
+            <SidebarComponent
               state={navigationScope.state}
               orderBy={navigationScope.orderBy}
               filter={navigationScope.filter}

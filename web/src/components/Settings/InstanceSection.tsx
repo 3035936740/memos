@@ -11,6 +11,7 @@ import { identityProviderServiceClient } from "@/connect";
 import { useInstance } from "@/contexts/InstanceContext";
 import useDialog from "@/hooks/useDialog";
 import { DEFAULT_MEMO_FEED_PAGE_SIZE, MAX_MEMO_FEED_PAGE_SIZE, MIN_MEMO_FEED_PAGE_SIZE } from "@/lib/constants";
+import { keepInstanceSiteConfig, parseInstanceSiteConfig, resolveMusicConfig } from "@/lib/instance-content";
 import { IdentityProvider } from "@/types/proto/api/v1/idp_service_pb";
 import {
   InstanceAccessMode,
@@ -21,11 +22,13 @@ import {
   InstanceSetting_Key,
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
+import { BLOG_STYLE_OPTIONS, DEFAULT_BLOG_STYLE, isBlogStyle, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { isValidLocale, useTranslate } from "@/utils/i18n";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
+import InstanceMusicEditor from "./InstanceMusicEditor";
 import SettingGroup from "./SettingGroup";
 import { SettingCodeEditor, SettingList, SettingListItem } from "./SettingList";
 import SettingSection from "./SettingSection";
@@ -36,8 +39,12 @@ const InstanceSection = () => {
   const customizeDialog = useDialog();
   const saveInstanceSetting = useInstanceSettingUpdater();
   const { accessSetting: originalAccessSetting, generalSetting: originalGeneralSetting, profile } = useInstance();
+  const normalizedOriginalGeneralSetting = useMemo(
+    () => create(InstanceSetting_GeneralSettingSchema, originalGeneralSetting),
+    [originalGeneralSetting],
+  );
   const [instanceAccessSetting, setInstanceAccessSetting] = useState<InstanceSetting_AccessSetting>(originalAccessSetting);
-  const [instanceGeneralSetting, setInstanceGeneralSetting] = useState<InstanceSetting_GeneralSetting>(originalGeneralSetting);
+  const [instanceGeneralSetting, setInstanceGeneralSetting] = useState<InstanceSetting_GeneralSetting>(normalizedOriginalGeneralSetting);
   const [identityProviderList, setIdentityProviderList] = useState<IdentityProvider[]>([]);
 
   useEffect(() => {
@@ -45,8 +52,8 @@ const InstanceSection = () => {
   }, [originalAccessSetting]);
 
   useEffect(() => {
-    setInstanceGeneralSetting(originalGeneralSetting);
-  }, [originalGeneralSetting]);
+    setInstanceGeneralSetting(normalizedOriginalGeneralSetting);
+  }, [normalizedOriginalGeneralSetting]);
 
   const fetchIdentityProviderList = async () => {
     const { identityProviders } = await identityProviderServiceClient.listIdentityProviders({});
@@ -75,6 +82,15 @@ const InstanceSection = () => {
     ? instanceGeneralSetting.defaultMemberMemoVisibility
     : "PUBLIC";
   const themeOptions = THEME_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) }));
+  const styleOptions = BLOG_STYLE_OPTIONS.filter((option) => !SECRET_BLOG_STYLES.includes(option.value)).map((option) => ({
+    value: option.value as string,
+    label: t(option.labelKey),
+  }));
+  // Keep reading the old reserved entry so existing installations migrate without losing their choices.
+  const siteConfig = parseInstanceSiteConfig(instanceGeneralSetting.customPagesJson);
+  const musicConfig = resolveMusicConfig(siteConfig, instanceGeneralSetting.musicConfigJson);
+  const storedFirstVisitStyle = instanceGeneralSetting.firstVisitDefaultStyle || siteConfig.firstVisitStyle;
+  const firstVisitStyle = isBlogStyle(storedFirstVisitStyle) ? storedFirstVisitStyle : DEFAULT_BLOG_STYLE;
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
     setInstanceGeneralSetting((currentSetting) =>
@@ -90,7 +106,7 @@ const InstanceSection = () => {
   };
 
   const handleSaveSettings = async () => {
-    const generalSettingChanged = !isEqual(instanceGeneralSetting, originalGeneralSetting);
+    const generalSettingChanged = !isEqual(instanceGeneralSetting, normalizedOriginalGeneralSetting);
     const accessSettingChanged = !isEqual(instanceAccessSetting, originalAccessSetting);
 
     if (generalSettingChanged) {
@@ -127,7 +143,7 @@ const InstanceSection = () => {
   };
 
   const hasUnsavedChanges =
-    !isEqual(instanceGeneralSetting, originalGeneralSetting) || !isEqual(instanceAccessSetting, originalAccessSetting);
+    !isEqual(instanceGeneralSetting, normalizedOriginalGeneralSetting) || !isEqual(instanceAccessSetting, originalAccessSetting);
 
   return (
     <SettingSection title={t("setting.system.label")}>
@@ -200,7 +216,9 @@ const InstanceSection = () => {
           navigationJson={instanceGeneralSetting.navigationJson}
           pagesJson={instanceGeneralSetting.customPagesJson}
           onNavigationChange={(navigationJson) => updatePartialSetting({ navigationJson })}
-          onPagesChange={(customPagesJson) => updatePartialSetting({ customPagesJson })}
+          onPagesChange={(customPagesJson) =>
+            updatePartialSetting({ customPagesJson: keepInstanceSiteConfig(customPagesJson, instanceGeneralSetting.customPagesJson) })
+          }
         />
       </SettingGroup>
 
@@ -249,6 +267,25 @@ const InstanceSection = () => {
               </SelectTrigger>
               <SelectContent>
                 {themeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingListItem>
+
+          <SettingListItem label={t("music-admin.first-visit-style")} description={t("music-admin.first-visit-style-description")}>
+            <Select
+              value={firstVisitStyle}
+              items={styleOptions}
+              onValueChange={(style) => updatePartialSetting({ firstVisitDefaultStyle: style })}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {styleOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -351,6 +388,10 @@ const InstanceSection = () => {
             </Select>
           </SettingListItem>
         </SettingList>
+      </SettingGroup>
+
+      <SettingGroup title={t("music-admin.title-group")} description={t("music-admin.description")} showSeparator>
+        <InstanceMusicEditor value={musicConfig} onChange={(music) => updatePartialSetting({ musicConfigJson: JSON.stringify(music) })} />
       </SettingGroup>
 
       <div className="w-full flex justify-end">

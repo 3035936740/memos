@@ -2,7 +2,10 @@ import { Clock3Icon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LocalePicker from "@/components/LocalePicker";
+import StyleSelect from "@/components/StyleSelect";
 import ThemeSelect from "@/components/ThemeSelect";
+import ToolbarCalendar from "@/components/ToolbarCalendar";
+import ToolbarMusicPlayer from "@/components/ToolbarMusicPlayer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -48,6 +51,7 @@ export const ToolbarPreferences = () => {
   return (
     <>
       <ThemeSelect value={theme} onValueChange={handleThemeChange} iconOnly />
+      <StyleSelect iconOnly />
       <LocalePicker value={locale} onChange={handleLocaleChange} iconOnly />
     </>
   );
@@ -82,6 +86,7 @@ export const ToolbarClock = ({ compact = false, className }: { compact?: boolean
 
   return (
     <div
+      data-toolbar-clock=""
       className={cn(
         "inline-flex shrink-0 items-center text-muted-foreground tabular-nums",
         compact ? "gap-1 px-1 text-[11px]" : "h-8 gap-2 rounded-md bg-muted/45 px-3 text-xs",
@@ -98,10 +103,17 @@ export const ToolbarClock = ({ compact = false, className }: { compact?: boolean
 
 const TopToolbar = () => {
   return (
-    <header className="sticky top-0 z-20 hidden h-12 w-full shrink-0 items-center border-b border-border/70 bg-background/85 px-4 backdrop-blur-md md:flex sm:px-6">
+    <header
+      data-app-toolbar=""
+      className="sticky top-0 z-20 hidden h-12 w-full shrink-0 items-center border-b border-border/70 bg-background/85 px-4 backdrop-blur-md md:flex sm:px-6"
+    >
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
         <ToolbarPreferences />
-        <ToolbarClock className="ml-auto" />
+        <div className="ml-auto flex items-center gap-1.5">
+          <ToolbarMusicPlayer />
+          <ToolbarCalendar />
+          <ToolbarClock />
+        </div>
       </div>
     </header>
   );

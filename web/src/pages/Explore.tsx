@@ -66,6 +66,7 @@ const Explore = () => {
           filter={memoFilter}
           contextFilter={contextFilter}
           showCreator
+          blogHero
           renderLeading={({ useGrid }) => {
             if (!isUserSettingsInitialized) return null;
 

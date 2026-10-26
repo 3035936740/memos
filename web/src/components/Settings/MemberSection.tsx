@@ -18,6 +18,7 @@ import { useDeleteUser, useListUsers } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
 import { buildUserSettingName } from "@/lib/resource-names";
 import { State } from "@/types/proto/api/v1/common_pb";
+import { InstanceSetting_GeneralSettingSchema, InstanceSetting_Key, InstanceSettingSchema } from "@/types/proto/api/v1/instance_service_pb";
 import { User, User_Role, UserSetting_Key, UserSettingSchema } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { unbanUser } from "@/utils/moderation";
@@ -25,11 +26,13 @@ import CreateUserDialog from "../CreateUserDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import SettingSection from "./SettingSection";
 import SettingTable from "./SettingTable";
+import useInstanceSettingUpdater, { buildInstanceSettingName } from "./useInstanceSettingUpdater";
 
 const MemberSection = () => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
   const { generalSetting } = useInstance();
+  const saveInstanceSetting = useInstanceSettingUpdater();
   const { data: users = [], refetch: refetchUsers } = useListUsers();
   const deleteUserMutation = useDeleteUser();
   const createDialog = useDialog();
@@ -139,6 +142,22 @@ const MemberSection = () => {
       for (const target of sortedUsers) {
         await initializePreferences(target);
       }
+      // Style, layout and music choices live in each browser; stamping the reset time tells every browser to drop its own.
+      await saveInstanceSetting({
+        key: InstanceSetting_Key.GENERAL,
+        setting: create(InstanceSettingSchema, {
+          name: buildInstanceSettingName(InstanceSetting_Key.GENERAL),
+          value: {
+            case: "generalSetting",
+            value: create(InstanceSetting_GeneralSettingSchema, {
+              ...generalSetting,
+              preferencesResetAt: BigInt(Date.now()),
+            }),
+          },
+        }),
+        errorContext: "Reset browser preferences",
+        showSuccessToast: false,
+      });
       toast.success(t("setting.member.initialize-all-preferences-success", { count: sortedUsers.length }));
     } catch (error) {
       handleError(error, toast.error, { context: "Initialize all member preferences" });

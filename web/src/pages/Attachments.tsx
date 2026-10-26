@@ -219,7 +219,7 @@ const Attachments = () => {
 
   return (
     <section className="@container min-h-full w-full pb-10 pt-3 md:pt-6">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 sm:gap-6 sm:px-6">
+      <div data-page-panel="" className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 sm:gap-6 sm:px-6">
         <div className="min-h-[16rem] pt-1">
           {renderContent()}
 

@@ -32,7 +32,13 @@ const buttonVariants = cva(
 
 const Button = React.forwardRef<HTMLElement, ButtonPrimitive.Props & VariantProps<typeof buttonVariants>>(
   ({ className, variant, size, ...props }, ref) => (
-    <ButtonPrimitive ref={ref} data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
+    <ButtonPrimitive
+      ref={ref}
+      data-slot="button"
+      data-variant={variant ?? "default"}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
   ),
 );
 Button.displayName = "Button";

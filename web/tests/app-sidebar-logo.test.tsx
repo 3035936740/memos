@@ -137,6 +137,10 @@ vi.mock("@/hooks/useAttachmentLibrary", () => ({
   useAttachmentLibraryStats: () => ({ stats: { media: 0, documents: 0, audio: 0, unused: 0 } }),
 }));
 
+vi.mock("@/contexts/ViewContext", () => ({
+  useView: () => ({ blogStyle: "default", feedLayout: "memo", setBlogStyle: vi.fn(), setFeedLayout: vi.fn() }),
+}));
+
 vi.mock("@/hooks/useMediaQuery", () => ({
   default: () => true,
 }));

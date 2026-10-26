@@ -2,6 +2,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   BoldIcon,
+  ChevronRightIcon,
   ExternalLinkIcon,
   FileTextIcon,
   Heading1Icon,
@@ -12,7 +13,7 @@ import {
   QuoteIcon,
   Trash2Icon,
 } from "lucide-react";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MemoMarkdownRenderer } from "@/components/MemoContent/MemoMarkdownRenderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,8 @@ const ICON_OPTIONS = [
 ] as const;
 
 const pagePath = (slug: string) => `/pages/${slug.trim()}`;
+
+const entryKey = (entry: Pick<EditorEntry, "kind" | "id" | "slug">) => `${entry.kind}:${entry.kind === "page" ? entry.slug : entry.id}`;
 
 const buildEntries = (navigationJson: string, pagesJson: string): EditorEntry[] => {
   const navigation = parseInstanceNavigation(navigationJson);
@@ -230,6 +233,9 @@ const MarkdownTool = ({ icon: Icon, label, onClick }: { icon: typeof BoldIcon; l
 const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, onPagesChange }: Props) => {
   const t = useTranslate();
   const entries = useMemo(() => buildEntries(navigationJson, pagesJson), [navigationJson, pagesJson]);
+  // One entry is open at a time, which keeps a long list short. Entries are rebuilt from the saved JSON on every
+  // change, which can reorder them, so the open one is tracked by identity rather than by position.
+  const [openKey, setOpenKey] = useState<string | null>(null);
   const accessOptions: Array<{ value: InstanceContentAccess; label: string }> = [
     { value: "public", label: t("setting.content.access-public") },
     { value: "authenticated", label: t("setting.content.access-authenticated") },
@@ -243,6 +249,8 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
   };
 
   const update = (index: number, partial: Partial<EditorEntry>) => {
+    const current = entries[index];
+    if (openKey === entryKey(current)) setOpenKey(entryKey({ ...current, ...partial }));
     commit(entries.map((entry, entryIndex) => (entryIndex === index ? { ...entry, ...partial } : entry)));
   };
 
@@ -271,6 +279,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
         showInNavigation: true,
       },
     ]);
+    setOpenKey(`page:${slug}`);
   };
 
   const addLink = () => {
@@ -290,6 +299,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
         showInNavigation: true,
       },
     ]);
+    setOpenKey(`link:${id}`);
   };
 
   return (
@@ -314,144 +324,167 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
         </div>
       )}
 
-      {entries.map((entry, index) => (
-        <section key={`${entry.kind}-${index}`} className="space-y-4 rounded-lg border bg-card/50 p-4">
-          <div className="flex items-center gap-2">
-            {entry.kind === "page" ? (
-              <FileTextIcon className="size-4 text-muted-foreground" />
-            ) : (
-              <ExternalLinkIcon className="size-4 text-muted-foreground" />
-            )}
-            <h4 className="min-w-0 flex-1 truncate text-sm font-medium">
-              {entry.title || (entry.kind === "page" ? t("setting.content.untitled-page") : t("setting.content.untitled-link"))}
-            </h4>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              disabled={index === 0}
-              onClick={() => move(index, -1)}
-              aria-label={t("common.move-up")}
-            >
-              <ArrowUpIcon className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              disabled={index === entries.length - 1}
-              onClick={() => move(index, 1)}
-              aria-label={t("common.move-down")}
-            >
-              <ArrowDownIcon className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => commit(entries.filter((_, entryIndex) => entryIndex !== index))}
-              aria-label={t("common.delete")}
-            >
-              <Trash2Icon className="size-4" />
-            </Button>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>{t("setting.content.display-name")}</Label>
-              <Input
-                value={entry.title}
-                onChange={(event) => update(index, { title: event.target.value })}
-                placeholder={t("setting.content.display-name-placeholder")}
-              />
-            </div>
-            {entry.kind === "page" ? (
-              <div className="space-y-1.5">
-                <Label>{t("setting.content.page-path")}</Label>
-                <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
-                  <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/pages/</span>
-                  <Input
-                    value={entry.slug}
-                    onChange={(event) => update(index, { slug: event.target.value.replace(/[^a-zA-Z0-9_-]/g, "") })}
-                    className="rounded-none border-0 shadow-none focus-visible:ring-0"
-                    placeholder="about"
-                  />
-                </div>
+      <div className="space-y-2">
+        {entries.map((entry, index) => {
+          const open = openKey === entryKey(entry);
+          return (
+            <section key={`${entry.kind}-${index}`} className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => setOpenKey(open ? null : entryKey(entry))}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <ChevronRightIcon className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-90")} />
+                  {entry.kind === "page" ? (
+                    <FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+                  ) : (
+                    <ExternalLinkIcon className="size-4 shrink-0 text-muted-foreground" />
+                  )}
+                  <span className="min-w-0 truncate text-sm font-medium">
+                    {entry.title || (entry.kind === "page" ? t("setting.content.untitled-page") : t("setting.content.untitled-link"))}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                    {entry.kind === "page" ? pagePath(entry.slug) : entry.path}
+                  </span>
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                  aria-label={t("common.move-up")}
+                >
+                  <ArrowUpIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  disabled={index === entries.length - 1}
+                  onClick={() => move(index, 1)}
+                  aria-label={t("common.move-down")}
+                >
+                  <ArrowDownIcon className="size-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => commit(entries.filter((_, entryIndex) => entryIndex !== index))}
+                  aria-label={t("common.delete")}
+                >
+                  <Trash2Icon className="size-4" />
+                </Button>
               </div>
-            ) : (
-              <div className="space-y-1.5">
-                <Label>{t("setting.content.destination")}</Label>
-                <Input
-                  value={entry.path}
-                  onChange={(event) => update(index, { path: event.target.value })}
-                  placeholder="https://example.com"
-                />
-              </div>
-            )}
 
-            <div className="space-y-1.5">
-              <Label>{t("setting.content.access")}</Label>
-              <Select value={entry.access} onValueChange={(access) => update(index, { access: access as InstanceContentAccess })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accessOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              {open && (
+                <>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label>{t("setting.content.display-name")}</Label>
+                      <Input
+                        value={entry.title}
+                        onChange={(event) => update(index, { title: event.target.value })}
+                        placeholder={t("setting.content.display-name-placeholder")}
+                      />
+                    </div>
+                    {entry.kind === "page" ? (
+                      <div className="space-y-1.5">
+                        <Label>{t("setting.content.page-path")}</Label>
+                        <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
+                          <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/pages/</span>
+                          <Input
+                            value={entry.slug}
+                            onChange={(event) => update(index, { slug: event.target.value.replace(/[^a-zA-Z0-9_-]/g, "") })}
+                            className="rounded-none border-0 shadow-none focus-visible:ring-0"
+                            placeholder="about"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <Label>{t("setting.content.destination")}</Label>
+                        <Input
+                          value={entry.path}
+                          onChange={(event) => update(index, { path: event.target.value })}
+                          placeholder="https://example.com"
+                        />
+                      </div>
+                    )}
 
-            <div className="space-y-1.5">
-              <Label>{t("setting.content.lucide-icon")}</Label>
-              <Select value={entry.icon} onValueChange={(icon) => update(index, { icon })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ICON_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {t(option.labelKey)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    <div className="space-y-1.5">
+                      <Label>{t("setting.content.access")}</Label>
+                      <Select value={entry.access} onValueChange={(access) => update(index, { access: access as InstanceContentAccess })}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {accessOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>{t("setting.content.custom-icon-url")}</Label>
-              <Input
-                value={entry.iconUrl}
-                onChange={(event) => update(index, { iconUrl: event.target.value })}
-                placeholder="https://example.com/icon.png"
-              />
-            </div>
-          </div>
+                    <div className="space-y-1.5">
+                      <Label>{t("setting.content.lucide-icon")}</Label>
+                      <Select value={entry.icon} onValueChange={(icon) => update(index, { icon })}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ICON_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {t(option.labelKey)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-          {entry.kind === "page" && (
-            <>
-              <div className="flex items-center justify-between rounded-md border bg-background/40 px-3 py-2">
-                <div>
-                  <Label>{t("setting.content.show-in-navigation")}</Label>
-                  <p className="text-xs text-muted-foreground">{t("setting.content.show-in-navigation-description")}</p>
-                </div>
-                <Switch checked={entry.showInNavigation} onCheckedChange={(showInNavigation) => update(index, { showInNavigation })} />
-              </div>
-              <MarkdownField value={entry.markdown} onChange={(markdown) => update(index, { markdown })} />
-            </>
-          )}
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label>{t("setting.content.custom-icon-url")}</Label>
+                      <Input
+                        value={entry.iconUrl}
+                        onChange={(event) => update(index, { iconUrl: event.target.value })}
+                        placeholder="https://example.com/icon.png"
+                      />
+                    </div>
+                  </div>
 
-          {entry.kind === "link" && (
-            <p className={cn("text-xs text-muted-foreground", !entry.path.trim() && "text-destructive")}>
-              {t("setting.content.link-behavior")}
-            </p>
-          )}
-        </section>
-      ))}
+                  {entry.kind === "page" && (
+                    <>
+                      <div className="flex items-center justify-between rounded-md border bg-background/40 px-3 py-2">
+                        <div>
+                          <Label>{t("setting.content.show-in-navigation")}</Label>
+                          <p className="text-xs text-muted-foreground">{t("setting.content.show-in-navigation-description")}</p>
+                        </div>
+                        <Switch
+                          checked={entry.showInNavigation}
+                          onCheckedChange={(showInNavigation) => update(index, { showInNavigation })}
+                        />
+                      </div>
+                      <MarkdownField value={entry.markdown} onChange={(markdown) => update(index, { markdown })} />
+                    </>
+                  )}
+
+                  {entry.kind === "link" && (
+                    <p className={cn("text-xs text-muted-foreground", !entry.path.trim() && "text-destructive")}>
+                      {t("setting.content.link-behavior")}
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 };
