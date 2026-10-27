@@ -2906,6 +2906,90 @@ html[data-style="handdrawn"] [data-music-button] {
   border: 1.25px solid var(--sb-ink);
 }
 
+/* The music visualizer (components/MusicVisualizer): pixel retro lights an LED equalizer, the developer style prints
+   a terminal-grid spectrum, vaporwave spins a cassette, hand-drawn hops notes; the rest tint plain bars. */
+[data-music-viz][data-viz-kind="pixel"] [data-viz-bar] {
+  background: linear-gradient(to top, var(--primary) 0 50%, var(--sb-px-coin, #ffd23f) 50% 80%, #ff5a5a 80%);
+}
+
+[data-music-viz]:is([data-viz-kind="pixel"], [data-viz-kind="spectrum"]) [data-viz-bar] {
+  -webkit-mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+  mask: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 4px);
+}
+
+[data-music-viz][data-viz-kind="spectrum"] {
+  color: var(--sb-tui-green, currentColor);
+}
+
+[data-music-viz][data-viz-kind="spectrum"] [data-viz-bar] {
+  background: currentColor;
+}
+
+[data-music-viz][data-viz-kind="cassette"] [data-viz-shell] {
+  fill: var(--sb-vw-pink, #f7b0d8);
+  stroke: var(--sb-vw-ink, currentColor);
+  stroke-width: 1.5;
+}
+
+[data-music-viz][data-viz-kind="cassette"] [data-viz-label] {
+  fill: var(--sb-vw-window, #ececf0);
+  stroke: var(--sb-vw-ink, currentColor);
+  stroke-width: 1;
+}
+
+[data-music-viz][data-viz-kind="cassette"] [data-viz-window] {
+  fill: #241a3a;
+  stroke: var(--sb-vw-ink, currentColor);
+  stroke-width: 1;
+}
+
+[data-music-viz][data-viz-kind="cassette"] [data-viz-tape] {
+  fill: #6b4a3a;
+}
+
+[data-music-viz][data-viz-kind="cassette"] [data-viz-hub] {
+  fill: #fff;
+  stroke: var(--sb-vw-ink, currentColor);
+  stroke-width: 1;
+}
+
+[data-music-viz][data-viz-kind="cassette"] :is([data-viz-spoke], [data-viz-foot]) {
+  fill: none;
+  stroke: var(--sb-vw-ink, currentColor);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+
+[data-music-viz][data-viz-kind="cassette"][data-viz-variant="compact"] :is([data-viz-label], [data-viz-foot]) {
+  display: none;
+}
+
+[data-music-viz][data-viz-kind="cassette"][data-viz-variant="compact"] [data-viz-spoke] {
+  stroke-width: 1.8;
+}
+
+[data-music-viz][data-viz-kind="notes"] [data-viz-note] {
+  transform-origin: 50% 100%;
+  color: var(--sb-ink, currentColor);
+}
+
+[data-music-viz][data-viz-kind="notes"][data-viz-variant="large"] [data-viz-note]:nth-child(even) {
+  color: var(--primary);
+}
+
+html[data-style="aero"] [data-music-viz][data-viz-kind="bars"][data-viz-variant="large"] [data-viz-bar] {
+  background: var(--sb-aero-aqua);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 75%);
+}
+
+html[data-style="glass"] [data-music-viz][data-viz-kind="bars"][data-viz-variant="large"] [data-viz-bar] {
+  box-shadow: 0 0 8px color-mix(in oklch, var(--primary) 60%, transparent);
+}
+
+html[data-style="golden"] [data-music-viz][data-viz-kind="bars"] [data-viz-bar] {
+  background: var(--sb-gold);
+}
+
 /* Frutiger Aero: bubbles drift slowly up the window, behind everything. */
 html[data-style="aero"] body::before {
   content: "";
@@ -4158,6 +4242,22 @@ html[data-style="golden"]:not([data-theme$="-dark"])[data-style] body {
 
 html[data-style="golden"]:not([data-theme$="-dark"]) :is([data-app-toolbar], [data-app-sidebar-frame]) {
   border-color: #e2cf9f;
+}
+
+/* Keep glass legible on phones without repeatedly blurring large, high-DPI surfaces. */
+@media (max-width: 767px) {
+  html[data-style="glass"] {
+    --sb-blur: blur(10px) saturate(160%);
+  }
+
+  html[data-style="aero"] {
+    --sb-blur: blur(8px) saturate(160%);
+  }
+
+  html:is([data-style="glass"], [data-style="aero"])[data-style] :is([data-app-toolbar], [data-app-sidebar], [data-app-sidebar-frame]) {
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    backdrop-filter: blur(10px) saturate(160%);
+  }
 }
 
 html[data-style="golden"]:not([data-theme$="-dark"]) [data-styled-blog] [data-sb-hero-title] {

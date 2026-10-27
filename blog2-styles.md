@@ -138,6 +138,21 @@ Aero、Y2K、蒸汽波、像素、手绘、开发者这 6 种风格可以与换�
 - 同源音频在浏览器允许时可提供音乐节奏联动；无法分析时仍可正常播放。
 - 浏览器可能限制有声自动播放，届时需要先点击或按键。
 
+### 音乐可视化
+
+播放且未静音时，工具栏的音乐按钮会变成一个小型可视化；打开播放器面板，顶部有一个大的。暂停或静音时按钮恢复成音符图标，面板里的可视化停在静止状态。
+
+| 风格 | 可视化 |
+| --- | --- |
+| 像素复古 | 像素 LED 均衡器，一格一格亮起，从下到上是主题色、金币黄、红色 |
+| 开发者 | 终端方块频谱，各列从同一底线向上堆叠 |
+| 蒸汽波 | 卡带：转轴随节拍转快；磁带随播放进度从左轴绕到右轴 |
+| 手绘涂鸦 | 几个随节拍跳动、摇摆的手绘音符 |
+| 其他风格和其他版式 | 频谱柱；Y2K 是绿底屏上的绿色柱，Aero 是水蓝光泽柱，玻璃拟态带发光，金色传说是金色柱 |
+
+- 曲目全部来自本站（例如本地上传的音频）时，可视化跟随真实频谱。外部链接无法分析，可视化按模拟节拍运动，音乐本身照常播放。
+- 开启减少动画偏好时，可视化不运动，播放中只显示一个静止的造型。
+
 ## 管理员默认值与偏好初始化
 
 「初次访问默认上色风格」和「初次访问默认样式风格」分别设置颜色与博客 2 风格。它们用于尚未保存相应偏好的浏览器。
@@ -149,7 +164,7 @@ Aero、Y2K、蒸汽波、像素、手绘、开发者这 6 种风格可以与换�
 - 风格样式：`web/src/themes/blog-styles.css`。
 - 风格组件：`web/src/components/StyledBlog/`。
 - 风格、反应和成就规则：`web/src/utils/blog-style.ts`、`style-reactions.ts`、`blog-progress.ts`。
-- 音乐播放器：`web/src/contexts/MusicPlayerContext.tsx` 与 `web/src/components/ToolbarMusicPlayer.tsx`。
+- 音乐播放器：`web/src/contexts/MusicPlayerContext.tsx` 与 `web/src/components/ToolbarMusicPlayer.tsx`；音乐可视化：`web/src/components/MusicVisualizer.tsx`。
 - 本地效果预览：运行前端开发服务后，访问 `/effects-preview.html`；rain 预览提供性能采样。
 - 界面图标复用现有 Lucide SVG；玻璃雨效适配 Codrops RainEffect；糖果素材使用 Twemoji。
 - 第三方来源与授权记录在 `web/public/visual-effects-NOTICES.txt` 及相关 vendor 目录中。

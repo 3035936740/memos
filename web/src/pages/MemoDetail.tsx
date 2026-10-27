@@ -260,7 +260,7 @@ const MemoDetail = () => {
             "w-full lg:grid lg:items-start",
             isBlog2 && !styledBlog ? "px-2 sm:px-3" : "px-4 sm:px-6",
             styledBlog
-              ? "max-w-[90rem] lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6 lg:px-8"
+              ? "lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6"
               : isBlog2
                 ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
                 : "max-w-6xl lg:grid-cols-[minmax(0,48rem)_15rem] lg:gap-4",

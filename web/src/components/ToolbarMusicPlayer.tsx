@@ -12,6 +12,7 @@ import {
   VolumeXIcon,
 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
+import MusicVisualizer from "@/components/MusicVisualizer";
 import MusicVolumeSlider from "@/components/MusicVolumeSlider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
@@ -74,11 +75,18 @@ const ToolbarMusicPlayer = () => {
         data-playing={playing || undefined}
         className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent/65 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 data-popup-open:bg-accent/65 data-popup-open:text-foreground"
       >
-        {playing && muted ? <VolumeXIcon className="size-4" /> : <MusicIcon className={cn("size-4", playing && "animate-pulse")} />}
+        {playing && muted ? (
+          <VolumeXIcon className="size-4" />
+        ) : playing ? (
+          <MusicVisualizer variant="compact" />
+        ) : (
+          <MusicIcon className="size-4" />
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={6} className="w-72 p-3">
         <div data-music-player="" className="flex flex-col gap-3">
           <div data-music-lcd="" className="rounded-md bg-muted/60 px-3 py-2">
+            <MusicVisualizer variant="large" className="mb-2" />
             <p data-music-title="" className="truncate text-sm font-medium text-foreground">
               {current?.title}
             </p>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { decorativeCanvasScale } from "@/utils/animation-budget";
 import type { ParticleKind } from "@/utils/style-reactions";
 import candySvg from "@/vendor/twemoji/candy.svg?raw";
 
@@ -593,7 +594,7 @@ const drawComet = (context: CanvasRenderingContext2D, particle: Particle) => {
 
 /** Particle speeds are written per frame at 60 frames a second. */
 const BASE_FRAME_MS = 1000 / 60;
-const MIN_FRAME_MS = 1000 / 45;
+const MIN_FRAME_MS = 1000 / 30;
 
 const LINE_KINDS: ParticleKind[] = ["rain", "comet", "snow"];
 const SWAYING_KINDS: ParticleKind[] = ["petal", "leaf", "snow"];
@@ -719,28 +720,33 @@ const INTERACTIVE = "a, button, input, textarea, select, [role='button'], [data-
 /**
  * Full-window particle layer for style reactions, festivals and bursts (pointer-events: none). Pauses while the tab is
  * hidden. When reduced motion is asked for, standing particles still appear (the reaction stays visible) but stand
- * still and are only redrawn now and then; bursts are skipped.
+ * still and redraw only when their settings or viewport change; bursts are skipped.
  */
 const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const settingsRef = useRef({ kinds, look, density, getEnergy });
+  const wakeRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     settingsRef.current = { kinds, look, density, getEnergy };
+    wakeRef.current();
   }, [density, getEnergy, kinds, look]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let still = motion.matches;
 
     let width = 0;
     let height = 0;
     let frame = 0;
     let particles: Particle[] = [];
-    let seeded = new Set<ParticleKind>();
+    const seeded = new Set<ParticleKind>();
     let lastTime = 0;
+    let resizeTimer = 0;
+    const livingCounts = new Map<ParticleKind, number>();
     // A different flock each visit, and mastery never doubles it.
     const batCount = 3 + Math.floor(Math.random() * 5);
     let candyCount = 8 + Math.floor(Math.random() * 9);
@@ -753,19 +759,21 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
     };
 
     const resize = () => {
-      const ratio = Math.min(2, window.devicePixelRatio || 1);
+      const ratio = decorativeCanvasScale(window.innerWidth, window.innerHeight);
       width = window.innerWidth;
       height = window.innerHeight;
-      canvas.width = Math.round(width * ratio);
-      canvas.height = Math.round(height * ratio);
+      const active = settingsRef.current.kinds.length > 0 || particles.length > 0;
+      canvas.width = active ? Math.round(width * ratio) : 1;
+      canvas.height = active ? Math.round(height * ratio) : 1;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
     };
 
     const tick = (time: number) => {
       frame = 0;
-      // Capped at about 45 frames a second, and every step scaled by the time that really passed, so particles move
+      if (document.hidden) return;
+      // Capped at 30 frames a second, and every step scaled by the time that really passed, so particles move
       // at the same pace on a 60 Hz and a 144 Hz screen.
-      if (!still && lastTime && time - lastTime < MIN_FRAME_MS) {
+      if (!still && lastTime && time - lastTime < MIN_FRAME_MS - 1) {
         frame = window.requestAnimationFrame(tick);
         return;
       }
@@ -781,11 +789,15 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
       }
 
       // Keep each active kind at its population; first appearance fills the screen at once.
+      livingCounts.clear();
+      for (const particle of particles) {
+        if (!particle.oneOff) livingCounts.set(particle.kind, (livingCounts.get(particle.kind) ?? 0) + 1);
+      }
       for (const kind of activeKinds) {
         // A comet is nothing but motion.
         if (still && kind === "comet") continue;
         const target = targetFor(kind, activeDensity);
-        const living = particles.filter((particle) => particle.kind === kind && !particle.oneOff).length;
+        const living = livingCounts.get(kind) ?? 0;
         const scatter = !seeded.has(kind);
         const cometDue = Math.random() < 0.004 * step ? 1 : 0;
         const batchSize = kind === "comet" ? cometDue : kind === "candy" ? 1 + Math.floor(Math.random() * 3) : 2;
@@ -793,13 +805,15 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
         for (let index = 0; index < missing; index++) particles.push(spawn(kind, activeLook, width, height, scatter));
         seeded.add(kind);
       }
-      seeded = new Set([...seeded].filter((kind) => activeKinds.includes(kind)));
+      for (const kind of seeded) if (!activeKinds.includes(kind)) seeded.delete(kind);
 
       context.clearRect(0, 0, width, height);
-      particles = particles.filter((particle) => {
+      let alive = 0;
+      for (let index = 0; index < particles.length; index++) {
+        const particle = particles[index];
         particle.age += still ? 1 : step;
         const stillActive = particle.oneOff || activeKinds.includes(particle.kind);
-        if (!stillActive || particle.age > particle.life) return false;
+        if (!stillActive || particle.age > particle.life) continue;
         const sway = SWAYING_KINDS.includes(particle.kind) ? Math.sin(particle.age * 0.03 + particle.phase) * 0.6 : 0;
         const bob = BOBBING_KINDS.includes(particle.kind) ? Math.sin(particle.age * 0.05 + particle.phase) * 0.6 : 0;
         if (particle.kind === "firefly") {
@@ -814,7 +828,7 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
           particle.y += (particle.vy + bob) * speed;
           particle.rotation += particle.spin * speed;
         }
-        if (!particle.oneOff && isOffscreen(particle, width, height)) return false;
+        if (!particle.oneOff && isOffscreen(particle, width, height)) continue;
 
         const glow = Math.abs(Math.sin(particle.age * 0.03 + particle.phase));
         const twinkle = TWINKLING_KINDS.includes(particle.kind) && !still ? 0.45 + 0.55 * glow : 1;
@@ -827,15 +841,22 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
         if (swell !== 1) context.scale(swell, swell);
         drawParticle(context, particle, activeLook, dark);
         context.restore();
-        return true;
-      });
+        particles[alive++] = particle;
+      }
+      particles.length = alive;
 
-      // Standing still, the once-a-second restart below is all the redrawing needed.
+      // Reduced-motion particles stay visible without a timer waking an idle canvas.
       if (!still && (activeKinds.length > 0 || particles.length > 0) && !document.hidden) frame = window.requestAnimationFrame(tick);
+      else if (activeKinds.length === 0 && particles.length === 0 && canvas.width > 1) resize();
     };
 
     const start = () => {
       if (frame || document.hidden) return;
+      if (settingsRef.current.kinds.length === 0 && particles.length === 0) {
+        if (canvas.width > 1) resize();
+        return;
+      }
+      if (canvas.width <= 1) resize();
       // After a pause the clock restarts, so particles do not leap ahead.
       lastTime = 0;
       frame = window.requestAnimationFrame(tick);
@@ -868,20 +889,40 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
     };
 
     const onVisibility = () => {
-      if (!document.hidden) start();
+      if (document.hidden) {
+        window.cancelAnimationFrame(frame);
+        frame = 0;
+      } else start();
+    };
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        if (width === window.innerWidth && Math.abs(height - window.innerHeight) < 100) return;
+        resize();
+        start();
+      }, 150);
+    };
+    const onMotionChange = () => {
+      still = motion.matches;
+      window.cancelAnimationFrame(frame);
+      frame = 0;
+      start();
     };
 
+    wakeRef.current = start;
     resize();
     start();
-    const restart = window.setInterval(start, 1000);
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", onResize);
+    motion.addEventListener("change", onMotionChange);
     window.addEventListener(BURST_EVENT, onBurst);
     window.addEventListener("pointerdown", onPointerDown, { capture: true, passive: true });
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
-      window.clearInterval(restart);
-      window.removeEventListener("resize", resize);
+      wakeRef.current = () => {};
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener("resize", onResize);
+      motion.removeEventListener("change", onMotionChange);
       window.removeEventListener(BURST_EVENT, onBurst);
       window.removeEventListener("pointerdown", onPointerDown, { capture: true });
       document.removeEventListener("visibilitychange", onVisibility);
@@ -891,6 +932,8 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
   return (
     <canvas
       ref={canvasRef}
+      width={1}
+      height={1}
       data-reaction-canvas={layer}
       aria-hidden
       className="pointer-events-none fixed inset-0 size-full"

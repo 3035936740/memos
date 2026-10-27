@@ -67,6 +67,8 @@ interface MusicPlayerContextValue {
   resetPrefs: () => void;
   /** Loudness of the low end right now, 0 to 1; 0 when it cannot be measured. Effects pulse to it. */
   getEnergy: () => number;
+  /** Fills `out` with the loudness of `out.length` bands, low to high, 0 to 1; false when it cannot be measured. */
+  getSpectrum: (out: Float32Array) => boolean;
 }
 
 const noop = () => {};
@@ -93,9 +95,23 @@ const EMPTY_PLAYER: MusicPlayerContextValue = {
   turnOff: noop,
   resetPrefs: noop,
   getEnergy: () => 0,
+  getSpectrum: () => false,
 };
 
 const MusicPlayerContext = createContext<MusicPlayerContextValue>(EMPTY_PLAYER);
+type MusicEffectsValue = Pick<MusicPlayerContextValue, "playing" | "muted" | "volume" | "getEnergy" | "getSpectrum" | "resetPrefs"> & {
+  getPlaybackProgress: () => number;
+};
+// Animation consumers do not need React updates for every playback-clock tick.
+const MusicEffectsContext = createContext<MusicEffectsValue>({
+  playing: false,
+  muted: true,
+  volume: 0.3,
+  getEnergy: EMPTY_PLAYER.getEnergy,
+  getSpectrum: EMPTY_PLAYER.getSpectrum,
+  resetPrefs: noop,
+  getPlaybackProgress: () => 0,
+});
 
 const shuffle = (values: number[]) => {
   const result = [...values];
@@ -114,6 +130,30 @@ const buildQueue = (count: number, mode: InstanceMusicMode, first?: number): num
   const shuffled = shuffle(indexes);
   if (first === undefined) return shuffled;
   return [first, ...shuffled.filter((index) => index !== first)];
+};
+
+/** Logarithmic 60 Hz–8 kHz bands, weighted by bin overlap so narrow bass bands never shift the following bands. */
+const fillBands = (levels: Uint8Array, out: Float32Array, sampleRate: number) => {
+  const count = out.length;
+  const binHz = sampleRate / (levels.length * 2);
+  const minimumHz = Math.max(60, binHz);
+  const maximumHz = Math.min(8000, (levels.length - 1) * binHz);
+  const range = maximumHz / minimumHz;
+  for (let band = 0; band < count; band++) {
+    const start = (minimumHz * range ** (band / count)) / binHz;
+    const end = (minimumHz * range ** ((band + 1) / count)) / binHz;
+    let squared = 0;
+    let weight = 0;
+    for (let bin = Math.floor(start); bin < Math.min(levels.length, Math.ceil(end)); bin++) {
+      const overlap = Math.max(0, Math.min(end, bin + 1) - Math.max(start, bin));
+      const level = levels[bin] / 255;
+      squared += level * level * overlap;
+      weight += overlap;
+    }
+    const loudness = weight > 0 ? Math.sqrt(squared / weight) : 0;
+    const tilt = 1 + (0.35 * band) / Math.max(1, count - 1);
+    out[band] = Math.min(1, Math.max(0, (loudness - 0.06) / 0.94) ** 0.8 * tilt);
+  }
 };
 
 const isSameOrigin = (url: string) => {
@@ -166,6 +206,9 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const levelsRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const analysisTimeRef = useRef(-Infinity);
+  const energyCacheRef = useRef({ at: -Infinity, value: 0 });
+  const bandsCacheRef = useRef(new Map<number, { at: number; values: Float32Array }>());
   const advanceRef = useRef<() => void>(noop);
   const queueRef = useRef<number[]>([]);
   const positionRef = useRef(0);
@@ -264,12 +307,14 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
       const context = new AudioContext();
       const source = context.createMediaElementSource(getAudio());
       const analyser = context.createAnalyser();
-      analyser.fftSize = 256;
+      analyser.fftSize = 2048;
       source.connect(analyser);
       analyser.connect(context.destination);
       audioContextRef.current = context;
       analyserRef.current = analyser;
       levelsRef.current = new Uint8Array(analyser.frequencyBinCount);
+      analysisTimeRef.current = -Infinity;
+      bandsCacheRef.current.clear();
     } catch {
       // Without an analyser the music plays all the same; effects just do not pulse.
     }
@@ -461,17 +506,67 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     setPrefs({});
   }, []);
 
-  const getEnergy = useCallback(() => {
+  const readFrequencyData = useCallback(() => {
     const analyser = analyserRef.current;
     const levels = levelsRef.current;
-    if (!analyser || !levels || !audioRef.current || audioRef.current.paused || audioRef.current.muted) return 0;
-    analyser.getByteFrequencyData(levels);
+    if (!analyser || !levels || !audioRef.current || audioRef.current.paused || audioRef.current.muted) return null;
+    const now = performance.now();
+    // The button, open panel and particles share one FFT snapshot, at most 30/s.
+    if (now - analysisTimeRef.current >= 1000 / 30) {
+      analyser.getByteFrequencyData(levels);
+      analysisTimeRef.current = now;
+    }
+    return levels;
+  }, []);
+
+  const getEnergy = useCallback(() => {
+    const levels = readFrequencyData();
+    if (!levels) return 0;
+    if (energyCacheRef.current.at === analysisTimeRef.current) return energyCacheRef.current.value;
     // The lowest eighth of the spectrum carries the beat.
     const bins = Math.max(1, Math.floor(levels.length / 8));
     let sum = 0;
     for (let bin = 0; bin < bins; bin++) sum += levels[bin];
-    return sum / bins / 255;
+    const value = sum / bins / 255;
+    energyCacheRef.current = { at: analysisTimeRef.current, value };
+    return value;
+  }, [readFrequencyData]);
+
+  const getSpectrum = useCallback(
+    (out: Float32Array) => {
+      const analyser = analyserRef.current;
+      const levels = levelsRef.current;
+      const audio = audioRef.current;
+      if (!analyser || !levels || !audio) return false;
+      const measured = readFrequencyData();
+      if (!measured) {
+        out.fill(0);
+        return true;
+      }
+      let cached = bandsCacheRef.current.get(out.length);
+      if (!cached) {
+        cached = { at: -Infinity, values: new Float32Array(out.length) };
+        bandsCacheRef.current.set(out.length, cached);
+      }
+      if (cached.at !== analysisTimeRef.current) {
+        fillBands(measured, cached.values, analyser.context.sampleRate);
+        cached.at = analysisTimeRef.current;
+      }
+      out.set(cached.values);
+      return true;
+    },
+    [readFrequencyData],
+  );
+
+  const getPlaybackProgress = useCallback(() => {
+    const audio = audioRef.current;
+    return audio && Number.isFinite(audio.duration) && audio.duration > 0 ? Math.min(1, audio.currentTime / audio.duration) : 0;
   }, []);
+
+  const effectsValue = useMemo<MusicEffectsValue>(
+    () => ({ playing, muted, volume, getEnergy, getSpectrum, resetPrefs, getPlaybackProgress }),
+    [playing, muted, volume, getEnergy, getSpectrum, resetPrefs, getPlaybackProgress],
+  );
 
   const value = useMemo<MusicPlayerContextValue>(
     () => ({
@@ -496,6 +591,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
       turnOff,
       resetPrefs,
       getEnergy,
+      getSpectrum,
     }),
     [
       available,
@@ -503,6 +599,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
       currentTime,
       duration,
       getEnergy,
+      getSpectrum,
       index,
       mode,
       muted,
@@ -521,7 +618,12 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     ],
   );
 
-  return <MusicPlayerContext.Provider value={value}>{children}</MusicPlayerContext.Provider>;
+  return (
+    <MusicPlayerContext.Provider value={value}>
+      <MusicEffectsContext.Provider value={effectsValue}>{children}</MusicEffectsContext.Provider>
+    </MusicPlayerContext.Provider>
+  );
 };
 
 export const useMusicPlayer = () => useContext(MusicPlayerContext);
+export const useMusicEffects = () => useContext(MusicEffectsContext);

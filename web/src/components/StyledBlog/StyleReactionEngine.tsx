@@ -2,7 +2,7 @@ import { MoonIcon, RotateCcwIcon, TrophyIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useInstance } from "@/contexts/InstanceContext";
-import { useMusicPlayer } from "@/contexts/MusicPlayerContext";
+import { useMusicEffects } from "@/contexts/MusicPlayerContext";
 import { useView } from "@/contexts/ViewContext";
 import useCurrentTheme from "@/hooks/useCurrentTheme";
 import { parseInstanceSiteConfig } from "@/lib/instance-content";
@@ -103,7 +103,7 @@ const StyleReactionEngine = () => {
   const t = useTranslate();
   const { generalSetting } = useInstance();
   const { feedLayout, blogStyle, applyFirstVisitStyle, resetToDefaults } = useView();
-  const { getEnergy, playing, resetPrefs } = useMusicPlayer();
+  const { getEnergy, resetPrefs } = useMusicEffects();
   const progress = useBlogProgress();
   const theme = useCurrentTheme();
   const [now, setNow] = useState(() => new Date());
@@ -116,7 +116,7 @@ const StyleReactionEngine = () => {
   const festival = getFestival(now);
   const transformations = useMemo(() => computeTransformations(progress), [progress]);
   const mastered = !!activeStyle && transformations.masteredStyles.includes(activeStyle);
-  const siteConfig = parseInstanceSiteConfig(generalSetting?.customPagesJson ?? "");
+  const siteConfig = useMemo(() => parseInstanceSiteConfig(generalSetting?.customPagesJson ?? ""), [generalSetting?.customPagesJson]);
   const firstVisitStyle = generalSetting?.firstVisitDefaultStyle || siteConfig.firstVisitStyle;
   const preferencesResetAt = Number(generalSetting?.preferencesResetAt ?? 0n) || siteConfig.preferencesResetAt;
 
@@ -227,24 +227,6 @@ const StyleReactionEngine = () => {
       });
     }
   }, [progress, t]);
-
-  // The music's beat, for CSS that pulses with it.
-  useEffect(() => {
-    if (!playing || !styled) {
-      document.documentElement.style.removeProperty("--sb-beat");
-      return;
-    }
-    let frame = 0;
-    const loop = () => {
-      document.documentElement.style.setProperty("--sb-beat", getEnergy().toFixed(3));
-      frame = window.requestAnimationFrame(loop);
-    };
-    frame = window.requestAnimationFrame(loop);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      document.documentElement.style.removeProperty("--sb-beat");
-    };
-  }, [getEnergy, playing, styled]);
 
   const kinds = useMemo(() => {
     if (!styled) return [];

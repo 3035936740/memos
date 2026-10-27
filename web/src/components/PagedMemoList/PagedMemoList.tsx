@@ -252,7 +252,7 @@ const PagedMemoList = (props: Props) => {
     <MentionResolutionProvider contents={contents} userNames={userNames}>
       <div ref={layoutMeasureRef} className="w-full">
         {styledBlog && !useGrid ? (
-          <div data-feed-layout="blog2" data-styled-blog="" className="mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-8">
+          <div data-feed-layout="blog2" data-styled-blog="" className="w-full">
             <SketchFilters />
             {props.blogHero && (
               <BlogHero

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { decorativeCanvasScale } from "@/utils/animation-budget";
 
 type RGB = readonly [number, number, number];
 type ParticleKind = "star" | "firefly" | "bubble" | "rain" | "dash" | "petal" | "dust" | "confetti";
@@ -389,7 +390,7 @@ const CosmicBackground = () => {
     };
 
     const resizeCanvas = (theme: ParticleTheme) => {
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      const pixelRatio = decorativeCanvasScale(window.innerWidth, window.innerHeight);
       canvas.width = Math.floor(window.innerWidth * pixelRatio);
       canvas.height = Math.floor(window.innerHeight * pixelRatio);
       canvas.style.width = `${window.innerWidth}px`;
@@ -462,7 +463,8 @@ const CosmicBackground = () => {
     };
 
     const draw = (timestamp: number) => {
-      if (!activeTheme || reducedMotion.matches) return;
+      animationFrame = 0;
+      if (!activeTheme || reducedMotion.matches || document.hidden) return;
       animationFrame = requestAnimationFrame(draw);
       if (timestamp - previousFrame < FRAME_INTERVAL) return;
 
@@ -495,9 +497,14 @@ const CosmicBackground = () => {
 
     const restartAnimation = () => {
       cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
       canvas.hidden = !activeTheme || reducedMotion.matches;
-      if (!activeTheme || reducedMotion.matches) return;
+      if (!activeTheme || reducedMotion.matches) {
+        canvas.width = canvas.height = 1;
+        particles = [];
+        return;
+      }
 
       previousFrame = 0;
       resizeCanvas(activeTheme);
@@ -506,7 +513,12 @@ const CosmicBackground = () => {
 
     const syncTheme = () => {
       const theme = document.documentElement.dataset.theme;
-      const nextTheme = theme && theme in PARTICLE_THEME_CONFIGS ? (theme as ParticleTheme) : undefined;
+      // Blog 2's reaction layer already draws the theme's particles. Do not
+      // composite a second animated full-screen background beneath it.
+      const nextTheme =
+        !document.documentElement.hasAttribute("data-particles") && theme && theme in PARTICLE_THEME_CONFIGS
+          ? (theme as ParticleTheme)
+          : undefined;
       if (nextTheme === activeTheme) return;
       activeTheme = nextTheme;
       restartAnimation();
@@ -523,13 +535,23 @@ const CosmicBackground = () => {
     };
 
     const observer = new MutationObserver(syncTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-particles"] });
+    const onVisibility = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      if (!document.hidden && activeTheme && !reducedMotion.matches) {
+        previousFrame = 0;
+        animationFrame = requestAnimationFrame(draw);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", handleResize);
     reducedMotion.addEventListener("change", restartAnimation);
     syncTheme();
 
     return () => {
       observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", handleResize);
       reducedMotion.removeEventListener("change", restartAnimation);
       window.clearTimeout(resizeTimer);
@@ -537,7 +559,17 @@ const CosmicBackground = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} hidden aria-hidden="true" className="pointer-events-none fixed inset-0 size-full" style={{ zIndex: 0 }} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      width={1}
+      height={1}
+      hidden
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 size-full"
+      style={{ zIndex: 0 }}
+    />
+  );
 };
 
 export default CosmicBackground;

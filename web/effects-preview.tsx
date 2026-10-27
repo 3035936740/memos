@@ -6,6 +6,7 @@ import desertCSS from "./src/themes/desert-sand.css?raw";
 import WalkingCat from "./src/components/StyledBlog/WalkingCat";
 import RainyGlass from "./src/components/StyledBlog/RainyGlass";
 import ReactionCanvas from "./src/components/StyledBlog/ReactionCanvas";
+import CosmicBackground from "./src/components/CosmicBackground";
 import SettingSection from "./src/components/Settings/SettingSection";
 import { SettingList, SettingListItem, SettingPanel } from "./src/components/Settings/SettingList";
 import { Button } from "./src/components/ui/button";
@@ -27,6 +28,11 @@ const PerformanceMeter = ({ mode }: { mode: string }) => {
     let frame = 0;
     let longTasks = 0;
     let longest = 0;
+    let canvasDraws = 0;
+    let previousDraws = 0;
+    const originalClear = CanvasRenderingContext2D.prototype.clearRect;
+    const countedClear: typeof originalClear = function(this: CanvasRenderingContext2D,...args) { canvasDraws++; return originalClear.apply(this, args); };
+    if (mode === "performance") CanvasRenderingContext2D.prototype.clearRect = countedClear;
     if (output.current) output.current.textContent = "性能采样预热中…";
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
@@ -42,14 +48,17 @@ const PerformanceMeter = ({ mode }: { mode: string }) => {
       if (now - lastReport >= 1000 && samples.length) {
         const recent = samples.slice(-1800).sort((a, b) => a - b);
         const p95 = recent[Math.floor((recent.length - 1) * 0.95)];
-        if (output.current) output.current.textContent = `${((now-warmup)/1000).toFixed(0)}s · RAF p95 ${p95.toFixed(1)}ms · >50ms 长任务 ${longTasks} · 最长 ${longest.toFixed(0)}ms`;
+        const pixels = [...document.querySelectorAll("canvas")].reduce((total,canvas)=>total+canvas.width*canvas.height,0);
+        const draws = (canvasDraws-previousDraws)/((now-lastReport)/1000);
+        if (output.current) output.current.textContent = `${((now-warmup)/1000).toFixed(0)}s · RAF p95 ${p95.toFixed(1)}ms · >50ms 长任务 ${longTasks} · 最长 ${longest.toFixed(0)}ms${mode === "performance" ? ` · Canvas ${draws.toFixed(0)} draws/s · ${(pixels/1e6).toFixed(2)} MP` : ""}`;
+        previousDraws = canvasDraws;
         lastReport = now;
       }
       if (samples.length > 3600) samples.splice(0, 1800);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => {cancelAnimationFrame(frame); observer.disconnect();};
+    return () => {cancelAnimationFrame(frame); observer.disconnect(); if(CanvasRenderingContext2D.prototype.clearRect===countedClear) CanvasRenderingContext2D.prototype.clearRect=originalClear;};
   }, [mode, run]);
   return <div data-rain-performance="" style={{position:"fixed", bottom:8, left:8, zIndex:110, padding:8, background:"#f8f7f0", color:"#222", fontSize:12}}><output ref={output} /><button style={{marginLeft:8}} onClick={()=>setRun(value=>value+1)}>重置性能采样</button></div>;
 };
@@ -63,18 +72,21 @@ const Preview = () => {
     sessionStorage.setItem("memos-effects-preview-dark",String(dark));
     document.documentElement.dataset.style = style;
     document.documentElement.dataset.theme = dark ? "default-dark" : mode === "ember" ? "desert-sand" : "default";
+    if(mode === "performance") {document.documentElement.dataset.theme = "ocean-breeze"; document.documentElement.dataset.particles="1";}
+    else delete document.documentElement.dataset.particles;
     document.documentElement.classList.toggle("dark", dark);
   }, [mode, style, dark]);
   return <>
-    {mode === "rain" && <PerformanceMeter mode={mode} />}
+    {(mode === "rain" || mode === "performance") && <PerformanceMeter mode={mode} />}
     {dark && <style>{darkCSS}</style>}
     {!dark && mode === "ember" && <style>{desertCSS}</style>}
     <nav style={{position: "relative", zIndex: 100, display: "flex", flexWrap:"wrap", gap: 12, padding: 16, background: dark ? "#132733" : "#f4f3ec"}}>
-      {["cat", "rain", "fish", "meteor", "bat", "bubble", "ember", "leaf", "petal", "candy", "settings"].map(value => <Button key={value} onClick={() => {setMode(value); if(value === "settings" || value === "fish") setStyle("aero"); if(value === "ember") setStyle("handdrawn");}}>{value}</Button>)}
+      {["cat", "rain", "fish", "meteor", "bat", "bubble", "ember", "leaf", "petal", "candy", "settings", "performance"].map(value => <Button key={value} onClick={() => {setMode(value); if(value === "settings" || value === "fish" || value === "performance") setStyle("aero"); if(value === "ember") setStyle("handdrawn");}}>{value}</Button>)}
       <select aria-label="Style" value={style} onChange={event => setStyle(event.target.value)}>{["default","aero","handdrawn","pixel","terminal"].map(value => <option key={value}>{value}</option>)}</select>
       <label><input type="checkbox" checked={dark} onChange={event => setDark(event.target.checked)} />Dark</label>
     </nav>
     <main style={{position:"relative", minHeight:"calc(100vh - 64px)", padding:"32px 8%"}}>
+      {mode === "performance" && <><CosmicBackground /><ReactionCanvas layer="back" kinds={["fish","bubble","star"]} look="gloss" density={2} getEnergy={energy} /><ReactionCanvas layer="front" kinds={[]} look="gloss" density={1} getEnergy={energy} /><div data-styled-blog="" style={{maxWidth:900,margin:"auto",display:"grid",gap:18}}>{Array.from({length:15},(_,index)=><article key={index} data-sb-card="" style={{padding:24}}><h2>性能检查文章 {index+1}</h2><p style={{marginTop:12}}>这是本地测试数据，用来检查滚动、背景动画与多个玻璃卡片同时出现时的开销。</p></article>)}</div></>}
       {mode === "cat" && <div data-styled-blog="" style={{maxWidth:800, margin:"auto"}}>
         <article data-sb-card="" style={{position:"relative", height:180, padding:24, border:"1px solid #b8b4a5", borderRadius:12}}>
           <h2>猫在卡片底部走过</h2><p>将鼠标放在这张卡片上。</p><WalkingCat />
