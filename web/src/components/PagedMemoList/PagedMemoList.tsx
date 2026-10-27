@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { useNewMemo } from "@/contexts/NewMemoContext";
+import { useSpaceContext } from "@/contexts/SpaceContext";
 import { useView } from "@/contexts/ViewContext";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useMemos } from "@/hooks/useMemoQueries";
@@ -69,6 +70,7 @@ const PagedMemoList = (props: Props) => {
   const t = useTranslate();
   const { isUserSettingsInitialized } = useAuth();
   const { generalSetting } = useInstance();
+  const { selectedSpace, selectedSpaceName } = useSpaceContext();
   const { filters } = useMemoFilterContext();
   const { maxColumns, compactMode, feedLayout = "memo" } = useView();
   const location = useLocation();
@@ -253,7 +255,10 @@ const PagedMemoList = (props: Props) => {
           <div data-feed-layout="blog2" data-styled-blog="" className="mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-8">
             <SketchFilters />
             {props.blogHero && (
-              <BlogHero title={generalSetting.customProfile?.title || "Memos"} description={generalSetting.customProfile?.description} />
+              <BlogHero
+                title={selectedSpaceName ? selectedSpace?.title || t("space.current") : generalSetting.customProfile?.title || "Memos"}
+                description={selectedSpaceName ? selectedSpace?.description : generalSetting.customProfile?.description}
+              />
             )}
             <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
               <main className="flex min-w-0 flex-col justify-start">
@@ -283,10 +288,7 @@ const PagedMemoList = (props: Props) => {
         ) : isBlogFeed && !useGrid ? (
           <div
             data-feed-layout="blog2"
-            className={cn(
-              "mx-auto w-full lg:grid lg:items-start lg:gap-5",
-              "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]",
-            )}
+            className={cn("mx-auto w-full lg:grid lg:items-start lg:gap-5", "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]")}
           >
             <main className="flex min-w-0 flex-col justify-start">
               {leadingContent}

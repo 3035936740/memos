@@ -960,7 +960,10 @@ const AppSidebar = ({ className }: { className?: string }) => {
   // Blog 2 gets a vertical menu in place of the pill row, on phones too; other layouts keep the pills.
   const blogNav = feedLayout === "blog2" && isBlogPageRoute(location.pathname);
   return (
-    <aside data-app-sidebar="" className={cn("flex h-full w-full select-none flex-col bg-sidebar text-sidebar-foreground", className)}>
+    <aside
+      data-app-sidebar=""
+      className={cn("flex h-full min-h-0 w-full select-none flex-col overflow-hidden bg-sidebar text-sidebar-foreground", className)}
+    >
       <div className={cn("flex h-13 shrink-0 items-center justify-between gap-2", SIDEBAR_HORIZONTAL_PADDING)}>
         <SidebarBrand className="w-full flex-1" />
         <div className="flex shrink-0 items-center gap-1">
@@ -979,10 +982,14 @@ const AppSidebar = ({ className }: { className?: string }) => {
           {canCompose && <NewMemoAction onClick={openEditor} />}
         </div>
       </div>
-      <GlobalNavigation vertical={blogNav} />
-      <div className="mx-3 mt-2 border-t border-border/70" />
-      <div className={cn("min-h-0 flex-1 overflow-y-auto overflow-x-hidden pt-2 pb-3 [scrollbar-width:thin]", SIDEBAR_HORIZONTAL_PADDING)}>
-        <RouteSidebarContent />
+      {!blogNav && <GlobalNavigation />}
+      {!blogNav && <div className="mx-3 mt-2 shrink-0 border-t border-border/70" />}
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain touch-pan-y pb-3 [scrollbar-width:thin]">
+        {blogNav && <GlobalNavigation vertical />}
+        {blogNav && <div className="mx-3 mt-2 border-t border-border/70" />}
+        <div className={cn("pt-2", SIDEBAR_HORIZONTAL_PADDING)}>
+          <RouteSidebarContent />
+        </div>
       </div>
       <footer className="shrink-0 border-t border-border/70">
         {currentUser ? (
@@ -1013,7 +1020,7 @@ export const MobileAppHeader = () => {
   return (
     <header
       data-app-toolbar=""
-      className="sticky top-0 z-20 flex h-12 w-full items-center justify-start gap-1 border-b border-border/70 bg-background/90 px-2 backdrop-blur-md md:hidden"
+      className="sticky top-0 z-20 flex h-12 w-full shrink-0 items-center justify-start gap-1 border-b border-border/70 bg-background/90 px-2 text-foreground backdrop-blur-md md:hidden"
     >
       <Button
         variant="ghost"
@@ -1044,7 +1051,7 @@ export const MobileAppSidebar = () => {
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
       <SheetContent
         side={direction === "rtl" ? "right" : "left"}
-        className="w-[min(18rem,calc(100vw-2rem))] gap-0 border-border p-0 shadow-2xl [&>button]:hidden"
+        className="h-dvh max-h-dvh w-[min(18rem,calc(100vw-2rem))] gap-0 overflow-hidden border-border p-0 shadow-2xl [&>button]:hidden"
       >
         <SheetTitle className="sr-only">Navigation</SheetTitle>
         <AppSidebar />

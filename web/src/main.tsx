@@ -15,6 +15,7 @@ import { InstanceProvider, useInstance } from "@/contexts/InstanceContext";
 import { ViewProvider } from "@/contexts/ViewContext";
 import { useLiveMemoRefresh } from "@/hooks/useLiveMemoRefresh";
 import { useTokenRefreshOnFocus } from "@/hooks/useTokenRefreshOnFocus";
+import { diagnosticPath, initializeFrontendDiagnostics, recordDiagnosticTrace } from "@/lib/frontend-diagnostics";
 import { queryClient } from "@/lib/query-client";
 import router from "./router";
 import { applyLocaleEarly } from "./utils/i18n";
@@ -23,6 +24,18 @@ import { applyThemeEarly } from "./utils/theme";
 // Apply theme and locale early to prevent flash
 applyThemeEarly();
 applyLocaleEarly();
+
+initializeFrontendDiagnostics();
+let previousDiagnosticNavigation = "";
+router.subscribe((state) => {
+  const path = diagnosticPath(state.navigation.location?.pathname || state.location.pathname);
+  const key = `${state.navigation.state}:${path}`;
+  if (key === previousDiagnosticNavigation) return;
+  previousDiagnosticNavigation = key;
+  recordDiagnosticTrace(`navigation-${state.navigation.state}`, {
+    path,
+  });
+});
 
 // Inner component that initializes contexts
 function AppInitializer({ children }: { children: React.ReactNode }) {

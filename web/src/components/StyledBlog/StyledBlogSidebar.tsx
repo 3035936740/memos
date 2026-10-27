@@ -1,8 +1,8 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { HistoryIcon, InfoIcon, MessageSquareReplyIcon, PinIcon, ShuffleIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import { BlogTagCloudWidget } from "@/components/AppSidebar";
+import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import { deriveBlogSidebarStats } from "@/components/BlogSidebar";
 import RelativeTime from "@/components/RelativeTime";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +12,7 @@ import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractMemoIdFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
-import { useRandomBlogMemo, useRecentBlogComments } from "@/utils/blog-sidebar";
+import { truncateBlogSidebarText, useRandomBlogMemo, useRecentBlogComments } from "@/utils/blog-sidebar";
 import { useTranslate } from "@/utils/i18n";
 
 const TIME_MACHINE_SIZE = 4;
@@ -20,7 +20,7 @@ const PINNED_ARTICLE_SIZE = 5;
 
 const WIDGET_CLASSES = "min-w-0 px-[18px] py-4";
 const WIDGET_TITLE_CLASSES = "mb-3 flex items-center gap-1.5 text-[13px] font-semibold text-foreground";
-const LINK_TEXT_CLASSES = "text-[13px] leading-5 text-foreground/90 transition-colors hover:text-primary";
+const LINK_TEXT_CLASSES = "break-words text-[13px] leading-5 text-foreground/90 transition-colors hover:text-primary";
 
 interface Props {
   state?: State;
@@ -65,7 +65,7 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
             {pinnedMemos.map((memo) => (
               <li key={memo.name} data-sb-item="">
                 <Link to={`/${memo.name}`} state={{ from: parentPage, navigationScope }} className={cn("line-clamp-2", LINK_TEXT_CLASSES)}>
-                  {deriveBlogMemoText(memo.content, memo.property?.title).title || t("memo.blog-untitled")}
+                  {truncateBlogSidebarText(deriveBlogMemoText(memo.content, memo.property?.title).title || t("memo.blog-untitled"))}
                 </Link>
               </li>
             ))}
@@ -89,7 +89,7 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
                   </div>
                 )}
                 <Link to={`/${memo.name}`} state={{ from: parentPage, navigationScope }} className={cn("line-clamp-2", LINK_TEXT_CLASSES)}>
-                  {deriveBlogMemoText(memo.content, memo.property?.title).title || t("memo.blog-untitled")}
+                  {truncateBlogSidebarText(deriveBlogMemoText(memo.content, memo.property?.title).title || t("memo.blog-untitled"))}
                 </Link>
               </li>
             );
@@ -117,8 +117,8 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
                       <RelativeTime date={new Date(comment.createTime * 1000)} />
                     </span>
                   </span>
-                  <span className="mt-0.5 line-clamp-2 block text-[13px] leading-5 text-foreground/90 transition-colors group-hover/comment:text-primary">
-                    {comment.content}
+                  <span className="mt-0.5 line-clamp-2 break-words text-[13px] leading-5 text-foreground/90 transition-colors group-hover/comment:text-primary">
+                    {truncateBlogSidebarText(comment.content)}
                   </span>
                 </Link>
               </li>
@@ -138,8 +138,8 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
             state={{ from: parentPage, navigationScope: randomNavigationScope }}
             className="block text-[13px] font-semibold leading-5 text-foreground/90 transition-colors hover:text-primary"
           >
-            <span className="line-clamp-2">
-              {deriveBlogMemoText(randomMemo.content, randomMemo.property?.title).title || t("memo.blog-untitled")}
+            <span className="line-clamp-2 break-words">
+              {truncateBlogSidebarText(deriveBlogMemoText(randomMemo.content, randomMemo.property?.title).title || t("memo.blog-untitled"))}
             </span>
           </Link>
         </section>

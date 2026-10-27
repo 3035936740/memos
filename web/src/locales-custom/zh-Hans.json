@@ -1,4 +1,7 @@
 {
+  "api-error": {
+    "html-response": "接口返回了网页（HTTP {{status}}，{{path}}），请重试；若持续出现，请检查反向代理配置或服务状态。"
+  },
   "theme": {
     "system": "与系统同步",
     "light": "亮色",

@@ -20,7 +20,7 @@ import { extractMemoIdFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { UserStats } from "@/types/proto/api/v1/user_service_pb";
-import { useRandomBlogMemo, useRecentBlogComments } from "@/utils/blog-sidebar";
+import { truncateBlogSidebarText, useRandomBlogMemo, useRecentBlogComments } from "@/utils/blog-sidebar";
 import { useTranslate } from "@/utils/i18n";
 
 const TIME_MACHINE_SIZE = 4;
@@ -109,7 +109,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
                   state={{ from: parentPage, navigationScope }}
                   className="line-clamp-3 text-sm leading-5 text-foreground/85 transition-colors hover:text-primary"
                 >
-                  {title || t("memo.blog-untitled")}
+                  {truncateBlogSidebarText(title || t("memo.blog-untitled"))}
                 </Link>
               </div>
             );
@@ -135,7 +135,9 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
                   <span className="truncate">{comment.creator ? `@${comment.creator}` : "—"}</span>
                   <RelativeTime date={new Date(comment.createTime * 1000)} />
                 </div>
-                <p className="mt-1 line-clamp-2 text-sm leading-5 text-foreground/85">{comment.content}</p>
+                <p className="mt-1 line-clamp-2 break-words text-sm leading-5 text-foreground/85">
+                  {truncateBlogSidebarText(comment.content)}
+                </p>
               </Link>
             ))}
           </div>
@@ -154,7 +156,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
             className="mt-3 block rounded-md px-2 py-2 transition-colors hover:bg-muted hover:text-primary"
           >
             <span className="line-clamp-2 text-sm font-medium leading-5">
-              {deriveBlogMemoText(randomMemo.content, randomMemo.property?.title).title || t("memo.blog-untitled")}
+              {truncateBlogSidebarText(deriveBlogMemoText(randomMemo.content, randomMemo.property?.title).title || t("memo.blog-untitled"))}
             </span>
           </Link>
         </section>
@@ -177,7 +179,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
                   className="flex items-start gap-2 rounded-md px-2 py-1.5 text-sm text-foreground/85 transition-colors hover:bg-muted hover:text-primary"
                 >
                   <PinIcon className="mt-0.5 size-3.5 shrink-0" />
-                  <span className="line-clamp-2">{title || t("memo.blog-untitled")}</span>
+                  <span className="line-clamp-2">{truncateBlogSidebarText(title || t("memo.blog-untitled"))}</span>
                 </Link>
               );
             })}

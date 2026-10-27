@@ -2,14 +2,16 @@ import { timestampDate } from "@bufbuild/protobuf/wkt";
 import { Code, ConnectError, createClient, type Interceptor } from "@connectrpc/connect";
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { getAccessToken, hasStoredToken, isTokenExpired, REQUEST_TOKEN_EXPIRY_BUFFER_MS, setAccessToken } from "./auth-state";
+import i18n from "./i18n";
+import { startDiagnosticRequest } from "./lib/frontend-diagnostics";
 import { AIService } from "./types/proto/api/v1/ai_service_pb";
 import { AttachmentService } from "./types/proto/api/v1/attachment_service_pb";
 import { AuthService } from "./types/proto/api/v1/auth_service_pb";
 import { IdentityProviderService } from "./types/proto/api/v1/idp_service_pb";
 import { InstanceService } from "./types/proto/api/v1/instance_service_pb";
 import { MemoService } from "./types/proto/api/v1/memo_service_pb";
-import { PollService } from "./types/proto/api/v1/poll_service_pb";
 import { MemoViewService } from "./types/proto/api/v1/memo_view_service_pb";
+import { PollService } from "./types/proto/api/v1/poll_service_pb";
 import { SpaceService } from "./types/proto/api/v1/space_service_pb";
 import { UserService } from "./types/proto/api/v1/user_service_pb";
 import { redirectOnAuthFailure } from "./utils/auth-redirect";
@@ -56,11 +58,54 @@ const tokenRefreshManager = createTokenRefreshManager();
 // Token Refresh
 // ============================================================================
 
-const fetchWithCredentials: typeof globalThis.fetch = (input, init) => {
-  return globalThis.fetch(input, {
-    ...init,
-    credentials: "include",
-  });
+const fetchWithCredentials: typeof globalThis.fetch = async (input, init) => {
+  const finishDiagnostic = startDiagnosticRequest(input, init);
+  let response: Response;
+  try {
+    response = await globalThis.fetch(input, {
+      ...init,
+      credentials: "include",
+      cache: "no-store",
+    });
+  } catch (error) {
+    try {
+      finishDiagnostic(undefined, error);
+    } catch (diagnosticError) {
+      console.warn("[Diagnostics] Failed to capture request failure", diagnosticError);
+    }
+    throw error;
+  }
+  try {
+    finishDiagnostic(response);
+  } catch (diagnosticError) {
+    console.warn("[Diagnostics] Failed to capture response", diagnosticError);
+  }
+  const contentType = response.headers.get("Content-Type")?.split(";", 1)[0].trim().toLowerCase();
+  if (contentType === "text/html" || contentType === "application/xhtml+xml") {
+    const requestUrl = typeof input === "string" || input instanceof URL ? input.toString() : input.url;
+    const requestPath = new URL(requestUrl, window.location.origin).pathname;
+    // A proxy error, challenge or redirect can return a webpage instead of an RPC
+    // response. Log routing metadata only, never credentials or response bodies.
+    console.error("[API] Received HTML instead of an RPC response", {
+      requestPath,
+      responsePath: response.url ? new URL(response.url).pathname : undefined,
+      status: response.status,
+      contentType,
+      redirected: response.redirected,
+      server: response.headers.get("Server"),
+      requestId: response.headers.get("X-Request-Id") || response.headers.get("CF-Ray"),
+    });
+    await response.body?.cancel();
+    throw new ConnectError(
+      i18n.t("api-error.html-response", {
+        defaultValue: "The API returned a webpage (HTTP {{status}}, {{path}}). Please retry; if this persists, check the reverse proxy.",
+        status: response.status,
+        path: requestPath,
+      }),
+      Code.Unknown,
+    );
+  }
+  return response;
 };
 
 // Separate transport without auth interceptor to prevent recursion

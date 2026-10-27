@@ -1,5 +1,10 @@
 package v1
 
+// frontendErrorReportPath is a public, write-only HTTP diagnostic collector,
+// including before sign-in on private instances. It exposes no stored logs or
+// instance data; the handler enforces same-origin, size and rate limits.
+const frontendErrorReportPath = "/api/v1/diagnostics/frontend-errors"
+
 // PublicMethods defines API endpoints that don't require authentication.
 // All other endpoints require a valid session or access token.
 //

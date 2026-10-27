@@ -164,9 +164,9 @@ const StyledBlogCard = ({ memo, showCreator = false, parentPage, navigationScope
         </Link>
       </h2>
 
-      {/* Clipped rather than line-clamped: clamping would stop the text wrapping round the cover. */}
+      {/* Three actual line heights keep every line intact across styles while preserving cover wrapping. */}
       {excerpt.trim() && (
-        <p data-sb-excerpt="" className="mt-1.5 max-h-[5.25rem] overflow-clip text-sm leading-[1.75] text-muted-foreground">
+        <p data-sb-excerpt="" className="mt-1.5 max-h-[3lh] overflow-clip break-words text-sm leading-[1.75] text-muted-foreground">
           {excerpt}
         </p>
       )}

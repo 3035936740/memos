@@ -104,6 +104,7 @@ const MemoDetail = () => {
   const styledBlog = isStyledBlog(feedLayout);
   const SidebarComponent = styledBlog ? StyledBlogSidebar : BlogSidebar;
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
+  const readingArticleRef = useRef<HTMLDivElement>(null);
   const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
   const location = useLocation();
@@ -244,7 +245,9 @@ const MemoDetail = () => {
       <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
         <MemoDetailScript memo={displayMemo} />
         {styledBlog && <SketchFilters />}
-        {styledBlog && <ReadingProgress memoName={displayMemo.name} tags={displayMemo.tags} style={blogStyle} />}
+        {styledBlog && (
+          <ReadingProgress memoName={displayMemo.name} tags={displayMemo.tags} style={blogStyle} articleRef={readingArticleRef} />
+        )}
         <MemoSidebarRegistration
           memo={displayMemo}
           from={resolvedParentPage}
@@ -297,27 +300,29 @@ const MemoDetail = () => {
                 </Link>
               </div>
             )}
-            <MemoView
-              key={displayMemo.name}
-              memo={displayMemo}
-              compact={false}
-              parentPage={resolvedParentPage}
-              navigationScope={navigationScope}
-              parentScope={parentScope}
-              shareImageDialogOpen={shareImageDialogOpen}
-              showCreator
-              showVisibility
-              showPinned
-              showSpace
-              className={
-                styledBlog
-                  ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                  : isBlog2
-                    ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                    : undefined
-              }
-              onShareImageDialogOpenChange={setShareImageDialogOpen}
-            />
+            <div ref={readingArticleRef}>
+              <MemoView
+                key={displayMemo.name}
+                memo={displayMemo}
+                compact={false}
+                parentPage={resolvedParentPage}
+                navigationScope={navigationScope}
+                parentScope={parentScope}
+                shareImageDialogOpen={shareImageDialogOpen}
+                showCreator
+                showVisibility
+                showPinned
+                showSpace
+                className={
+                  styledBlog
+                    ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                    : isBlog2
+                      ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                      : undefined
+                }
+                onShareImageDialogOpenChange={setShareImageDialogOpen}
+              />
+            </div>
             {!isShareMode && !displayMemo.parent && (previousMemo || nextMemo) ? (
               <nav
                 className={cn(

@@ -1169,8 +1169,14 @@ html[data-style="terminal"] [data-styled-blog] [data-sb-card]:hover {
 }
 
 html[data-style="terminal"] [data-styled-blog] [data-sb-title]::before {
-  content: "\276F ";
+  content: ">";
+  display: inline-block;
+  margin-inline-end: 0.55em;
   color: var(--sb-tui-green);
+  font-family: Consolas, "Liberation Mono", monospace;
+  font-size: 1.1em;
+  font-weight: 600;
+  transform: scaleY(0.7);
 }
 
 html[data-style="terminal"] [data-styled-blog] [data-sb-card]:hover [data-sb-title] a {
@@ -1537,6 +1543,7 @@ html[data-style="pixel"] [data-app-toolbar] {
   --accent: color-mix(in oklch, var(--sb-px-hud-text) 22%, var(--sb-px-hud));
   border-bottom: 4px solid var(--sb-px-ink);
   background: var(--sb-px-hud);
+  color: var(--sb-px-hud-text);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }

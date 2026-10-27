@@ -1,4 +1,7 @@
 {
+  "api-error": {
+    "html-response": "介面回傳了網頁（HTTP {{status}}，{{path}}），請重試；若持續出現，請檢查反向代理設定或服務狀態。"
+  },
   "theme": {
     "system": "與系統同步",
     "light": "明亮",

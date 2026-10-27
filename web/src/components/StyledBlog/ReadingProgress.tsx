@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef } from "react";
 import { recordRead } from "@/utils/blog-progress";
 import { tagItemsOf } from "@/utils/tag-items";
 import RainyGlass from "./RainyGlass";
@@ -6,21 +6,21 @@ import { burst } from "./ReactionCanvas";
 
 /** Cells in the text bar the developer style shows instead of the drawn one. */
 const TEXT_BAR_CELLS = 24;
-/** How far down counts as having read the article. */
-const READ_THROUGH = 0.95;
 
 interface Props {
   memoName: string;
   tags: string[];
   /** The Blog 2 style the article is read in, for style mastery. */
   style: string;
+  /** Only the article card, excluding comments, navigation and sidebar widgets. */
+  articleRef: RefObject<HTMLElement | null>;
 }
 
 /**
  * A bar across the top of the window that fills as an article is read. Each style dresses it (blog-styles.css);
  * the width and the text bar are written straight to the DOM so scrolling never re-renders React.
  */
-const ReadingProgress = ({ memoName, tags, style }: Props) => {
+const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
   const fillRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const readRef = useRef({ memoName, tags, style });
@@ -38,20 +38,31 @@ const ReadingProgress = ({ memoName, tags, style }: Props) => {
 
   useEffect(() => {
     let frame = 0;
+    let recorded = false;
     const update = () => {
       frame = 0;
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+      const article = articleRef.current;
+      if (!article) return;
+      const bounds = article.getBoundingClientRect();
+      if (bounds.height <= 0) return;
+      const toolbarBottom = Math.max(0, document.querySelector<HTMLElement>("[data-app-toolbar]")?.getBoundingClientRect().bottom ?? 0);
+      const start = Math.max(0, window.scrollY + bounds.top - toolbarBottom);
+      const end = Math.max(0, window.scrollY + bounds.bottom - window.innerHeight);
+      // The last line reaching the viewport completes the article, regardless of
+      // how much sidebar or comment content continues below it. Allow subpixel rounding.
+      const complete = bounds.bottom <= window.innerHeight + 1;
+      const ratio = complete ? 1 : end > start ? Math.min(1, Math.max(0, (window.scrollY - start) / (end - start))) : 0;
       if (fillRef.current) fillRef.current.style.width = `${ratio * 100}%`;
       // A short article that fits the window counts as read straight away.
-      if (ratio >= READ_THROUGH || scrollable <= 0) {
+      if (complete && !recorded) {
         const { memoName: name, tags: readTags, style: readStyle } = readRef.current;
         recordRead(name, readTags, readStyle);
+        recorded = true;
       }
       if (labelRef.current) {
-        const filled = Math.round(ratio * TEXT_BAR_CELLS);
+        const filled = Math.floor(ratio * TEXT_BAR_CELLS);
         const bar = `${"=".repeat(Math.max(0, filled - 1))}${filled > 0 ? ">" : ""}${" ".repeat(TEXT_BAR_CELLS - filled)}`;
-        labelRef.current.textContent = `[${bar}] ${Math.round(ratio * 100)}%`;
+        labelRef.current.textContent = `[${bar}] ${Math.floor(ratio * 100)}%`;
       }
     };
     const schedule = () => {
@@ -60,12 +71,16 @@ const ReadingProgress = ({ memoName, tags, style }: Props) => {
     update();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    // Images, embeds and font loading can change the article after its first paint.
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : undefined;
+    if (articleRef.current) observer?.observe(articleRef.current);
     return () => {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
+      observer?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [articleRef, memoName]);
 
   return (
     <>

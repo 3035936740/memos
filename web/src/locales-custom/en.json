@@ -1,4 +1,7 @@
 {
+  "api-error": {
+    "html-response": "The API returned a webpage (HTTP {{status}}, {{path}}). Please retry; if this persists, check the reverse proxy."
+  },
   "theme": {
     "system": "Sync with system",
     "light": "Light",

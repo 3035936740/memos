@@ -220,7 +220,7 @@ const Blog2MemoView = ({ memo, featured = false, showCreator = false, parentPage
             <p
               className={cn(
                 "mt-2 text-sm leading-6 text-muted-foreground",
-                hasFlowingCover ? "max-h-[4.5rem] overflow-clip" : "line-clamp-3",
+                hasFlowingCover ? "max-h-[3lh] overflow-clip break-words" : "line-clamp-3",
                 featured && "max-w-2xl",
               )}
             >

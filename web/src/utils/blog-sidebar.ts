@@ -6,6 +6,13 @@ import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { ListMemosRequestSchema } from "@/types/proto/api/v1/memo_service_pb";
 
+/** Keep sidebar previews within 100 Unicode characters, including the ellipsis. */
+export const truncateBlogSidebarText = (value: string): string => {
+  const text = value.replace(/\s+/g, " ").trim();
+  const characters = Array.from(text);
+  return characters.length > 100 ? `${characters.slice(0, 97).join("")}...` : text;
+};
+
 export interface BlogRecentComment {
   name: string;
   parentName: string;
