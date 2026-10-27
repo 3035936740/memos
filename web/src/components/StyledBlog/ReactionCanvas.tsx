@@ -495,21 +495,29 @@ const drawBotanicalParticle = (context: CanvasRenderingContext2D, particle: Part
   }
 };
 
-/** A diffuse ring with no solid stroke; aero keeps its separate glass treatment. */
-const drawSoftRing = (context: CanvasRenderingContext2D, particle: Particle, dark: boolean) => {
-  const feather = Math.max(2, particle.size * 0.3);
-  const outer = particle.size + feather * 1.5;
+/** A crisp, hollow circle with a narrow glow outside its rim; aero keeps its glass treatment. */
+const drawGlowingRing = (context: CanvasRenderingContext2D, particle: Particle, dark: boolean) => {
+  const radius = particle.size;
+  const lineWidth = 1;
+  const glowStart = radius + lineWidth / 2;
+  const outer = glowStart + Math.max(1.5, Math.min(3, radius * 0.25));
   const color = dark ? "240,236,226" : "28,27,24";
   const opacity = 0.12 + (particle.phase / (Math.PI * 2)) * 0.23;
-  const rim = context.createRadialGradient(0, 0, Math.max(0, particle.size - feather), 0, 0, outer);
-  rim.addColorStop(0, `rgba(${color},0)`);
-  rim.addColorStop(0.4, `rgba(${color},${opacity})`);
-  rim.addColorStop(0.7, `rgba(${color},${opacity * 0.25})`);
-  rim.addColorStop(1, `rgba(${color},0)`);
-  context.fillStyle = rim;
+  const glow = context.createRadialGradient(0, 0, glowStart, 0, 0, outer);
+  glow.addColorStop(0, `rgba(${color},${opacity * 0.4})`);
+  glow.addColorStop(0.45, `rgba(${color},${opacity * 0.12})`);
+  glow.addColorStop(1, `rgba(${color},0)`);
+  context.fillStyle = glow;
   context.beginPath();
   context.arc(0, 0, outer, 0, Math.PI * 2);
-  context.fill();
+  context.moveTo(glowStart, 0);
+  context.arc(0, 0, glowStart, 0, Math.PI * 2, true);
+  context.fill("evenodd");
+  context.strokeStyle = `rgba(${color},${opacity})`;
+  context.lineWidth = lineWidth;
+  context.beginPath();
+  context.arc(0, 0, radius, 0, Math.PI * 2);
+  context.stroke();
 };
 
 const CANDY_PALETTES = [
@@ -627,7 +635,7 @@ const drawParticle = (context: CanvasRenderingContext2D, particle: Particle, loo
   }
 
   if ((kind === "bubble" || kind === "ember") && look !== "gloss") {
-    drawSoftRing(context, particle, dark);
+    drawGlowingRing(context, particle, dark);
     return;
   }
 

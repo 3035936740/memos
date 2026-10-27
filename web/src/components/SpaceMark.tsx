@@ -20,7 +20,12 @@ const SpaceMark = ({ size = "md", className, avatarUrl }: Props) => {
   return (
     <span
       aria-hidden
-      className={cn("flex shrink-0 items-center justify-center bg-sidebar-accent text-sidebar-accent-foreground", scale.mark, className)}
+      className={cn(
+        "flex shrink-0 items-center justify-center",
+        avatarUrl ? "bg-transparent" : "bg-sidebar-accent text-sidebar-accent-foreground",
+        scale.mark,
+        className,
+      )}
     >
       {avatarUrl ? (
         <img src={avatarUrl} alt="" className="size-full rounded-[inherit] object-cover" />
