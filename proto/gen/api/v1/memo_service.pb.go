@@ -338,7 +338,11 @@ type Memo struct {
 	// instance statistics. Only instance administrators may change this field.
 	HideTime bool `protobuf:"varint,30,opt,name=hide_time,json=hideTime,proto3" json:"hide_time,omitempty"`
 	// Optional. A poll attached to this memo.
-	Poll          *Poll `protobuf:"bytes,31,opt,name=poll,proto3" json:"poll,omitempty"`
+	Poll *Poll `protobuf:"bytes,31,opt,name=poll,proto3" json:"poll,omitempty"`
+	// Output only. Present only in trash responses.
+	DeleteTime *timestamppb.Timestamp `protobuf:"bytes,32,opt,name=delete_time,json=deleteTime,proto3" json:"delete_time,omitempty"`
+	// Output only. Expected permanent deletion time.
+	PurgeTime     *timestamppb.Timestamp `protobuf:"bytes,33,opt,name=purge_time,json=purgeTime,proto3" json:"purge_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -565,6 +569,20 @@ func (x *Memo) GetHideTime() bool {
 func (x *Memo) GetPoll() *Poll {
 	if x != nil {
 		return x.Poll
+	}
+	return nil
+}
+
+func (x *Memo) GetDeleteTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DeleteTime
+	}
+	return nil
+}
+
+func (x *Memo) GetPurgeTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PurgeTime
 	}
 	return nil
 }
@@ -2872,6 +2890,630 @@ func (x *LinkMetadata) GetImage() string {
 	return ""
 }
 
+type ListDeletedMemosRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PageSize      int32                  `protobuf:"varint,1,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	ShowAll       bool                   `protobuf:"varint,3,opt,name=show_all,json=showAll,proto3" json:"show_all,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDeletedMemosRequest) Reset() {
+	*x = ListDeletedMemosRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDeletedMemosRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDeletedMemosRequest) ProtoMessage() {}
+
+func (x *ListDeletedMemosRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDeletedMemosRequest.ProtoReflect.Descriptor instead.
+func (*ListDeletedMemosRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ListDeletedMemosRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+func (x *ListDeletedMemosRequest) GetPageToken() string {
+	if x != nil {
+		return x.PageToken
+	}
+	return ""
+}
+
+func (x *ListDeletedMemosRequest) GetShowAll() bool {
+	if x != nil {
+		return x.ShowAll
+	}
+	return false
+}
+
+type ListDeletedMemosResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Memos         []*Memo                `protobuf:"bytes,1,rep,name=memos,proto3" json:"memos,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDeletedMemosResponse) Reset() {
+	*x = ListDeletedMemosResponse{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDeletedMemosResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDeletedMemosResponse) ProtoMessage() {}
+
+func (x *ListDeletedMemosResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDeletedMemosResponse.ProtoReflect.Descriptor instead.
+func (*ListDeletedMemosResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *ListDeletedMemosResponse) GetMemos() []*Memo {
+	if x != nil {
+		return x.Memos
+	}
+	return nil
+}
+
+func (x *ListDeletedMemosResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+type RestoreMemoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RestoreMemoRequest) Reset() {
+	*x = RestoreMemoRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RestoreMemoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RestoreMemoRequest) ProtoMessage() {}
+
+func (x *RestoreMemoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RestoreMemoRequest.ProtoReflect.Descriptor instead.
+func (*RestoreMemoRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *RestoreMemoRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type PurgeMemoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PurgeMemoRequest) Reset() {
+	*x = PurgeMemoRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PurgeMemoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PurgeMemoRequest) ProtoMessage() {}
+
+func (x *PurgeMemoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PurgeMemoRequest.ProtoReflect.Descriptor instead.
+func (*PurgeMemoRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *PurgeMemoRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type EmptyTrashRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ShowAll       bool                   `protobuf:"varint,1,opt,name=show_all,json=showAll,proto3" json:"show_all,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EmptyTrashRequest) Reset() {
+	*x = EmptyTrashRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EmptyTrashRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EmptyTrashRequest) ProtoMessage() {}
+
+func (x *EmptyTrashRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EmptyTrashRequest.ProtoReflect.Descriptor instead.
+func (*EmptyTrashRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *EmptyTrashRequest) GetShowAll() bool {
+	if x != nil {
+		return x.ShowAll
+	}
+	return false
+}
+
+type MemoRevision struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Memo          string                 `protobuf:"bytes,2,opt,name=memo,proto3" json:"memo,omitempty"`
+	Editor        string                 `protobuf:"bytes,3,opt,name=editor,proto3" json:"editor,omitempty"`
+	CreateTime    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
+	Preview       string                 `protobuf:"bytes,5,opt,name=preview,proto3" json:"preview,omitempty"`
+	Content       string                 `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
+	Visibility    Visibility             `protobuf:"varint,7,opt,name=visibility,proto3,enum=memos.api.v1.Visibility" json:"visibility,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MemoRevision) Reset() {
+	*x = MemoRevision{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MemoRevision) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemoRevision) ProtoMessage() {}
+
+func (x *MemoRevision) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemoRevision.ProtoReflect.Descriptor instead.
+func (*MemoRevision) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *MemoRevision) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *MemoRevision) GetMemo() string {
+	if x != nil {
+		return x.Memo
+	}
+	return ""
+}
+
+func (x *MemoRevision) GetEditor() string {
+	if x != nil {
+		return x.Editor
+	}
+	return ""
+}
+
+func (x *MemoRevision) GetCreateTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreateTime
+	}
+	return nil
+}
+
+func (x *MemoRevision) GetPreview() string {
+	if x != nil {
+		return x.Preview
+	}
+	return ""
+}
+
+func (x *MemoRevision) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *MemoRevision) GetVisibility() Visibility {
+	if x != nil {
+		return x.Visibility
+	}
+	return Visibility_VISIBILITY_UNSPECIFIED
+}
+
+type ListMemoRevisionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMemoRevisionsRequest) Reset() {
+	*x = ListMemoRevisionsRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMemoRevisionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMemoRevisionsRequest) ProtoMessage() {}
+
+func (x *ListMemoRevisionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMemoRevisionsRequest.ProtoReflect.Descriptor instead.
+func (*ListMemoRevisionsRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *ListMemoRevisionsRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type ListMemoRevisionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Revisions     []*MemoRevision        `protobuf:"bytes,1,rep,name=revisions,proto3" json:"revisions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMemoRevisionsResponse) Reset() {
+	*x = ListMemoRevisionsResponse{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMemoRevisionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMemoRevisionsResponse) ProtoMessage() {}
+
+func (x *ListMemoRevisionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMemoRevisionsResponse.ProtoReflect.Descriptor instead.
+func (*ListMemoRevisionsResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *ListMemoRevisionsResponse) GetRevisions() []*MemoRevision {
+	if x != nil {
+		return x.Revisions
+	}
+	return nil
+}
+
+type GetMemoRevisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	RevisionId    int64                  `protobuf:"varint,2,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMemoRevisionRequest) Reset() {
+	*x = GetMemoRevisionRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMemoRevisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMemoRevisionRequest) ProtoMessage() {}
+
+func (x *GetMemoRevisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMemoRevisionRequest.ProtoReflect.Descriptor instead.
+func (*GetMemoRevisionRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *GetMemoRevisionRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GetMemoRevisionRequest) GetRevisionId() int64 {
+	if x != nil {
+		return x.RevisionId
+	}
+	return 0
+}
+
+type RestoreMemoRevisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	RevisionId    int64                  `protobuf:"varint,2,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RestoreMemoRevisionRequest) Reset() {
+	*x = RestoreMemoRevisionRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RestoreMemoRevisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RestoreMemoRevisionRequest) ProtoMessage() {}
+
+func (x *RestoreMemoRevisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RestoreMemoRevisionRequest.ProtoReflect.Descriptor instead.
+func (*RestoreMemoRevisionRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *RestoreMemoRevisionRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RestoreMemoRevisionRequest) GetRevisionId() int64 {
+	if x != nil {
+		return x.RevisionId
+	}
+	return 0
+}
+
+type DeleteMemoRevisionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	RevisionId    int64                  `protobuf:"varint,2,opt,name=revision_id,json=revisionId,proto3" json:"revision_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteMemoRevisionRequest) Reset() {
+	*x = DeleteMemoRevisionRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteMemoRevisionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteMemoRevisionRequest) ProtoMessage() {}
+
+func (x *DeleteMemoRevisionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteMemoRevisionRequest.ProtoReflect.Descriptor instead.
+func (*DeleteMemoRevisionRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *DeleteMemoRevisionRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeleteMemoRevisionRequest) GetRevisionId() int64 {
+	if x != nil {
+		return x.RevisionId
+	}
+	return 0
+}
+
+type ClearMemoRevisionsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClearMemoRevisionsRequest) Reset() {
+	*x = ClearMemoRevisionsRequest{}
+	mi := &file_api_v1_memo_service_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClearMemoRevisionsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClearMemoRevisionsRequest) ProtoMessage() {}
+
+func (x *ClearMemoRevisionsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_memo_service_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClearMemoRevisionsRequest.ProtoReflect.Descriptor instead.
+func (*ClearMemoRevisionsRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_memo_service_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ClearMemoRevisionsRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 // Computed properties of a memo.
 type Memo_Property struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
@@ -2887,7 +3529,7 @@ type Memo_Property struct {
 
 func (x *Memo_Property) Reset() {
 	*x = Memo_Property{}
-	mi := &file_api_v1_memo_service_proto_msgTypes[38]
+	mi := &file_api_v1_memo_service_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2899,7 +3541,7 @@ func (x *Memo_Property) String() string {
 func (*Memo_Property) ProtoMessage() {}
 
 func (x *Memo_Property) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_memo_service_proto_msgTypes[38]
+	mi := &file_api_v1_memo_service_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2964,7 +3606,7 @@ type MemoRelation_Memo struct {
 
 func (x *MemoRelation_Memo) Reset() {
 	*x = MemoRelation_Memo{}
-	mi := &file_api_v1_memo_service_proto_msgTypes[39]
+	mi := &file_api_v1_memo_service_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2976,7 +3618,7 @@ func (x *MemoRelation_Memo) String() string {
 func (*MemoRelation_Memo) ProtoMessage() {}
 
 func (x *MemoRelation_Memo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_memo_service_proto_msgTypes[39]
+	mi := &file_api_v1_memo_service_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3019,7 +3661,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
 	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breactionJ\x04\b\x03\x10\x04R\n" +
-	"content_id\"\xda\f\n" +
+	"content_id\"\xdc\r\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -3057,7 +3699,11 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x05space\x18\x1d \x01(\tB\x1a\xe0A\x01\xfaA\x14\n" +
 	"\x12memos.api.v1/SpaceH\x04R\x05space\x88\x01\x01\x12 \n" +
 	"\thide_time\x18\x1e \x01(\bB\x03\xe0A\x01R\bhideTime\x12+\n" +
-	"\x04poll\x18\x1f \x01(\v2\x12.memos.api.v1.PollB\x03\xe0A\x01R\x04poll\x1a\xac\x01\n" +
+	"\x04poll\x18\x1f \x01(\v2\x12.memos.api.v1.PollB\x03\xe0A\x01R\x04poll\x12@\n" +
+	"\vdelete_time\x18  \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
+	"deleteTime\x12>\n" +
+	"\n" +
+	"purge_time\x18! \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\tpurgeTime\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +
@@ -3261,7 +3907,50 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x03url\x18\x01 \x01(\tR\x03url\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x14\n" +
-	"\x05image\x18\x04 \x01(\tR\x05image*[\n" +
+	"\x05image\x18\x04 \x01(\tR\x05image\"p\n" +
+	"\x17ListDeletedMemosRequest\x12\x1b\n" +
+	"\tpage_size\x18\x01 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\n" +
+	"page_token\x18\x02 \x01(\tR\tpageToken\x12\x19\n" +
+	"\bshow_all\x18\x03 \x01(\bR\ashowAll\"l\n" +
+	"\x18ListDeletedMemosResponse\x12(\n" +
+	"\x05memos\x18\x01 \x03(\v2\x12.memos.api.v1.MemoR\x05memos\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"(\n" +
+	"\x12RestoreMemoRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"&\n" +
+	"\x10PurgeMemoRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\".\n" +
+	"\x11EmptyTrashRequest\x12\x19\n" +
+	"\bshow_all\x18\x01 \x01(\bR\ashowAll\"\xf5\x01\n" +
+	"\fMemoRevision\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
+	"\x04memo\x18\x02 \x01(\tR\x04memo\x12\x16\n" +
+	"\x06editor\x18\x03 \x01(\tR\x06editor\x12;\n" +
+	"\vcreate_time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"createTime\x12\x18\n" +
+	"\apreview\x18\x05 \x01(\tR\apreview\x12\x18\n" +
+	"\acontent\x18\x06 \x01(\tR\acontent\x128\n" +
+	"\n" +
+	"visibility\x18\a \x01(\x0e2\x18.memos.api.v1.VisibilityR\n" +
+	"visibility\".\n" +
+	"\x18ListMemoRevisionsRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"U\n" +
+	"\x19ListMemoRevisionsResponse\x128\n" +
+	"\trevisions\x18\x01 \x03(\v2\x1a.memos.api.v1.MemoRevisionR\trevisions\"M\n" +
+	"\x16GetMemoRevisionRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vrevision_id\x18\x02 \x01(\x03R\n" +
+	"revisionId\"Q\n" +
+	"\x1aRestoreMemoRevisionRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vrevision_id\x18\x02 \x01(\x03R\n" +
+	"revisionId\"P\n" +
+	"\x19DeleteMemoRevisionRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vrevision_id\x18\x02 \x01(\x03R\n" +
+	"revisionId\"/\n" +
+	"\x19ClearMemoRevisionsRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name*[\n" +
 	"\n" +
 	"Visibility\x12\x1a\n" +
 	"\x16VISIBILITY_UNSPECIFIED\x10\x00\x12\v\n" +
@@ -3274,8 +3963,18 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x16VOTER_TYPE_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rAUTHENTICATED\x10\x01\x12\n" +
 	"\n" +
-	"\x06ANYONE\x10\x022\xa4\x16\n" +
-	"\vMemoService\x12e\n" +
+	"\x06ANYONE\x10\x022\xb7\x1f\n" +
+	"\vMemoService\x12~\n" +
+	"\x10ListDeletedMemos\x12%.memos.api.v1.ListDeletedMemosRequest\x1a&.memos.api.v1.ListDeletedMemosResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/memos:trash\x12n\n" +
+	"\vRestoreMemo\x12 .memos.api.v1.RestoreMemoRequest\x1a\x12.memos.api.v1.Memo\")\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/{name=memos/*}:restore\x12l\n" +
+	"\tPurgeMemo\x12\x1e.memos.api.v1.PurgeMemoRequest\x1a\x16.google.protobuf.Empty\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/{name=memos/*}:purge\x12j\n" +
+	"\n" +
+	"EmptyTrash\x12\x1f.memos.api.v1.EmptyTrashRequest\x1a\x16.google.protobuf.Empty\"#\x82\xd3\xe4\x93\x02\x1d:\x01*\"\x18/api/v1/memos:emptyTrash\x12\x8e\x01\n" +
+	"\x11ListMemoRevisions\x12&.memos.api.v1.ListMemoRevisionsRequest\x1a'.memos.api.v1.ListMemoRevisionsResponse\"(\x82\xd3\xe4\x93\x02\"\x12 /api/v1/{name=memos/*}/revisions\x12\x8b\x01\n" +
+	"\x0fGetMemoRevision\x12$.memos.api.v1.GetMemoRevisionRequest\x1a\x1a.memos.api.v1.MemoRevision\"6\x82\xd3\xe4\x93\x020\x12./api/v1/{name=memos/*}/revisions/{revision_id}\x12\x96\x01\n" +
+	"\x13RestoreMemoRevision\x12(.memos.api.v1.RestoreMemoRevisionRequest\x1a\x12.memos.api.v1.Memo\"A\x82\xd3\xe4\x93\x02;:\x01*\"6/api/v1/{name=memos/*}/revisions/{revision_id}:restore\x12\x8d\x01\n" +
+	"\x12DeleteMemoRevision\x12'.memos.api.v1.DeleteMemoRevisionRequest\x1a\x16.google.protobuf.Empty\"6\x82\xd3\xe4\x93\x020*./api/v1/{name=memos/*}/revisions/{revision_id}\x12\x7f\n" +
+	"\x12ClearMemoRevisions\x12'.memos.api.v1.ClearMemoRevisionsRequest\x1a\x16.google.protobuf.Empty\"(\x82\xd3\xe4\x93\x02\"* /api/v1/{name=memos/*}/revisions\x12e\n" +
 	"\n" +
 	"CreateMemo\x12\x1f.memos.api.v1.CreateMemoRequest\x1a\x12.memos.api.v1.Memo\"\"\xdaA\x04memo\x82\xd3\xe4\x93\x02\x15:\x04memo\"\r/api/v1/memos\x12f\n" +
 	"\tListMemos\x12\x1e.memos.api.v1.ListMemosRequest\x1a\x1f.memos.api.v1.ListMemosResponse\"\x18\xdaA\x00\x82\xd3\xe4\x93\x02\x0f\x12\r/api/v1/memos\x12b\n" +
@@ -3316,7 +4015,7 @@ func file_api_v1_memo_service_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_memo_service_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_api_v1_memo_service_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_api_v1_memo_service_proto_msgTypes = make([]protoimpl.MessageInfo, 52)
 var file_api_v1_memo_service_proto_goTypes = []any{
 	(Visibility)(0),                      // 0: memos.api.v1.Visibility
 	(VoterType)(0),                       // 1: memos.api.v1.VoterType
@@ -3359,102 +4058,138 @@ var file_api_v1_memo_service_proto_goTypes = []any{
 	(*BatchGetLinkMetadataRequest)(nil),  // 38: memos.api.v1.BatchGetLinkMetadataRequest
 	(*BatchGetLinkMetadataResponse)(nil), // 39: memos.api.v1.BatchGetLinkMetadataResponse
 	(*LinkMetadata)(nil),                 // 40: memos.api.v1.LinkMetadata
-	(*Memo_Property)(nil),                // 41: memos.api.v1.Memo.Property
-	(*MemoRelation_Memo)(nil),            // 42: memos.api.v1.MemoRelation.Memo
-	(*timestamppb.Timestamp)(nil),        // 43: google.protobuf.Timestamp
-	(State)(0),                           // 44: memos.api.v1.State
-	(*Attachment)(nil),                   // 45: memos.api.v1.Attachment
-	(*fieldmaskpb.FieldMask)(nil),        // 46: google.protobuf.FieldMask
-	(*emptypb.Empty)(nil),                // 47: google.protobuf.Empty
+	(*ListDeletedMemosRequest)(nil),      // 41: memos.api.v1.ListDeletedMemosRequest
+	(*ListDeletedMemosResponse)(nil),     // 42: memos.api.v1.ListDeletedMemosResponse
+	(*RestoreMemoRequest)(nil),           // 43: memos.api.v1.RestoreMemoRequest
+	(*PurgeMemoRequest)(nil),             // 44: memos.api.v1.PurgeMemoRequest
+	(*EmptyTrashRequest)(nil),            // 45: memos.api.v1.EmptyTrashRequest
+	(*MemoRevision)(nil),                 // 46: memos.api.v1.MemoRevision
+	(*ListMemoRevisionsRequest)(nil),     // 47: memos.api.v1.ListMemoRevisionsRequest
+	(*ListMemoRevisionsResponse)(nil),    // 48: memos.api.v1.ListMemoRevisionsResponse
+	(*GetMemoRevisionRequest)(nil),       // 49: memos.api.v1.GetMemoRevisionRequest
+	(*RestoreMemoRevisionRequest)(nil),   // 50: memos.api.v1.RestoreMemoRevisionRequest
+	(*DeleteMemoRevisionRequest)(nil),    // 51: memos.api.v1.DeleteMemoRevisionRequest
+	(*ClearMemoRevisionsRequest)(nil),    // 52: memos.api.v1.ClearMemoRevisionsRequest
+	(*Memo_Property)(nil),                // 53: memos.api.v1.Memo.Property
+	(*MemoRelation_Memo)(nil),            // 54: memos.api.v1.MemoRelation.Memo
+	(*timestamppb.Timestamp)(nil),        // 55: google.protobuf.Timestamp
+	(State)(0),                           // 56: memos.api.v1.State
+	(*Attachment)(nil),                   // 57: memos.api.v1.Attachment
+	(*fieldmaskpb.FieldMask)(nil),        // 58: google.protobuf.FieldMask
+	(*emptypb.Empty)(nil),                // 59: google.protobuf.Empty
 }
 var file_api_v1_memo_service_proto_depIdxs = []int32{
-	43, // 0: memos.api.v1.Reaction.create_time:type_name -> google.protobuf.Timestamp
-	44, // 1: memos.api.v1.Memo.state:type_name -> memos.api.v1.State
-	43, // 2: memos.api.v1.Memo.create_time:type_name -> google.protobuf.Timestamp
-	43, // 3: memos.api.v1.Memo.update_time:type_name -> google.protobuf.Timestamp
+	55, // 0: memos.api.v1.Reaction.create_time:type_name -> google.protobuf.Timestamp
+	56, // 1: memos.api.v1.Memo.state:type_name -> memos.api.v1.State
+	55, // 2: memos.api.v1.Memo.create_time:type_name -> google.protobuf.Timestamp
+	55, // 3: memos.api.v1.Memo.update_time:type_name -> google.protobuf.Timestamp
 	0,  // 4: memos.api.v1.Memo.visibility:type_name -> memos.api.v1.Visibility
-	45, // 5: memos.api.v1.Memo.attachments:type_name -> memos.api.v1.Attachment
+	57, // 5: memos.api.v1.Memo.attachments:type_name -> memos.api.v1.Attachment
 	20, // 6: memos.api.v1.Memo.relations:type_name -> memos.api.v1.MemoRelation
 	3,  // 7: memos.api.v1.Memo.reactions:type_name -> memos.api.v1.Reaction
-	41, // 8: memos.api.v1.Memo.property:type_name -> memos.api.v1.Memo.Property
+	53, // 8: memos.api.v1.Memo.property:type_name -> memos.api.v1.Memo.Property
 	5,  // 9: memos.api.v1.Memo.location:type_name -> memos.api.v1.Location
-	43, // 10: memos.api.v1.Memo.publish_time:type_name -> google.protobuf.Timestamp
+	55, // 10: memos.api.v1.Memo.publish_time:type_name -> google.protobuf.Timestamp
 	8,  // 11: memos.api.v1.Memo.poll:type_name -> memos.api.v1.Poll
-	4,  // 12: memos.api.v1.CreateMemoRequest.memo:type_name -> memos.api.v1.Memo
-	44, // 13: memos.api.v1.ListMemosRequest.state:type_name -> memos.api.v1.State
-	45, // 14: memos.api.v1.Poll.image:type_name -> memos.api.v1.Attachment
-	10, // 15: memos.api.v1.Poll.options:type_name -> memos.api.v1.PollOption
-	1,  // 16: memos.api.v1.Poll.voter_type:type_name -> memos.api.v1.VoterType
-	43, // 17: memos.api.v1.Poll.start_time:type_name -> google.protobuf.Timestamp
-	43, // 18: memos.api.v1.Poll.end_time:type_name -> google.protobuf.Timestamp
-	9,  // 19: memos.api.v1.Poll.voters:type_name -> memos.api.v1.PollVoter
-	45, // 20: memos.api.v1.PollOption.image:type_name -> memos.api.v1.Attachment
-	4,  // 21: memos.api.v1.ListMemosResponse.memos:type_name -> memos.api.v1.Memo
-	4,  // 22: memos.api.v1.UpdateMemoRequest.memo:type_name -> memos.api.v1.Memo
-	46, // 23: memos.api.v1.UpdateMemoRequest.update_mask:type_name -> google.protobuf.FieldMask
-	45, // 24: memos.api.v1.SetMemoAttachmentsRequest.attachments:type_name -> memos.api.v1.Attachment
-	45, // 25: memos.api.v1.ListMemoAttachmentsResponse.attachments:type_name -> memos.api.v1.Attachment
-	42, // 26: memos.api.v1.MemoRelation.memo:type_name -> memos.api.v1.MemoRelation.Memo
-	42, // 27: memos.api.v1.MemoRelation.related_memo:type_name -> memos.api.v1.MemoRelation.Memo
-	2,  // 28: memos.api.v1.MemoRelation.type:type_name -> memos.api.v1.MemoRelation.Type
-	20, // 29: memos.api.v1.SetMemoRelationsRequest.relations:type_name -> memos.api.v1.MemoRelation
-	20, // 30: memos.api.v1.ListMemoRelationsResponse.relations:type_name -> memos.api.v1.MemoRelation
-	4,  // 31: memos.api.v1.CreateMemoCommentRequest.comment:type_name -> memos.api.v1.Memo
-	4,  // 32: memos.api.v1.ListMemoCommentsResponse.memos:type_name -> memos.api.v1.Memo
-	3,  // 33: memos.api.v1.ListMemoReactionsResponse.reactions:type_name -> memos.api.v1.Reaction
-	3,  // 34: memos.api.v1.UpsertMemoReactionRequest.reaction:type_name -> memos.api.v1.Reaction
-	43, // 35: memos.api.v1.MemoShare.create_time:type_name -> google.protobuf.Timestamp
-	43, // 36: memos.api.v1.MemoShare.expire_time:type_name -> google.protobuf.Timestamp
-	31, // 37: memos.api.v1.CreateMemoShareRequest.memo_share:type_name -> memos.api.v1.MemoShare
-	31, // 38: memos.api.v1.ListMemoSharesResponse.memo_shares:type_name -> memos.api.v1.MemoShare
-	40, // 39: memos.api.v1.BatchGetLinkMetadataResponse.link_metadata:type_name -> memos.api.v1.LinkMetadata
-	6,  // 40: memos.api.v1.MemoService.CreateMemo:input_type -> memos.api.v1.CreateMemoRequest
-	7,  // 41: memos.api.v1.MemoService.ListMemos:input_type -> memos.api.v1.ListMemosRequest
-	12, // 42: memos.api.v1.MemoService.GetMemo:input_type -> memos.api.v1.GetMemoRequest
-	13, // 43: memos.api.v1.MemoService.RecordMemoView:input_type -> memos.api.v1.RecordMemoViewRequest
-	15, // 44: memos.api.v1.MemoService.UpdateMemo:input_type -> memos.api.v1.UpdateMemoRequest
-	16, // 45: memos.api.v1.MemoService.DeleteMemo:input_type -> memos.api.v1.DeleteMemoRequest
-	17, // 46: memos.api.v1.MemoService.SetMemoAttachments:input_type -> memos.api.v1.SetMemoAttachmentsRequest
-	18, // 47: memos.api.v1.MemoService.ListMemoAttachments:input_type -> memos.api.v1.ListMemoAttachmentsRequest
-	21, // 48: memos.api.v1.MemoService.SetMemoRelations:input_type -> memos.api.v1.SetMemoRelationsRequest
-	22, // 49: memos.api.v1.MemoService.ListMemoRelations:input_type -> memos.api.v1.ListMemoRelationsRequest
-	24, // 50: memos.api.v1.MemoService.CreateMemoComment:input_type -> memos.api.v1.CreateMemoCommentRequest
-	25, // 51: memos.api.v1.MemoService.ListMemoComments:input_type -> memos.api.v1.ListMemoCommentsRequest
-	27, // 52: memos.api.v1.MemoService.ListMemoReactions:input_type -> memos.api.v1.ListMemoReactionsRequest
-	29, // 53: memos.api.v1.MemoService.UpsertMemoReaction:input_type -> memos.api.v1.UpsertMemoReactionRequest
-	30, // 54: memos.api.v1.MemoService.DeleteMemoReaction:input_type -> memos.api.v1.DeleteMemoReactionRequest
-	32, // 55: memos.api.v1.MemoService.CreateMemoShare:input_type -> memos.api.v1.CreateMemoShareRequest
-	33, // 56: memos.api.v1.MemoService.ListMemoShares:input_type -> memos.api.v1.ListMemoSharesRequest
-	35, // 57: memos.api.v1.MemoService.DeleteMemoShare:input_type -> memos.api.v1.DeleteMemoShareRequest
-	36, // 58: memos.api.v1.MemoService.GetSharedMemo:input_type -> memos.api.v1.GetSharedMemoRequest
-	37, // 59: memos.api.v1.MemoService.GetLinkMetadata:input_type -> memos.api.v1.GetLinkMetadataRequest
-	38, // 60: memos.api.v1.MemoService.BatchGetLinkMetadata:input_type -> memos.api.v1.BatchGetLinkMetadataRequest
-	4,  // 61: memos.api.v1.MemoService.CreateMemo:output_type -> memos.api.v1.Memo
-	11, // 62: memos.api.v1.MemoService.ListMemos:output_type -> memos.api.v1.ListMemosResponse
-	4,  // 63: memos.api.v1.MemoService.GetMemo:output_type -> memos.api.v1.Memo
-	14, // 64: memos.api.v1.MemoService.RecordMemoView:output_type -> memos.api.v1.RecordMemoViewResponse
-	4,  // 65: memos.api.v1.MemoService.UpdateMemo:output_type -> memos.api.v1.Memo
-	47, // 66: memos.api.v1.MemoService.DeleteMemo:output_type -> google.protobuf.Empty
-	47, // 67: memos.api.v1.MemoService.SetMemoAttachments:output_type -> google.protobuf.Empty
-	19, // 68: memos.api.v1.MemoService.ListMemoAttachments:output_type -> memos.api.v1.ListMemoAttachmentsResponse
-	47, // 69: memos.api.v1.MemoService.SetMemoRelations:output_type -> google.protobuf.Empty
-	23, // 70: memos.api.v1.MemoService.ListMemoRelations:output_type -> memos.api.v1.ListMemoRelationsResponse
-	4,  // 71: memos.api.v1.MemoService.CreateMemoComment:output_type -> memos.api.v1.Memo
-	26, // 72: memos.api.v1.MemoService.ListMemoComments:output_type -> memos.api.v1.ListMemoCommentsResponse
-	28, // 73: memos.api.v1.MemoService.ListMemoReactions:output_type -> memos.api.v1.ListMemoReactionsResponse
-	3,  // 74: memos.api.v1.MemoService.UpsertMemoReaction:output_type -> memos.api.v1.Reaction
-	47, // 75: memos.api.v1.MemoService.DeleteMemoReaction:output_type -> google.protobuf.Empty
-	31, // 76: memos.api.v1.MemoService.CreateMemoShare:output_type -> memos.api.v1.MemoShare
-	34, // 77: memos.api.v1.MemoService.ListMemoShares:output_type -> memos.api.v1.ListMemoSharesResponse
-	47, // 78: memos.api.v1.MemoService.DeleteMemoShare:output_type -> google.protobuf.Empty
-	4,  // 79: memos.api.v1.MemoService.GetSharedMemo:output_type -> memos.api.v1.Memo
-	40, // 80: memos.api.v1.MemoService.GetLinkMetadata:output_type -> memos.api.v1.LinkMetadata
-	39, // 81: memos.api.v1.MemoService.BatchGetLinkMetadata:output_type -> memos.api.v1.BatchGetLinkMetadataResponse
-	61, // [61:82] is the sub-list for method output_type
-	40, // [40:61] is the sub-list for method input_type
-	40, // [40:40] is the sub-list for extension type_name
-	40, // [40:40] is the sub-list for extension extendee
-	0,  // [0:40] is the sub-list for field type_name
+	55, // 12: memos.api.v1.Memo.delete_time:type_name -> google.protobuf.Timestamp
+	55, // 13: memos.api.v1.Memo.purge_time:type_name -> google.protobuf.Timestamp
+	4,  // 14: memos.api.v1.CreateMemoRequest.memo:type_name -> memos.api.v1.Memo
+	56, // 15: memos.api.v1.ListMemosRequest.state:type_name -> memos.api.v1.State
+	57, // 16: memos.api.v1.Poll.image:type_name -> memos.api.v1.Attachment
+	10, // 17: memos.api.v1.Poll.options:type_name -> memos.api.v1.PollOption
+	1,  // 18: memos.api.v1.Poll.voter_type:type_name -> memos.api.v1.VoterType
+	55, // 19: memos.api.v1.Poll.start_time:type_name -> google.protobuf.Timestamp
+	55, // 20: memos.api.v1.Poll.end_time:type_name -> google.protobuf.Timestamp
+	9,  // 21: memos.api.v1.Poll.voters:type_name -> memos.api.v1.PollVoter
+	57, // 22: memos.api.v1.PollOption.image:type_name -> memos.api.v1.Attachment
+	4,  // 23: memos.api.v1.ListMemosResponse.memos:type_name -> memos.api.v1.Memo
+	4,  // 24: memos.api.v1.UpdateMemoRequest.memo:type_name -> memos.api.v1.Memo
+	58, // 25: memos.api.v1.UpdateMemoRequest.update_mask:type_name -> google.protobuf.FieldMask
+	57, // 26: memos.api.v1.SetMemoAttachmentsRequest.attachments:type_name -> memos.api.v1.Attachment
+	57, // 27: memos.api.v1.ListMemoAttachmentsResponse.attachments:type_name -> memos.api.v1.Attachment
+	54, // 28: memos.api.v1.MemoRelation.memo:type_name -> memos.api.v1.MemoRelation.Memo
+	54, // 29: memos.api.v1.MemoRelation.related_memo:type_name -> memos.api.v1.MemoRelation.Memo
+	2,  // 30: memos.api.v1.MemoRelation.type:type_name -> memos.api.v1.MemoRelation.Type
+	20, // 31: memos.api.v1.SetMemoRelationsRequest.relations:type_name -> memos.api.v1.MemoRelation
+	20, // 32: memos.api.v1.ListMemoRelationsResponse.relations:type_name -> memos.api.v1.MemoRelation
+	4,  // 33: memos.api.v1.CreateMemoCommentRequest.comment:type_name -> memos.api.v1.Memo
+	4,  // 34: memos.api.v1.ListMemoCommentsResponse.memos:type_name -> memos.api.v1.Memo
+	3,  // 35: memos.api.v1.ListMemoReactionsResponse.reactions:type_name -> memos.api.v1.Reaction
+	3,  // 36: memos.api.v1.UpsertMemoReactionRequest.reaction:type_name -> memos.api.v1.Reaction
+	55, // 37: memos.api.v1.MemoShare.create_time:type_name -> google.protobuf.Timestamp
+	55, // 38: memos.api.v1.MemoShare.expire_time:type_name -> google.protobuf.Timestamp
+	31, // 39: memos.api.v1.CreateMemoShareRequest.memo_share:type_name -> memos.api.v1.MemoShare
+	31, // 40: memos.api.v1.ListMemoSharesResponse.memo_shares:type_name -> memos.api.v1.MemoShare
+	40, // 41: memos.api.v1.BatchGetLinkMetadataResponse.link_metadata:type_name -> memos.api.v1.LinkMetadata
+	4,  // 42: memos.api.v1.ListDeletedMemosResponse.memos:type_name -> memos.api.v1.Memo
+	55, // 43: memos.api.v1.MemoRevision.create_time:type_name -> google.protobuf.Timestamp
+	0,  // 44: memos.api.v1.MemoRevision.visibility:type_name -> memos.api.v1.Visibility
+	46, // 45: memos.api.v1.ListMemoRevisionsResponse.revisions:type_name -> memos.api.v1.MemoRevision
+	41, // 46: memos.api.v1.MemoService.ListDeletedMemos:input_type -> memos.api.v1.ListDeletedMemosRequest
+	43, // 47: memos.api.v1.MemoService.RestoreMemo:input_type -> memos.api.v1.RestoreMemoRequest
+	44, // 48: memos.api.v1.MemoService.PurgeMemo:input_type -> memos.api.v1.PurgeMemoRequest
+	45, // 49: memos.api.v1.MemoService.EmptyTrash:input_type -> memos.api.v1.EmptyTrashRequest
+	47, // 50: memos.api.v1.MemoService.ListMemoRevisions:input_type -> memos.api.v1.ListMemoRevisionsRequest
+	49, // 51: memos.api.v1.MemoService.GetMemoRevision:input_type -> memos.api.v1.GetMemoRevisionRequest
+	50, // 52: memos.api.v1.MemoService.RestoreMemoRevision:input_type -> memos.api.v1.RestoreMemoRevisionRequest
+	51, // 53: memos.api.v1.MemoService.DeleteMemoRevision:input_type -> memos.api.v1.DeleteMemoRevisionRequest
+	52, // 54: memos.api.v1.MemoService.ClearMemoRevisions:input_type -> memos.api.v1.ClearMemoRevisionsRequest
+	6,  // 55: memos.api.v1.MemoService.CreateMemo:input_type -> memos.api.v1.CreateMemoRequest
+	7,  // 56: memos.api.v1.MemoService.ListMemos:input_type -> memos.api.v1.ListMemosRequest
+	12, // 57: memos.api.v1.MemoService.GetMemo:input_type -> memos.api.v1.GetMemoRequest
+	13, // 58: memos.api.v1.MemoService.RecordMemoView:input_type -> memos.api.v1.RecordMemoViewRequest
+	15, // 59: memos.api.v1.MemoService.UpdateMemo:input_type -> memos.api.v1.UpdateMemoRequest
+	16, // 60: memos.api.v1.MemoService.DeleteMemo:input_type -> memos.api.v1.DeleteMemoRequest
+	17, // 61: memos.api.v1.MemoService.SetMemoAttachments:input_type -> memos.api.v1.SetMemoAttachmentsRequest
+	18, // 62: memos.api.v1.MemoService.ListMemoAttachments:input_type -> memos.api.v1.ListMemoAttachmentsRequest
+	21, // 63: memos.api.v1.MemoService.SetMemoRelations:input_type -> memos.api.v1.SetMemoRelationsRequest
+	22, // 64: memos.api.v1.MemoService.ListMemoRelations:input_type -> memos.api.v1.ListMemoRelationsRequest
+	24, // 65: memos.api.v1.MemoService.CreateMemoComment:input_type -> memos.api.v1.CreateMemoCommentRequest
+	25, // 66: memos.api.v1.MemoService.ListMemoComments:input_type -> memos.api.v1.ListMemoCommentsRequest
+	27, // 67: memos.api.v1.MemoService.ListMemoReactions:input_type -> memos.api.v1.ListMemoReactionsRequest
+	29, // 68: memos.api.v1.MemoService.UpsertMemoReaction:input_type -> memos.api.v1.UpsertMemoReactionRequest
+	30, // 69: memos.api.v1.MemoService.DeleteMemoReaction:input_type -> memos.api.v1.DeleteMemoReactionRequest
+	32, // 70: memos.api.v1.MemoService.CreateMemoShare:input_type -> memos.api.v1.CreateMemoShareRequest
+	33, // 71: memos.api.v1.MemoService.ListMemoShares:input_type -> memos.api.v1.ListMemoSharesRequest
+	35, // 72: memos.api.v1.MemoService.DeleteMemoShare:input_type -> memos.api.v1.DeleteMemoShareRequest
+	36, // 73: memos.api.v1.MemoService.GetSharedMemo:input_type -> memos.api.v1.GetSharedMemoRequest
+	37, // 74: memos.api.v1.MemoService.GetLinkMetadata:input_type -> memos.api.v1.GetLinkMetadataRequest
+	38, // 75: memos.api.v1.MemoService.BatchGetLinkMetadata:input_type -> memos.api.v1.BatchGetLinkMetadataRequest
+	42, // 76: memos.api.v1.MemoService.ListDeletedMemos:output_type -> memos.api.v1.ListDeletedMemosResponse
+	4,  // 77: memos.api.v1.MemoService.RestoreMemo:output_type -> memos.api.v1.Memo
+	59, // 78: memos.api.v1.MemoService.PurgeMemo:output_type -> google.protobuf.Empty
+	59, // 79: memos.api.v1.MemoService.EmptyTrash:output_type -> google.protobuf.Empty
+	48, // 80: memos.api.v1.MemoService.ListMemoRevisions:output_type -> memos.api.v1.ListMemoRevisionsResponse
+	46, // 81: memos.api.v1.MemoService.GetMemoRevision:output_type -> memos.api.v1.MemoRevision
+	4,  // 82: memos.api.v1.MemoService.RestoreMemoRevision:output_type -> memos.api.v1.Memo
+	59, // 83: memos.api.v1.MemoService.DeleteMemoRevision:output_type -> google.protobuf.Empty
+	59, // 84: memos.api.v1.MemoService.ClearMemoRevisions:output_type -> google.protobuf.Empty
+	4,  // 85: memos.api.v1.MemoService.CreateMemo:output_type -> memos.api.v1.Memo
+	11, // 86: memos.api.v1.MemoService.ListMemos:output_type -> memos.api.v1.ListMemosResponse
+	4,  // 87: memos.api.v1.MemoService.GetMemo:output_type -> memos.api.v1.Memo
+	14, // 88: memos.api.v1.MemoService.RecordMemoView:output_type -> memos.api.v1.RecordMemoViewResponse
+	4,  // 89: memos.api.v1.MemoService.UpdateMemo:output_type -> memos.api.v1.Memo
+	59, // 90: memos.api.v1.MemoService.DeleteMemo:output_type -> google.protobuf.Empty
+	59, // 91: memos.api.v1.MemoService.SetMemoAttachments:output_type -> google.protobuf.Empty
+	19, // 92: memos.api.v1.MemoService.ListMemoAttachments:output_type -> memos.api.v1.ListMemoAttachmentsResponse
+	59, // 93: memos.api.v1.MemoService.SetMemoRelations:output_type -> google.protobuf.Empty
+	23, // 94: memos.api.v1.MemoService.ListMemoRelations:output_type -> memos.api.v1.ListMemoRelationsResponse
+	4,  // 95: memos.api.v1.MemoService.CreateMemoComment:output_type -> memos.api.v1.Memo
+	26, // 96: memos.api.v1.MemoService.ListMemoComments:output_type -> memos.api.v1.ListMemoCommentsResponse
+	28, // 97: memos.api.v1.MemoService.ListMemoReactions:output_type -> memos.api.v1.ListMemoReactionsResponse
+	3,  // 98: memos.api.v1.MemoService.UpsertMemoReaction:output_type -> memos.api.v1.Reaction
+	59, // 99: memos.api.v1.MemoService.DeleteMemoReaction:output_type -> google.protobuf.Empty
+	31, // 100: memos.api.v1.MemoService.CreateMemoShare:output_type -> memos.api.v1.MemoShare
+	34, // 101: memos.api.v1.MemoService.ListMemoShares:output_type -> memos.api.v1.ListMemoSharesResponse
+	59, // 102: memos.api.v1.MemoService.DeleteMemoShare:output_type -> google.protobuf.Empty
+	4,  // 103: memos.api.v1.MemoService.GetSharedMemo:output_type -> memos.api.v1.Memo
+	40, // 104: memos.api.v1.MemoService.GetLinkMetadata:output_type -> memos.api.v1.LinkMetadata
+	39, // 105: memos.api.v1.MemoService.BatchGetLinkMetadata:output_type -> memos.api.v1.BatchGetLinkMetadataResponse
+	76, // [76:106] is the sub-list for method output_type
+	46, // [46:76] is the sub-list for method input_type
+	46, // [46:46] is the sub-list for extension type_name
+	46, // [46:46] is the sub-list for extension extendee
+	0,  // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_memo_service_proto_init() }
@@ -3476,7 +4211,7 @@ func file_api_v1_memo_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_memo_service_proto_rawDesc), len(file_api_v1_memo_service_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   40,
+			NumMessages:   52,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

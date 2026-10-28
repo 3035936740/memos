@@ -88,7 +88,7 @@ func authorizePostgresAttachmentMutation(
 		var memoSpace sql.NullInt64
 		var content string
 		if err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, space_id, visibility, content
-			FROM memo WHERE id = $1`, memoID).Scan(
+			FROM memo WHERE deleted_ts IS NULL AND id = $1`, memoID).Scan(
 			&snapshot.CreatorID, &snapshot.RowStatus, &memoSpace, &snapshot.Visibility, &content,
 		); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {

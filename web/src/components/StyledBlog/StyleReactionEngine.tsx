@@ -101,7 +101,7 @@ interface Banner {
  */
 const StyleReactionEngine = () => {
   const t = useTranslate();
-  const { generalSetting } = useInstance();
+  const { generalSetting, isInitialized } = useInstance();
   const { feedLayout, blogStyle, applyFirstVisitStyle, resetToDefaults } = useView();
   const { getEnergy, resetPrefs } = useMusicEffects();
   const progress = useBlogProgress();
@@ -113,7 +113,7 @@ const StyleReactionEngine = () => {
   const activeStyle = styled ? blogStyle : undefined;
   const fusion = useMemo(() => computeFusion(activeStyle, theme), [activeStyle, theme]);
   const daypart = getDaypart(now);
-  const festival = getFestival(now);
+  const festival = isInitialized && !generalSetting.disableFestivalEffects ? getFestival(now) : undefined;
   const transformations = useMemo(() => computeTransformations(progress), [progress]);
   const mastered = !!activeStyle && transformations.masteredStyles.includes(activeStyle);
   const siteConfig = useMemo(() => parseInstanceSiteConfig(generalSetting?.customPagesJson ?? ""), [generalSetting?.customPagesJson]);

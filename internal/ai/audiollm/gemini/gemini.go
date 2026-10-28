@@ -63,7 +63,7 @@ func New(cfg ai.ProviderConfig, options audiollm.Options) (*Model, error) {
 	client, err := genai.NewClient(context.Background(), &genai.ClientConfig{
 		APIKey:      cfg.APIKey,
 		Backend:     genai.BackendGeminiAPI,
-		HTTPClient:  options.HTTPClient,
+		HTTPClient:  ai.WithHeaders(options.HTTPClient, cfg.CustomHeaders),
 		HTTPOptions: httpOptions,
 	})
 	if err != nil {

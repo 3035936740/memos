@@ -103,6 +103,9 @@ func collectDeleteUserTargets(ctx context.Context, tx *sql.Tx, userID int32) (*d
 }
 
 func deleteUserTargetsTx(ctx context.Context, tx *sql.Tx, userID int32, targets *deleteUserTargetSet) error {
+	if err := store.EnqueueAttachmentCleanup(ctx, tx, "mysql", targets.attachments); err != nil {
+		return err
+	}
 	memoIDs := targets.memoIDs
 
 	// Delete the memo rows before their reactions: a concurrent UpsertReaction
@@ -364,6 +367,9 @@ func deleteMemoRelationsTx(ctx context.Context, tx *sql.Tx, memoIDs []int32) err
 }
 
 func deleteMemosTx(ctx context.Context, tx *sql.Tx, memoIDs []int32) error {
+	if err := store.DeleteMemoSetRevisions(ctx, tx, "mysql", memoIDs); err != nil {
+		return err
+	}
 	for _, batch := range deleteUserBatches(memoIDs, deleteUserBatchSize) {
 		clause, args := deleteUserInClause(1, batch)
 		if _, err := tx.ExecContext(ctx, `DELETE FROM memo WHERE id IN `+clause, args...); err != nil {

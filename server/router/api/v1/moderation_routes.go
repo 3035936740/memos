@@ -539,11 +539,26 @@ func RegisterModerationRoutes(router *echo.Group, service *APIV1Service, authori
 			return moderationError(c, code, err)
 		}
 		setting := store.DefaultInstanceModerationSecuritySetting()
-		if err := json.NewDecoder(http.MaxBytesReader(c.Response(), c.Request().Body, 4096)).Decode(setting); err != nil {
+		setting.AIReview = nil
+		if err := json.NewDecoder(http.MaxBytesReader(c.Response(), c.Request().Body, 65536)).Decode(setting); err != nil {
 			return moderationError(c, http.StatusBadRequest, errors.New("invalid request body"))
 		}
 		if setting.CommentReportThreshold < 1 || setting.CommentReportThreshold > 10000 || setting.ArticleReportThreshold < 1 || setting.ArticleReportThreshold > 10000 || setting.UserReportThreshold < 1 || setting.UserReportThreshold > 10000 || setting.UserAutoBanInitialDays < 1 || setting.UserAutoBanInitialDays > int32(maxModerationBanDays) || setting.PublishCooldownSeconds < 0 || setting.PublishCooldownSeconds > 86400 {
 			return moderationError(c, http.StatusBadRequest, errors.New("setting is outside the allowed range"))
+		}
+		if setting.AIReview == nil {
+			existing, err := service.Store.GetInstanceModerationSecuritySetting(c.Request().Context())
+			if err != nil {
+				return moderationError(c, http.StatusInternalServerError, errors.New("failed to load security setting"))
+			}
+			setting.AIReview = existing.AIReview
+		}
+		aiSetting, err := service.Store.GetInstanceAISetting(c.Request().Context())
+		if err != nil {
+			return moderationError(c, http.StatusInternalServerError, errors.New("failed to load AI setting"))
+		}
+		if err := validateAIReviewSetting(setting.AIReview, aiSetting); err != nil {
+			return moderationError(c, http.StatusBadRequest, err)
 		}
 		if err := service.Store.UpsertInstanceModerationSecuritySetting(c.Request().Context(), setting); err != nil {
 			return moderationError(c, http.StatusInternalServerError, errors.New("failed to save security setting"))

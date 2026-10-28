@@ -100,6 +100,9 @@ func deleteSQLiteMemoSetTx(ctx context.Context, tx dbExecutor, memoIDs []int32) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to collect memo attachments")
 	}
+	if err := store.EnqueueAttachmentCleanup(ctx, tx, "sqlite", attachments); err != nil {
+		return nil, err
+	}
 	if err := deleteSQLiteMemoSetShares(ctx, tx, memoIDs); err != nil {
 		return nil, errors.Wrap(err, "failed to delete memo shares")
 	}

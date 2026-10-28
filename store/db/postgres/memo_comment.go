@@ -34,7 +34,7 @@ func readPostgresMemoParticipation(ctx context.Context, tx *sql.Tx, memoID, acto
 	}
 	var contextSpace sql.NullInt64
 	err = tx.QueryRowContext(ctx, `SELECT creator_id, row_status, visibility, space_id
-		FROM memo WHERE id = $1`, memoID).Scan(
+		FROM memo WHERE deleted_ts IS NULL AND id = $1`, memoID).Scan(
 		&snapshot.ContextCreatorID, &snapshot.ContextRowStatus, &snapshot.ContextVisibility, &contextSpace,
 	)
 	if err != nil {

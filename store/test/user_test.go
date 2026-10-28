@@ -11,6 +11,36 @@ import (
 	"github.com/usememos/memos/store"
 )
 
+func TestCreateUserPersistsDescription(t *testing.T) {
+	for _, mode := range []string{"ordinary", "first-user", "identity"} {
+		t.Run(mode, func(t *testing.T) {
+			ctx := context.Background()
+			ts := NewTestingStore(ctx, t)
+			defer ts.Close()
+			input := &store.User{Username: "bio-user", Role: store.RoleUser, Description: "A saved biography"}
+			var user *store.User
+			var err error
+			switch mode {
+			case "ordinary":
+				user, err = ts.CreateUser(ctx, input)
+			case "first-user":
+				var created bool
+				user, created, err = ts.CreateUserIfNoUsers(ctx, input)
+				require.True(t, created)
+			case "identity":
+				user, err = ts.CreateUserWithIdentity(ctx, input, &store.UserIdentity{Provider: "bio-idp", ExternUID: "bio-subject"})
+			}
+			require.NoError(t, err)
+			require.Equal(t, "A saved biography", user.Description)
+			// List queries read the driver directly, bypassing the user cache.
+			users, err := ts.ListUsers(ctx, &store.FindUser{ID: &user.ID})
+			require.NoError(t, err)
+			require.Len(t, users, 1)
+			require.Equal(t, "A saved biography", users[0].Description)
+		})
+	}
+}
+
 func TestUserStore(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()

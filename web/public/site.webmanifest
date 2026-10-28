@@ -10,5 +10,10 @@
   "scope": "/",
   "start_url": "/",
   "theme_color": "#faf9f5",
-  "background_color": "#faf9f5"
+  "background_color": "#faf9f5",
+  "share_target": {
+    "action": "/home",
+    "method": "GET",
+    "params": { "title": "share_title", "text": "share_text", "url": "share_url" }
+  }
 }

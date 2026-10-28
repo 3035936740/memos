@@ -33,6 +33,7 @@ func (d *DB) UpsertMemoRelation(ctx context.Context, create *store.MemoRelation)
 
 func (d *DB) ListMemoRelations(ctx context.Context, find *store.FindMemoRelation) ([]*store.MemoRelation, error) {
 	where, args := []string{"TRUE"}, []any{}
+	where = append(where, "memo_id IN (SELECT id FROM memo WHERE deleted_ts IS NULL) AND related_memo_id IN (SELECT id FROM memo WHERE deleted_ts IS NULL)")
 	if find.MemoID != nil {
 		where, args = append(where, "`memo_id` = ?"), append(args, *find.MemoID)
 	}

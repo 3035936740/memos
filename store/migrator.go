@@ -100,6 +100,9 @@ func validateMigrationFileName(filename string) error {
 // It checks the current schema version and applies any necessary migrations.
 // It also seeds the database with initial data if in demo mode.
 func (s *Store) Migrate(ctx context.Context) error {
+	if err := s.backupBeforeMigration(ctx); err != nil {
+		return err
+	}
 	if err := s.preMigrate(ctx); err != nil {
 		return errors.Wrap(err, "failed to pre-migrate")
 	}
@@ -130,9 +133,13 @@ func (s *Store) Migrate(ctx context.Context) error {
 		}
 	}
 
+	if err := s.applyPlusMigrations(ctx); err != nil {
+		return errors.Wrap(err, "failed to migrate Memos Plus")
+	}
+
 	if s.profile.Demo {
 		// In demo mode, we should seed the database.
-		if err := s.seed(ctx); err != nil {
+		if err := s.ResetDemo(ctx); err != nil {
 			return errors.Wrap(err, "failed to seed")
 		}
 	}
@@ -376,6 +383,10 @@ func (s *Store) preMigrate(ctx context.Context) error {
 			return errors.Wrap(err, "failed to commit transaction")
 		}
 
+		if err := s.initPlusLedger(ctx, true); err != nil {
+			return err
+		}
+
 		// Upsert current schema version to database.
 		schemaVersion, err := s.GetCurrentSchemaVersion()
 		if err != nil {
@@ -401,29 +412,7 @@ func (s *Store) getSeedBasePath() string {
 	return fmt.Sprintf("seed/%s/", s.profile.Driver)
 }
 
-// seed seeds the database with initial data.
-// It reads all seed files from the embedded filesystem and executes them in order.
-// This is only supported for SQLite databases and is used in demo mode.
-func (s *Store) seed(ctx context.Context) error {
-	// Only seed for SQLite - other databases should use production data
-	if s.profile.Driver != "sqlite" {
-		slog.Warn("seed is only supported for SQLite, skipping for other databases")
-		return nil
-	}
-
-	filenames, err := fs.Glob(seedFS, fmt.Sprintf("%s*.sql", s.getSeedBasePath()))
-	if err != nil {
-		return errors.Wrap(err, "failed to read seed files")
-	}
-
-	// Sort seed files by name. This is important to ensure that seed files are applied in order.
-	slices.Sort(filenames)
-	// Start a transaction to apply the seed files.
-	tx, err := s.driver.GetDB().Begin()
-	if err != nil {
-		return errors.Wrap(err, "failed to start transaction")
-	}
-	defer tx.Rollback()
+func (s *Store) seedTx(ctx context.Context, tx *sql.Tx, filenames []string) error {
 	// Loop over all seed files and execute them in order.
 	for _, filename := range filenames {
 		bytes, err := seedFS.ReadFile(filename)
@@ -434,7 +423,7 @@ func (s *Store) seed(ctx context.Context) error {
 			return errors.Wrapf(err, "seed error: %s", filename)
 		}
 	}
-	return tx.Commit()
+	return nil
 }
 
 // GetCurrentSchemaVersion returns the latest schema version available for the configured database driver.

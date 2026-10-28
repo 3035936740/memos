@@ -190,7 +190,10 @@ const TagsSection = () => {
                 </datalist>
               </div>
 
-              <div className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2 text-sm text-muted-foreground">
+              <div
+                data-settings-surface=""
+                className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2 text-sm text-muted-foreground"
+              >
                 <PaletteIcon className="size-4" />
                 <span>{t("setting.tags.background-color")}</span>
                 <input

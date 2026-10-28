@@ -2,11 +2,13 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { useLocation, useNavigate } from "react-router-dom";
 import { routeSupportsCollectionScope } from "@/components/AppSidebar/routes";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { useSpaces } from "@/hooks/useSpaceQueries";
+import { useBatchSpaces, usePagedSpaces, useSpaces } from "@/hooks/useSpaceQueries";
 import { buildCollectionScopeFilter, type CollectionScope } from "@/lib/cel-filter";
 import { getDuplicateSpaceTitles } from "@/lib/space-display";
+import { getSpaceNavigationPath, getSpaceRoute, getUnscopedPath } from "@/lib/space-routes";
 import { ROUTES } from "@/router/routes";
 import type { Space } from "@/types/proto/api/v1/space_service_pb";
+import { readRecentSpaces, recordRecentSpace } from "@/utils/space-directory";
 
 const SELECTED_SPACE_STORAGE_PREFIX = "memos-selected-space:";
 const ALL_COLLECTION_SCOPE: CollectionScope = { kind: "all" };
@@ -36,10 +38,12 @@ const writeSelectedSpaceName = (userName: string, spaceName: string | undefined)
 
 interface SpaceContextValue {
   spaces: Space[];
+  totalSpaces: number;
   spaceByName: ReadonlyMap<string, Space>;
   duplicateSpaceTitles: ReadonlySet<string>;
   selectedSpace?: Space;
   selectedSpaceName?: string;
+  selectedSpacePath?: string;
   collectionScope: CollectionScope;
   memoFilter?: string;
   isLoadingSpaces: boolean;
@@ -69,10 +73,32 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   const [selectedSpaceName, setSelectedSpaceName] = useState(() => readSelectedSpaceName(sessionKey));
   const [optimisticSpace, setOptimisticSpace] = useState<Space>();
   const spacesQuery = useSpaces(viewerName);
-  const spaces = spacesQuery.data ?? NO_SPACES;
-  const spaceByName = useMemo(() => new Map(spaces.map((space) => [space.name, space])), [spaces]);
-  const listedSelectedSpace = spaces.find((space) => space.name === selectedSpaceName);
+  const summary = usePagedSpaces(viewerName, "", "", { enabled: true });
+  const totalSpaces = summary.data?.totalSize ?? spacesQuery.data?.length ?? 0;
+  const spaces = summary.data && totalSpaces <= 10 ? summary.data.spaces : (spacesQuery.data ?? NO_SPACES);
+  const [recentNames, setRecentNames] = useState(() => readRecentSpaces(viewerName ?? ""));
+  const selectedQuery = useBatchSpaces(viewerName, selectedSpaceName ? [selectedSpaceName] : []);
+  const recentQuery = useBatchSpaces(viewerName, recentNames);
+  const hydratedSpaces = useMemo(
+    () => [...spaces, ...(recentQuery.data?.spaces ?? []), ...(selectedQuery.data?.spaces ?? [])],
+    [spaces, recentQuery.data, selectedQuery.data],
+  );
+  const spaceByName = useMemo(() => new Map(hydratedSpaces.map((space) => [space.name, space])), [hydratedSpaces]);
+  const listedSelectedSpace = selectedSpaceName ? spaceByName.get(selectedSpaceName) : undefined;
   const selectedSpace = listedSelectedSpace ?? (optimisticSpace?.name === selectedSpaceName ? optimisticSpace : undefined);
+  const selectedSpacePath = selectedSpaceName
+    ? `/space/${encodeURIComponent(selectedSpace?.urlSlug || selectedSpaceName.split("/").at(-1) || "")}`
+    : undefined;
+
+  // Normal navigation changes the lens, never the selected Space. Reuse the
+  // existing page links while keeping refreshes and copied URLs Space-aware.
+  useEffect(() => {
+    if (!selectedSpacePath) return;
+    const target = getSpaceNavigationPath(selectedSpacePath, location.pathname);
+    if (target && target !== location.pathname) {
+      navigateRef.current({ pathname: target, search: location.search, hash: location.hash }, { replace: true, state: location.state });
+    }
+  }, [selectedSpacePath, location.pathname, location.search, location.hash, location.state]);
   const duplicateSpaceTitles = useMemo(
     () => getDuplicateSpaceTitles(selectedSpace && !spaceByName.has(selectedSpace.name) ? [...spaces, selectedSpace] : spaces),
     [selectedSpace, spaceByName, spaces],
@@ -89,17 +115,16 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   }, [listedSelectedSpace, optimisticSpace]);
 
   useEffect(() => {
-    if (!selectedSpaceName || !spacesQuery.isSuccess || selectedSpace) {
-      return;
+    if (selectedSpaceName && selectedQuery.isSuccess && selectedQuery.data.spaces.length === 0) {
+      writeSelectedSpaceName(sessionKey, undefined);
+      setSelectedSpaceName(undefined);
+      setOptimisticSpace(undefined);
     }
-
-    writeSelectedSpaceName(sessionKey, undefined);
-    setSelectedSpaceName(undefined);
-  }, [selectedSpace, selectedSpaceName, sessionKey, spacesQuery.isSuccess]);
+  }, [selectedSpaceName, selectedQuery.isSuccess, selectedQuery.data, sessionKey]);
 
   const navigateAfterScopeChange = useCallback((destination?: string) => {
     if (destination) {
-      navigateRef.current(destination, { replace: true });
+      navigateRef.current(destination);
       return;
     }
     // Scope and collection lens are independent. Preserve the active lens when
@@ -112,11 +137,15 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   const selectSpace = useCallback(
     (space: Space, destination?: string) => {
       writeSelectedSpaceName(sessionKey, space.name);
+      recordRecentSpace(viewerName ?? "", space.name);
+      setRecentNames(readRecentSpaces(viewerName ?? ""));
       setOptimisticSpace(space);
       setSelectedSpaceName(space.name);
-      navigateAfterScopeChange(destination);
+      const basePath = `/space/${encodeURIComponent(space.urlSlug || space.name.split("/").at(-1) || "")}`;
+      const path = destination || getSpaceNavigationPath(basePath, getUnscopedPath(pathnameRef.current)) || basePath;
+      if (pathnameRef.current !== path) navigateRef.current(path);
     },
-    [navigateAfterScopeChange, sessionKey],
+    [sessionKey, viewerName],
   );
 
   const clearSelectedSpace = useCallback(() => {
@@ -127,16 +156,18 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
 
   const selectMemos = useCallback(() => {
     clearSelectedSpace();
-    navigateAfterScopeChange();
+    navigateAfterScopeChange(getSpaceRoute(pathnameRef.current)?.pathname);
   }, [clearSelectedSpace, navigateAfterScopeChange]);
 
   const value = useMemo<SpaceContextValue>(
     () => ({
       spaces,
+      totalSpaces,
       spaceByName,
       duplicateSpaceTitles,
       selectedSpace,
       selectedSpaceName,
+      selectedSpacePath,
       collectionScope,
       memoFilter: buildCollectionScopeFilter(collectionScope),
       isLoadingSpaces: spacesQuery.isPending,
@@ -153,8 +184,10 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
       selectSpace,
       selectedSpace,
       selectedSpaceName,
+      selectedSpacePath,
       spaceByName,
       spaces,
+      totalSpaces,
       spacesQuery.isError,
       spacesQuery.isPending,
     ],

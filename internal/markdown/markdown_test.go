@@ -15,6 +15,16 @@ func TestNewService(t *testing.T) {
 	assert.NotNil(t, svc)
 }
 
+func TestReviewImageDestinationsIncludeHTMLButNotCode(t *testing.T) {
+	content := "![photo](https://example.com/markdown.png)\n\n<img src=\"https://example.com/html.png\">\n\n`<img src=\"https://example.com/inline-code.png\">`\n\n```html\n<img src=\"https://example.com/code.png\">\n```"
+	metadata, err := NewService().ExtractAll([]byte(content))
+	require.NoError(t, err)
+	require.ElementsMatch(t, []string{"https://example.com/markdown.png", "https://example.com/html.png"}, metadata.ImageDestinations)
+	metadata, err = NewService().ExtractAll([]byte(`<picture><source srcset="https://example.com/2x.png 2x"><img src="https://example.com/1x.png"></picture>`))
+	require.NoError(t, err)
+	require.Contains(t, metadata.ImageDestinations, "unsupported-srcset:")
+}
+
 func TestValidateContent(t *testing.T) {
 	svc := NewService()
 

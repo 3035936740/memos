@@ -65,10 +65,26 @@ type Memo struct {
 	SpaceID    *int32
 
 	// Composed fields
+	DeletedTs *int64
 	ParentUID *string
 }
 
+// DeletedFilter controls trash visibility; the zero value excludes deleted memos.
+type DeletedFilter int
+
+const (
+	// OnlyDeleted returns trash entries only.
+	OnlyDeleted DeletedFilter = 1
+	// IncludeDeleted includes live and deleted entries for trusted lifecycle code.
+	IncludeDeleted DeletedFilter = 2
+)
+
 type FindMemo struct {
+	Deleted         DeletedFilter
+	DeletedBeforeTs *int64
+	AfterID         *int32
+	OrderByID       bool
+
 	ID  *int32
 	UID *string
 
@@ -109,6 +125,10 @@ type FindMemoPayload struct {
 }
 
 type UpdateMemo struct {
+	// RevisionLimit is set by the API, nil means a trusted internal update without history.
+	RevisionLimit *int
+	RevisionForce bool
+
 	ID         int32
 	UID        *string
 	CreatedTs  *int64

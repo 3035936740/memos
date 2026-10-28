@@ -35,11 +35,23 @@ const InstanceBlockedWordsSettingName = "BLOCKED_WORDS"
 const InstanceModerationSecuritySettingName = "MODERATION_SECURITY"
 
 type InstanceModerationSecuritySetting struct {
-	CommentReportThreshold int32 `json:"commentReportThreshold"`
-	ArticleReportThreshold int32 `json:"articleReportThreshold"`
-	UserReportThreshold    int32 `json:"userReportThreshold"`
-	UserAutoBanInitialDays int32 `json:"userAutoBanInitialDays"`
-	PublishCooldownSeconds int32 `json:"publishCooldownSeconds"`
+	CommentReportThreshold int32            `json:"commentReportThreshold"`
+	ArticleReportThreshold int32            `json:"articleReportThreshold"`
+	UserReportThreshold    int32            `json:"userReportThreshold"`
+	UserAutoBanInitialDays int32            `json:"userAutoBanInitialDays"`
+	PublishCooldownSeconds int32            `json:"publishCooldownSeconds"`
+	AIReview               *AIReviewSetting `json:"aiReview,omitempty"`
+}
+
+// AIReviewSetting controls independent opt-in text and image review pipelines.
+type AIReviewSetting struct {
+	Enabled          bool     `json:"enabled"`
+	TextEnabled      bool     `json:"textEnabled"`
+	ImagesEnabled    bool     `json:"imagesEnabled"`
+	TextProviderIDs  []string `json:"textProviderIds"`
+	ImageProviderIDs []string `json:"imageProviderIds"`
+	TextPrompt       string   `json:"textPrompt"`
+	ImagePrompt      string   `json:"imagePrompt"`
 }
 
 func DefaultInstanceModerationSecuritySetting() *InstanceModerationSecuritySetting {
@@ -49,6 +61,7 @@ func DefaultInstanceModerationSecuritySetting() *InstanceModerationSecuritySetti
 		UserReportThreshold:    50,
 		UserAutoBanInitialDays: 30,
 		PublishCooldownSeconds: 60,
+		AIReview:               &AIReviewSetting{TextProviderIDs: []string{}, ImageProviderIDs: []string{}},
 	}
 }
 

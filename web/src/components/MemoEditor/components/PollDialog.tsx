@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
@@ -285,17 +286,25 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
               />
             </label>
           </div>
-          <label className="flex flex-col gap-1.5 text-sm font-medium">
-            投票权限
-            <select
-              className="h-8 rounded-md border border-border bg-background px-3 text-sm"
-              value={voterType}
-              onChange={(event) => setVoterType(Number(event.target.value) as VoterType)}
+          <div className="flex flex-col gap-1.5 text-sm font-medium">
+            <label htmlFor="poll-voter-type">投票权限</label>
+            <Select
+              value={String(voterType)}
+              items={[
+                { value: String(VoterType.AUTHENTICATED), label: "仅登录用户" },
+                { value: String(VoterType.ANYONE), label: "游客也可投票" },
+              ]}
+              onValueChange={(value) => setVoterType(Number(value) as VoterType)}
             >
-              <option value={VoterType.AUTHENTICATED}>仅登录用户</option>
-              <option value={VoterType.ANYONE}>游客也可投票</option>
-            </select>
-          </label>
+              <SelectTrigger id="poll-voter-type" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(VoterType.AUTHENTICATED)}>仅登录用户</SelectItem>
+                <SelectItem value={String(VoterType.ANYONE)}>游客也可投票</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-3 rounded-md border p-3">
             <label className="flex items-center justify-between gap-3 text-sm">
               投票后才显示票数

@@ -36,10 +36,12 @@ CREATE TABLE space (
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   avatar_url TEXT NOT NULL DEFAULT '',
-  url_slug TEXT UNIQUE,
+  url_slug TEXT,
   access_mode TEXT NOT NULL DEFAULT 'INVITE_ONLY' CHECK (access_mode IN ('INVITE_ONLY', 'AUTHENTICATED', 'PUBLIC')),
   sync_to_main_feed INTEGER NOT NULL DEFAULT 1 CHECK (sync_to_main_feed IN (0, 1))
 );
+
+CREATE UNIQUE INDEX idx_space_url_slug ON space(url_slug) WHERE url_slug IS NOT NULL;
 
 -- space membership
 CREATE TABLE space_member (
@@ -65,7 +67,9 @@ CREATE TABLE memo (
   pinned INTEGER NOT NULL CHECK (pinned IN (0, 1)) DEFAULT 0,
   view_count BIGINT NOT NULL DEFAULT 0,
   payload TEXT NOT NULL DEFAULT '{}',
-  space_id INTEGER DEFAULT NULL
+  space_id INTEGER DEFAULT NULL,
+  deleted_ts BIGINT DEFAULT NULL,
+  last_editor_id INTEGER DEFAULT NULL
 );
 
 CREATE INDEX idx_memo_creator_id ON memo(creator_id);
@@ -239,3 +243,16 @@ CREATE TABLE poll_vote (
 );
 CREATE INDEX idx_poll_vote_memo ON poll_vote(memo_id);
 CREATE INDEX idx_poll_vote_user ON poll_vote(user_id, memo_id);
+
+CREATE INDEX idx_memo_deleted_creator ON memo(deleted_ts, creator_id, id);
+CREATE TABLE IF NOT EXISTS memo_revision (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, memo_id INTEGER NOT NULL, editor_id INTEGER NOT NULL,
+ saved_by INTEGER NOT NULL, created_ts BIGINT NOT NULL,
+ content TEXT NOT NULL, payload TEXT NOT NULL, visibility VARCHAR(32) NOT NULL
+);
+CREATE INDEX idx_memo_revision_memo ON memo_revision(memo_id, created_ts DESC, id DESC);
+CREATE INDEX idx_space_access_id ON space(access_mode, id);
+
+CREATE TABLE IF NOT EXISTS attachment_cleanup (
+ attachment_id INTEGER PRIMARY KEY, snapshot TEXT NOT NULL, attempted_ts BIGINT NOT NULL DEFAULT 0
+);

@@ -33,7 +33,7 @@ func loadSQLiteMemoParticipation(ctx context.Context, tx dbExecutor, memoID, act
 	snapshot.ActorActive = actorStatus == store.Normal
 
 	var contextSpace sql.NullInt64
-	err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, visibility, space_id FROM memo WHERE id = ?`, memoID).Scan(
+	err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, visibility, space_id FROM memo WHERE deleted_ts IS NULL AND id = ?`, memoID).Scan(
 		&snapshot.ContextCreatorID, &snapshot.ContextRowStatus, &snapshot.ContextVisibility, &contextSpace,
 	)
 	if err != nil {

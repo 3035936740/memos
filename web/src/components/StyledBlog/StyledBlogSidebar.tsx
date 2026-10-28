@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { BlogTagCloudWidget } from "@/components/AppSidebar";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import { deriveBlogSidebarStats } from "@/components/BlogSidebar";
+import PoweredByMemosPlus from "@/components/PoweredByMemosPlus";
 import RelativeTime from "@/components/RelativeTime";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemos } from "@/hooks/useMemoQueries";
@@ -161,6 +162,7 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
       </section>
 
       <BlogTagCloudWidget widgetClassName={WIDGET_CLASSES} titleClassName={WIDGET_TITLE_CLASSES} />
+      <PoweredByMemosPlus />
     </div>
   );
 };

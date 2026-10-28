@@ -9,7 +9,9 @@ import AppSidebar, {
   SidebarResizeHandle,
   useSidebarWidth,
 } from "@/components/AppSidebar";
+import SetupWizard from "@/components/SetupWizard";
 import SpaceDocumentBrand from "@/components/SpaceDocumentBrand";
+import SketchFilters from "@/components/StyledBlog/SketchFilters";
 import StyleEasterEggs from "@/components/StyledBlog/StyleEasterEggs";
 import StyleReactionEngine from "@/components/StyledBlog/StyleReactionEngine";
 import TopToolbar from "@/components/TopToolbar";
@@ -107,6 +109,8 @@ const RootLayoutContent = () => {
         <Outlet />
       </main>
       <QuickFindDialog />
+      <SketchFilters />
+      <SetupWizard />
       <StyleEasterEggs />
       <StyleReactionEngine />
     </div>

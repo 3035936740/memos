@@ -21,6 +21,7 @@ func TestGetInstanceProfile(t *testing.T) {
 	t.Run("GetInstanceProfile returns instance profile", func(t *testing.T) {
 		// Create test service for this specific test
 		ts := NewTestService(t)
+		ts.Profile.Demo = true
 		defer ts.Cleanup()
 
 		// Call GetInstanceProfile directly
@@ -46,6 +47,7 @@ func TestGetInstanceProfile(t *testing.T) {
 	t.Run("GetInstanceProfile with initialized instance", func(t *testing.T) {
 		// Create test service for this specific test
 		ts := NewTestService(t)
+		ts.Profile.Demo = true
 		defer ts.Cleanup()
 
 		// Create a host user in the store
@@ -76,6 +78,7 @@ func TestGetInstanceProfile(t *testing.T) {
 	t.Run("GetInstanceProfile with users but no admin", func(t *testing.T) {
 		// Create test service for this specific test
 		ts := NewTestService(t)
+		ts.Profile.Demo = true
 		defer ts.Cleanup()
 
 		// Create a regular user but no admin. This mirrors an instance that has
@@ -102,6 +105,7 @@ func TestGetInstanceProfile_Concurrency(t *testing.T) {
 	t.Run("Concurrent access to service", func(t *testing.T) {
 		// Create test service for this specific test
 		ts := NewTestService(t)
+		ts.Profile.Demo = true
 		defer ts.Cleanup()
 
 		// Create a host user

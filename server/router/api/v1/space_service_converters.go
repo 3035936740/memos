@@ -1,6 +1,10 @@
 package v1
 
 import (
+	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	"github.com/usememos/memos/store"
 )
@@ -24,6 +28,10 @@ func convertSpaceFromStore(space *store.Space) *v1pb.Space {
 	}
 	converted.CurrentUserRole = convertSpaceMemberRoleFromStore(space.CurrentUserRole)
 	converted.MemberCount = space.MemberCount
+	converted.MemoCount = space.MemoCount
+	if space.LastActivityTs > 0 {
+		converted.LastActivityTime = timestamppb.New(time.Unix(space.LastActivityTs, 0))
+	}
 	return converted
 }
 

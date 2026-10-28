@@ -15,6 +15,55 @@ import "google/protobuf/timestamp.proto";
 option go_package = "gen/api/v1";
 
 service MemoService {
+  // ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+  rpc ListDeletedMemos(ListDeletedMemosRequest) returns (ListDeletedMemosResponse) {
+    option (google.api.http) = {get: "/api/v1/memos:trash"};
+  }
+  // RestoreMemo restores a deleted memo and its jointly deleted comments.
+  rpc RestoreMemo(RestoreMemoRequest) returns (Memo) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}:restore"
+      body: "*"
+    };
+  }
+  // PurgeMemo permanently removes a memo that is already in trash.
+  rpc PurgeMemo(PurgeMemoRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}:purge"
+      body: "*"
+    };
+  }
+  // EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+  rpc EmptyTrash(EmptyTrashRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/memos:emptyTrash"
+      body: "*"
+    };
+  }
+  // ListMemoRevisions requires permission to manage the memo, even for public memos.
+  rpc ListMemoRevisions(ListMemoRevisionsRequest) returns (ListMemoRevisionsResponse) {
+    option (google.api.http) = {get: "/api/v1/{name=memos/*}/revisions"};
+  }
+  // GetMemoRevision returns a full historical version to a memo manager only.
+  rpc GetMemoRevision(GetMemoRevisionRequest) returns (MemoRevision) {
+    option (google.api.http) = {get: "/api/v1/{name=memos/*}/revisions/{revision_id}"};
+  }
+  // RestoreMemoRevision uses the normal content update path.
+  rpc RestoreMemoRevision(RestoreMemoRevisionRequest) returns (Memo) {
+    option (google.api.http) = {
+      post: "/api/v1/{name=memos/*}/revisions/{revision_id}:restore"
+      body: "*"
+    };
+  }
+  // DeleteMemoRevision removes one historical version, including its sensitive content.
+  rpc DeleteMemoRevision(DeleteMemoRevisionRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/{name=memos/*}/revisions/{revision_id}"};
+  }
+  // ClearMemoRevisions removes all historical versions of a memo.
+  rpc ClearMemoRevisions(ClearMemoRevisionsRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/{name=memos/*}/revisions"};
+  }
+
   // CreateMemo creates a memo. The request body is a Memo; set its content
   // (Markdown) and visibility (PRIVATE | PROTECTED | PUBLIC | SPACE,
   // default PRIVATE).
@@ -330,6 +379,11 @@ message Memo {
 
   // Optional. A poll attached to this memo.
   Poll poll = 31 [(google.api.field_behavior) = OPTIONAL];
+
+  // Output only. Present only in trash responses.
+  google.protobuf.Timestamp delete_time = 32 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. Expected permanent deletion time.
+  google.protobuf.Timestamp purge_time = 33 [(google.api.field_behavior) = OUTPUT_ONLY];
 
   // Computed properties of a memo.
   message Property {
@@ -839,4 +893,53 @@ message LinkMetadata {
 
   // The link image URL.
   string image = 4;
+}
+
+message ListDeletedMemosRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+  bool show_all = 3;
+}
+message ListDeletedMemosResponse {
+  repeated Memo memos = 1;
+  string next_page_token = 2;
+}
+message RestoreMemoRequest {
+  string name = 1;
+}
+message PurgeMemoRequest {
+  string name = 1;
+}
+message EmptyTrashRequest {
+  bool show_all = 1;
+}
+message MemoRevision {
+  int64 id = 1;
+  string memo = 2;
+  string editor = 3;
+  google.protobuf.Timestamp create_time = 4;
+  string preview = 5;
+  string content = 6;
+  Visibility visibility = 7;
+}
+message ListMemoRevisionsRequest {
+  string name = 1;
+}
+message ListMemoRevisionsResponse {
+  repeated MemoRevision revisions = 1;
+}
+message GetMemoRevisionRequest {
+  string name = 1;
+  int64 revision_id = 2;
+}
+message RestoreMemoRevisionRequest {
+  string name = 1;
+  int64 revision_id = 2;
+}
+message DeleteMemoRevisionRequest {
+  string name = 1;
+  int64 revision_id = 2;
+}
+message ClearMemoRevisionsRequest {
+  string name = 1;
 }

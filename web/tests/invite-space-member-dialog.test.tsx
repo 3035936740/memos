@@ -84,6 +84,7 @@ const productSpace: Space = {
   syncToMainFeed: true,
   currentUserRole: SpaceMember_Role.ADMIN,
   memberCount: 1,
+ memoCount: 0,
 };
 
 const alice: User = {

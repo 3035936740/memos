@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"connectrpc.com/connect"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -27,6 +28,7 @@ import (
 const MaxAPIRequestBytes = 256 << 20
 
 type APIV1Service struct {
+	backupMu sync.Mutex
 	v1pb.UnimplementedInstanceServiceServer
 	v1pb.UnimplementedAuthServiceServer
 	v1pb.UnimplementedUserServiceServer
@@ -52,6 +54,7 @@ type APIV1Service struct {
 	// instanceStatsCache memoizes GetInstanceStats results for instanceStatsCacheTTL.
 	instanceStatsCache  instanceStatsCache
 	contentModeration   contentModerationCache
+	aiReview            aiReviewCache
 	linkMetadataFetcher linkMetadataFetcher
 }
 
@@ -184,6 +187,7 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	RegisterContentModerationRoutes(gwGroup, s, authorizer)
 	RegisterModerationRoutes(gwGroup, s, authorizer)
 	RegisterEmojiRoutes(gwGroup, s, authorizer)
+	registerBackupRoutes(gwGroup, s, authorizer)
 	RegisterBlogSidebarRoutes(gwGroup, s, authorizer)
 	registerFrontendDiagnosticRoutes(gwGroup, s.Profile)
 	handler := echo.WrapHandler(http.MaxBytesHandler(gwMux, MaxAPIRequestBytes))

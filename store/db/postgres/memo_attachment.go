@@ -61,7 +61,7 @@ func (d *DB) ApplyMemoMutation(ctx context.Context, mutation *store.MemoMutation
 
 	var creatorID int32
 	var content string
-	if err := tx.QueryRowContext(ctx, `SELECT creator_id, content FROM memo WHERE id = $1 FOR UPDATE`, mutation.MemoID).Scan(&creatorID, &content); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT creator_id, content FROM memo WHERE deleted_ts IS NULL AND id = $1 FOR UPDATE`, mutation.MemoID).Scan(&creatorID, &content); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return errors.Wrap(store.ErrMemoMutationConflict, "memo no longer exists")
 		}
@@ -174,11 +174,12 @@ func replaceMemoReferenceRelations(ctx context.Context, tx *sql.Tx, memoID int32
 	return nil
 }
 
-type memoUpdateExecer interface {
-	ExecContext(context.Context, string, ...any) (sql.Result, error)
-}
+type memoUpdateExecer = store.SQLExecutor
 
 func applyMemoUpdate(ctx context.Context, executor memoUpdateExecer, update *store.UpdateMemo) error {
+	if err := store.CaptureMemoRevision(ctx, executor, "postgres", update); err != nil {
+		return err
+	}
 	set, args := []string{}, []any{}
 	appendValue := func(column string, value any) {
 		args = append(args, value)

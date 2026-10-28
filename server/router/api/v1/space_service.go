@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -148,11 +147,20 @@ func (s *APIV1Service) CreateSpace(ctx context.Context, request *v1pb.CreateSpac
 	if err != nil {
 		return nil, err
 	}
+	if s.Profile.Demo && len(request.Space.AvatarUrl) > ((MebiByte+2)/3)*4+64 {
+		return nil, status.Error(codes.InvalidArgument, "demo avatars must not exceed 1 MiB")
+	}
 	if err := validateSpaceAvatar(request.Space.AvatarUrl); err != nil {
 		return nil, err
 	}
 	urlSlug, err := validateSpaceURLSlug(request.Space.UrlSlug)
 	if err != nil {
+		return nil, err
+	}
+	if err := s.validateTextContent(ctx, title, request.Space.Description, urlSlug); err != nil {
+		return nil, err
+	}
+	if err := s.reviewImageSource(ctx, request.Space.AvatarUrl); err != nil {
 		return nil, err
 	}
 	if existing, err := s.Store.GetSpace(ctx, &store.FindSpace{UIDOrURLSlug: &uid}); err != nil {
@@ -212,53 +220,40 @@ func (s *APIV1Service) ListSpaces(ctx context.Context, request *v1pb.ListSpacesR
 	if filter := strings.TrimSpace(request.Filter); filter != "" {
 		find.Search = &filter
 	}
-	var spaces []*store.Space
+
+	switch request.OrderBy {
+	case "", "create_time desc", "member_count desc", "last_activity_time desc", "title":
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid space order_by")
+	}
+	if request.Scope != v1pb.ListSpacesRequest_SCOPE_UNSPECIFIED && request.Scope != v1pb.ListSpacesRequest_VISIBLE && request.Scope != v1pb.ListSpacesRequest_JOINED {
+		return nil, status.Error(codes.InvalidArgument, "invalid space scope")
+	}
+	find.OrderBy = request.OrderBy
+	find.ShortAvatar = true
+	var total int32
+	if request.ShowTotalSize {
+		find.TotalSize = &total
+	}
+	if currentUser != nil {
+		find.ViewerUserID = &currentUser.ID
+	}
 	if request.ShowAll {
 		if currentUser == nil || !isSuperUser(currentUser) {
-			return nil, status.Error(codes.PermissionDenied, "instance administrator permission required")
+			return nil, status.Error(codes.PermissionDenied, "administrator required")
 		}
-		spaces, err = s.Store.ListSpaces(ctx, find)
+	} else if request.Scope == v1pb.ListSpacesRequest_JOINED {
+		if currentUser == nil {
+			return nil, status.Error(codes.Unauthenticated, "JOINED scope requires sign in")
+		}
+		find.MemberUserID = &currentUser.ID
 	} else if currentUser == nil {
 		find.AccessModes = []store.SpaceAccessMode{store.SpaceAccessModePublic}
-		spaces, err = s.Store.ListSpaces(ctx, find)
 	} else {
-		// Fetch enough rows from each visibility source to merge, de-duplicate,
-		// sort, and apply one stable page across both sets.
-		sourceLimit := offset + limitPlusOne
-		memberFind := &store.FindSpace{MemberUserID: &currentUser.ID, Limit: &sourceLimit}
-		visibleFind := &store.FindSpace{
-			AccessModes: []store.SpaceAccessMode{store.SpaceAccessModeAuthenticated, store.SpaceAccessModePublic},
-			Limit:       &sourceLimit,
-		}
-		if find.Search != nil {
-			memberFind.Search = find.Search
-			visibleFind.Search = find.Search
-		}
-		memberSpaces, memberErr := s.Store.ListSpaces(ctx, memberFind)
-		if memberErr != nil {
-			return nil, status.Errorf(codes.Internal, "failed to list member spaces: %v", memberErr)
-		}
-		visibleSpaces, visibleErr := s.Store.ListSpaces(ctx, visibleFind)
-		if visibleErr != nil {
-			return nil, status.Errorf(codes.Internal, "failed to list accessible spaces: %v", visibleErr)
-		}
-		spaceByID := make(map[int32]*store.Space, len(memberSpaces)+len(visibleSpaces))
-		for _, space := range visibleSpaces {
-			spaceByID[space.ID] = space
-		}
-		for _, space := range memberSpaces {
-			spaceByID[space.ID] = space
-		}
-		merged := make([]*store.Space, 0, len(spaceByID))
-		for _, space := range spaceByID {
-			merged = append(merged, space)
-		}
-		sort.Slice(merged, func(i, j int) bool { return merged[i].ID > merged[j].ID })
-		if offset < len(merged) {
-			end := min(offset+limitPlusOne, len(merged))
-			spaces = merged[offset:end]
-		}
+		find.VisibleToUserID = &currentUser.ID
 	}
+	spaces, err := s.Store.ListSpaces(ctx, find)
+
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to list spaces: %v", err)
 	}
@@ -271,7 +266,7 @@ func (s *APIV1Service) ListSpaces(ctx context.Context, request *v1pb.ListSpacesR
 			return nil, status.Errorf(codes.Internal, "failed to create next page token: %v", err)
 		}
 	}
-	response := &v1pb.ListSpacesResponse{Spaces: make([]*v1pb.Space, 0, len(spaces)), NextPageToken: nextPageToken}
+	response := &v1pb.ListSpacesResponse{Spaces: make([]*v1pb.Space, 0, len(spaces)), NextPageToken: nextPageToken, TotalSize: total}
 	for _, space := range spaces {
 		response.Spaces = append(response.Spaces, convertSpaceFromStore(space))
 	}
@@ -359,18 +354,33 @@ func (s *APIV1Service) UpdateSpace(ctx context.Context, request *v1pb.UpdateSpac
 			if title == "" {
 				return nil, status.Error(codes.InvalidArgument, "space title is required")
 			}
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, title); err != nil {
+				return nil, err
+			}
 			update.Title = &title
 		case "description":
 			description := strings.TrimSpace(request.Space.Description)
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, description); err != nil {
+				return nil, err
+			}
 			update.Description = &description
 		case "avatar_url":
+			if s.Profile.Demo && len(request.Space.AvatarUrl) > ((MebiByte+2)/3)*4+64 {
+				return nil, status.Error(codes.InvalidArgument, "demo avatars must not exceed 1 MiB")
+			}
 			if err := validateSpaceAvatar(request.Space.AvatarUrl); err != nil {
 				return nil, err
 			}
 			update.AvatarURL = &request.Space.AvatarUrl
+			if err := s.reviewImageSource(ctx, request.Space.AvatarUrl); err != nil {
+				return nil, err
+			}
 		case "url_slug":
 			urlSlug, err := validateSpaceURLSlug(request.Space.UrlSlug)
 			if err != nil {
+				return nil, err
+			}
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, urlSlug); err != nil {
 				return nil, err
 			}
 			if urlSlug != "" {
@@ -397,6 +407,17 @@ func (s *APIV1Service) UpdateSpace(ctx context.Context, request *v1pb.UpdateSpac
 		}
 	}
 	update.InstanceAdmin = isSuperUser(currentUser)
+	textFields := []string{}
+	for _, value := range []*string{update.Title, update.Description, update.URLSlug} {
+		if value != nil && strings.TrimSpace(*value) != "" {
+			textFields = append(textFields, *value)
+		}
+	}
+	if len(textFields) > 0 {
+		if err := s.reviewAIContent(ctx, textFields, nil); err != nil {
+			return nil, err
+		}
+	}
 	updated, err := s.Store.UpdateSpace(ctx, update, currentUser.ID)
 	if err != nil {
 		return nil, mapSpaceMutationError(err, "failed to update space")

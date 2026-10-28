@@ -1,17 +1,12 @@
-name: Demo Deploy
-
+name: Memos Plus Demo Health
+# Deployment is managed by the site owner; no upstream Render deploy hook.
 on:
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
-  deploy-demo:
+  health:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render Deploy
-        run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" \
-            -H "Content-Type: application/json" \
-            -d '{"trigger": "github_action"}'
-
-      - name: Deployment Status
-        run: echo "Demo deployment triggered successfully on Render"
+      - name: Check the public Memos Plus demo
+        run: curl --fail --retry 2 --max-time 30 https://memos.bing.tomato-universe.tech/

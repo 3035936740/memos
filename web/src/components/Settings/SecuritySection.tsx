@@ -3,7 +3,8 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslate } from "@/utils/i18n";
-import { getModerationSecurity, type ModerationSecuritySetting, saveModerationSecurity } from "@/utils/moderation";
+import { DEFAULT_AI_REVIEW, getModerationSecurity, type ModerationSecuritySetting, saveModerationSecurity } from "@/utils/moderation";
+import AIReviewEditor from "./AIReviewEditor";
 import BlockedWordsEditor from "./BlockedWordsEditor";
 import SettingGroup from "./SettingGroup";
 import { SettingList, SettingListItem } from "./SettingList";
@@ -25,7 +26,7 @@ const SecuritySection = () => {
       .then(setSetting)
       .catch((error) => toast.error(error instanceof Error ? error.message : t("setting.security.load-failed")));
   }, [t]);
-  const numberField = (key: keyof ModerationSecuritySetting, min: number, max: number) => (
+  const numberField = (key: Exclude<keyof ModerationSecuritySetting, "aiReview">, min: number, max: number) => (
     <Input
       type="number"
       className="w-28"
@@ -63,6 +64,10 @@ const SecuritySection = () => {
             {numberField("userAutoBanInitialDays", 1, 36500)}
           </SettingListItem>
         </SettingList>
+        <AIReviewEditor
+          value={{ ...DEFAULT_AI_REVIEW, ...setting.aiReview }}
+          onChange={(aiReview) => setSetting((current) => ({ ...current, aiReview }))}
+        />
         <div className="flex justify-end">
           <Button
             disabled={saving}

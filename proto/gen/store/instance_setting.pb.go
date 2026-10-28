@@ -162,6 +162,8 @@ const (
 	AIProviderType_DEEPSEEK                     AIProviderType = 4
 	AIProviderType_OPENAI_COMPATIBLE            AIProviderType = 5
 	AIProviderType_OLLAMA                       AIProviderType = 6
+	AIProviderType_AZURE_OPENAI                 AIProviderType = 7
+	AIProviderType_JEV                          AIProviderType = 8
 )
 
 // Enum value maps for AIProviderType.
@@ -174,6 +176,8 @@ var (
 		4: "DEEPSEEK",
 		5: "OPENAI_COMPATIBLE",
 		6: "OLLAMA",
+		7: "AZURE_OPENAI",
+		8: "JEV",
 	}
 	AIProviderType_value = map[string]int32{
 		"AI_PROVIDER_TYPE_UNSPECIFIED": 0,
@@ -183,6 +187,8 @@ var (
 		"DEEPSEEK":                     4,
 		"OPENAI_COMPATIBLE":            5,
 		"OLLAMA":                       6,
+		"AZURE_OPENAI":                 7,
+		"JEV":                          8,
 	}
 )
 
@@ -608,8 +614,18 @@ type InstanceGeneralSetting struct {
 	PreferencesResetAt int64 `protobuf:"varint,20,opt,name=preferences_reset_at,json=preferencesResetAt,proto3" json:"preferences_reset_at,omitempty"`
 	// music_config_json stores the administrator-managed public site playlist.
 	MusicConfigJson string `protobuf:"bytes,21,opt,name=music_config_json,json=musicConfigJson,proto3" json:"music_config_json,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Optional. Days to retain trash; absent means 30, zero disables trash.
+	TrashRetentionDays *int32 `protobuf:"varint,22,opt,name=trash_retention_days,json=trashRetentionDays,proto3,oneof" json:"trash_retention_days,omitempty"`
+	// Optional. Maximum revisions per memo; absent means 20, zero disables history.
+	MemoRevisionLimit *int32 `protobuf:"varint,23,opt,name=memo_revision_limit,json=memoRevisionLimit,proto3,oneof" json:"memo_revision_limit,omitempty"`
+	// Whether the administrator has completed or skipped the setup wizard.
+	SetupCompleted bool `protobuf:"varint,24,opt,name=setup_completed,json=setupCompleted,proto3" json:"setup_completed,omitempty"`
+	// Optional. Whether to show the Memos Plus footer; absent means true.
+	ShowPoweredBy *bool `protobuf:"varint,25,opt,name=show_powered_by,json=showPoweredBy,proto3,oneof" json:"show_powered_by,omitempty"`
+	// Disable automatic holiday background effects for all visitors. Default is false.
+	DisableFestivalEffects bool `protobuf:"varint,26,opt,name=disable_festival_effects,json=disableFestivalEffects,proto3" json:"disable_festival_effects,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -780,6 +796,41 @@ func (x *InstanceGeneralSetting) GetMusicConfigJson() string {
 		return x.MusicConfigJson
 	}
 	return ""
+}
+
+func (x *InstanceGeneralSetting) GetTrashRetentionDays() int32 {
+	if x != nil && x.TrashRetentionDays != nil {
+		return *x.TrashRetentionDays
+	}
+	return 0
+}
+
+func (x *InstanceGeneralSetting) GetMemoRevisionLimit() int32 {
+	if x != nil && x.MemoRevisionLimit != nil {
+		return *x.MemoRevisionLimit
+	}
+	return 0
+}
+
+func (x *InstanceGeneralSetting) GetSetupCompleted() bool {
+	if x != nil {
+		return x.SetupCompleted
+	}
+	return false
+}
+
+func (x *InstanceGeneralSetting) GetShowPoweredBy() bool {
+	if x != nil && x.ShowPoweredBy != nil {
+		return *x.ShowPoweredBy
+	}
+	return false
+}
+
+func (x *InstanceGeneralSetting) GetDisableFestivalEffects() bool {
+	if x != nil {
+		return x.DisableFestivalEffects
+	}
+	return false
 }
 
 type InstanceCustomProfile struct {
@@ -1341,9 +1392,10 @@ type InstanceAISetting struct {
 	Providers []*AIProviderConfig `protobuf:"bytes,1,rep,name=providers,proto3" json:"providers,omitempty"`
 	// transcription is the speech-to-text feature configuration.
 	// When unset or transcription.provider_id is empty, transcription is disabled.
-	Transcription *TranscriptionConfig `protobuf:"bytes,2,opt,name=transcription,proto3" json:"transcription,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Transcription  *TranscriptionConfig  `protobuf:"bytes,2,opt,name=transcription,proto3" json:"transcription,omitempty"`
+	TextGeneration *TextGenerationConfig `protobuf:"bytes,3,opt,name=text_generation,json=textGeneration,proto3" json:"text_generation,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *InstanceAISetting) Reset() {
@@ -1390,6 +1442,89 @@ func (x *InstanceAISetting) GetTranscription() *TranscriptionConfig {
 	return nil
 }
 
+func (x *InstanceAISetting) GetTextGeneration() *TextGenerationConfig {
+	if x != nil {
+		return x.TextGeneration
+	}
+	return nil
+}
+
+type TextGenerationConfig struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	Enabled              bool                   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	PlanningProviderId   string                 `protobuf:"bytes,2,opt,name=planning_provider_id,json=planningProviderId,proto3" json:"planning_provider_id,omitempty"`
+	PlanningModel        string                 `protobuf:"bytes,3,opt,name=planning_model,json=planningModel,proto3" json:"planning_model,omitempty"`
+	GenerationProviderId string                 `protobuf:"bytes,4,opt,name=generation_provider_id,json=generationProviderId,proto3" json:"generation_provider_id,omitempty"`
+	GenerationModel      string                 `protobuf:"bytes,5,opt,name=generation_model,json=generationModel,proto3" json:"generation_model,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *TextGenerationConfig) Reset() {
+	*x = TextGenerationConfig{}
+	mi := &file_store_instance_setting_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TextGenerationConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TextGenerationConfig) ProtoMessage() {}
+
+func (x *TextGenerationConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_store_instance_setting_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TextGenerationConfig.ProtoReflect.Descriptor instead.
+func (*TextGenerationConfig) Descriptor() ([]byte, []int) {
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *TextGenerationConfig) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *TextGenerationConfig) GetPlanningProviderId() string {
+	if x != nil {
+		return x.PlanningProviderId
+	}
+	return ""
+}
+
+func (x *TextGenerationConfig) GetPlanningModel() string {
+	if x != nil {
+		return x.PlanningModel
+	}
+	return ""
+}
+
+func (x *TextGenerationConfig) GetGenerationProviderId() string {
+	if x != nil {
+		return x.GenerationProviderId
+	}
+	return ""
+}
+
+func (x *TextGenerationConfig) GetGenerationModel() string {
+	if x != nil {
+		return x.GenerationModel
+	}
+	return ""
+}
+
 type AIProviderConfig struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Id       string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1397,14 +1532,22 @@ type AIProviderConfig struct {
 	Type     AIProviderType         `protobuf:"varint,3,opt,name=type,proto3,enum=memos.store.AIProviderType" json:"type,omitempty"`
 	Endpoint string                 `protobuf:"bytes,4,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
 	// api_key is write-only at the API layer and is required by the server to call providers.
-	ApiKey        string `protobuf:"bytes,5,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	ApiKey          string            `protobuf:"bytes,5,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
+	DefaultModel    string            `protobuf:"bytes,10,opt,name=default_model,json=defaultModel,proto3" json:"default_model,omitempty"`
+	ReasoningEffort string            `protobuf:"bytes,11,opt,name=reasoning_effort,json=reasoningEffort,proto3" json:"reasoning_effort,omitempty"`
+	CustomHeaders   map[string]string `protobuf:"bytes,12,rep,name=custom_headers,json=customHeaders,proto3" json:"custom_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Transient update flag, cleared before persisting the setting.
+	ReplaceCustomHeaders bool   `protobuf:"varint,14,opt,name=replace_custom_headers,json=replaceCustomHeaders,proto3" json:"replace_custom_headers,omitempty"`
+	AzureApiVersion      string `protobuf:"bytes,15,opt,name=azure_api_version,json=azureApiVersion,proto3" json:"azure_api_version,omitempty"`
+	WritingEnabled       bool   `protobuf:"varint,16,opt,name=writing_enabled,json=writingEnabled,proto3" json:"writing_enabled,omitempty"`
+	SupportsVision       bool   `protobuf:"varint,17,opt,name=supports_vision,json=supportsVision,proto3" json:"supports_vision,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *AIProviderConfig) Reset() {
 	*x = AIProviderConfig{}
-	mi := &file_store_instance_setting_proto_msgTypes[12]
+	mi := &file_store_instance_setting_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1416,7 +1559,7 @@ func (x *AIProviderConfig) String() string {
 func (*AIProviderConfig) ProtoMessage() {}
 
 func (x *AIProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[12]
+	mi := &file_store_instance_setting_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1429,7 +1572,7 @@ func (x *AIProviderConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AIProviderConfig.ProtoReflect.Descriptor instead.
 func (*AIProviderConfig) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{12}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *AIProviderConfig) GetId() string {
@@ -1467,6 +1610,55 @@ func (x *AIProviderConfig) GetApiKey() string {
 	return ""
 }
 
+func (x *AIProviderConfig) GetDefaultModel() string {
+	if x != nil {
+		return x.DefaultModel
+	}
+	return ""
+}
+
+func (x *AIProviderConfig) GetReasoningEffort() string {
+	if x != nil {
+		return x.ReasoningEffort
+	}
+	return ""
+}
+
+func (x *AIProviderConfig) GetCustomHeaders() map[string]string {
+	if x != nil {
+		return x.CustomHeaders
+	}
+	return nil
+}
+
+func (x *AIProviderConfig) GetReplaceCustomHeaders() bool {
+	if x != nil {
+		return x.ReplaceCustomHeaders
+	}
+	return false
+}
+
+func (x *AIProviderConfig) GetAzureApiVersion() string {
+	if x != nil {
+		return x.AzureApiVersion
+	}
+	return ""
+}
+
+func (x *AIProviderConfig) GetWritingEnabled() bool {
+	if x != nil {
+		return x.WritingEnabled
+	}
+	return false
+}
+
+func (x *AIProviderConfig) GetSupportsVision() bool {
+	if x != nil {
+		return x.SupportsVision
+	}
+	return false
+}
+
 // TranscriptionConfig configures the speech-to-text feature.
 type TranscriptionConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1497,7 +1689,7 @@ type TranscriptionConfig struct {
 
 func (x *TranscriptionConfig) Reset() {
 	*x = TranscriptionConfig{}
-	mi := &file_store_instance_setting_proto_msgTypes[13]
+	mi := &file_store_instance_setting_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1509,7 +1701,7 @@ func (x *TranscriptionConfig) String() string {
 func (*TranscriptionConfig) ProtoMessage() {}
 
 func (x *TranscriptionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[13]
+	mi := &file_store_instance_setting_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1522,7 +1714,7 @@ func (x *TranscriptionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptionConfig.ProtoReflect.Descriptor instead.
 func (*TranscriptionConfig) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{13}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *TranscriptionConfig) GetProviderId() string {
@@ -1562,7 +1754,7 @@ type InstanceAccessSetting struct {
 
 func (x *InstanceAccessSetting) Reset() {
 	*x = InstanceAccessSetting{}
-	mi := &file_store_instance_setting_proto_msgTypes[14]
+	mi := &file_store_instance_setting_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1574,7 +1766,7 @@ func (x *InstanceAccessSetting) String() string {
 func (*InstanceAccessSetting) ProtoMessage() {}
 
 func (x *InstanceAccessSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[14]
+	mi := &file_store_instance_setting_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1587,7 +1779,7 @@ func (x *InstanceAccessSetting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstanceAccessSetting.ProtoReflect.Descriptor instead.
 func (*InstanceAccessSetting) Descriptor() ([]byte, []int) {
-	return file_store_instance_setting_proto_rawDescGZIP(), []int{14}
+	return file_store_instance_setting_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *InstanceAccessSetting) GetAccessMode() InstanceAccessMode {
@@ -1615,7 +1807,7 @@ type InstanceNotificationSetting_EmailSetting struct {
 
 func (x *InstanceNotificationSetting_EmailSetting) Reset() {
 	*x = InstanceNotificationSetting_EmailSetting{}
-	mi := &file_store_instance_setting_proto_msgTypes[16]
+	mi := &file_store_instance_setting_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1627,7 +1819,7 @@ func (x *InstanceNotificationSetting_EmailSetting) String() string {
 func (*InstanceNotificationSetting_EmailSetting) ProtoMessage() {}
 
 func (x *InstanceNotificationSetting_EmailSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_store_instance_setting_proto_msgTypes[16]
+	mi := &file_store_instance_setting_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1733,7 +1925,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xe6\b\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xa7\v\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -1755,7 +1947,15 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\"default_member_save_media_metadata\x18\x12 \x01(\bR\x1edefaultMemberSaveMediaMetadata\x129\n" +
 	"\x19first_visit_default_style\x18\x13 \x01(\tR\x16firstVisitDefaultStyle\x120\n" +
 	"\x14preferences_reset_at\x18\x14 \x01(\x03R\x12preferencesResetAt\x12*\n" +
-	"\x11music_config_json\x18\x15 \x01(\tR\x0fmusicConfigJson\"j\n" +
+	"\x11music_config_json\x18\x15 \x01(\tR\x0fmusicConfigJson\x125\n" +
+	"\x14trash_retention_days\x18\x16 \x01(\x05H\x00R\x12trashRetentionDays\x88\x01\x01\x123\n" +
+	"\x13memo_revision_limit\x18\x17 \x01(\x05H\x01R\x11memoRevisionLimit\x88\x01\x01\x12'\n" +
+	"\x0fsetup_completed\x18\x18 \x01(\bR\x0esetupCompleted\x12+\n" +
+	"\x0fshow_powered_by\x18\x19 \x01(\bH\x02R\rshowPoweredBy\x88\x01\x01\x128\n" +
+	"\x18disable_festival_effects\x18\x1a \x01(\bR\x16disableFestivalEffectsB\x17\n" +
+	"\x15_trash_retention_daysB\x16\n" +
+	"\x14_memo_revision_limitB\x12\n" +
+	"\x10_show_powered_by\"j\n" +
 	"\x15InstanceCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +
@@ -1813,16 +2013,34 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\breply_to\x18\b \x01(\tR\areplyTo\x12\x17\n" +
 	"\ause_tls\x18\t \x01(\bR\x06useTls\x12\x17\n" +
 	"\ause_ssl\x18\n" +
-	" \x01(\bR\x06useSsl\"\x98\x01\n" +
+	" \x01(\bR\x06useSsl\"\xe4\x01\n" +
 	"\x11InstanceAISetting\x12;\n" +
 	"\tproviders\x18\x01 \x03(\v2\x1d.memos.store.AIProviderConfigR\tproviders\x12F\n" +
-	"\rtranscription\x18\x02 \x01(\v2 .memos.store.TranscriptionConfigR\rtranscription\"\x9e\x01\n" +
+	"\rtranscription\x18\x02 \x01(\v2 .memos.store.TranscriptionConfigR\rtranscription\x12J\n" +
+	"\x0ftext_generation\x18\x03 \x01(\v2!.memos.store.TextGenerationConfigR\x0etextGeneration\"\xea\x01\n" +
+	"\x14TextGenerationConfig\x12\x18\n" +
+	"\aenabled\x18\x01 \x01(\bR\aenabled\x120\n" +
+	"\x14planning_provider_id\x18\x02 \x01(\tR\x12planningProviderId\x12%\n" +
+	"\x0eplanning_model\x18\x03 \x01(\tR\rplanningModel\x124\n" +
+	"\x16generation_provider_id\x18\x04 \x01(\tR\x14generationProviderId\x12)\n" +
+	"\x10generation_model\x18\x05 \x01(\tR\x0fgenerationModel\"\xbd\x04\n" +
 	"\x10AIProviderConfig\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12/\n" +
 	"\x04type\x18\x03 \x01(\x0e2\x1b.memos.store.AIProviderTypeR\x04type\x12\x1a\n" +
 	"\bendpoint\x18\x04 \x01(\tR\bendpoint\x12\x17\n" +
-	"\aapi_key\x18\x05 \x01(\tR\x06apiKey\"\x80\x01\n" +
+	"\aapi_key\x18\x05 \x01(\tR\x06apiKey\x12#\n" +
+	"\rdefault_model\x18\n" +
+	" \x01(\tR\fdefaultModel\x12)\n" +
+	"\x10reasoning_effort\x18\v \x01(\tR\x0freasoningEffort\x12W\n" +
+	"\x0ecustom_headers\x18\f \x03(\v20.memos.store.AIProviderConfig.CustomHeadersEntryR\rcustomHeaders\x124\n" +
+	"\x16replace_custom_headers\x18\x0e \x01(\bR\x14replaceCustomHeaders\x12*\n" +
+	"\x11azure_api_version\x18\x0f \x01(\tR\x0fazureApiVersion\x12'\n" +
+	"\x0fwriting_enabled\x18\x10 \x01(\bR\x0ewritingEnabled\x12'\n" +
+	"\x0fsupports_vision\x18\x11 \x01(\bR\x0esupportsVision\x1a@\n" +
+	"\x12CustomHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x80\x01\n" +
 	"\x13TranscriptionConfig\x12\x1f\n" +
 	"\vprovider_id\x18\x01 \x01(\tR\n" +
 	"providerId\x12\x14\n" +
@@ -1847,7 +2065,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x18STORAGE_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15STORAGE_TYPE_DATABASE\x10\x01\x12\x16\n" +
 	"\x12STORAGE_TYPE_LOCAL\x10\x02\x12\x13\n" +
-	"\x0fSTORAGE_TYPE_S3\x10\x03*\x8a\x01\n" +
+	"\x0fSTORAGE_TYPE_S3\x10\x03*\xa5\x01\n" +
 	"\x0eAIProviderType\x12 \n" +
 	"\x1cAI_PROVIDER_TYPE_UNSPECIFIED\x10\x00\x12\n" +
 	"\n" +
@@ -1858,7 +2076,9 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\bDEEPSEEK\x10\x04\x12\x15\n" +
 	"\x11OPENAI_COMPATIBLE\x10\x05\x12\n" +
 	"\n" +
-	"\x06OLLAMA\x10\x06*}\n" +
+	"\x06OLLAMA\x10\x06\x12\x10\n" +
+	"\fAZURE_OPENAI\x10\a\x12\a\n" +
+	"\x03JEV\x10\b*}\n" +
 	"\x12InstanceAccessMode\x12$\n" +
 	" INSTANCE_ACCESS_MODE_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cINSTANCE_ACCESS_MODE_PRIVATE\x10\x01\x12\x1f\n" +
@@ -1878,7 +2098,7 @@ func file_store_instance_setting_proto_rawDescGZIP() []byte {
 }
 
 var file_store_instance_setting_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_store_instance_setting_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_store_instance_setting_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_store_instance_setting_proto_goTypes = []any{
 	(InstanceSettingKey)(0),                          // 0: memos.store.InstanceSettingKey
 	(StorageType)(0),                                 // 1: memos.store.StorageType
@@ -1897,12 +2117,14 @@ var file_store_instance_setting_proto_goTypes = []any{
 	(*InstanceTagsSetting)(nil),                      // 14: memos.store.InstanceTagsSetting
 	(*InstanceNotificationSetting)(nil),              // 15: memos.store.InstanceNotificationSetting
 	(*InstanceAISetting)(nil),                        // 16: memos.store.InstanceAISetting
-	(*AIProviderConfig)(nil),                         // 17: memos.store.AIProviderConfig
-	(*TranscriptionConfig)(nil),                      // 18: memos.store.TranscriptionConfig
-	(*InstanceAccessSetting)(nil),                    // 19: memos.store.InstanceAccessSetting
-	nil,                                              // 20: memos.store.InstanceTagsSetting.TagsEntry
-	(*InstanceNotificationSetting_EmailSetting)(nil), // 21: memos.store.InstanceNotificationSetting.EmailSetting
-	(*color.Color)(nil),                              // 22: google.type.Color
+	(*TextGenerationConfig)(nil),                     // 17: memos.store.TextGenerationConfig
+	(*AIProviderConfig)(nil),                         // 18: memos.store.AIProviderConfig
+	(*TranscriptionConfig)(nil),                      // 19: memos.store.TranscriptionConfig
+	(*InstanceAccessSetting)(nil),                    // 20: memos.store.InstanceAccessSetting
+	nil,                                              // 21: memos.store.InstanceTagsSetting.TagsEntry
+	(*InstanceNotificationSetting_EmailSetting)(nil), // 22: memos.store.InstanceNotificationSetting.EmailSetting
+	nil,                 // 23: memos.store.AIProviderConfig.CustomHeadersEntry
+	(*color.Color)(nil), // 24: google.type.Color
 }
 var file_store_instance_setting_proto_depIdxs = []int32{
 	0,  // 0: memos.store.InstanceSetting.key:type_name -> memos.store.InstanceSettingKey
@@ -1913,26 +2135,28 @@ var file_store_instance_setting_proto_depIdxs = []int32{
 	14, // 5: memos.store.InstanceSetting.tags_setting:type_name -> memos.store.InstanceTagsSetting
 	15, // 6: memos.store.InstanceSetting.notification_setting:type_name -> memos.store.InstanceNotificationSetting
 	16, // 7: memos.store.InstanceSetting.ai_setting:type_name -> memos.store.InstanceAISetting
-	19, // 8: memos.store.InstanceSetting.access_setting:type_name -> memos.store.InstanceAccessSetting
+	20, // 8: memos.store.InstanceSetting.access_setting:type_name -> memos.store.InstanceAccessSetting
 	8,  // 9: memos.store.InstanceGeneralSetting.custom_profile:type_name -> memos.store.InstanceCustomProfile
 	1,  // 10: memos.store.Storage.type:type_name -> memos.store.StorageType
 	11, // 11: memos.store.Storage.s3_config:type_name -> memos.store.StorageS3Config
 	4,  // 12: memos.store.InstanceStorageSetting.storage_type:type_name -> memos.store.InstanceStorageSetting.StorageType
 	11, // 13: memos.store.InstanceStorageSetting.s3_config:type_name -> memos.store.StorageS3Config
 	9,  // 14: memos.store.InstanceStorageSetting.storages:type_name -> memos.store.Storage
-	22, // 15: memos.store.InstanceTagMetadata.background_color:type_name -> google.type.Color
-	20, // 16: memos.store.InstanceTagsSetting.tags:type_name -> memos.store.InstanceTagsSetting.TagsEntry
-	21, // 17: memos.store.InstanceNotificationSetting.email:type_name -> memos.store.InstanceNotificationSetting.EmailSetting
-	17, // 18: memos.store.InstanceAISetting.providers:type_name -> memos.store.AIProviderConfig
-	18, // 19: memos.store.InstanceAISetting.transcription:type_name -> memos.store.TranscriptionConfig
-	2,  // 20: memos.store.AIProviderConfig.type:type_name -> memos.store.AIProviderType
-	3,  // 21: memos.store.InstanceAccessSetting.access_mode:type_name -> memos.store.InstanceAccessMode
-	13, // 22: memos.store.InstanceTagsSetting.TagsEntry.value:type_name -> memos.store.InstanceTagMetadata
-	23, // [23:23] is the sub-list for method output_type
-	23, // [23:23] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	24, // 15: memos.store.InstanceTagMetadata.background_color:type_name -> google.type.Color
+	21, // 16: memos.store.InstanceTagsSetting.tags:type_name -> memos.store.InstanceTagsSetting.TagsEntry
+	22, // 17: memos.store.InstanceNotificationSetting.email:type_name -> memos.store.InstanceNotificationSetting.EmailSetting
+	18, // 18: memos.store.InstanceAISetting.providers:type_name -> memos.store.AIProviderConfig
+	19, // 19: memos.store.InstanceAISetting.transcription:type_name -> memos.store.TranscriptionConfig
+	17, // 20: memos.store.InstanceAISetting.text_generation:type_name -> memos.store.TextGenerationConfig
+	2,  // 21: memos.store.AIProviderConfig.type:type_name -> memos.store.AIProviderType
+	23, // 22: memos.store.AIProviderConfig.custom_headers:type_name -> memos.store.AIProviderConfig.CustomHeadersEntry
+	3,  // 23: memos.store.InstanceAccessSetting.access_mode:type_name -> memos.store.InstanceAccessMode
+	13, // 24: memos.store.InstanceTagsSetting.TagsEntry.value:type_name -> memos.store.InstanceTagMetadata
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_store_instance_setting_proto_init() }
@@ -1950,6 +2174,7 @@ func file_store_instance_setting_proto_init() {
 		(*InstanceSetting_AiSetting)(nil),
 		(*InstanceSetting_AccessSetting)(nil),
 	}
+	file_store_instance_setting_proto_msgTypes[2].OneofWrappers = []any{}
 	file_store_instance_setting_proto_msgTypes[4].OneofWrappers = []any{
 		(*Storage_S3Config)(nil),
 	}
@@ -1959,7 +2184,7 @@ func file_store_instance_setting_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_store_instance_setting_proto_rawDesc), len(file_store_instance_setting_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   17,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

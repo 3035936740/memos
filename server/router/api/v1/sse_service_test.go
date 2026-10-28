@@ -32,7 +32,7 @@ func newIntegrationService(t *testing.T) *APIV1Service {
 	security := store.DefaultInstanceModerationSecuritySetting()
 	security.PublishCooldownSeconds = 0
 	require.NoError(t, st.UpsertInstanceModerationSecuritySetting(ctx, security))
-	p := &profile.Profile{Demo: true, Data: t.TempDir(), Driver: "sqlite", DSN: ":memory:"}
+	p := &profile.Profile{Demo: false, Data: t.TempDir(), Driver: "sqlite", DSN: ":memory:"}
 	return NewAPIV1Service("test-secret", p, st)
 }
 
@@ -562,6 +562,10 @@ func TestDeleteMemoReactionPublishesMemoChanged(t *testing.T) {
 func TestDeleteMemo_DeletesOnlyRequestedMemo(t *testing.T) {
 	ctx := context.Background()
 	svc := newIntegrationService(t)
+	// Explicitly disabled trash preserves the old hard-delete contract.
+	zero := int32(0)
+	_, settingErr := svc.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_GENERAL, Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: &storepb.InstanceGeneralSetting{TrashRetentionDays: &zero}}})
+	require.NoError(t, settingErr)
 	rootAuthor, err := svc.Store.CreateUser(ctx, &store.User{
 		Username: "delete-root-author", Role: store.RoleAdmin, Email: "delete-root-author@example.com",
 	})
@@ -616,6 +620,10 @@ func TestDeleteMemo_DeletesOnlyRequestedMemo(t *testing.T) {
 func TestDeleteMemoCleansAttachmentStorage(t *testing.T) {
 	ctx := context.Background()
 	svc := newIntegrationService(t)
+	// Explicitly disabled trash preserves the old hard-delete contract.
+	zero := int32(0)
+	_, settingErr := svc.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_GENERAL, Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: &storepb.InstanceGeneralSetting{TrashRetentionDays: &zero}}})
+	require.NoError(t, settingErr)
 	owner, err := svc.Store.CreateUser(ctx, &store.User{
 		Username: "delete-cleanup-owner", Role: store.RoleAdmin, Email: "delete-cleanup-owner@example.com",
 	})

@@ -98,12 +98,23 @@ type Space struct {
 	SyncToMainFeedSet bool
 	CurrentUserRole   SpaceMemberRole
 	MemberCount       int32
+	MemoCount         int32
+	LastActivityTs    int64
 }
 
 // FindSpace selects spaces. MemberUserID restricts results to spaces where the
 // user has a membership, populates the viewer summary, and is applied before
 // pagination.
 type FindSpace struct {
+	UIDList         []string
+	VisibleToUserID *int32
+	ViewerUserID    *int32
+	TotalSize       *int32
+	OrderBy         string
+	ShortAvatar     bool
+	MinID           *int32
+	MaxID           *int32
+
 	ID           *int32
 	IDList       []int32
 	UID          *string

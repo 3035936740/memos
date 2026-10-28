@@ -196,6 +196,20 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 	if err := validatePassword(request.User.Password); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
+	if err := s.validateTextFieldsAgainstBlockedWords(ctx, request.User.Username, request.User.DisplayName, request.User.Description); err != nil {
+		return nil, err
+	}
+	if request.User.AvatarUrl != "" {
+		if err := validateSpaceAvatar(request.User.AvatarUrl); err != nil {
+			return nil, err
+		}
+	}
+	reviewProfile := func() error {
+		if err := s.reviewAIContent(ctx, []string{request.User.Username, request.User.DisplayName, request.User.Description}, nil); err != nil {
+			return err
+		}
+		return s.reviewImageSource(ctx, request.User.AvatarUrl)
+	}
 
 	roleToAssign := store.RoleUser
 	if currentUser != nil && currentUser.Role == store.RoleAdmin {
@@ -212,6 +226,9 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 		if len(allUsers) == 0 {
 			roleToAssign = store.RoleAdmin
 			if !request.ValidateOnly {
+				if err := reviewProfile(); err != nil {
+					return nil, err
+				}
 				passwordHash, err := bcrypt.GenerateFromPassword([]byte(request.User.Password), bcrypt.DefaultCost)
 				if err != nil {
 					return nil, status.Errorf(codes.Internal, "failed to generate password hash: %v", err)
@@ -221,6 +238,8 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 					Role:         store.RoleAdmin,
 					Email:        request.User.Email,
 					Nickname:     request.User.DisplayName,
+					Description:  request.User.Description,
+					AvatarURL:    request.User.AvatarUrl,
 					PasswordHash: string(passwordHash),
 				})
 				if err != nil {
@@ -252,12 +271,16 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 	}
 
 	// If validate_only is true, just validate without creating
+	if err := reviewProfile(); err != nil {
+		return nil, err
+	}
 	if request.ValidateOnly {
 		// Perform validation checks without actually creating the user
 		return &v1pb.User{
 			Username:    request.User.Username,
 			Email:       request.User.Email,
 			DisplayName: request.User.DisplayName,
+			Description: request.User.Description,
 			Role:        convertUserRoleFromStore(roleToAssign),
 		}, nil
 	}
@@ -272,6 +295,8 @@ func (s *APIV1Service) CreateUser(ctx context.Context, request *v1pb.CreateUserR
 		Role:         roleToAssign,
 		Email:        request.User.Email,
 		Nickname:     request.User.DisplayName,
+		Description:  request.User.Description,
+		AvatarURL:    request.User.AvatarUrl,
 		PasswordHash: string(passwordHash),
 	})
 	if err != nil {
@@ -300,6 +325,9 @@ func (s *APIV1Service) UpdateUser(ctx context.Context, request *v1pb.UpdateUserR
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.NotFound, "user not found")
+	}
+	if s.Profile.Demo && user.Role == store.RoleAdmin {
+		return nil, status.Errorf(codes.PermissionDenied, "demo administrator accounts are read-only")
 	}
 	userID := user.ID
 	currentUser, err := s.fetchCurrentUser(ctx)
@@ -333,15 +361,24 @@ func (s *APIV1Service) UpdateUser(ctx context.Context, request *v1pb.UpdateUserR
 			if err := validateWritableUsername(request.User.Username); err != nil {
 				return nil, status.Errorf(codes.InvalidArgument, "%v", err)
 			}
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, request.User.Username); err != nil {
+				return nil, err
+			}
 			update.Username = &request.User.Username
 		case "display_name":
 			if instanceGeneralSetting.DisallowChangeNickname {
 				return nil, status.Errorf(codes.PermissionDenied, "permission denied: disallow change nickname")
 			}
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, request.User.DisplayName); err != nil {
+				return nil, err
+			}
 			update.Nickname = &request.User.DisplayName
 		case "email":
 			update.Email = &request.User.Email
 		case "avatar_url":
+			if s.Profile.Demo && len(request.User.AvatarUrl) > ((MebiByte+2)/3)*4+64 {
+				return nil, status.Error(codes.InvalidArgument, "demo avatars must not exceed 1 MiB")
+			}
 			// Validate avatar MIME type to prevent XSS during upload
 			if request.User.AvatarUrl != "" {
 				imageType, _, err := extractImageInfo(request.User.AvatarUrl)
@@ -361,7 +398,13 @@ func (s *APIV1Service) UpdateUser(ctx context.Context, request *v1pb.UpdateUserR
 				}
 			}
 			update.AvatarURL = &request.User.AvatarUrl
+			if err := s.reviewImageSource(ctx, request.User.AvatarUrl); err != nil {
+				return nil, err
+			}
 		case "description":
+			if err := s.validateTextFieldsAgainstBlockedWords(ctx, request.User.Description); err != nil {
+				return nil, err
+			}
 			update.Description = &request.User.Description
 		case "role":
 			// Only allow admin to update role.
@@ -391,6 +434,17 @@ func (s *APIV1Service) UpdateUser(ctx context.Context, request *v1pb.UpdateUserR
 		}
 	}
 
+	textFields := []string{}
+	for _, value := range []*string{update.Username, update.Nickname, update.Description} {
+		if value != nil && strings.TrimSpace(*value) != "" {
+			textFields = append(textFields, *value)
+		}
+	}
+	if len(textFields) > 0 {
+		if err := s.reviewAIContent(ctx, textFields, nil); err != nil {
+			return nil, err
+		}
+	}
 	updatedUser, err := s.Store.UpdateUser(ctx, update)
 	if err != nil {
 		if stderrors.Is(err, store.ErrLastSpaceAdmin) {
@@ -409,6 +463,9 @@ func (s *APIV1Service) DeleteUser(ctx context.Context, request *v1pb.DeleteUserR
 	}
 	if user == nil {
 		return nil, status.Errorf(codes.NotFound, "user not found")
+	}
+	if s.Profile.Demo && user.Role == store.RoleAdmin {
+		return nil, status.Errorf(codes.PermissionDenied, "demo administrator accounts are read-only")
 	}
 	userID := user.ID
 	currentUser, err := s.fetchCurrentUser(ctx)

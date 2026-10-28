@@ -50,5 +50,5 @@ func postgresMemoAccessPredicate(access *store.MemoAccessScope, memoAlias, membe
 		*args = append(*args, *access.UserID)
 		validState = fmt.Sprintf("(%s.row_status = 'NORMAL' OR (%s.row_status = 'ARCHIVED' AND %s.creator_id = %s))", memoAlias, memoAlias, memoAlias, targetStateHolder)
 	}
-	return "(" + strings.Join(clauses, " OR ") + ") AND " + validMemo + " AND " + validState
+	return "(" + strings.Join(clauses, " OR ") + ") AND " + validMemo + " AND " + validState + " AND " + memoAlias + ".deleted_ts IS NULL"
 }

@@ -60,6 +60,9 @@ func (s *APIV1Service) resolveSSOUser(ctx context.Context, currentUser *store.Us
 	}
 	user, err = s.createSSOUser(ctx, userInfo, string(passwordHash), provider, externUID)
 	if err != nil {
+		if status.Code(err) == codes.InvalidArgument || status.Code(err) == codes.Unavailable || status.Code(err) == codes.ResourceExhausted || status.Code(err) == codes.DeadlineExceeded {
+			return nil, err
+		}
 		return nil, status.Errorf(codes.Internal, "failed to create user, error: %v", err)
 	}
 	return user, nil
@@ -82,7 +85,16 @@ func (s *APIV1Service) createSSOUser(
 	provider string,
 	externUID string,
 ) (*store.User, error) {
+	if err := s.validateTextContent(ctx, userInfo.DisplayName); err != nil {
+		return nil, err
+	}
+	if err := s.reviewImageSource(ctx, userInfo.AvatarURL); err != nil {
+		return nil, err
+	}
 	tryUsername := func(username string) (*store.User, error) {
+		if err := s.validateTextContent(ctx, username); err != nil {
+			return nil, err
+		}
 		user, err := s.Store.CreateUserWithIdentity(ctx, &store.User{
 			Username:     username,
 			Role:         store.RoleUser,

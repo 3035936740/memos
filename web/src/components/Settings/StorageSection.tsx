@@ -24,6 +24,7 @@ import {
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import BackupExport from "./BackupExport";
 import SettingGroup from "./SettingGroup";
 import { SettingPanel } from "./SettingList";
 import SettingRow from "./SettingRow";
@@ -288,6 +289,8 @@ const StorageSection = () => {
     <SettingSection title={t("setting.storage.label")}>
       <SettingGroup title={t("setting.storage.current-storage")} description={t("setting.storage.current-storage-description")}>
         <RadioGroup
+          data-settings-surface=""
+          data-settings-choice-group=""
           value={String(selectedStorageType)}
           onValueChange={(value) => {
             handleStorageTypeChanged(Number(value) as InstanceSetting_StorageType);
@@ -299,13 +302,16 @@ const StorageSection = () => {
             const selected = selectedStorageType === option.storageType;
             return (
               <div
+                data-settings-choice-row=""
                 key={option.id}
                 className={cn(
-                  "relative flex border-border bg-background px-3 py-3 transition-colors first:rounded-t-lg last:rounded-b-lg",
+                  "relative flex border-border bg-background px-3 py-3 transition-colors",
                   selected ? "bg-muted/50" : "hover:bg-muted/30",
                 )}
               >
-                {selected && <div className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" aria-hidden />}
+                {selected && (
+                  <div data-settings-choice-marker="" className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" aria-hidden />
+                )}
                 <div className="flex w-full items-start gap-3">
                   <RadioGroupItem value={String(option.storageType)} id={option.id} className="mt-0.5" />
                   <Label
@@ -468,6 +474,7 @@ const StorageSection = () => {
           {t("common.save")}
         </Button>
       </div>
+      <BackupExport />
     </SettingSection>
   );
 };

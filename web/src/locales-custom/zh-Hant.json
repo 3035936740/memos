@@ -1,4 +1,53 @@
 {
+  "ai-review": {
+    "writing-enabled": "接入寫作助手",
+    "writing-note": "預設關閉。只有明確開啟的 AI 才能用於寫作和規劃；審核用途在安全中心獨立選擇。Jev 僅用於審核。",
+    "vision-capability": "目前預設模型支援圖片辨識",
+    "jev-note": "Jev 使用 System One 決策介面。官方圖片介面目前為實驗性功能；確認模型支援後開啟圖片辨識，才能選作圖片審核。",
+    "master": "啟用 AI 審核",
+    "master-note": "所有 AI 審核開關均預設關閉。下方可分別開啟文字和圖片審核、選擇模型，儲存後生效。關閉總開關會停用兩類 AI 審核。",
+    "text-enabled": "啟用 AI 文字審核（預設關閉）",
+    "image-enabled": "啟用 AI 圖片審核（預設關閉）",
+    "text-note": "可選擇一個或多個 AI，最多 8 個。建立或修改文章、評論、投票、使用者資料與 Space 資訊時檢查。",
+    "image-note": "可多選支援辨識圖片的 AI，最多 8 個。僅開啟後檢查頭像、Space 頭像和上傳／發佈的圖片。圖片縮小後送審；動圖需改為靜態圖片。",
+    "no-providers": "請先在 AI 設定新增 Provider；審核模型無須接入寫作助手。",
+    "no-vision": "暫無支援圖片的模型，請先在 AI 設定確認並啟用圖片辨識能力。",
+    "prompt": "審核提示詞（選填）",
+    "text-default": "留空使用預設規則：允許普通筆記、討論與教學內容；拒絕騷擾、威脅、露骨色情、血腥暴力、垃圾訊息與惡意內容。",
+    "image-default": "留空使用預設規則：允許普通照片、繪畫與截圖；拒絕露骨色情、血腥暴力、針對性仇恨圖像與明顯垃圾圖片。",
+    "decision-note": "所有選中的 AI 均合規才通過。LLM 僅回傳 true／false；Jev 合規機率大於 0.5 轉為 true，否則為 false。任一 false 拒絕提交；逾時、格式錯誤或餘額不足也會拒絕，並提示管理員檢查。",
+    "no-writing": "管理員尚未開放可用於寫作助手的 AI。",
+    "rejected": "提交內容未通過 AI 審核，請修改後再試。",
+    "unavailable": "AI 審核服務失敗，請聯絡管理員檢查 API 餘額、額度與服務狀態。本次提交未儲存。"
+  },
+  "ai-options": {
+    "model": "預設模型 ID",
+    "deployment": "Azure 部署名稱",
+    "model-note": "可填寫服務商支援的任意模型 ID。寫作時未另行指定模型就使用此項；語音轉寫仍使用獨立設定。",
+    "provider-default": "使用服務商預設值",
+    "reasoning": "推理強度",
+    "reasoning-note": "僅選擇後才傳送此參數，需要模型支援。強度越高，耗時和 Token 消耗可能越多。",
+    "azure-version": "Azure API 版本（選填）",
+    "azure-note": "位址填寫資源根位址，如 https://example.openai.azure.com。版本留空使用 Azure OpenAI v1；填寫日期版本後使用舊版部署介面。透過 API Key 認證。",
+    "headers": "自訂請求標頭",
+    "add-header": "新增標頭",
+    "header-name": "標頭名稱",
+    "header-value": "標頭內容",
+    "header-keep": "留空保留已儲存的值",
+    "remove-header": "刪除標頭",
+    "headers-note": "最多 20 項，可設定 User-Agent、認證等標頭。內容僅儲存於伺服器，不會回傳；刪除一列即可移除對應標頭。",
+    "invalid-headers": "標頭名稱不能為空，也不能重複。",
+    "workflow-title": "規劃／生成雙模型",
+    "workflow-note": "先由規劃模型整理寫作思路，再由生成模型輸出正文。可使用同一服務商的不同模型，也可使用不同服務商。兩階段都會呼叫 API。",
+    "workflow-enable": "先規劃，再生成",
+    "choose-provider": "選擇 Provider",
+    "planning": "規劃 Provider",
+    "generation": "生成 Provider",
+    "planning-model": "規劃模型 ID",
+    "generation-model": "生成模型 ID",
+    "workflow-active": "使用管理員設定的規劃和生成模型，完成後僅插入最終正文。",
+    "workflow-generating": "正在規劃並生成…"
+  },
   "api-error": {
     "html-response": "介面回傳了網頁（HTTP {{status}}，{{path}}），請重試；若持續出現，請檢查反向代理設定或服務狀態。"
   },
@@ -91,11 +140,56 @@
     },
     "read-later": {
       "remove-failed": "無法從稍後閱讀中移除"
+    },
+    "series": {
+      "label": "系列文章",
+      "title": "系列：{{name}}",
+      "position": "第 {{index}} 篇 / 共 {{total}} 篇",
+      "expand": "展開全部 {{total}} 篇",
+      "collapse": "收起"
+    },
+    "age-notice": {
+      "text": "這篇寫於 {{count}} 年前，部分內容可能已經過時。",
+      "revised": "最後更新於 {{date}}。"
+    },
+    "resume": {
+      "prompt": "上次讀到 {{percent}}%",
+      "action": "繼續閱讀",
+      "dismiss": "關閉"
+    },
+    "batch": {
+      "start": "批次整理",
+      "count": "已選 {{count}} 則",
+      "pick": "選取：{{title}}",
+      "pick-page": "全選本頁",
+      "pick-none": "取消全選",
+      "finish": "完成",
+      "done": "已處理 {{count}} 則",
+      "partly-done": "已處理 {{done}} 則，{{failed}} 則失敗，可以再試一次。",
+      "delete-title": "刪除選取的 {{count}} 則？",
+      "delete-description": "刪除後無法復原，附件也會一起刪除。",
+      "privacy-description": "選取的備忘錄將對所有人公開，裡面好像有這些資訊："
     }
   },
   "editor": {
     "insert-menu": {
       "insert-emoji": "插入表情包"
+    },
+    "privacy-check": {
+      "title": "公開前確認一下",
+      "description": "這則備忘錄是公開的，任何人都看得到。裡面好像有這些資訊：",
+      "keep-editing": "返回修改",
+      "publish-anyway": "仍然發布",
+      "more": "還有 {{count}} 處",
+      "kind": {
+        "phone": "手機號碼",
+        "id-card": "身分證號",
+        "bank-card": "銀行卡號",
+        "email": "電子郵件地址",
+        "secret": "金鑰或權杖",
+        "private-key": "私鑰",
+        "private-ip": "內網位址"
+      }
     }
   },
   "emoji": {
@@ -226,7 +320,7 @@
       "cleared": "已清除阻擋字詞",
       "clear-failed": "無法清除阻擋字詞",
       "current-count": "目前清單：{{count}} 字詞",
-      "status-description": "{{source}}。發佈備忘錄、編輯內容以及張貼評論都會由伺服器檢查。",
+      "status-description": "{{source}}。伺服器檢查備忘錄、評論，以及建立和修改時的使用者名稱、暱稱、個人簡介、Space 名稱、說明和存取別名；SSO 註冊同樣檢查。",
       "clear": "清除屏蔽的詞語",
       "manual-title": "手動維護清單",
       "manual-description": "每行輸入一個單詞，或用逗號、分號或製表符分隔條目。保存會替換數據庫列表，而不是附加歷史記錄。",
@@ -241,7 +335,7 @@
       "file-description": "文件僅在您的瀏覽器中讀取，伺服器不會保留它。解析的條目將直接寫入數據庫。支持 UTF-8 TXT 和 CSV，最大 30 MiB。",
       "choose-file-replace": "選擇文件並替換",
       "clear-title": "清除所有被阻止的單詞？",
-      "clear-description": "這會刪除當前的資料庫詞彙列表，並在未來的帖子中停用屏蔽詞檢查。它不會刪除任何備忘錄或評論。",
+      "clear-description": "這會刪除目前詞庫，停用後續提交和修改的屏蔽詞檢查，包括使用者資料與 Space。已有內容會保留。",
       "clear-confirm": "全部清除"
     },
     "moderation-center": {
@@ -285,6 +379,18 @@
     },
     "instance": {
       "first-visit-default-theme": "初次造訪預設上色風格"
+    },
+    "preference": {
+      "share-title": "收藏到 Memos",
+      "share-description": "把在別處看到的內容存成草稿。Android 手機上把本站「安裝」或「加到主畫面」後，系統的分享選單裡就會出現 Memos。",
+      "bookmarklet": "書籤小工具",
+      "bookmarklet-description": "把這個按鈕拖到瀏覽器的書籤列。之後在任何網頁選取文字再點它，會在新分頁開啟 Memos，把選取的文字和出處放進草稿。",
+      "bookmarklet-name": "收藏到 Memos",
+      "bookmarklet-drag": "拖到書籤列"
+    },
+    "spaces": {
+      "current-space": "目前空間",
+      "manage": "管理"
     }
   },
   "music-admin": {
@@ -484,8 +590,138 @@
     },
     "current": "目前反應：{{combo}} → {{reaction}}",
     "current-none": "現在沒有反應。選一個會反應的風格（Aero、Y2K、蒸汽波、像素、手繪、開發者），再換一個預設以外的主題試試。",
-    "golden-unlocked": "隱藏風格已解鎖，去風格選單裡看看。",
+    "golden-unlocked": "隱藏風格已解鎖，去風格選單裡看看。它也會和主題起反應，圖鑑裡多了它的一行。",
     "try-themes": "試試主題",
     "element-hint": "把滑鼠移到「?」上，可以看到該和哪些主題搭配。"
+  },
+  "quick-find": {
+    "jumps": "直接開啟",
+    "hint": "按 Enter 搜尋全部內容；用 ↑ ↓ 選取上面的結果，按 Enter 直接開啟。",
+    "kind": {
+      "page": "頁面",
+      "category": "分類",
+      "tag": "標籤",
+      "memo": "文章"
+    }
+  },
+  "space": {
+    "directory": {
+      "title": "全部空間",
+      "description": "搜尋名稱、簡介或 ID，或者隨便逛逛。",
+      "search": "搜尋空間",
+      "tab-all": "全部空間",
+      "tab-joined": "我加入的",
+      "random": "隨便逛逛",
+      "shuffle": "換一批",
+      "no-results": "找不到符合的空間。換個關鍵字試試。",
+      "no-joined": "你還沒有加入任何空間。",
+      "empty": "還沒有可以開啟的空間。",
+      "page": "第 {{page}} 頁",
+      "recent": "最近開啟",
+      "find": "尋找空間（共 {{count}} 個）",
+      "total": "共 {{count}} 个空间",
+      "sort": "排序",
+      "sort-newest": "最新创建",
+      "sort-members": "成员最多",
+      "sort-active": "最近活跃",
+      "sort-title": "名称"
+    }
+  },
+  "setup": {
+    "title": "歡迎使用 Memos Plus",
+    "progress": "設定進度",
+    "step-site": "站點",
+    "step-purpose": "用途",
+    "step-look": "外觀",
+    "step-site-description": "先給站點取個名字。之後可以在「設定 → 系統」裡隨時修改。",
+    "step-purpose-description": "選一個最接近的用途，會據此設好註冊方式和新內容預設給誰看。",
+    "step-look-description": "選新訪客第一次開啟時看到的風格和配色。每位訪客之後都可以自己換。",
+    "site-title": "站點名稱",
+    "site-description": "一句話簡介",
+    "site-description-placeholder": "例如：記錄生活和讀書的小站",
+    "type-blog": "個人部落格",
+    "type-blog-description": "只有你寫，所有人都能看。關閉註冊。",
+    "type-community": "小圈子社群",
+    "type-community-description": "大家都能註冊來寫，新內容預設只給登入的人看。",
+    "type-team": "團隊日誌",
+    "type-team-description": "由你新增成員，內容預設只給成員看。關閉註冊。",
+    "style": "風格",
+    "theme": "配色",
+    "look-note": "完成後，你自己的檢視也會切換到這個風格。",
+    "later": "以後再說",
+    "back": "上一步",
+    "next": "下一步",
+    "finish": "完成",
+    "done": "設定好了，站點已經換上新外觀。"
+  },
+  "memos-plus": {
+    "group-title": "Memos Plus",
+    "group-description": "外觀包、頁尾署名和安裝精靈。",
+    "pack": "外觀包",
+    "pack-description": "把站點外觀（新訪客風格、配色、預設背景、自訂樣式）匯出成檔案，或匯入別人分享的外觀包。腳本不會被匯出或匯入。",
+    "pack-export": "匯出",
+    "pack-import": "匯入",
+    "pack-unnamed": "未命名外觀包",
+    "pack-confirm-title": "匯入外觀包「{{name}}」？",
+    "pack-will-set": "將設定：{{items}}。",
+    "pack-nothing": "沒有可匯入的內容",
+    "pack-style": "新訪客風格為{{style}}",
+    "pack-theme": "配色為{{theme}}",
+    "pack-background": "預設背景圖",
+    "pack-css": "自訂樣式（{{count}} 個字元，會取代現有的）",
+    "pack-external": "它會讓訪客的瀏覽器從這些網站載入資源：{{hosts}}。",
+    "pack-save-hint": "匯入後還需要按「儲存」才會生效。",
+    "list-separator": "、",
+    "pack-error-invalid": "這不是 Memos Plus 外觀包檔案。",
+    "pack-error-version": "這個外觀包來自較新的版本，請先升級。",
+    "pack-error-too-large": "外觀包裡的自訂樣式太大，無法匯入。",
+    "powered-by": "頁尾顯示「由 Memos Plus 驅動」",
+    "powered-by-description": "在部落格側欄底部顯示一行小字，連結到專案首頁，幫助更多人發現它。關閉後會在自訂樣式裡加一條隱藏規則。",
+    "powered-by-prefix": "由 ",
+    "powered-by-suffix": " 驅動",
+    "setup": "安裝精靈",
+    "setup-description": "重新設定站點名稱、用途和新訪客外觀。",
+    "setup-open": "開啟精靈"
+  },
+  "trash": {
+    "title": "回收站",
+    "empty": "清空回收站",
+    "all": "显示所有用户的回收站",
+    "none": "回收站是空的。",
+    "purge": "彻底删除",
+    "irreversible": "这会彻底删除备忘录、评论、附件和历史版本，无法恢复。",
+    "remaining": "还有 {{count}} 天自动删除",
+    "retention": "回收站保留天数",
+    "retention-description": "默认保留 30 天。设为 0 时删除立即生效，无法从回收站恢复。",
+    "moved": "已移入回收站",
+    "undo": "撤销"
+  },
+  "history": {
+    "title": "历史版本",
+    "private": "仅备忘录管理者可以查看。旧版本可能包含你后来删掉的隐私内容。",
+    "empty": "还没有历史版本。",
+    "restore": "恢复此版本",
+    "diff": "与当前正文比较：− 当前行，+ 历史行；最多显示 1000 行。",
+    "clear": "清空历史版本",
+    "remove": "删除历史版本",
+    "restore-description": "恢复前会先保存当前版本，并重新执行正常的内容检查。",
+    "remove-description": "删除历史版本后无法恢复，当前正文不受影响。",
+    "storage-settings": "删除恢复与历史版本",
+    "limit": "每篇保留的版本数",
+    "limit-description": "默认 20，最多 200。设为 0 后停止记录新版本；已有版本可在历史窗口中手动删除。"
+  },
+  "backup": {
+    "title": "全站备份",
+    "description": "管理员导出全部备忘录、评论及所选附件，下载为可直接阅读的 ZIP 文件。",
+    "attachments": "附件范围",
+    "local": "本地附件",
+    "all": "本地和 S3 附件",
+    "none": "不包含附件",
+    "database": "包含 SQLite 数据库快照",
+    "sensitive": "数据库快照包含密码哈希、令牌和实例密钥，请妥善保管。MySQL / PostgreSQL 需要另行使用原生工具备份。",
+    "download": "下载全站备份",
+    "downloading": "正在导出…",
+    "running": "已有备份正在导出，请稍后再试。",
+    "failed": "备份下载失败"
   }
 }

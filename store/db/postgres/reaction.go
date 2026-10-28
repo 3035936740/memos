@@ -41,7 +41,7 @@ func upsertPostgresReaction(ctx context.Context, querier postgresReactionUpsertQ
 		INSERT INTO reaction (creator_id, memo_id, reaction_type)
 		SELECT $1, memo.id, $2
 		FROM memo
-		WHERE memo.id = $3
+		WHERE memo.deleted_ts IS NULL AND memo.id = $3
 		FOR KEY SHARE OF memo
 		RETURNING id, created_ts
 	`, upsert.CreatorID, upsert.ReactionType, upsert.MemoID).Scan(
@@ -59,6 +59,7 @@ func upsertPostgresReaction(ctx context.Context, querier postgresReactionUpsertQ
 
 func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*store.Reaction, error) {
 	where, args := []string{"1 = 1"}, []any{}
+	where = append(where, "memo_id NOT IN (SELECT id FROM memo WHERE deleted_ts IS NOT NULL)")
 
 	if find.ID != nil {
 		where, args = append(where, "id = "+placeholder(len(args)+1)), append(args, *find.ID)

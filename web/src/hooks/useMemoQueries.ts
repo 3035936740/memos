@@ -9,12 +9,16 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { createElement } from "react";
+import toast from "react-hot-toast";
 import { memoServiceClient } from "@/connect";
+import { useInstance } from "@/contexts/InstanceContext";
 import { attachmentKeys } from "@/hooks/useAttachmentQueries";
 import { userKeys } from "@/hooks/useUserQueries";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/lib/constants";
 import type { ListMemosRequest, ListMemosResponse, Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { ListMemoCommentsRequestSchema, ListMemosRequestSchema, MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
+import { useTranslate } from "@/utils/i18n";
 
 // Query keys factory for consistent cache management
 export const memoKeys = {
@@ -282,6 +286,8 @@ export function useUpdateMemo() {
 
 export function useDeleteMemo() {
   const queryClient = useQueryClient();
+  const { generalSetting } = useInstance();
+  const t = useTranslate();
 
   return useMutation({
     mutationFn: async (name: string) => {
@@ -297,6 +303,42 @@ export function useDeleteMemo() {
       queryClient.invalidateQueries({ queryKey: userKeys.stats() });
       // Memo deletion can remove or unlink associated attachments.
       queryClient.invalidateQueries({ queryKey: attachmentKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["trash"] });
+      if ((generalSetting.trashRetentionDays ?? 30) > 0) {
+        toast(
+          (notification) =>
+            createElement(
+              "span",
+              { className: "flex items-center gap-4" },
+              t("trash.moved"),
+              createElement(
+                "button",
+                {
+                  type: "button",
+                  className: "font-medium underline underline-offset-4",
+                  onClick: async () => {
+                    toast.dismiss(notification.id);
+                    try {
+                      await memoServiceClient.restoreMemo({ name });
+                      await Promise.all([
+                        queryClient.invalidateQueries({ queryKey: memoKeys.all }),
+                        queryClient.invalidateQueries({ queryKey: ["trash"] }),
+                        queryClient.invalidateQueries({ queryKey: userKeys.stats() }),
+                        queryClient.invalidateQueries({ queryKey: attachmentKeys.lists() }),
+                      ]);
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : t("message.update-failed"));
+                    }
+                  },
+                },
+                t("trash.undo"),
+              ),
+            ),
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(t("message.deleted-successfully"));
+      }
     },
   });
 }

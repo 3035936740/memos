@@ -308,7 +308,7 @@ func TestGenerateTextWithDeepSeek(t *testing.T) {
 	_, err = ts.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
 		Key: storepb.InstanceSettingKey_AI,
 		Value: &storepb.InstanceSetting_AiSetting{AiSetting: &storepb.InstanceAISetting{Providers: []*storepb.AIProviderConfig{
-			{Id: "deepseek-main", Title: "DeepSeek", Type: storepb.AIProviderType_DEEPSEEK, Endpoint: providerServer.URL + "/v1", ApiKey: "sk-deepseek"},
+			{Id: "deepseek-main", Title: "DeepSeek", Type: storepb.AIProviderType_DEEPSEEK, WritingEnabled: true, Endpoint: providerServer.URL + "/v1", ApiKey: "sk-deepseek"},
 		}}},
 	})
 	require.NoError(t, err)

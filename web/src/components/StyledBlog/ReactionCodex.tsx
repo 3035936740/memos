@@ -11,7 +11,7 @@ import {
   MASTERY_READS,
   useBlogProgress,
 } from "@/utils/blog-progress";
-import { blogStyleLabelKey } from "@/utils/blog-style";
+import { blogStyleLabelKey, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
 import {
   ELEMENTS,
@@ -42,11 +42,13 @@ const ReactionCodex = ({ open, onOpenChange }: Props) => {
   const [tab, setTab] = useState<CodexTab>("legend");
   const found = new Set(progress.discovered);
   const legendaryFound = LEGENDARY_REACTIONS.filter((reaction) => found.has(reaction.id)).length;
-  const elementFound = REACTIVE_STYLES.reduce(
+  // The secret style's row stays out of the table, and out of the count, until its achievement unlocks it.
+  const styles = REACTIVE_STYLES.filter((style) => !SECRET_BLOG_STYLES.includes(style) || progress.achievements.includes(style));
+  const elementFound = styles.reduce(
     (count, style) => count + ELEMENTS.filter((element) => found.has(elementReactionId(style, element))).length,
     0,
   );
-  const total = LEGENDARY_REACTIONS.length + REACTIVE_STYLES.length * ELEMENTS.length;
+  const total = LEGENDARY_REACTIONS.length + styles.length * ELEMENTS.length;
   const transformations = computeTransformations(progress);
   const themeLabel = (theme: string) => {
     const option = THEME_OPTIONS.find((item) => item.value === theme);
@@ -133,7 +135,7 @@ const ReactionCodex = ({ open, onOpenChange }: Props) => {
                 </tr>
               </thead>
               <tbody>
-                {REACTIVE_STYLES.map((style) => (
+                {styles.map((style) => (
                   <tr key={style}>
                     <th className="whitespace-nowrap pe-2 text-start font-medium">{t(blogStyleLabelKey(style))}</th>
                     {ELEMENTS.map((element) => {

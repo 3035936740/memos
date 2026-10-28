@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { useSyncExternalStore } from "react";
+import { SECRET_BLOG_STYLES } from "./blog-style";
 import type { Translations } from "./i18n";
 import { REACTIVE_STYLES } from "./style-reactions";
 
@@ -131,11 +132,14 @@ export interface AchievementRule {
   test: (progress: BlogProgress, legendaryCount: number) => boolean;
 }
 
+/** The styles "all flowers" asks for; the secret style comes after the ten legends, so it is not one of them. */
+const FLOWER_STYLES = REACTIVE_STYLES.filter((style) => !SECRET_BLOG_STYLES.includes(style));
+
 export const ACHIEVEMENTS: AchievementRule[] = [
   { id: "first-reaction", test: (progress) => progress.discovered.some((id) => id.includes(":")) },
   { id: "first-legend", test: (_, legendary) => legendary >= 1 },
   { id: "five-legends", test: (_, legendary) => legendary >= 5 },
-  { id: "all-flowers", test: (progress) => REACTIVE_STYLES.every((style) => progress.discovered.includes(`${style}:flower`)) },
+  { id: "all-flowers", test: (progress) => FLOWER_STYLES.every((style) => progress.discovered.includes(`${style}:flower`)) },
   {
     id: "night-reader",
     test: (progress) => Object.values(progress.reads).some((read) => new Date(read.at).getHours() < 5),

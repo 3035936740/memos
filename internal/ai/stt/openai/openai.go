@@ -43,7 +43,7 @@ func New(cfg ai.ProviderConfig, options stt.Options) (*Transcriber, error) {
 		client: openaisdk.NewClient(
 			openaioption.WithAPIKey(apiKey),
 			openaioption.WithBaseURL(endpoint),
-			openaioption.WithHTTPClient(options.HTTPClient),
+			openaioption.WithHTTPClient(ai.WithHeaders(options.HTTPClient, cfg.CustomHeaders)),
 		),
 	}, nil
 }

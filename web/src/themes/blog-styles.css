@@ -3797,10 +3797,12 @@ html[data-style] [data-styled-blog] [data-sb-hero-title] {
 
 /* ---------------------------------------------------------------------------
    金色传说 Golden Legend: the secret style for finding every legendary reaction. Gilded edges on deep brown-black,
-   a shimmering gold title and gold dust in the air. It brings its own palette.
+   a shimmering gold title and gold dust in the air. It brings its own palette on the stock themes; any other theme
+   keeps its colours and gets the gold edges, title and dust over them (fusion).
    --------------------------------------------------------------------------- */
 
-html[data-style="golden"] {
+/* Its own palette, only on the stock themes; any other theme colours it (fusion). */
+html[data-style="golden"]:not([data-fusion="fused"]) {
   color-scheme: dark;
   --background: #15110a;
   --foreground: #f6ecd2;
@@ -3823,7 +3825,13 @@ html[data-style="golden"] {
   --sidebar-foreground: #f6ecd2;
   --sidebar-accent: #2a2214;
   --sidebar-accent-foreground: #fff3d0;
+}
+
+html[data-style="golden"] {
   --sb-gold: linear-gradient(135deg, #8a6a1f 0%, #f5d27a 25%, #fff3c4 45%, #c99a2e 65%, #f5d27a 85%, #8a6a1f 100%);
+  --sb-gold-line: #6b5426;
+  --sb-gold-glow: rgb(242 193 78 / 35%);
+  --sb-gold-title: linear-gradient(100deg, #b8862b 0%, #f5d27a 30%, #fffbe6 45%, #f5d27a 60%, #b8862b 100%);
   --sb-surface: linear-gradient(var(--card), var(--card)) padding-box, var(--sb-gold) border-box;
   --sb-border: 1.5px solid transparent;
   --sb-radius: 14px;
@@ -3847,11 +3855,11 @@ html[data-style="golden"][data-style] body {
 }
 
 html[data-style="golden"] :is([data-app-toolbar], [data-app-sidebar-frame]) {
-  border-color: #6b5426;
+  border-color: var(--sb-gold-line);
 }
 
 html[data-style="golden"] [data-styled-blog] [data-sb-hero-title] {
-  background-image: linear-gradient(100deg, #b8862b 0%, #f5d27a 30%, #fffbe6 45%, #f5d27a 60%, #b8862b 100%);
+  background-image: var(--sb-gold-title);
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -3874,13 +3882,87 @@ html[data-style="golden"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-
 }
 
 html[data-style="golden"] [data-styled-blog] [data-sb-cloud-tag]:not([aria-pressed="true"]) {
-  border: 1px solid #6b5426;
+  border: 1px solid var(--sb-gold-line);
   background: transparent;
   color: var(--foreground);
 }
 
-html[data-style="golden"] [data-blog-nav] a[aria-current="page"] {
+/* Widget headings sit on a gold rule that fades out. */
+html[data-style="golden"] [data-styled-blog] [data-sb-widget-title] {
+  padding-bottom: 6px;
+  background: linear-gradient(90deg, var(--sb-gold-line), transparent 85%) left bottom / 100% 1px no-repeat;
+  letter-spacing: 0.04em;
+}
+
+/* Boxes inside a post (polls, link previews, code, tables) and the comments get a fine gold rule; their rows a
+   fainter one. */
+html[data-style="golden"] [data-styled-blog] :is([data-sb-subcard], [data-memo-comment-section] [data-memo-view]) {
+  border: 1px solid var(--sb-gold-line);
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--muted) 45%, var(--card));
+  box-shadow: none;
+}
+
+html[data-style="golden"] [data-styled-blog] [data-sb-subitem] {
+  border: 1px solid color-mix(in oklch, var(--sb-gold-line) 55%, transparent);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+/* Side panel rows: a gold thread marks the current page, and a fainter one previews it on hover. */
+html[data-style="golden"] [data-app-sidebar] [class*="hover:bg-sidebar-accent"]:hover,
+html[data-style="golden"] [data-app-sidebar] :is([class~="bg-sidebar-accent"], [data-blog-nav] a[aria-current="page"]) {
+  background: color-mix(in oklch, var(--primary) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--sb-gold-line);
+}
+
+html[data-style="golden"] [data-app-sidebar] :is([class~="bg-sidebar-accent"], [data-blog-nav] a[aria-current="page"]) {
+  background: color-mix(in oklch, var(--primary) 16%, transparent);
+  box-shadow: inset 3px 0 0 var(--primary);
   color: var(--primary);
+}
+
+/* Popups (menus, pickers, popovers, dialogs, the codex) are gilded like the cards. */
+html[data-style="golden"] :is(
+    [data-slot="dropdown-menu-content"],
+    [data-slot="popover-content"],
+    [data-slot="select-content"],
+    [role="dialog"]:not([data-slot="sheet-content"])
+  ) {
+  border: 1px solid transparent;
+  background: linear-gradient(var(--popover), var(--popover)) padding-box, var(--sb-gold) border-box;
+  box-shadow: 0 18px 40px -14px var(--sb-gold-glow);
+}
+
+html[data-style="golden"] :is([data-slot="dropdown-menu-item"], [data-slot="dropdown-menu-sub-trigger"], [data-slot="dropdown-menu-checkbox-item"], [data-slot="dropdown-menu-radio-item"], [data-slot="select-item"]):is([data-highlighted], [data-popup-open]) {
+  background: color-mix(in oklch, var(--primary) 16%, transparent);
+  color: var(--foreground);
+}
+
+html[data-style="golden"] :is([data-slot="dropdown-menu-separator"], [data-slot="select-separator"]) {
+  background: linear-gradient(90deg, transparent, var(--sb-gold-line), transparent);
+}
+
+/* The reading progress bar, the player's screen, play button and progress are gold leaf too. */
+html[data-style="golden"] [data-reading-progress-fill],
+html[data-style="golden"] [data-music-progress-fill] {
+  background: var(--sb-gold);
+  box-shadow: 0 0 10px var(--sb-gold-glow);
+}
+
+html[data-style="golden"] [data-music-lcd] {
+  border: 1px solid transparent;
+  background: linear-gradient(var(--muted), var(--muted)) padding-box, var(--sb-gold) border-box;
+}
+
+html[data-style="golden"] [data-music-button][data-music-main] {
+  background: var(--sb-gold);
+  color: #1a1408;
+  box-shadow: 0 0 12px var(--sb-gold-glow);
+}
+
+html[data-style="golden"] [data-reaction-banner] [data-reaction-title] {
+  font-family: var(--sb-font-display);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4201,7 +4283,7 @@ html[data-style="terminal"]:not([data-fusion="fused"]):not([data-theme$="-dark"]
   background: color-mix(in oklch, var(--card) 94%, var(--primary));
 }
 
-html[data-style="golden"]:not([data-theme$="-dark"]) {
+html[data-style="golden"]:not([data-fusion="fused"]):not([data-theme$="-dark"]) {
   color-scheme: light;
   --background: #fbf6ea;
   --foreground: #3a2c12;
@@ -4224,6 +4306,12 @@ html[data-style="golden"]:not([data-theme$="-dark"]) {
   --sidebar-foreground: #3a2c12;
   --sidebar-accent: #f1e2bd;
   --sidebar-accent-foreground: #3a2c12;
+}
+
+html[data-style="golden"]:not([data-theme$="-dark"]) {
+  --sb-gold-line: #e2cf9f;
+  --sb-gold-glow: rgb(168 122 31 / 30%);
+  --sb-gold-title: linear-gradient(100deg, #7a5a14 0%, #b8862b 30%, #e0b24a 45%, #b8862b 60%, #7a5a14 100%);
   --sb-shadow:
     0 0 0 1px rgb(168 122 31 / 15%),
     0 10px 30px -14px rgb(168 122 31 / 40%);
@@ -4240,10 +4328,6 @@ html[data-style="golden"]:not([data-theme$="-dark"])[data-style] body {
   background-attachment: fixed;
 }
 
-html[data-style="golden"]:not([data-theme$="-dark"]) :is([data-app-toolbar], [data-app-sidebar-frame]) {
-  border-color: #e2cf9f;
-}
-
 /* Keep glass legible on phones without repeatedly blurring large, high-DPI surfaces. */
 @media (max-width: 767px) {
   html[data-style="glass"] {
@@ -4258,12 +4342,4 @@ html[data-style="golden"]:not([data-theme$="-dark"]) :is([data-app-toolbar], [da
     -webkit-backdrop-filter: blur(10px) saturate(160%);
     backdrop-filter: blur(10px) saturate(160%);
   }
-}
-
-html[data-style="golden"]:not([data-theme$="-dark"]) [data-styled-blog] [data-sb-hero-title] {
-  background-image: linear-gradient(100deg, #7a5a14 0%, #b8862b 30%, #e0b24a 45%, #b8862b 60%, #7a5a14 100%);
-}
-
-html[data-style="golden"]:not([data-theme$="-dark"]) [data-styled-blog] [data-sb-cloud-tag]:not([aria-pressed="true"]) {
-  border-color: #e2cf9f;
 }

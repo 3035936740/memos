@@ -26,6 +26,12 @@ vi.mock("@/contexts/MemoFilterContext", async (importOriginal) => {
   };
 });
 
+// Jump results need the instance settings and the API; these tests cover the search itself.
+vi.mock("@/components/AppSidebar/useQuickFindJumps", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/AppSidebar/useQuickFindJumps")>()),
+  useQuickFindJumps: () => [],
+}));
+
 vi.mock("@/hooks/useCurrentUser", () => ({
   default: () => state.currentUser,
 }));

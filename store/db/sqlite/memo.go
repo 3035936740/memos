@@ -100,6 +100,21 @@ func validateSQLiteMemoSpaceWriter(ctx context.Context, tx dbExecutor, spaceID, 
 
 func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo, error) {
 	where, args := []string{"1 = 1"}, []any{}
+	switch find.Deleted {
+	case store.OnlyDeleted:
+		where = append(where, "memo.deleted_ts IS NOT NULL")
+	case store.IncludeDeleted:
+	default:
+		where = append(where, "memo.deleted_ts IS NULL")
+	}
+	if find.DeletedBeforeTs != nil {
+		args = append(args, *find.DeletedBeforeTs)
+		where = append(where, "memo.deleted_ts < "+"?")
+	}
+	if find.AfterID != nil {
+		args = append(args, *find.AfterID)
+		where = append(where, "memo.id > "+"?")
+	}
 
 	engine, err := filter.DefaultEngine()
 	if err != nil {
@@ -208,10 +223,14 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			WHERE parent_relation.memo_id = memo.id AND parent_relation.type = 'COMMENT'
 			ORDER BY parent_memo.id LIMIT 1) AS parent_uid`,
 	}
+	fields = append(fields, "memo.deleted_ts")
 	if !find.ExcludeContent {
 		fields = append(fields, "`memo`.`content` AS `content`")
 	}
 
+	if find.OrderByID {
+		orderBy = []string{"memo.id ASC"}
+	}
 	query := "SELECT " + strings.Join(fields, ", ") + " FROM `memo` " +
 		"LEFT JOIN `user` AS `memo_creator` ON `memo`.`creator_id` = `memo_creator`.`id` " +
 		"LEFT JOIN `space` AS `memo_space` ON `memo`.`space_id` = `memo_space`.`id` " +
@@ -248,6 +267,7 @@ func (d *DB) ListMemos(ctx context.Context, find *store.FindMemo) ([]*store.Memo
 			&memo.SpaceID,
 			&memo.ParentUID,
 		}
+		dests = append(dests, &memo.DeletedTs)
 		if !find.ExcludeContent {
 			dests = append(dests, &memo.Content)
 		}

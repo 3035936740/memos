@@ -41,7 +41,7 @@ func upsertSQLiteReaction(ctx context.Context, querier sqliteReactionUpsertQueri
 		INSERT INTO reaction (creator_id, memo_id, reaction_type)
 		SELECT ?, memo.id, ?
 		FROM memo
-		WHERE memo.id = ?
+		WHERE memo.deleted_ts IS NULL AND memo.id = ?
 		RETURNING id, created_ts
 	`, upsert.CreatorID, upsert.ReactionType, upsert.MemoID).Scan(
 		&upsert.ID,
@@ -58,6 +58,7 @@ func upsertSQLiteReaction(ctx context.Context, querier sqliteReactionUpsertQueri
 
 func (d *DB) ListReactions(ctx context.Context, find *store.FindReaction) ([]*store.Reaction, error) {
 	where, args := []string{"1 = 1"}, []any{}
+	where = append(where, "memo_id NOT IN (SELECT id FROM memo WHERE deleted_ts IS NOT NULL)")
 
 	if find.ID != nil {
 		where, args = append(where, "id = ?"), append(args, *find.ID)

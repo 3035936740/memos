@@ -1739,6 +1739,9 @@ func TestMemoCommentDoesNotFollowParentVisibilityChanges(t *testing.T) {
 func TestGlobalFeedExcludesCommentsUntilContextIsDeleted(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestService(t)
+	zero := int32(0)
+	_, settingErr := ts.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_GENERAL, Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: &storepb.InstanceGeneralSetting{TrashRetentionDays: &zero}}})
+	require.NoError(t, settingErr)
 	defer ts.Cleanup()
 
 	owner, err := ts.CreateRegularUser(ctx, "comment-feed-owner")

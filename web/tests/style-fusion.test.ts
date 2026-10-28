@@ -7,7 +7,7 @@ import {
   resolveMusicConfig,
   withInstanceSiteConfig,
 } from "@/lib/instance-content";
-import { type BlogProgress, computeTransformations, currentVisitStreak } from "@/utils/blog-progress";
+import { ACHIEVEMENTS, type BlogProgress, computeTransformations, currentVisitStreak } from "@/utils/blog-progress";
 import { estimateReadingMinutes } from "@/utils/reading-time";
 import { computeFusion, getDaypart, getFestival, THEME_ELEMENTS } from "@/utils/style-reactions";
 import { tagItemsOf } from "@/utils/tag-items";
@@ -45,6 +45,11 @@ describe("computeFusion", () => {
     expect(fusion.reactionIds).toEqual(["matrix", "terminal:rain", "terminal:night"]);
   });
 
+  it("lets the secret golden style react as well", () => {
+    expect(computeFusion("golden", "sakura-day")).toMatchObject({ pure: false, elements: ["flower"], reactionIds: ["golden:flower"] });
+    expect(computeFusion("golden", "default-dark").pure).toBe(true);
+  });
+
   it("gives every colour theme at least one element", () => {
     for (const [theme, elements] of Object.entries(THEME_ELEMENTS)) {
       expect(elements.length, theme).toBeGreaterThan(0);
@@ -75,6 +80,12 @@ describe("blog progress", () => {
     expect(currentVisitStreak(["2026-10-24", "2026-10-25", "2026-10-26"], today)).toBe(3);
     expect(currentVisitStreak(["2026-10-24", "2026-10-25"], today)).toBe(2);
     expect(currentVisitStreak(["2026-10-20"], today)).toBe(0);
+  });
+
+  it("does not ask the secret style for every flower", () => {
+    const rule = ACHIEVEMENTS.find((item) => item.id === "all-flowers")!;
+    const discovered = ["aero", "y2k", "vaporwave", "pixel", "handdrawn", "terminal"].map((style) => `${style}:flower`);
+    expect(rule.test({ ...emptyProgress, discovered }, 0)).toBe(true);
   });
 
   it("earns the traveller and mastery transformations", () => {

@@ -6,6 +6,7 @@ import { attachmentKeys } from "@/hooks/useAttachmentQueries";
 import { memoKeys } from "@/hooks/useMemoQueries";
 import { userKeys } from "@/hooks/useUserQueries";
 import {
+  ListSpacesRequest_Scope,
   type Space,
   type Space_AccessMode,
   type SpaceInvitation,
@@ -21,6 +22,8 @@ const SPACE_LIST_STALE_TIME = 1000 * 60 * 5;
 
 export interface SpaceQueryOptions {
   enabled?: boolean;
+  scope?: ListSpacesRequest_Scope;
+  orderBy?: string;
 }
 
 export type UpdateSpaceVariables = {
@@ -113,18 +116,19 @@ export function useSpaces(viewerName: string | undefined, options?: SpaceQueryOp
 
       do {
         const response = await spaceServiceClient.listSpaces({
-          pageSize: SPACE_LIST_PAGE_SIZE,
+          pageSize: viewerName ? 100 : 10,
           pageToken,
+          scope: viewerName ? ListSpacesRequest_Scope.JOINED : ListSpacesRequest_Scope.VISIBLE,
         });
         spaces.push(...response.spaces);
         pageToken = response.nextPageToken;
-      } while (pageToken);
+      } while (viewerName && pageToken);
 
       return spaces;
     },
     enabled: options?.enabled ?? true,
-    // SpaceProvider wraps the whole route tree, so this drains every page on boot.
-    // Space membership is near-static, so don't re-run that loop on each tab return.
+    // Fetch joined spaces only; visitors get one small visible page.
+    // Membership is near-static, so avoid refetching on each tab return.
     staleTime: SPACE_LIST_STALE_TIME,
     refetchOnWindowFocus: false,
   });
@@ -132,9 +136,17 @@ export function useSpaces(viewerName: string | undefined, options?: SpaceQueryOp
 
 export function usePagedSpaces(viewerName: string | undefined, filter: string, pageToken: string, options?: SpaceQueryOptions) {
   return useQuery({
-    queryKey: spaceKeys.pagedList(viewerName ?? "", filter, pageToken),
-    queryFn: () => spaceServiceClient.listSpaces({ pageSize: ADMIN_SPACE_LIST_PAGE_SIZE, pageToken, filter }),
-    enabled: Boolean(viewerName) && (options?.enabled ?? true),
+    queryKey: [...spaceKeys.pagedList(viewerName ?? "", filter, pageToken), options?.scope, options?.orderBy],
+    queryFn: () =>
+      spaceServiceClient.listSpaces({
+        pageSize: ADMIN_SPACE_LIST_PAGE_SIZE,
+        pageToken,
+        filter,
+        showTotalSize: true,
+        scope: options?.scope,
+        orderBy: options?.orderBy,
+      }),
+    enabled: options?.enabled ?? true,
     staleTime: SPACE_LIST_STALE_TIME,
   });
 }
@@ -431,5 +443,24 @@ export function useDeleteSpaceMember(viewerName: string) {
       // authoritative list output. Refresh them without relying on those fields here.
       void queryClient.invalidateQueries({ queryKey: spaceKeys.list(viewerName), exact: true });
     },
+  });
+}
+
+/** Bounded metadata hydration, separate from the small joined-space switcher list. */
+export function useBatchSpaces(viewerName: string | undefined, names: readonly string[], options?: SpaceQueryOptions) {
+  const unique = [...new Set(names.filter(Boolean))].sort().slice(0, 100);
+  return useQuery({
+    queryKey: [...spaceKeys.all, "batch", viewerName ?? "", unique],
+    queryFn: () => spaceServiceClient.batchGetSpaces({ names: unique }),
+    enabled: unique.length > 0 && (options?.enabled ?? true),
+    staleTime: SPACE_LIST_STALE_TIME,
+  });
+}
+export function useSampleSpaces(viewerName: string | undefined, count = 4, enabled = true) {
+  return useQuery({
+    queryKey: [...spaceKeys.all, "sample", viewerName ?? "", count],
+    queryFn: () => spaceServiceClient.sampleSpaces({ count }),
+    enabled,
+    staleTime: SPACE_LIST_STALE_TIME,
   });
 }

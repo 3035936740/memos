@@ -67,7 +67,7 @@ const InstanceCategoryEditor = ({ value, onChange }: Props) => {
       </div>
 
       {categories.length === 0 && (
-        <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+        <div data-settings-surface="" className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
           {t("setting.category.empty")}
         </div>
       )}
@@ -76,7 +76,11 @@ const InstanceCategoryEditor = ({ value, onChange }: Props) => {
         {categories.map((category, index) => {
           const open = openIndex === index;
           return (
-            <section key={`category-${index}`} className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}>
+            <section
+              data-settings-surface=""
+              key={`category-${index}`}
+              className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}
+            >
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -133,7 +137,10 @@ const InstanceCategoryEditor = ({ value, onChange }: Props) => {
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t("setting.category.path")}</Label>
-                    <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
+                    <div
+                      data-settings-surface=""
+                      className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50"
+                    >
                       <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/categories/</span>
                       <Input
                         value={category.slug}

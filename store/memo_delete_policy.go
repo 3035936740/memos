@@ -9,6 +9,11 @@ import (
 // DeleteMemoWithPolicy identifies one memo to delete atomically.
 // Relations do not confer lifecycle authority, so no related memo is deleted.
 type DeleteMemoWithPolicy struct {
+	// DeletedTs enables soft deletion; nil preserves the trusted hard-deletion path.
+	DeletedTs *int64
+	// RequireDeleted makes purge revalidate trash membership inside the transaction.
+	RequireDeleted bool
+
 	MemoID      int32
 	ActorUserID int32
 	// AdminOverride permits an instance administrator or an active ADMIN of

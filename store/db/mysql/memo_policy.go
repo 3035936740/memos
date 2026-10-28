@@ -22,7 +22,7 @@ func validateMySQLMemoWritePolicy(ctx context.Context, tx *sql.Tx, memoID int32,
 	snapshot := new(store.MemoWriteSnapshot)
 	snapshot.ActorInstanceAdmin = actorRole == store.RoleAdmin
 	var spaceID sql.NullInt64
-	if err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, space_id, visibility FROM memo WHERE id = ?`, memoID).Scan(
+	if err := tx.QueryRowContext(ctx, `SELECT creator_id, row_status, space_id, visibility FROM memo WHERE deleted_ts IS NULL AND id = ?`, memoID).Scan(
 		&snapshot.CreatorID, &snapshot.RowStatus, &spaceID, &snapshot.Visibility,
 	); err != nil {
 		if stderrors.Is(err, sql.ErrNoRows) {

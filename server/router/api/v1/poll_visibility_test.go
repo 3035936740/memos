@@ -34,7 +34,7 @@ func TestPollSampledChoicesVisibility(t *testing.T) {
 		require.NoError(t, s.Store.ReplacePollVotes(ctx, &store.ReplacePollVotes{MemoID: stored.ID, UserID: user.ID, OptionIDs: []string{"b"}}))
 	}
 	for _, showChoices := range []bool{false, true, false} {
-		settings := proto.Clone(memo.Poll).(*v1pb.Poll)
+		settings := proto.CloneOf(memo.Poll)
 		settings.ShowVoterChoices = showChoices
 		_, err = s.UpdateMemo(ownerCtx, &v1pb.UpdateMemoRequest{Memo: &v1pb.Memo{Name: memo.Name, Poll: settings}, UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"poll"}}})
 		require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestPollSampledChoicesVisibility(t *testing.T) {
 			}
 		}
 	}
-	settings := proto.Clone(memo.Poll).(*v1pb.Poll)
+	settings := proto.CloneOf(memo.Poll)
 	settings.ShowVoterChoices = true
 	settings.ShowVotersBeforeVoting = false
 	_, err = s.UpdateMemo(ownerCtx, &v1pb.UpdateMemoRequest{Memo: &v1pb.Memo{Name: memo.Name, Poll: settings}, UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"poll"}}})
@@ -84,7 +84,7 @@ func TestPollVisibilityChangesPreserveVotes(t *testing.T) {
 	// Every before/after combination works independently without deleting ballots.
 	for _, before := range []bool{false, true} {
 		for _, after := range []bool{true, false} {
-			settings := proto.Clone(memo.Poll).(*v1pb.Poll)
+			settings := proto.CloneOf(memo.Poll)
 			settings.HideResultsUntilVoted = true
 			settings.ShowVotersBeforeVoting = before
 			settings.ShowVotersAfterVoting = after

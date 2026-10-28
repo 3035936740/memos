@@ -136,7 +136,10 @@ const StorageStaticFiles = () => {
   return (
     <div className="space-y-4">
       <SettingRow label={t("setting.storage.static-files-path")} description={t("setting.storage.static-files-path-description")}>
-        <div className="flex w-full max-w-lg overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
+        <div
+          data-settings-surface=""
+          className="flex w-full max-w-lg overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50"
+        >
           <span className="flex shrink-0 items-center bg-muted px-2 text-sm text-muted-foreground">/storage/</span>
           <Input
             className="rounded-none border-0 font-mono shadow-none focus-visible:ring-0"
@@ -185,7 +188,7 @@ const StorageStaticFiles = () => {
         </div>
       </SettingRow>
 
-      <div className="overflow-hidden rounded-lg border">
+      <div data-settings-surface="" className="overflow-hidden rounded-lg border">
         <div className="flex items-center gap-2 border-b bg-muted/20 px-3 py-2 text-xs font-medium text-muted-foreground">
           <FolderIcon className="size-3.5" />
           <span>{t("setting.storage.static-files-list")}</span>

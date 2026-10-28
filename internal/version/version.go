@@ -10,6 +10,18 @@ import (
 // Version is set by release builds and defaults to a development build marker.
 var Version = "dev"
 
+// PlusVersion is the independently versioned Memos Plus release.
+var PlusVersion = "1.0.0-dev"
+
+// GetDisplayVersion describes the fork release without changing upstream schema semantics.
+func GetDisplayVersion() string {
+	base := Version
+	if base == "dev" {
+		base = "0.34.x-dev"
+	}
+	return fmt.Sprintf("%s (based on Memos %s)", PlusVersion, base)
+}
+
 // Commit is set by CI builds and defaults to an unknown revision marker.
 var Commit = "unknown"
 

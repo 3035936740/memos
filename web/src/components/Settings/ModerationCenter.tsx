@@ -67,7 +67,7 @@ const ModerationCenter = ({ mode }: { mode: Mode }) => {
           <TabsTrigger value="USER">{t("common.user")}</TabsTrigger>
         </TabsList>
       </Tabs>
-      <div className="overflow-hidden rounded-lg border border-border">
+      <div data-settings-surface="" className="overflow-hidden rounded-lg border border-border">
         {loading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
         ) : items.length === 0 ? (

@@ -34,6 +34,30 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// MemoServiceListDeletedMemosProcedure is the fully-qualified name of the MemoService's
+	// ListDeletedMemos RPC.
+	MemoServiceListDeletedMemosProcedure = "/memos.api.v1.MemoService/ListDeletedMemos"
+	// MemoServiceRestoreMemoProcedure is the fully-qualified name of the MemoService's RestoreMemo RPC.
+	MemoServiceRestoreMemoProcedure = "/memos.api.v1.MemoService/RestoreMemo"
+	// MemoServicePurgeMemoProcedure is the fully-qualified name of the MemoService's PurgeMemo RPC.
+	MemoServicePurgeMemoProcedure = "/memos.api.v1.MemoService/PurgeMemo"
+	// MemoServiceEmptyTrashProcedure is the fully-qualified name of the MemoService's EmptyTrash RPC.
+	MemoServiceEmptyTrashProcedure = "/memos.api.v1.MemoService/EmptyTrash"
+	// MemoServiceListMemoRevisionsProcedure is the fully-qualified name of the MemoService's
+	// ListMemoRevisions RPC.
+	MemoServiceListMemoRevisionsProcedure = "/memos.api.v1.MemoService/ListMemoRevisions"
+	// MemoServiceGetMemoRevisionProcedure is the fully-qualified name of the MemoService's
+	// GetMemoRevision RPC.
+	MemoServiceGetMemoRevisionProcedure = "/memos.api.v1.MemoService/GetMemoRevision"
+	// MemoServiceRestoreMemoRevisionProcedure is the fully-qualified name of the MemoService's
+	// RestoreMemoRevision RPC.
+	MemoServiceRestoreMemoRevisionProcedure = "/memos.api.v1.MemoService/RestoreMemoRevision"
+	// MemoServiceDeleteMemoRevisionProcedure is the fully-qualified name of the MemoService's
+	// DeleteMemoRevision RPC.
+	MemoServiceDeleteMemoRevisionProcedure = "/memos.api.v1.MemoService/DeleteMemoRevision"
+	// MemoServiceClearMemoRevisionsProcedure is the fully-qualified name of the MemoService's
+	// ClearMemoRevisions RPC.
+	MemoServiceClearMemoRevisionsProcedure = "/memos.api.v1.MemoService/ClearMemoRevisions"
 	// MemoServiceCreateMemoProcedure is the fully-qualified name of the MemoService's CreateMemo RPC.
 	MemoServiceCreateMemoProcedure = "/memos.api.v1.MemoService/CreateMemo"
 	// MemoServiceListMemosProcedure is the fully-qualified name of the MemoService's ListMemos RPC.
@@ -96,6 +120,24 @@ const (
 
 // MemoServiceClient is a client for the memos.api.v1.MemoService service.
 type MemoServiceClient interface {
+	// ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+	ListDeletedMemos(context.Context, *connect.Request[v1.ListDeletedMemosRequest]) (*connect.Response[v1.ListDeletedMemosResponse], error)
+	// RestoreMemo restores a deleted memo and its jointly deleted comments.
+	RestoreMemo(context.Context, *connect.Request[v1.RestoreMemoRequest]) (*connect.Response[v1.Memo], error)
+	// PurgeMemo permanently removes a memo that is already in trash.
+	PurgeMemo(context.Context, *connect.Request[v1.PurgeMemoRequest]) (*connect.Response[emptypb.Empty], error)
+	// EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+	EmptyTrash(context.Context, *connect.Request[v1.EmptyTrashRequest]) (*connect.Response[emptypb.Empty], error)
+	// ListMemoRevisions requires permission to manage the memo, even for public memos.
+	ListMemoRevisions(context.Context, *connect.Request[v1.ListMemoRevisionsRequest]) (*connect.Response[v1.ListMemoRevisionsResponse], error)
+	// GetMemoRevision returns a full historical version to a memo manager only.
+	GetMemoRevision(context.Context, *connect.Request[v1.GetMemoRevisionRequest]) (*connect.Response[v1.MemoRevision], error)
+	// RestoreMemoRevision uses the normal content update path.
+	RestoreMemoRevision(context.Context, *connect.Request[v1.RestoreMemoRevisionRequest]) (*connect.Response[v1.Memo], error)
+	// DeleteMemoRevision removes one historical version, including its sensitive content.
+	DeleteMemoRevision(context.Context, *connect.Request[v1.DeleteMemoRevisionRequest]) (*connect.Response[emptypb.Empty], error)
+	// ClearMemoRevisions removes all historical versions of a memo.
+	ClearMemoRevisions(context.Context, *connect.Request[v1.ClearMemoRevisionsRequest]) (*connect.Response[emptypb.Empty], error)
 	// CreateMemo creates a memo. The request body is a Memo; set its content
 	// (Markdown) and visibility (PRIVATE | PROTECTED | PUBLIC | SPACE,
 	// default PRIVATE).
@@ -162,6 +204,60 @@ func NewMemoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 	baseURL = strings.TrimRight(baseURL, "/")
 	memoServiceMethods := v1.File_api_v1_memo_service_proto.Services().ByName("MemoService").Methods()
 	return &memoServiceClient{
+		listDeletedMemos: connect.NewClient[v1.ListDeletedMemosRequest, v1.ListDeletedMemosResponse](
+			httpClient,
+			baseURL+MemoServiceListDeletedMemosProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("ListDeletedMemos")),
+			connect.WithClientOptions(opts...),
+		),
+		restoreMemo: connect.NewClient[v1.RestoreMemoRequest, v1.Memo](
+			httpClient,
+			baseURL+MemoServiceRestoreMemoProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("RestoreMemo")),
+			connect.WithClientOptions(opts...),
+		),
+		purgeMemo: connect.NewClient[v1.PurgeMemoRequest, emptypb.Empty](
+			httpClient,
+			baseURL+MemoServicePurgeMemoProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("PurgeMemo")),
+			connect.WithClientOptions(opts...),
+		),
+		emptyTrash: connect.NewClient[v1.EmptyTrashRequest, emptypb.Empty](
+			httpClient,
+			baseURL+MemoServiceEmptyTrashProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("EmptyTrash")),
+			connect.WithClientOptions(opts...),
+		),
+		listMemoRevisions: connect.NewClient[v1.ListMemoRevisionsRequest, v1.ListMemoRevisionsResponse](
+			httpClient,
+			baseURL+MemoServiceListMemoRevisionsProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("ListMemoRevisions")),
+			connect.WithClientOptions(opts...),
+		),
+		getMemoRevision: connect.NewClient[v1.GetMemoRevisionRequest, v1.MemoRevision](
+			httpClient,
+			baseURL+MemoServiceGetMemoRevisionProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("GetMemoRevision")),
+			connect.WithClientOptions(opts...),
+		),
+		restoreMemoRevision: connect.NewClient[v1.RestoreMemoRevisionRequest, v1.Memo](
+			httpClient,
+			baseURL+MemoServiceRestoreMemoRevisionProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("RestoreMemoRevision")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteMemoRevision: connect.NewClient[v1.DeleteMemoRevisionRequest, emptypb.Empty](
+			httpClient,
+			baseURL+MemoServiceDeleteMemoRevisionProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("DeleteMemoRevision")),
+			connect.WithClientOptions(opts...),
+		),
+		clearMemoRevisions: connect.NewClient[v1.ClearMemoRevisionsRequest, emptypb.Empty](
+			httpClient,
+			baseURL+MemoServiceClearMemoRevisionsProcedure,
+			connect.WithSchema(memoServiceMethods.ByName("ClearMemoRevisions")),
+			connect.WithClientOptions(opts...),
+		),
 		createMemo: connect.NewClient[v1.CreateMemoRequest, v1.Memo](
 			httpClient,
 			baseURL+MemoServiceCreateMemoProcedure,
@@ -293,6 +389,15 @@ func NewMemoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 
 // memoServiceClient implements MemoServiceClient.
 type memoServiceClient struct {
+	listDeletedMemos     *connect.Client[v1.ListDeletedMemosRequest, v1.ListDeletedMemosResponse]
+	restoreMemo          *connect.Client[v1.RestoreMemoRequest, v1.Memo]
+	purgeMemo            *connect.Client[v1.PurgeMemoRequest, emptypb.Empty]
+	emptyTrash           *connect.Client[v1.EmptyTrashRequest, emptypb.Empty]
+	listMemoRevisions    *connect.Client[v1.ListMemoRevisionsRequest, v1.ListMemoRevisionsResponse]
+	getMemoRevision      *connect.Client[v1.GetMemoRevisionRequest, v1.MemoRevision]
+	restoreMemoRevision  *connect.Client[v1.RestoreMemoRevisionRequest, v1.Memo]
+	deleteMemoRevision   *connect.Client[v1.DeleteMemoRevisionRequest, emptypb.Empty]
+	clearMemoRevisions   *connect.Client[v1.ClearMemoRevisionsRequest, emptypb.Empty]
 	createMemo           *connect.Client[v1.CreateMemoRequest, v1.Memo]
 	listMemos            *connect.Client[v1.ListMemosRequest, v1.ListMemosResponse]
 	getMemo              *connect.Client[v1.GetMemoRequest, v1.Memo]
@@ -314,6 +419,51 @@ type memoServiceClient struct {
 	getSharedMemo        *connect.Client[v1.GetSharedMemoRequest, v1.Memo]
 	getLinkMetadata      *connect.Client[v1.GetLinkMetadataRequest, v1.LinkMetadata]
 	batchGetLinkMetadata *connect.Client[v1.BatchGetLinkMetadataRequest, v1.BatchGetLinkMetadataResponse]
+}
+
+// ListDeletedMemos calls memos.api.v1.MemoService.ListDeletedMemos.
+func (c *memoServiceClient) ListDeletedMemos(ctx context.Context, req *connect.Request[v1.ListDeletedMemosRequest]) (*connect.Response[v1.ListDeletedMemosResponse], error) {
+	return c.listDeletedMemos.CallUnary(ctx, req)
+}
+
+// RestoreMemo calls memos.api.v1.MemoService.RestoreMemo.
+func (c *memoServiceClient) RestoreMemo(ctx context.Context, req *connect.Request[v1.RestoreMemoRequest]) (*connect.Response[v1.Memo], error) {
+	return c.restoreMemo.CallUnary(ctx, req)
+}
+
+// PurgeMemo calls memos.api.v1.MemoService.PurgeMemo.
+func (c *memoServiceClient) PurgeMemo(ctx context.Context, req *connect.Request[v1.PurgeMemoRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.purgeMemo.CallUnary(ctx, req)
+}
+
+// EmptyTrash calls memos.api.v1.MemoService.EmptyTrash.
+func (c *memoServiceClient) EmptyTrash(ctx context.Context, req *connect.Request[v1.EmptyTrashRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.emptyTrash.CallUnary(ctx, req)
+}
+
+// ListMemoRevisions calls memos.api.v1.MemoService.ListMemoRevisions.
+func (c *memoServiceClient) ListMemoRevisions(ctx context.Context, req *connect.Request[v1.ListMemoRevisionsRequest]) (*connect.Response[v1.ListMemoRevisionsResponse], error) {
+	return c.listMemoRevisions.CallUnary(ctx, req)
+}
+
+// GetMemoRevision calls memos.api.v1.MemoService.GetMemoRevision.
+func (c *memoServiceClient) GetMemoRevision(ctx context.Context, req *connect.Request[v1.GetMemoRevisionRequest]) (*connect.Response[v1.MemoRevision], error) {
+	return c.getMemoRevision.CallUnary(ctx, req)
+}
+
+// RestoreMemoRevision calls memos.api.v1.MemoService.RestoreMemoRevision.
+func (c *memoServiceClient) RestoreMemoRevision(ctx context.Context, req *connect.Request[v1.RestoreMemoRevisionRequest]) (*connect.Response[v1.Memo], error) {
+	return c.restoreMemoRevision.CallUnary(ctx, req)
+}
+
+// DeleteMemoRevision calls memos.api.v1.MemoService.DeleteMemoRevision.
+func (c *memoServiceClient) DeleteMemoRevision(ctx context.Context, req *connect.Request[v1.DeleteMemoRevisionRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.deleteMemoRevision.CallUnary(ctx, req)
+}
+
+// ClearMemoRevisions calls memos.api.v1.MemoService.ClearMemoRevisions.
+func (c *memoServiceClient) ClearMemoRevisions(ctx context.Context, req *connect.Request[v1.ClearMemoRevisionsRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.clearMemoRevisions.CallUnary(ctx, req)
 }
 
 // CreateMemo calls memos.api.v1.MemoService.CreateMemo.
@@ -423,6 +573,24 @@ func (c *memoServiceClient) BatchGetLinkMetadata(ctx context.Context, req *conne
 
 // MemoServiceHandler is an implementation of the memos.api.v1.MemoService service.
 type MemoServiceHandler interface {
+	// ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+	ListDeletedMemos(context.Context, *connect.Request[v1.ListDeletedMemosRequest]) (*connect.Response[v1.ListDeletedMemosResponse], error)
+	// RestoreMemo restores a deleted memo and its jointly deleted comments.
+	RestoreMemo(context.Context, *connect.Request[v1.RestoreMemoRequest]) (*connect.Response[v1.Memo], error)
+	// PurgeMemo permanently removes a memo that is already in trash.
+	PurgeMemo(context.Context, *connect.Request[v1.PurgeMemoRequest]) (*connect.Response[emptypb.Empty], error)
+	// EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+	EmptyTrash(context.Context, *connect.Request[v1.EmptyTrashRequest]) (*connect.Response[emptypb.Empty], error)
+	// ListMemoRevisions requires permission to manage the memo, even for public memos.
+	ListMemoRevisions(context.Context, *connect.Request[v1.ListMemoRevisionsRequest]) (*connect.Response[v1.ListMemoRevisionsResponse], error)
+	// GetMemoRevision returns a full historical version to a memo manager only.
+	GetMemoRevision(context.Context, *connect.Request[v1.GetMemoRevisionRequest]) (*connect.Response[v1.MemoRevision], error)
+	// RestoreMemoRevision uses the normal content update path.
+	RestoreMemoRevision(context.Context, *connect.Request[v1.RestoreMemoRevisionRequest]) (*connect.Response[v1.Memo], error)
+	// DeleteMemoRevision removes one historical version, including its sensitive content.
+	DeleteMemoRevision(context.Context, *connect.Request[v1.DeleteMemoRevisionRequest]) (*connect.Response[emptypb.Empty], error)
+	// ClearMemoRevisions removes all historical versions of a memo.
+	ClearMemoRevisions(context.Context, *connect.Request[v1.ClearMemoRevisionsRequest]) (*connect.Response[emptypb.Empty], error)
 	// CreateMemo creates a memo. The request body is a Memo; set its content
 	// (Markdown) and visibility (PRIVATE | PROTECTED | PUBLIC | SPACE,
 	// default PRIVATE).
@@ -485,6 +653,60 @@ type MemoServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewMemoServiceHandler(svc MemoServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	memoServiceMethods := v1.File_api_v1_memo_service_proto.Services().ByName("MemoService").Methods()
+	memoServiceListDeletedMemosHandler := connect.NewUnaryHandler(
+		MemoServiceListDeletedMemosProcedure,
+		svc.ListDeletedMemos,
+		connect.WithSchema(memoServiceMethods.ByName("ListDeletedMemos")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceRestoreMemoHandler := connect.NewUnaryHandler(
+		MemoServiceRestoreMemoProcedure,
+		svc.RestoreMemo,
+		connect.WithSchema(memoServiceMethods.ByName("RestoreMemo")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServicePurgeMemoHandler := connect.NewUnaryHandler(
+		MemoServicePurgeMemoProcedure,
+		svc.PurgeMemo,
+		connect.WithSchema(memoServiceMethods.ByName("PurgeMemo")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceEmptyTrashHandler := connect.NewUnaryHandler(
+		MemoServiceEmptyTrashProcedure,
+		svc.EmptyTrash,
+		connect.WithSchema(memoServiceMethods.ByName("EmptyTrash")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceListMemoRevisionsHandler := connect.NewUnaryHandler(
+		MemoServiceListMemoRevisionsProcedure,
+		svc.ListMemoRevisions,
+		connect.WithSchema(memoServiceMethods.ByName("ListMemoRevisions")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceGetMemoRevisionHandler := connect.NewUnaryHandler(
+		MemoServiceGetMemoRevisionProcedure,
+		svc.GetMemoRevision,
+		connect.WithSchema(memoServiceMethods.ByName("GetMemoRevision")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceRestoreMemoRevisionHandler := connect.NewUnaryHandler(
+		MemoServiceRestoreMemoRevisionProcedure,
+		svc.RestoreMemoRevision,
+		connect.WithSchema(memoServiceMethods.ByName("RestoreMemoRevision")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceDeleteMemoRevisionHandler := connect.NewUnaryHandler(
+		MemoServiceDeleteMemoRevisionProcedure,
+		svc.DeleteMemoRevision,
+		connect.WithSchema(memoServiceMethods.ByName("DeleteMemoRevision")),
+		connect.WithHandlerOptions(opts...),
+	)
+	memoServiceClearMemoRevisionsHandler := connect.NewUnaryHandler(
+		MemoServiceClearMemoRevisionsProcedure,
+		svc.ClearMemoRevisions,
+		connect.WithSchema(memoServiceMethods.ByName("ClearMemoRevisions")),
+		connect.WithHandlerOptions(opts...),
+	)
 	memoServiceCreateMemoHandler := connect.NewUnaryHandler(
 		MemoServiceCreateMemoProcedure,
 		svc.CreateMemo,
@@ -613,6 +835,24 @@ func NewMemoServiceHandler(svc MemoServiceHandler, opts ...connect.HandlerOption
 	)
 	return "/memos.api.v1.MemoService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case MemoServiceListDeletedMemosProcedure:
+			memoServiceListDeletedMemosHandler.ServeHTTP(w, r)
+		case MemoServiceRestoreMemoProcedure:
+			memoServiceRestoreMemoHandler.ServeHTTP(w, r)
+		case MemoServicePurgeMemoProcedure:
+			memoServicePurgeMemoHandler.ServeHTTP(w, r)
+		case MemoServiceEmptyTrashProcedure:
+			memoServiceEmptyTrashHandler.ServeHTTP(w, r)
+		case MemoServiceListMemoRevisionsProcedure:
+			memoServiceListMemoRevisionsHandler.ServeHTTP(w, r)
+		case MemoServiceGetMemoRevisionProcedure:
+			memoServiceGetMemoRevisionHandler.ServeHTTP(w, r)
+		case MemoServiceRestoreMemoRevisionProcedure:
+			memoServiceRestoreMemoRevisionHandler.ServeHTTP(w, r)
+		case MemoServiceDeleteMemoRevisionProcedure:
+			memoServiceDeleteMemoRevisionHandler.ServeHTTP(w, r)
+		case MemoServiceClearMemoRevisionsProcedure:
+			memoServiceClearMemoRevisionsHandler.ServeHTTP(w, r)
 		case MemoServiceCreateMemoProcedure:
 			memoServiceCreateMemoHandler.ServeHTTP(w, r)
 		case MemoServiceListMemosProcedure:
@@ -663,6 +903,42 @@ func NewMemoServiceHandler(svc MemoServiceHandler, opts ...connect.HandlerOption
 
 // UnimplementedMemoServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedMemoServiceHandler struct{}
+
+func (UnimplementedMemoServiceHandler) ListDeletedMemos(context.Context, *connect.Request[v1.ListDeletedMemosRequest]) (*connect.Response[v1.ListDeletedMemosResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.ListDeletedMemos is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) RestoreMemo(context.Context, *connect.Request[v1.RestoreMemoRequest]) (*connect.Response[v1.Memo], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.RestoreMemo is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) PurgeMemo(context.Context, *connect.Request[v1.PurgeMemoRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.PurgeMemo is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) EmptyTrash(context.Context, *connect.Request[v1.EmptyTrashRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.EmptyTrash is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) ListMemoRevisions(context.Context, *connect.Request[v1.ListMemoRevisionsRequest]) (*connect.Response[v1.ListMemoRevisionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.ListMemoRevisions is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) GetMemoRevision(context.Context, *connect.Request[v1.GetMemoRevisionRequest]) (*connect.Response[v1.MemoRevision], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.GetMemoRevision is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) RestoreMemoRevision(context.Context, *connect.Request[v1.RestoreMemoRevisionRequest]) (*connect.Response[v1.Memo], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.RestoreMemoRevision is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) DeleteMemoRevision(context.Context, *connect.Request[v1.DeleteMemoRevisionRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.DeleteMemoRevision is not implemented"))
+}
+
+func (UnimplementedMemoServiceHandler) ClearMemoRevisions(context.Context, *connect.Request[v1.ClearMemoRevisionsRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.ClearMemoRevisions is not implemented"))
+}
 
 func (UnimplementedMemoServiceHandler) CreateMemo(context.Context, *connect.Request[v1.CreateMemoRequest]) (*connect.Response[v1.Memo], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.MemoService.CreateMemo is not implemented"))

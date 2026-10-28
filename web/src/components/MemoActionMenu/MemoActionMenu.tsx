@@ -9,6 +9,7 @@ import {
   Edit3Icon,
   FileTextIcon,
   FlagIcon,
+  HistoryIcon,
   LinkIcon,
   ListChecksIcon,
   ListRestartIcon,
@@ -18,6 +19,7 @@ import {
 import { useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import MemoHistoryDialog from "@/components/MemoHistoryDialog";
 import ReportDialog from "@/components/ReportDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +47,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
   const [bookmarkLoaded, setBookmarkLoaded] = useState(false);
 
   // Dialog state
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
 
@@ -125,6 +128,12 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
           </>
         )}
 
+        {!readonly && (
+          <DropdownMenuItem onClick={() => setHistoryOpen(true)}>
+            <HistoryIcon className="size-4" />
+            {t("history.title")}
+          </DropdownMenuItem>
+        )}
         {/* Copy submenu (non-archived) */}
         {!isArchived && (
           <DropdownMenuSub>
@@ -199,6 +208,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
         )}
       </DropdownMenuContent>
 
+      {historyOpen && <MemoHistoryDialog memo={memo} open={historyOpen} onOpenChange={setHistoryOpen} />}
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}

@@ -15,6 +15,7 @@ import { ROUTES } from "./routes";
 
 const AdminSignIn = lazyWithReload(() => import("@/pages/AdminSignIn"));
 const About = lazyWithReload(() => import("@/pages/About"));
+const Trash = lazyWithReload(() => import("@/pages/Trash"));
 const Archived = lazyWithReload(() => import("@/pages/Archived"));
 const AuthCallback = lazyWithReload(() => import("@/pages/AuthCallback"));
 const Explore = lazyWithReload(() => import("@/pages/Explore"));
@@ -86,16 +87,47 @@ export const routeConfig: RouteObject[] = [
               { path: "pages/:slug", element: <CustomMarkdownPage /> },
               { path: "categories/:slug", element: <MemoCategory /> },
               { path: "u/:username", element: <UserProfile /> },
-              { path: "space/:uid", element: <Space /> },
               {
                 element: <RequireAuthRoute />,
                 children: [
                   { path: Routes.HOME, element: <Home /> },
                   { path: Routes.ARCHIVED, element: <Archived /> },
+                  { path: "trash", element: <Trash /> },
                   { path: Routes.READ_LATER, element: <ReadLater /> },
                   {
                     element: <RequireFullInitializationRoute />,
                     children: [{ path: Routes.VIEWS, element: <MemoViews /> }],
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: "space/:uid",
+            element: <Space />,
+            children: [
+              {
+                element: <MainLayout />,
+                children: [
+                  { index: true, element: <Explore /> },
+                  { path: "explore", element: <Explore /> },
+                  { path: "categories/:slug", element: <MemoCategory /> },
+                  {
+                    element: <RequireAuthRoute />,
+                    children: [
+                      { path: "home", element: <Home /> },
+                      { path: "read-later", element: <ReadLater /> },
+                      { path: "archived", element: <Archived /> },
+                    ],
+                  },
+                ],
+              },
+              {
+                element: <RequireAuthRoute />,
+                children: [
+                  {
+                    element: <RequireFullInitializationRoute />,
+                    children: [{ path: "attachments", element: <Attachments /> }],
                   },
                 ],
               },

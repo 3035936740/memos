@@ -1,0 +1,15 @@
+services:
+  memos-plus-demo:
+    image: ghcr.io/3035936740/memos-plus:canary
+    restart: unless-stopped
+    environment:
+      MEMOS_DEMO: "true"
+      MEMOS_DRIVER: sqlite
+      MEMOS_PORT: "5230"
+      MEMOS_DATA: /var/opt/memos
+    ports:
+      - "127.0.0.1:5231:5230"
+    volumes:
+      - memos-plus-demo-data:/var/opt/memos
+volumes:
+  memos-plus-demo-data:

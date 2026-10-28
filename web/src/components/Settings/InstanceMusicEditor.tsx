@@ -221,14 +221,20 @@ const InstanceMusicEditor = ({ value, onChange }: Props) => {
       </div>
 
       {value.tracks.length === 0 && (
-        <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">{t("music-admin.empty")}</div>
+        <div data-settings-surface="" className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+          {t("music-admin.empty")}
+        </div>
       )}
 
       <div className="space-y-2">
         {value.tracks.map((track, index) => {
           const open = openId === track.id;
           return (
-            <section key={track.id} className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}>
+            <section
+              data-settings-surface=""
+              key={track.id}
+              className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}
+            >
               <div className="flex items-center gap-2">
                 <button
                   type="button"

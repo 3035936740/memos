@@ -1,6 +1,6 @@
 import { Code, ConnectError } from "@connectrpc/connect";
 import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Outlet, useLocation, useParams } from "react-router-dom";
 import { buttonVariants } from "@/components/ui/button";
 import { useSpaceContext } from "@/contexts/SpaceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
@@ -9,21 +9,23 @@ import { cn } from "@/lib/utils";
 import { ROUTES } from "@/router/routes";
 import { useTranslate } from "@/utils/i18n";
 
-// /space/:uid is a stable sharing shortcut, not a separate feed. Resolve the
-// Space, make it the current collection, then enter the regular Explore page.
+// Resolve the shared URL and render the normal feed without redirecting away.
 const SpacePage = () => {
   const t = useTranslate();
   const { uid = "" } = useParams();
+  const { pathname } = useLocation();
   const currentUser = useCurrentUser();
-  const { selectSpace } = useSpaceContext();
+  const { selectSpace, selectedSpaceName } = useSpaceContext();
   const spaceQuery = useSpace(currentUser?.name, uid ? `spaces/${uid}` : "");
   const space = spaceQuery.data;
 
   useEffect(() => {
     if (space) {
-      selectSpace(space, ROUTES.EXPLORE);
+      selectSpace(space, pathname);
     }
-  }, [selectSpace, space]);
+  }, [pathname, selectSpace, space]);
+
+  if (space && selectedSpaceName === space.name) return <Outlet />;
 
   if (!spaceQuery.isError) {
     return <div className="w-full px-4 py-12 text-center text-sm text-muted-foreground">{t("space.loading")}</div>;

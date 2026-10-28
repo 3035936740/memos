@@ -37,6 +37,8 @@ message GenerateTextRequest {
   string prompt = 3 [(google.api.field_behavior) = REQUIRED];
   // Optional. Current memo text supplied as editing context.
   string context = 4 [(google.api.field_behavior) = OPTIONAL];
+  // Use the administrator-configured planning and generation models.
+  bool plan_first = 5 [(google.api.field_behavior) = OPTIONAL];
 }
 
 message GenerateTextResponse {

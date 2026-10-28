@@ -76,15 +76,15 @@ func NewSSEHub() *SSEHub {
 // Subscribe registers a new client and returns it.
 // The caller must call Unsubscribe when done.
 func (h *SSEHub) Subscribe() *SSEClient {
-	return h.subscribe(0, store.RoleUser)
+	return h.attachClient(0, store.RoleUser)
 }
 
 // SubscribeForUser registers a client with identity-aware event filtering.
 func (h *SSEHub) SubscribeForUser(userID int32, role store.Role) *SSEClient {
-	return h.subscribe(userID, role)
+	return h.attachClient(userID, role)
 }
 
-func (h *SSEHub) subscribe(userID int32, role store.Role) *SSEClient {
+func (h *SSEHub) attachClient(userID int32, role store.Role) *SSEClient {
 	c := &SSEClient{
 		// Buffer a few events so a slow client doesn't block broadcasting.
 		events: make(chan []byte, sseClientEventBufferSize),

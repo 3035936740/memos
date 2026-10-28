@@ -31,10 +31,11 @@ type Server struct {
 	Profile *profile.Profile
 	Store   *store.Store
 
-	echoServer   *echo.Echo
-	httpServer   *http.Server
-	sseHub       *apiv1.SSEHub
-	apiV1Service *apiv1.APIV1Service
+	echoServer       *echo.Echo
+	httpServer       *http.Server
+	sseHub           *apiv1.SSEHub
+	apiV1Service     *apiv1.APIV1Service
+	lifecycleContext context.Context
 
 	backgroundRunnerCancels []context.CancelFunc
 	backgroundRunnerWG      sync.WaitGroup
@@ -42,8 +43,9 @@ type Server struct {
 
 func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store) (*Server, error) {
 	s := &Server{
-		Store:   store,
-		Profile: profile,
+		Store:            store,
+		Profile:          profile,
+		lifecycleContext: ctx,
 	}
 
 	echoServer := echo.New()
@@ -56,10 +58,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 		return nil, errors.Wrap(err, "failed to get instance basic setting")
 	}
 
-	secret := "usememos"
-	if !profile.Demo {
-		secret = instanceBasicSetting.SecretKey
-	}
+	secret := instanceBasicSetting.SecretKey
 	s.Secret = secret
 
 	// Register healthz endpoint.
@@ -115,6 +114,7 @@ func (s *Server) Start() error {
 	}
 
 	// Start Echo server directly (no cmux needed - all traffic is HTTP).
+	s.startBackgroundRunners(s.lifecycleContext)
 	s.httpServer = &http.Server{Handler: s.echoServer}
 	go func() {
 		if err := s.httpServer.Serve(listener); err != nil && err != http.ErrServerClosed {
@@ -130,9 +130,11 @@ func (s *Server) Shutdown(ctx context.Context) {
 	defer cancel()
 
 	slog.Info("server shutting down")
+	s.stopBackgroundRunners()
 
 	s.closeLongLivedConnections()
 	s.shutdownHTTPServer(ctx)
+	s.waitBackgroundRunners(ctx)
 
 	// Close database connection.
 	if err := s.Store.Close(); err != nil {
@@ -149,6 +151,11 @@ func (s *Server) startBackgroundRunners(ctx context.Context) {
 		s.backgroundRunnerWG.Add(1)
 		go func() {
 			defer s.backgroundRunnerWG.Done()
+			demoTicker := time.NewTicker(24 * time.Hour)
+			defer demoTicker.Stop()
+			trashTicker := time.NewTicker(time.Hour)
+			defer trashTicker.Stop()
+			s.apiV1Service.PurgeExpiredTrash(scheduledContext)
 			ticker := time.NewTicker(15 * time.Second)
 			defer ticker.Stop()
 			s.apiV1Service.PublishScheduledMemos(scheduledContext)
@@ -157,6 +164,14 @@ func (s *Server) startBackgroundRunners(ctx context.Context) {
 				select {
 				case <-scheduledContext.Done():
 					return
+				case <-demoTicker.C:
+					if s.Profile.Demo {
+						if err := s.Store.ResetDemo(scheduledContext); err != nil {
+							slog.Error("demo reset failed", "error", err)
+						}
+					}
+				case <-trashTicker.C:
+					s.apiV1Service.PurgeExpiredTrash(scheduledContext)
 				case <-ticker.C:
 					s.apiV1Service.PublishScheduledMemos(scheduledContext)
 					s.apiV1Service.ReleaseExpiredUserBans(scheduledContext)

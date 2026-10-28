@@ -70,7 +70,7 @@ const MyAccountSection = () => {
       <LinkedIdentitySection />
 
       <SettingGroup showSeparator title={t("setting.account.danger-area")} description={t("setting.account.danger-area-description")}>
-        <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <div data-settings-surface="" className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <div className="flex items-start gap-3">
             <div className="rounded-full bg-destructive/10 p-2 text-destructive">
               <AlertTriangleIcon className="h-4 w-4" />

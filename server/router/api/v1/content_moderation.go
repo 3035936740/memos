@@ -213,12 +213,19 @@ func (s *APIV1Service) clearContentModerationSetting(ctx context.Context) error 
 }
 
 func (s *APIV1Service) validateMemoContentAgainstBlockedWords(ctx context.Context, content string) error {
+	return s.validateTextContent(ctx, content)
+}
+
+// Validate fields independently so a match cannot be formed across field boundaries.
+func (s *APIV1Service) validateTextFieldsAgainstBlockedWords(ctx context.Context, fields ...string) error {
 	_, matcher, err := s.getContentModerationSetting(ctx)
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to load content moderation setting")
 	}
-	if matcher.matches(content) {
-		return status.Error(codes.InvalidArgument, "content contains a blocked word")
+	for _, text := range fields {
+		if matcher.matches(text) {
+			return status.Error(codes.InvalidArgument, "content contains a blocked word")
+		}
 	}
 	return nil
 }
@@ -258,6 +265,9 @@ func decodeModerationJSON(c *echo.Context, value any) error {
 }
 
 func (s *APIV1Service) authenticateModerationAdmin(c *echo.Context, authorizer *Authorizer) (*store.User, int, error) {
+	if s.Profile.Demo && c.Request().Method != http.MethodGet {
+		return nil, http.StatusForbidden, errors.New("administration is read-only on the demo instance")
+	}
 	ctx := c.Request().Context()
 	result := authorizer.Authenticate(ctx, c.Request().Header.Get("Authorization"))
 	if result == nil {

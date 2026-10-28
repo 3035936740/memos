@@ -15,7 +15,7 @@ PopoverTrigger.displayName = "PopoverTrigger";
 const PopoverContent = React.forwardRef<
   HTMLDivElement,
   PopoverPrimitive.Popup.Props & Pick<PopoverPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset">
->(({ className, align = "center", alignOffset, side, sideOffset = 4, ...props }, ref) => {
+>(({ className, children, align = "center", alignOffset, side, sideOffset = 4, ...props }, ref) => {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
@@ -29,12 +29,19 @@ const PopoverContent = React.forwardRef<
           ref={ref}
           data-slot="popover-content"
           className={cn(
-            "bg-popover text-popover-foreground z-dropdown w-auto origin-(--transform-origin) rounded-md border p-1 shadow-md outline-hidden",
+            "bg-popover text-popover-foreground relative z-dropdown flex max-h-(--available-height) w-auto max-w-(--available-width) flex-col origin-(--transform-origin) overflow-hidden rounded-md border p-1 shadow-md outline-hidden",
             popupMotionClasses,
             className,
           )}
           {...props}
-        />
+        >
+          <div
+            data-slot="popover-viewport"
+            className="relative z-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [display:inherit] [flex-direction:inherit] [gap:inherit]"
+          >
+            {children}
+          </div>
+        </PopoverPrimitive.Popup>
       </PopoverPrimitive.Positioner>
     </PopoverPrimitive.Portal>
   );

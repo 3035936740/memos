@@ -6,10 +6,12 @@ import { useLocalStorage } from "@/hooks";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { cn } from "@/lib/utils";
 import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
+import { Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { convertVisibilityFromString } from "@/utils/memo";
+import { findPrivateInfo, type PrivacyFinding } from "@/utils/privacy-check";
 import { isSuperUser } from "@/utils/user";
-import { AudioRecorderPanel, EditorContent, EditorMetadata, FocusModeOverlay, TimestampPopover } from "./components";
+import { AudioRecorderPanel, EditorContent, EditorMetadata, FocusModeOverlay, PrivacyCheckDialog, TimestampPopover } from "./components";
 import { FOCUS_MODE_STYLES, FORMATTING_TOOLBAR_STORAGE_KEY } from "./constants";
 import {
   splitInlineLocalFiles,
@@ -66,6 +68,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   const { aiSetting, fetchSetting } = useInstance();
   const [isAudioRecorderOpen, setIsAudioRecorderOpen] = useState(false);
   const [isTranscribingAudio, setIsTranscribingAudio] = useState(false);
+  const [privacyFindings, setPrivacyFindings] = useState<PrivacyFinding[]>([]);
   const { createBlobUrl } = useBlobUrls();
   const saveMediaMetadata = userGeneralSetting?.saveMediaMetadata ?? false;
   const inlineImageUpload = useInlineImageUpload(editorRef);
@@ -330,7 +333,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
         onToggleFormattingToolbar: handleToggleFormattingToolbar,
       };
 
-  const handleSave = useMemoSave({
+  const saveMemo = useMemoSave({
     memoName,
     parentMemoName,
     defaultSpace,
@@ -341,6 +344,29 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     onConfirm,
     onCancel: onCancel ? handleCancel : undefined,
   });
+
+  // A memo about to go public is checked for personal details and secrets first. Whatever the saved memo already
+  // showed in public is not asked about again, so editing an old post does not repeat the question.
+  const handleSave = useCallback(async () => {
+    const { content, metadata } = getState();
+    const goingPublic = metadata.visibility === Visibility.PUBLIC && (!metadata.draft || metadata.publishTime !== undefined);
+    if (goingPublic) {
+      const alreadyPublic = memo?.visibility === Visibility.PUBLIC && !memo.draft ? findPrivateInfo(memo.content) : [];
+      const findings = findPrivateInfo(content).filter(
+        (finding) => !alreadyPublic.some((known) => known.kind === finding.kind && known.text === finding.text),
+      );
+      if (findings.length > 0) {
+        setPrivacyFindings(findings);
+        return;
+      }
+    }
+    await saveMemo();
+  }, [getState, memo, saveMemo]);
+
+  const handlePublishAnyway = useCallback(() => {
+    setPrivacyFindings([]);
+    void saveMemo();
+  }, [saveMemo]);
 
   return (
     <>
@@ -423,6 +449,8 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
           />
         </div>
       </div>
+
+      <PrivacyCheckDialog findings={privacyFindings} onKeepEditing={() => setPrivacyFindings([])} onPublish={handlePublishAnyway} />
     </>
   );
 };

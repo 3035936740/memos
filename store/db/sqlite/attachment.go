@@ -66,6 +66,9 @@ func insertSQLiteAttachment(ctx context.Context, executor dbExecutor, create *st
 
 func (d *DB) ListAttachments(ctx context.Context, find *store.FindAttachment) ([]*store.Attachment, error) {
 	where, args := []string{"1 = 1"}, []any{}
+	if !find.IncludeDeletedMemos {
+		where = append(where, "(attachment.memo_id IS NULL OR memo.deleted_ts IS NULL)")
+	}
 
 	if v := find.ID; v != nil {
 		where, args = append(where, "`attachment`.`id` = ?"), append(args, *v)

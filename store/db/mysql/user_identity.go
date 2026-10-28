@@ -17,8 +17,8 @@ type execer interface {
 }
 
 func insertUser(ctx context.Context, e execer, create *store.User) (sql.Result, error) {
-	stmt := "INSERT INTO user (`username`, `role`, `email`, `nickname`, `password_hash`, `avatar_url`) VALUES (?, ?, ?, ?, ?, ?)"
-	return e.ExecContext(ctx, stmt, create.Username, create.Role, create.Email, create.Nickname, create.PasswordHash, create.AvatarURL)
+	stmt := "INSERT INTO user (`username`, `role`, `email`, `nickname`, `password_hash`, `avatar_url`, `description`) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	return e.ExecContext(ctx, stmt, create.Username, create.Role, create.Email, create.Nickname, create.PasswordHash, create.AvatarURL, create.Description)
 }
 
 func insertUserIdentity(ctx context.Context, e execer, create *store.UserIdentity) (sql.Result, error) {

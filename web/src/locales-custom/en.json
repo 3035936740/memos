@@ -1,4 +1,53 @@
 {
+  "ai-review": {
+    "writing-enabled": "Enable for the writing assistant",
+    "writing-note": "Off by default. Only opted-in providers can be used for writing or planning. Review is configured independently in Security Center; Jev is review-only.",
+    "vision-capability": "The default model supports image recognition",
+    "jev-note": "Jev uses the System One decision API. Its image API is experimental; image recognition must be explicitly enabled here before selecting it for image review.",
+    "master": "Enable AI moderation",
+    "master-note": "All AI review switches are off by default. Configure text and image review independently below, then save. Disabling this switch stops both review pipelines.",
+    "text-enabled": "Review submitted text with AI (off by default)",
+    "image-enabled": "Review images with AI (off by default)",
+    "text-note": "Select one or more reviewers (up to 8). Checks posts, comments, polls, user profiles and Space metadata on creation or editing.",
+    "image-note": "Select one or more vision-capable reviewers (up to 8). Checks avatars and uploaded/published images only while enabled. Review copies are resized; animated images must be replaced with static images.",
+    "no-providers": "Configure AI providers in AI settings first. Writing access is not required for review.",
+    "no-vision": "No vision-capable providers. Enable image recognition for the model in AI settings first.",
+    "prompt": "Review policy prompt (optional)",
+    "text-default": "Leave blank for the default policy: allow ordinary notes, discussion and educational content; reject harassment, threats, explicit sexual content, graphic violence, spam and malicious content.",
+    "image-default": "Leave blank for the default policy: allow ordinary photos, art and screenshots; reject explicit sexual content, graphic violence, targeted hateful imagery and obvious spam.",
+    "decision-note": "All selected reviewers must pass. LLMs must return exactly true/false; Jev compliance probability above 0.5 becomes true, otherwise false. Any false rejects the submission. Timeouts, invalid responses and insufficient balance reject the submission and ask the administrator to check the service.",
+    "no-writing": "No AI providers have been opened to the writing assistant by the administrator.",
+    "rejected": "The submission did not pass AI moderation. Please edit it and try again.",
+    "unavailable": "AI moderation failed. Please contact the administrator to check API balance, quota and service status. The submission was not saved."
+  },
+  "ai-options": {
+    "model": "Default model ID",
+    "deployment": "Azure deployment name",
+    "model-note": "Enter any model ID supported by your provider. Used for writing when no model override is entered; transcription keeps its own model.",
+    "provider-default": "Provider default",
+    "reasoning": "Reasoning effort",
+    "reasoning-note": "Sent only when selected. Requires a compatible model; higher effort may take longer and use more tokens.",
+    "azure-version": "Azure API version (optional)",
+    "azure-note": "Use the resource root URL, such as https://example.openai.azure.com. Leave the version empty for Azure OpenAI v1; enter a date to use the legacy deployment API. Uses API Key authentication.",
+    "headers": "Custom headers",
+    "add-header": "Add header",
+    "header-name": "Header name",
+    "header-value": "Header value",
+    "header-keep": "Leave blank to retain a stored value",
+    "remove-header": "Remove header",
+    "headers-note": "Up to 20 headers, including User-Agent and authentication headers. Values are stored on the server and never returned. Remove a row to delete that header.",
+    "invalid-headers": "Header names must be nonempty and unique.",
+    "workflow-title": "Planning and generation models",
+    "workflow-note": "Use one model to plan, then another to write the final text. Providers may be the same. Both stages make an API request and may incur costs.",
+    "workflow-enable": "Plan before generating",
+    "choose-provider": "Choose a provider",
+    "planning": "Planning provider",
+    "generation": "Generation provider",
+    "planning-model": "Planning model ID",
+    "generation-model": "Generation model ID",
+    "workflow-active": "Uses the administrator-configured planning and generation models.",
+    "workflow-generating": "Planning and generating…"
+  },
   "api-error": {
     "html-response": "The API returned a webpage (HTTP {{status}}, {{path}}). Please retry; if this persists, check the reverse proxy."
   },
@@ -91,11 +140,58 @@
     },
     "read-later": {
       "remove-failed": "Failed to remove from read later"
+    },
+    "series": {
+      "label": "Series",
+      "title": "Series: {{name}}",
+      "position": "Part {{index}} of {{total}}",
+      "expand": "Show all {{total}}",
+      "collapse": "Show fewer"
+    },
+    "age-notice": {
+      "text": "Written {{count}} years ago; some of it may be out of date.",
+      "text_one": "Written a year ago; some of it may be out of date.",
+      "text_other": "Written {{count}} years ago; some of it may be out of date.",
+      "revised": "Last updated {{date}}."
+    },
+    "resume": {
+      "prompt": "You were {{percent}}% through",
+      "action": "Continue reading",
+      "dismiss": "Dismiss"
+    },
+    "batch": {
+      "start": "Select memos",
+      "count": "{{count}} selected",
+      "pick": "Select: {{title}}",
+      "pick-page": "Select page",
+      "pick-none": "Select none",
+      "finish": "Done",
+      "done": "Updated {{count}}",
+      "partly-done": "Updated {{done}}; {{failed}} failed. Try again.",
+      "delete-title": "Delete {{count}} memos?",
+      "delete-description": "This cannot be undone. Their attachments are deleted too.",
+      "privacy-description": "Anyone will be able to see the selected memos. They seem to contain:"
     }
   },
   "editor": {
     "insert-menu": {
       "insert-emoji": "Insert emoji pack"
+    },
+    "privacy-check": {
+      "title": "Check before it goes public",
+      "description": "Anyone can see this memo. It seems to contain:",
+      "keep-editing": "Keep editing",
+      "publish-anyway": "Publish anyway",
+      "more": "and {{count}} more",
+      "kind": {
+        "phone": "Phone number",
+        "id-card": "ID card number",
+        "bank-card": "Bank card number",
+        "email": "Email address",
+        "secret": "Key or token",
+        "private-key": "Private key",
+        "private-ip": "Private network address"
+      }
     }
   },
   "emoji": {
@@ -226,7 +322,7 @@
       "cleared": "Blocked words cleared",
       "clear-failed": "Failed to clear blocked words",
       "current-count": "Current list: {{count}} words",
-      "status-description": "{{source}}. Publishing memos, editing content, and posting comments are all checked by the server.",
+      "status-description": "{{source}}. The server checks memos, comments, usernames, nicknames, personal bios, and Space names, descriptions, and URL aliases when created or updated, including SSO signup.",
       "clear": "Clear blocked words",
       "manual-title": "Maintain the list manually",
       "manual-description": "Enter one word per line, or separate entries with commas, semicolons, or tabs. Saving replaces the database list instead of appending history.",
@@ -241,7 +337,7 @@
       "file-description": "The file is read only in your browser and the server does not retain it. Parsed entries are written directly to the database. Supports UTF-8 TXT and CSV up to 30 MiB.",
       "choose-file-replace": "Choose file and replace",
       "clear-title": "Clear all blocked words?",
-      "clear-description": "This deletes the current database word list and disables blocked-word checks for future posts. It does not delete any memos or comments.",
+      "clear-description": "This deletes the current word list and disables blocked-word checks on future submissions and edits, including profiles and Spaces. Existing content is kept.",
       "clear-confirm": "Clear all"
     },
     "moderation-center": {
@@ -285,6 +381,18 @@
     },
     "instance": {
       "first-visit-default-theme": "First-visit default color theme"
+    },
+    "preference": {
+      "share-title": "Save to Memos",
+      "share-description": "Save things you find elsewhere as a draft. On Android, once this site is installed or added to the home screen, Memos appears in the system share menu.",
+      "bookmarklet": "Bookmarklet",
+      "bookmarklet-description": "Drag this button to your bookmarks bar. Then select text on any page and click it: Memos opens in a new tab with the text and its source in the draft.",
+      "bookmarklet-name": "Save to Memos",
+      "bookmarklet-drag": "Drag to the bookmarks bar"
+    },
+    "spaces": {
+      "current-space": "Current space",
+      "manage": "Manage"
     }
   },
   "music-admin": {
@@ -484,8 +592,138 @@
     },
     "current": "Reacting now: {{combo}} → {{reaction}}",
     "current-none": "Nothing is reacting. Pick a reactive style (Aero, Y2K, Vaporwave, Pixel, Hand-drawn, Developer) and a theme other than the stock ones.",
-    "golden-unlocked": "A secret style is unlocked. Find it in the style menu.",
+    "golden-unlocked": "A secret style is unlocked. Find it in the style menu. It reacts to themes too, with its own row in the codex.",
     "try-themes": "Try the theme",
     "element-hint": "Hover a “?” to see which themes to pair it with."
+  },
+  "quick-find": {
+    "jumps": "Open directly",
+    "hint": "Enter searches everything; pick a result above with ↑ ↓ and press Enter to open it.",
+    "kind": {
+      "page": "Pages",
+      "category": "Categories",
+      "tag": "Tags",
+      "memo": "Posts"
+    }
+  },
+  "space": {
+    "directory": {
+      "title": "All spaces",
+      "description": "Search by name, description or ID, or browse a few at random.",
+      "search": "Search spaces",
+      "tab-all": "All spaces",
+      "tab-joined": "Joined",
+      "random": "Browse at random",
+      "shuffle": "Shuffle",
+      "no-results": "No spaces match. Try another word.",
+      "no-joined": "You haven't joined any spaces yet.",
+      "empty": "No spaces to open yet.",
+      "page": "Page {{page}}",
+      "recent": "Recently opened",
+      "find": "Find a space ({{count}} in all)",
+      "total": "{{count}} spaces",
+      "sort": "Sort",
+      "sort-newest": "Newest",
+      "sort-members": "Most members",
+      "sort-active": "Recently active",
+      "sort-title": "Name"
+    }
+  },
+  "setup": {
+    "title": "Welcome to Memos Plus",
+    "progress": "Setup progress",
+    "step-site": "Site",
+    "step-purpose": "Purpose",
+    "step-look": "Look",
+    "step-site-description": "Give your site a name. You can change it any time in Settings → System.",
+    "step-purpose-description": "Pick the closest fit; it sets who can sign up and who sees new memos by default.",
+    "step-look-description": "Pick the style and colors first-time visitors see. Every visitor can switch later.",
+    "site-title": "Site name",
+    "site-description": "One-line description",
+    "site-description-placeholder": "For example: notes on life and books",
+    "type-blog": "Personal blog",
+    "type-blog-description": "Only you write; everyone can read. Sign-ups are closed.",
+    "type-community": "Small community",
+    "type-community-description": "Anyone can sign up and write; new memos are for signed-in readers by default.",
+    "type-team": "Team log",
+    "type-team-description": "You add the members; memos are for members by default. Sign-ups are closed.",
+    "style": "Style",
+    "theme": "Colors",
+    "look-note": "When you finish, your own view switches to this style too.",
+    "later": "Later",
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "done": "All set. Your site has its new look."
+  },
+  "memos-plus": {
+    "group-title": "Memos Plus",
+    "group-description": "Appearance packs, the footer credit and the setup wizard.",
+    "pack": "Appearance pack",
+    "pack-description": "Export the site's look (visitor style, colors, default background, custom CSS) as a file, or import one someone shared. Scripts are never exported or imported.",
+    "pack-export": "Export",
+    "pack-import": "Import",
+    "pack-unnamed": "Untitled pack",
+    "pack-confirm-title": "Import the appearance pack “{{name}}”?",
+    "pack-will-set": "This sets {{items}}.",
+    "pack-nothing": "nothing",
+    "pack-style": "the visitor style to {{style}}",
+    "pack-theme": "the colors to {{theme}}",
+    "pack-background": "the default background image",
+    "pack-css": "custom CSS ({{count}} characters, replacing yours)",
+    "pack-external": "Visitors' browsers will load files from: {{hosts}}.",
+    "pack-save-hint": "Press Save afterwards to apply it.",
+    "list-separator": ", ",
+    "pack-error-invalid": "This is not a Memos Plus appearance pack.",
+    "pack-error-version": "This pack comes from a newer version. Upgrade first.",
+    "pack-error-too-large": "The pack's custom CSS is too large to import.",
+    "powered-by": "Show “Powered by Memos Plus”",
+    "powered-by-description": "A small line under the blog sidebar linking to the project, so more people find it. Turning it off adds a hiding rule to your custom CSS.",
+    "powered-by-prefix": "Powered by ",
+    "powered-by-suffix": "",
+    "setup": "Setup wizard",
+    "setup-description": "Set the site name, purpose and visitor look again.",
+    "setup-open": "Open wizard"
+  },
+  "trash": {
+    "title": "Trash",
+    "empty": "Empty trash",
+    "all": "Show all users' trash",
+    "none": "Trash is empty.",
+    "purge": "Delete permanently",
+    "irreversible": "This permanently removes the memo, comments, attachments and history. This cannot be undone.",
+    "remaining": "Automatically deleted in {{count}} days",
+    "retention": "Trash retention (days)",
+    "retention-description": "Default 30 days. Set 0 to delete immediately without a trash recovery window.",
+    "moved": "Moved to trash",
+    "undo": "Undo"
+  },
+  "history": {
+    "title": "Version history",
+    "private": "Only memo managers can access history. Old versions may contain information you removed.",
+    "empty": "No saved versions yet.",
+    "restore": "Restore this version",
+    "diff": "Compared with the current text: - current lines, + historical lines; at most 1000 lines are shown.",
+    "clear": "Clear all history",
+    "remove": "Delete version history",
+    "restore-description": "The current text will be saved before restoring. Normal content checks still apply.",
+    "remove-description": "Deleted history cannot be recovered. The current memo stays unchanged.",
+    "storage-settings": "Recovery and version history",
+    "limit": "Versions kept per memo",
+    "limit-description": "Default 20; maximum 200. Set 0 to stop recording new history. Existing versions can be removed from the history dialog."
+  },
+  "backup": {
+    "title": "Site backup",
+    "description": "Administrator export: all memos, comments and selected attachments in a readable ZIP archive.",
+    "attachments": "Attachments",
+    "local": "Local attachments",
+    "all": "Local and S3 attachments",
+    "none": "No attachments",
+    "database": "Include SQLite database snapshot",
+    "sensitive": "Database snapshots contain password hashes, tokens and instance secrets. Keep them private. MySQL/PostgreSQL require separate native backups.",
+    "download": "Download site backup",
+    "downloading": "Exporting...",
+    "running": "Another backup is already in progress.",
+    "failed": "Backup download failed"
   }
 }

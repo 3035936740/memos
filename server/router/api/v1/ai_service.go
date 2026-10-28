@@ -151,11 +151,27 @@ func (s *APIV1Service) GenerateText(ctx context.Context, request *v1pb.GenerateT
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get AI setting: %v", err)
 	}
-	provider, err := s.resolveAIProvider(aiSetting, request.GetProviderId())
+	providerID := request.GetProviderId()
+	requestedModel := request.GetModel()
+	if request.PlanFirst {
+		workflow := aiSetting.GetTextGeneration()
+		if !workflow.GetEnabled() {
+			return nil, status.Error(codes.FailedPrecondition, "planning workflow is not configured")
+		}
+		providerID = workflow.GenerationProviderId
+		requestedModel = workflow.GenerationModel
+	}
+	provider, err := s.resolveAIProvider(aiSetting, providerID)
 	if err != nil {
 		return nil, err
 	}
-	model := strings.TrimSpace(request.GetModel())
+	if !provider.WritingEnabled || provider.Type == ai.ProviderJev {
+		return nil, status.Error(codes.PermissionDenied, "AI provider is not enabled for writing")
+	}
+	model := strings.TrimSpace(requestedModel)
+	if model == "" {
+		model = provider.DefaultModel
+	}
 	if model == "" {
 		model = defaultAITextModel(provider.Type)
 	}
@@ -163,6 +179,38 @@ func (s *APIV1Service) GenerateText(ctx context.Context, request *v1pb.GenerateT
 		return nil, status.Errorf(codes.InvalidArgument, "model is required for provider type %q", provider.Type)
 	}
 
+	if request.PlanFirst {
+		workflow := aiSetting.GetTextGeneration()
+		planner, err := s.resolveAIProvider(aiSetting, workflow.PlanningProviderId)
+		if err != nil {
+			return nil, err
+		}
+		if !planner.WritingEnabled || planner.Type == ai.ProviderJev {
+			return nil, status.Error(codes.PermissionDenied, "planning provider is not enabled for writing")
+		}
+		planningModel := strings.TrimSpace(workflow.PlanningModel)
+		if planningModel == "" {
+			planningModel = planner.DefaultModel
+		}
+		if planningModel == "" {
+			planningModel = defaultAITextModel(planner.Type)
+		}
+		if planningModel == "" {
+			return nil, status.Error(codes.InvalidArgument, "planning model is required")
+		}
+		plan, err := generateAIText(ctx, planner, planningModel, "Prepare a concise writing plan for the following instruction. Return the plan only, not the finished article.\n\n"+prompt, request.GetContext())
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "AI planning failed: %v", err)
+		}
+		planRunes := []rune(strings.TrimSpace(plan))
+		if len(planRunes) == 0 {
+			return nil, status.Error(codes.Internal, "AI planner returned an empty plan")
+		}
+		if len(planRunes) > 8192 {
+			planRunes = planRunes[:8192]
+		}
+		prompt += "\n\nUse the following writing plan as a guide. Return only the completed text, without the plan:\n---\n" + string(planRunes) + "\n---"
+	}
 	text, err := generateAIText(ctx, provider, model, prompt, request.GetContext())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "AI text generation failed: %v", err)
@@ -197,20 +245,52 @@ func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prom
 		userText += "\n\nCurrent memo for context:\n---\n" + memoContext + "\n---"
 	}
 	systemText := "You assist with writing a personal memo or blog post. Return only the requested text in valid Markdown; do not add a preface."
+	return callAIModel(ctx, provider, model, systemText, userText, nil)
+}
+
+type aiImage struct {
+	Mime   string
+	Base64 string
+}
+
+func callAIModel(ctx context.Context, provider ai.ProviderConfig, model, systemText, userText string, images []aiImage) (string, error) {
 
 	switch provider.Type {
-	case ai.ProviderOpenAI, ai.ProviderDeepSeek, ai.ProviderOpenAICompatible, ai.ProviderOllama:
+	case ai.ProviderOpenAI, ai.ProviderDeepSeek, ai.ProviderOpenAICompatible, ai.ProviderOllama, ai.ProviderAzureOpenAI:
 		endpoint := strings.TrimRight(provider.Endpoint, "/") + "/chat/completions"
+		var userContent any = userText
+		if len(images) > 0 {
+			parts := []map[string]any{{"type": "text", "text": userText}}
+			for _, image := range images {
+				parts = append(parts, map[string]any{"type": "image_url", "image_url": map[string]string{"url": "data:" + image.Mime + ";base64," + image.Base64}})
+			}
+			userContent = parts
+		}
 		payload := map[string]any{
 			"model": model,
-			"messages": []map[string]string{
+			"messages": []map[string]any{
 				{"role": "system", "content": systemText},
-				{"role": "user", "content": userText},
+				{"role": "user", "content": userContent},
 			},
 		}
 		headers := map[string]string{}
 		if provider.APIKey != "" {
 			headers["Authorization"] = "Bearer " + provider.APIKey
+		}
+		if provider.Type == ai.ProviderAzureOpenAI {
+			base := strings.TrimRight(provider.Endpoint, "/")
+			endpoint = base + "/openai/v1/chat/completions"
+			if strings.HasSuffix(base, "/openai/v1") {
+				endpoint = base + "/chat/completions"
+			}
+			if provider.AzureAPIVersion != "" {
+				endpoint = base + "/openai/deployments/" + url.PathEscape(model) + "/chat/completions?api-version=" + url.QueryEscape(provider.AzureAPIVersion)
+			}
+			delete(headers, "Authorization")
+			headers["api-key"] = provider.APIKey
+		}
+		if provider.ReasoningEffort != "" {
+			payload["reasoning_effort"] = provider.ReasoningEffort
 		}
 		var response struct {
 			Choices []struct {
@@ -219,7 +299,7 @@ func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prom
 				} `json:"message"`
 			} `json:"choices"`
 		}
-		if err := postAIJSON(ctx, endpoint, headers, payload, &response); err != nil {
+		if err := postAIJSON(ctx, endpoint, mergeAIHeaders(headers, provider.CustomHeaders), payload, &response); err != nil {
 			return "", err
 		}
 		if len(response.Choices) == 0 {
@@ -229,9 +309,13 @@ func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prom
 
 	case ai.ProviderAnthropic:
 		endpoint := strings.TrimRight(provider.Endpoint, "/") + "/messages"
+		parts := []map[string]any{{"type": "text", "text": userText}}
+		for _, image := range images {
+			parts = append(parts, map[string]any{"type": "image", "source": map[string]string{"type": "base64", "media_type": image.Mime, "data": image.Base64}})
+		}
 		payload := map[string]any{
 			"model": model, "max_tokens": 4096, "system": systemText,
-			"messages": []map[string]string{{"role": "user", "content": userText}},
+			"messages": []map[string]any{{"role": "user", "content": parts}},
 		}
 		headers := map[string]string{"x-api-key": provider.APIKey, "anthropic-version": "2023-06-01"}
 		var response struct {
@@ -240,22 +324,26 @@ func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prom
 				Text string `json:"text"`
 			} `json:"content"`
 		}
-		if err := postAIJSON(ctx, endpoint, headers, payload, &response); err != nil {
+		if err := postAIJSON(ctx, endpoint, mergeAIHeaders(headers, provider.CustomHeaders), payload, &response); err != nil {
 			return "", err
 		}
-		parts := make([]string, 0, len(response.Content))
+		textParts := make([]string, 0, len(response.Content))
 		for _, block := range response.Content {
 			if block.Type == "text" && block.Text != "" {
-				parts = append(parts, block.Text)
+				textParts = append(textParts, block.Text)
 			}
 		}
-		return strings.Join(parts, "\n"), nil
+		return strings.Join(textParts, "\n"), nil
 
 	case ai.ProviderGemini:
 		endpoint := fmt.Sprintf("%s/models/%s:generateContent?key=%s", strings.TrimRight(provider.Endpoint, "/"), url.PathEscape(model), url.QueryEscape(provider.APIKey))
+		parts := []map[string]any{{"text": userText}}
+		for _, image := range images {
+			parts = append(parts, map[string]any{"inlineData": map[string]string{"mimeType": image.Mime, "data": image.Base64}})
+		}
 		payload := map[string]any{
 			"systemInstruction": map[string]any{"parts": []map[string]string{{"text": systemText}}},
-			"contents":          []map[string]any{{"role": "user", "parts": []map[string]string{{"text": userText}}}},
+			"contents":          []map[string]any{{"role": "user", "parts": parts}},
 		}
 		var response struct {
 			Candidates []struct {
@@ -266,22 +354,31 @@ func generateAIText(ctx context.Context, provider ai.ProviderConfig, model, prom
 				} `json:"content"`
 			} `json:"candidates"`
 		}
-		if err := postAIJSON(ctx, endpoint, nil, payload, &response); err != nil {
+		if err := postAIJSON(ctx, endpoint, provider.CustomHeaders, payload, &response); err != nil {
 			return "", err
 		}
 		if len(response.Candidates) == 0 {
 			return "", errors.New("provider response did not include candidates")
 		}
-		parts := make([]string, 0, len(response.Candidates[0].Content.Parts))
+		textParts := make([]string, 0, len(response.Candidates[0].Content.Parts))
 		for _, part := range response.Candidates[0].Content.Parts {
 			if part.Text != "" {
-				parts = append(parts, part.Text)
+				textParts = append(textParts, part.Text)
 			}
 		}
-		return strings.Join(parts, "\n"), nil
+		return strings.Join(textParts, "\n"), nil
 	default:
 		return "", errors.Errorf("provider type %q is not supported for text generation", provider.Type)
 	}
+}
+
+type aiProviderHTTPError struct {
+	Status int
+	Detail string
+}
+
+func (err *aiProviderHTTPError) Error() string {
+	return fmt.Sprintf("provider returned HTTP %d: %s", err.Status, err.Detail)
 }
 
 func postAIJSON(ctx context.Context, endpoint string, headers map[string]string, payload any, target any) error {
@@ -299,7 +396,7 @@ func postAIJSON(ctx context.Context, endpoint string, headers map[string]string,
 			req.Header.Set(key, value)
 		}
 	}
-	resp, err := aiTextHTTPClient.Do(req)
+	resp, err := ai.WithHeaders(aiTextHTTPClient, headers).Do(req)
 	if err != nil {
 		return errors.Wrap(err, "provider request failed")
 	}
@@ -317,7 +414,7 @@ func postAIJSON(ctx context.Context, endpoint string, headers map[string]string,
 		if len(detail) > maxProviderErrorLength {
 			detail = detail[:maxProviderErrorLength] + "..."
 		}
-		return errors.Errorf("provider returned HTTP %d: %s", resp.StatusCode, detail)
+		return &aiProviderHTTPError{Status: resp.StatusCode, Detail: detail}
 	}
 	if err := json.Unmarshal(responseBody, target); err != nil {
 		return errors.Wrap(err, "failed to decode provider response")
@@ -416,11 +513,17 @@ func (*APIV1Service) resolveAIProvider(setting *storepb.InstanceAISetting, provi
 
 func convertAIProviderConfigFromStore(provider *storepb.AIProviderConfig) ai.ProviderConfig {
 	return ai.ProviderConfig{
-		ID:       provider.GetId(),
-		Title:    provider.GetTitle(),
-		Type:     convertAIProviderTypeFromStore(provider.GetType()),
-		Endpoint: provider.GetEndpoint(),
-		APIKey:   provider.GetApiKey(),
+		ID:              provider.GetId(),
+		Title:           provider.GetTitle(),
+		Type:            convertAIProviderTypeFromStore(provider.GetType()),
+		Endpoint:        provider.GetEndpoint(),
+		APIKey:          provider.GetApiKey(),
+		DefaultModel:    provider.GetDefaultModel(),
+		ReasoningEffort: provider.GetReasoningEffort(),
+		CustomHeaders:   provider.GetCustomHeaders(),
+		AzureAPIVersion: provider.GetAzureApiVersion(),
+		WritingEnabled:  provider.GetWritingEnabled(),
+		SupportsVision:  provider.GetSupportsVision(),
 	}
 }
 
@@ -438,6 +541,10 @@ func convertAIProviderTypeFromStore(providerType storepb.AIProviderType) ai.Prov
 		return ai.ProviderOpenAICompatible
 	case storepb.AIProviderType_OLLAMA:
 		return ai.ProviderOllama
+	case storepb.AIProviderType_AZURE_OPENAI:
+		return ai.ProviderAzureOpenAI
+	case storepb.AIProviderType_JEV:
+		return ai.ProviderJev
 	default:
 		return ""
 	}

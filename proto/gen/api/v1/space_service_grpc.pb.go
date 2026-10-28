@@ -20,6 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	SpaceService_BatchGetSpaces_FullMethodName           = "/memos.api.v1.SpaceService/BatchGetSpaces"
+	SpaceService_SampleSpaces_FullMethodName             = "/memos.api.v1.SpaceService/SampleSpaces"
 	SpaceService_CreateSpace_FullMethodName              = "/memos.api.v1.SpaceService/CreateSpace"
 	SpaceService_ListSpaces_FullMethodName               = "/memos.api.v1.SpaceService/ListSpaces"
 	SpaceService_GetSpace_FullMethodName                 = "/memos.api.v1.SpaceService/GetSpace"
@@ -44,6 +46,10 @@ const (
 //
 // SpaceService manages collaborative spaces and their memberships.
 type SpaceServiceClient interface {
+	// BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+	BatchGetSpaces(ctx context.Context, in *BatchGetSpacesRequest, opts ...grpc.CallOption) (*BatchGetSpacesResponse, error)
+	// SampleSpaces returns a bounded sample from the caller's visible spaces.
+	SampleSpaces(ctx context.Context, in *SampleSpacesRequest, opts ...grpc.CallOption) (*SampleSpacesResponse, error)
 	// CreateSpace creates a space and makes the authenticated caller its first
 	// administrator.
 	CreateSpace(ctx context.Context, in *CreateSpaceRequest, opts ...grpc.CallOption) (*Space, error)
@@ -87,6 +93,26 @@ type spaceServiceClient struct {
 
 func NewSpaceServiceClient(cc grpc.ClientConnInterface) SpaceServiceClient {
 	return &spaceServiceClient{cc}
+}
+
+func (c *spaceServiceClient) BatchGetSpaces(ctx context.Context, in *BatchGetSpacesRequest, opts ...grpc.CallOption) (*BatchGetSpacesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BatchGetSpacesResponse)
+	err := c.cc.Invoke(ctx, SpaceService_BatchGetSpaces_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *spaceServiceClient) SampleSpaces(ctx context.Context, in *SampleSpacesRequest, opts ...grpc.CallOption) (*SampleSpacesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SampleSpacesResponse)
+	err := c.cc.Invoke(ctx, SpaceService_SampleSpaces_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *spaceServiceClient) CreateSpace(ctx context.Context, in *CreateSpaceRequest, opts ...grpc.CallOption) (*Space, error) {
@@ -255,6 +281,10 @@ func (c *spaceServiceClient) DeleteSpaceMember(ctx context.Context, in *DeleteSp
 //
 // SpaceService manages collaborative spaces and their memberships.
 type SpaceServiceServer interface {
+	// BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+	BatchGetSpaces(context.Context, *BatchGetSpacesRequest) (*BatchGetSpacesResponse, error)
+	// SampleSpaces returns a bounded sample from the caller's visible spaces.
+	SampleSpaces(context.Context, *SampleSpacesRequest) (*SampleSpacesResponse, error)
 	// CreateSpace creates a space and makes the authenticated caller its first
 	// administrator.
 	CreateSpace(context.Context, *CreateSpaceRequest) (*Space, error)
@@ -300,6 +330,12 @@ type SpaceServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSpaceServiceServer struct{}
 
+func (UnimplementedSpaceServiceServer) BatchGetSpaces(context.Context, *BatchGetSpacesRequest) (*BatchGetSpacesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BatchGetSpaces not implemented")
+}
+func (UnimplementedSpaceServiceServer) SampleSpaces(context.Context, *SampleSpacesRequest) (*SampleSpacesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SampleSpaces not implemented")
+}
 func (UnimplementedSpaceServiceServer) CreateSpace(context.Context, *CreateSpaceRequest) (*Space, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateSpace not implemented")
 }
@@ -367,6 +403,42 @@ func RegisterSpaceServiceServer(s grpc.ServiceRegistrar, srv SpaceServiceServer)
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&SpaceService_ServiceDesc, srv)
+}
+
+func _SpaceService_BatchGetSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetSpacesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SpaceServiceServer).BatchGetSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SpaceService_BatchGetSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SpaceServiceServer).BatchGetSpaces(ctx, req.(*BatchGetSpacesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SpaceService_SampleSpaces_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SampleSpacesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SpaceServiceServer).SampleSpaces(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SpaceService_SampleSpaces_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SpaceServiceServer).SampleSpaces(ctx, req.(*SampleSpacesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _SpaceService_CreateSpace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -664,6 +736,14 @@ var SpaceService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "memos.api.v1.SpaceService",
 	HandlerType: (*SpaceServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "BatchGetSpaces",
+			Handler:    _SpaceService_BatchGetSpaces_Handler,
+		},
+		{
+			MethodName: "SampleSpaces",
+			Handler:    _SpaceService_SampleSpaces_Handler,
+		},
 		{
 			MethodName: "CreateSpace",
 			Handler:    _SpaceService_CreateSpace_Handler,

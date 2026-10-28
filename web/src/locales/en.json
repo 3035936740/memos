@@ -1,5 +1,10 @@
 {
   "about": {
+    "tagline": "Your notes, your blog, your own space.",
+    "plus-description": "Memos Plus is an enhanced fork based on the original Memos 0.31.rc, with blog layouts and styles, Spaces, polls, music playback, and backup and history features. Thanks to the original Memos authors and contributors.",
+    "demo-site": "Demo site",
+    "plus-documents-note": "Memos Plus features, deployment, and upgrades",
+    "upstream-project": "Original Memos project",
     "api-docs": "API Docs",
     "api-docs-note": "REST and gRPC reference",
     "blogs": "Blogs",
@@ -121,6 +126,7 @@
     }
   },
   "common": {
+    "blocked-word": "The submitted text contains a blocked word. Please edit it and try again.",
     "about": "About",
     "actions": "Actions",
     "add": "Add",
@@ -1113,6 +1119,8 @@
       "warning-text": "Are you sure you want to delete storage service `{{name}}`? THIS ACTION IS IRREVERSIBLE"
     },
     "system": {
+      "festival-effects": "Holiday background effects",
+      "festival-effects-description": "Automatically show Halloween bats, Christmas/winter snow, and Spring Festival lanterns during their seasons. Turn off to disable holiday effects site-wide; theme effects and tag effects stay unchanged. Save to apply.",
       "additional-script": "Additional script",
       "additional-script-description": "Inject JavaScript into every web page. Use only trusted code.",
       "additional-script-placeholder": "Additional JavaScript code",

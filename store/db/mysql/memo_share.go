@@ -70,6 +70,7 @@ func createMySQLMemoShare(ctx context.Context, executor mysqlMemoShareCreator, c
 
 func (d *DB) ListMemoShares(ctx context.Context, find *store.FindMemoShare) ([]*store.MemoShare, error) {
 	where, args := []string{"1 = 1"}, []any{}
+	where = append(where, "memo_id IN (SELECT id FROM memo WHERE deleted_ts IS NULL)")
 
 	if find.ID != nil {
 		where, args = append(where, "`id` = ?"), append(args, *find.ID)

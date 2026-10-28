@@ -189,6 +189,16 @@ message InstanceSetting {
     int64 preferences_reset_at = 20;
     // music_config_json stores the administrator-managed public site playlist.
     string music_config_json = 21;
+    // Optional. Days to retain trash; absent means 30, zero disables trash.
+    optional int32 trash_retention_days = 22;
+    // Optional. Maximum revisions per memo; absent means 20, zero disables history.
+    optional int32 memo_revision_limit = 23;
+    // Whether the administrator has completed or skipped the setup wizard.
+    bool setup_completed = 24;
+    // Optional. Whether to show the Memos Plus footer; absent means true.
+    optional bool show_powered_by = 25;
+    // Disable automatic holiday background effects for all visitors. Default is false.
+    bool disable_festival_effects = 26;
 
     // Custom profile configuration for instance branding.
     message CustomProfile {
@@ -337,6 +347,16 @@ message InstanceSetting {
     // transcription is the speech-to-text feature configuration.
     // When unset or transcription.provider_id is empty, transcription is disabled.
     TranscriptionConfig transcription = 2;
+    // Optional two-stage writing workflow managed by the administrator.
+    TextGenerationConfig text_generation = 3;
+  }
+
+  message TextGenerationConfig {
+    bool enabled = 1;
+    string planning_provider_id = 2;
+    string planning_model = 3;
+    string generation_provider_id = 4;
+    string generation_model = 5;
   }
 
   // AIProviderConfig represents one callable AI provider connection.
@@ -351,6 +371,21 @@ message InstanceSetting {
     bool api_key_set = 8 [(google.api.field_behavior) = OUTPUT_ONLY];
     // api_key_hint is a masked hint for the stored API key.
     string api_key_hint = 9 [(google.api.field_behavior) = OUTPUT_ONLY];
+    // Default text-generation model or Azure deployment name.
+    string default_model = 10;
+    // Optional OpenAI-compatible reasoning effort; empty leaves the provider default.
+    string reasoning_effort = 11;
+    // Write-only header values; omitted values are never returned to clients.
+    map<string, string> custom_headers = 12 [(google.api.field_behavior) = INPUT_ONLY];
+    repeated string custom_header_names = 13 [(google.api.field_behavior) = OUTPUT_ONLY];
+    // Replace the header set; blank values retain an existing header of the same name.
+    bool replace_custom_headers = 14 [(google.api.field_behavior) = INPUT_ONLY];
+    // Azure legacy API version; empty uses Azure OpenAI v1.
+    string azure_api_version = 15;
+    // Explicit opt-in for writing; absent/false providers cannot generate writing text.
+    bool writing_enabled = 16;
+    // Administrator-confirmed capability of the configured default model.
+    bool supports_vision = 17;
   }
 
   // AIProviderType is the provider implementation type.
@@ -362,6 +397,8 @@ message InstanceSetting {
     DEEPSEEK = 4;
     OPENAI_COMPATIBLE = 5;
     OLLAMA = 6;
+    AZURE_OPENAI = 7;
+    JEV = 8;
   }
 
   // TranscriptionConfig configures the speech-to-text feature.

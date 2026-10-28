@@ -66,6 +66,12 @@ func validateInstanceGeneralSetting(setting *v1pb.InstanceSetting_GeneralSetting
 	if setting == nil {
 		return errors.New("general setting is required")
 	}
+	if setting.TrashRetentionDays != nil && (*setting.TrashRetentionDays < 0 || *setting.TrashRetentionDays > 3650) {
+		return errors.New("trash retention days must be between 0 and 3650")
+	}
+	if setting.MemoRevisionLimit != nil && (*setting.MemoRevisionLimit < 0 || *setting.MemoRevisionLimit > 200) {
+		return errors.New("memo revision limit must be between 0 and 200")
+	}
 	if len(setting.FirstVisitDefaultStyle) > maxFirstVisitStyleLength {
 		return errors.Errorf("first_visit_default_style is too long; maximum length is %d characters", maxFirstVisitStyleLength)
 	}
@@ -189,8 +195,25 @@ func (s *APIV1Service) prepareInstanceAISettingForUpdate(ctx context.Context, se
 		if provider.Type == storepb.AIProviderType_OPENAI_COMPATIBLE && provider.Endpoint == "" {
 			return errors.Errorf("provider %q endpoint is required for an OpenAI-compatible connection", provider.Id)
 		}
+		if provider.Type == storepb.AIProviderType_AZURE_OPENAI && provider.Endpoint == "" {
+			return errors.New("Azure OpenAI resource endpoint is required")
+		}
+		if err := prepareAIProviderOptions(provider, existingProviders[provider.Id]); err != nil {
+			return err
+		}
 		if provider.Type == storepb.AIProviderType_OLLAMA && provider.Endpoint == "" {
 			provider.Endpoint = "http://localhost:11434/v1"
+		}
+		if provider.Type == storepb.AIProviderType_JEV {
+			if provider.WritingEnabled {
+				return errors.New("Jev cannot be enabled for writing")
+			}
+			if provider.Endpoint == "" {
+				provider.Endpoint = "https://api.typesafe.ai/v1"
+			}
+			if provider.DefaultModel == "" {
+				provider.DefaultModel = "jev-latest"
+			}
 		}
 
 		if provider.ApiKey == "" {
@@ -206,7 +229,14 @@ func (s *APIV1Service) prepareInstanceAISettingForUpdate(ctx context.Context, se
 	if err := preparePersistedTranscriptionConfig(setting, existing); err != nil {
 		return err
 	}
-	return nil
+	if err := prepareTextGenerationConfig(setting, existing); err != nil {
+		return err
+	}
+	security, err := s.Store.GetInstanceModerationSecuritySetting(ctx)
+	if err != nil {
+		return err
+	}
+	return validateAIReviewSetting(security.AIReview, setting)
 }
 
 func preparePersistedTranscriptionConfig(setting *storepb.InstanceAISetting, existing *storepb.InstanceAISetting) error {
@@ -262,7 +292,9 @@ func isSupportedAIProviderType(providerType storepb.AIProviderType) bool {
 		storepb.AIProviderType_ANTHROPIC,
 		storepb.AIProviderType_DEEPSEEK,
 		storepb.AIProviderType_OPENAI_COMPATIBLE,
-		storepb.AIProviderType_OLLAMA:
+		storepb.AIProviderType_OLLAMA,
+		storepb.AIProviderType_AZURE_OPENAI,
+		storepb.AIProviderType_JEV:
 		return true
 	default:
 		return false

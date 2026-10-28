@@ -155,7 +155,10 @@ detect_previous_image() {
       continue
     fi
     if git -C "$REPO_ROOT" merge-base --is-ancestor "$tag" HEAD; then
-      printf 'neosmemo/memos:%s\n' "${tag#v}"
+      case "$tag" in
+        v0.*) printf 'neosmemo/memos:%s\n' "${tag#v}" ;;
+        *) printf 'ghcr.io/3035936740/memos-plus:%s\n' "${tag#v}" ;;
+      esac
       return
     fi
   done < <(git -C "$REPO_ROOT" tag --list 'v[0-9]*' --sort=-version:refname)

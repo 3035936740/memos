@@ -33,6 +33,7 @@ func TestContentModerationReplacementAndClear(t *testing.T) {
 
 	require.NoError(t, service.replaceContentModerationSetting(ctx, &store.InstanceBlockedWordsSetting{Words: []string{"old"}}))
 	require.Equal(t, codes.InvalidArgument, status.Code(service.validateMemoContentAgainstBlockedWords(ctx, "contains old")))
+	require.NoError(t, service.validateTextFieldsAgainstBlockedWords(ctx, "o", "ld"))
 
 	// A second import replaces the single stored row; it does not merge old words.
 	require.NoError(t, service.replaceContentModerationSetting(ctx, &store.InstanceBlockedWordsSetting{Words: []string{"new"}}))

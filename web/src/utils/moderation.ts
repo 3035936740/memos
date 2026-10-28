@@ -26,7 +26,28 @@ export interface ModerationSecuritySetting {
   userReportThreshold: number;
   userAutoBanInitialDays: number;
   publishCooldownSeconds: number;
+  aiReview?: AIReviewSetting;
 }
+
+export interface AIReviewSetting {
+  enabled: boolean;
+  textEnabled: boolean;
+  imagesEnabled: boolean;
+  textProviderIds: string[];
+  imageProviderIds: string[];
+  textPrompt: string;
+  imagePrompt: string;
+}
+
+export const DEFAULT_AI_REVIEW: AIReviewSetting = {
+  enabled: false,
+  textEnabled: false,
+  imagesEnabled: false,
+  textProviderIds: [],
+  imageProviderIds: [],
+  textPrompt: "",
+  imagePrompt: "",
+};
 
 export interface UserBanInfo {
   active: boolean;

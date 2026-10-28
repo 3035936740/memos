@@ -17,9 +17,12 @@ on:
       # Anything that can change how an existing database is opened or upgraded.
       - "store/migration/**"
       - "store/migrator.go"
+      - "store/plus_migrator.go"
+      - "store/plus-migration/**"
       - "store/db/**"
       - "store/test/containers.go"
       - "store/test/migrator*_test.go"
+      - "store/test/plus*_test.go"
       - "store/test/store.go"
       - "server/server.go"
       - "scripts/Dockerfile"
@@ -62,7 +65,7 @@ jobs:
       # store/test/migrator_test.go documents skipping the race detector.
       - name: Run migration and upgrade tests
         run: |
-          go test -v -timeout 30m -run 'TestMigration|TestUpgrade|TestFreshInstall' ./store/test/...
+          go test -v -timeout 30m -run 'TestMigration|TestUpgrade|TestFreshInstall|TestPlus' ./store/test/...
         env:
           DRIVER: ${{ matrix.driver }}
 

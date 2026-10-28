@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
-import { MoreVerticalIcon, PlusIcon } from "lucide-react";
+import { MoreVerticalIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useInstance } from "@/contexts/InstanceContext";
 import {
@@ -24,6 +25,7 @@ import {
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import AIWorkflowEditor from "./AIWorkflowEditor";
 import SettingGroup from "./SettingGroup";
 import { SettingPanel } from "./SettingList";
 import SettingSection from "./SettingSection";
@@ -38,6 +40,13 @@ type LocalAIProvider = {
   apiKey: string;
   apiKeySet: boolean;
   apiKeyHint: string;
+  defaultModel: string;
+  reasoningEffort: string;
+  azureApiVersion: string;
+  headers: { id: string; name: string; value: string }[];
+  headersChanged: boolean;
+  writingEnabled: boolean;
+  supportsVision: boolean;
 };
 
 type LocalTranscription = {
@@ -54,6 +63,8 @@ const providerTypeOptions = [
   InstanceSetting_AIProviderType.DEEPSEEK,
   InstanceSetting_AIProviderType.OPENAI_COMPATIBLE,
   InstanceSetting_AIProviderType.OLLAMA,
+  InstanceSetting_AIProviderType.AZURE_OPENAI,
+  InstanceSetting_AIProviderType.JEV,
 ];
 
 const providerMetadata: Partial<
@@ -62,6 +73,20 @@ const providerMetadata: Partial<
     { label: string; title: string; endpoint: string; transcription: boolean; apiKeyRequired: boolean }
   >
 > = {
+  [InstanceSetting_AIProviderType.JEV]: {
+    label: "TypeSafe Jev",
+    title: "TypeSafe Jev",
+    endpoint: "https://api.typesafe.ai/v1",
+    transcription: false,
+    apiKeyRequired: true,
+  },
+  [InstanceSetting_AIProviderType.AZURE_OPENAI]: {
+    label: "Azure OpenAI",
+    title: "Azure OpenAI",
+    endpoint: "",
+    transcription: false,
+    apiKeyRequired: true,
+  },
   [InstanceSetting_AIProviderType.OPENAI]: {
     label: "OpenAI",
     title: "OpenAI",
@@ -128,6 +153,13 @@ const toLocalProvider = (provider: InstanceSetting_AIProviderConfig): LocalAIPro
   apiKey: "",
   apiKeySet: provider.apiKeySet,
   apiKeyHint: provider.apiKeyHint,
+  defaultModel: provider.defaultModel,
+  reasoningEffort: provider.reasoningEffort,
+  azureApiVersion: provider.azureApiVersion,
+  headers: provider.customHeaderNames.map((name) => ({ id: uuidv4(), name, value: "" })),
+  headersChanged: false,
+  writingEnabled: provider.writingEnabled,
+  supportsVision: provider.supportsVision,
 });
 
 const toLocalTranscription = (config: InstanceSetting_TranscriptionConfig | undefined): LocalTranscription => ({
@@ -145,6 +177,13 @@ const newProvider = (): LocalAIProvider => ({
   apiKey: "",
   apiKeySet: false,
   apiKeyHint: "",
+  defaultModel: "",
+  reasoningEffort: "",
+  azureApiVersion: "",
+  headers: [],
+  headersChanged: false,
+  writingEnabled: false,
+  supportsVision: false,
 });
 
 const toProviderConfig = (provider: LocalAIProvider) =>
@@ -154,6 +193,13 @@ const toProviderConfig = (provider: LocalAIProvider) =>
     type: provider.type,
     endpoint: provider.endpoint.trim(),
     apiKey: provider.apiKey,
+    writingEnabled: provider.writingEnabled,
+    supportsVision: provider.supportsVision,
+    defaultModel: provider.defaultModel.trim(),
+    reasoningEffort: provider.reasoningEffort,
+    azureApiVersion: provider.azureApiVersion.trim(),
+    replaceCustomHeaders: provider.headersChanged,
+    customHeaders: provider.headersChanged ? Object.fromEntries(provider.headers.map(({ name, value }) => [name.trim(), value])) : {},
   });
 
 const toTranscriptionConfig = (transcription: LocalTranscription) =>
@@ -213,8 +259,17 @@ const AISection = () => {
         value: {
           case: "aiSetting",
           value: create(InstanceSetting_AISettingSchema, {
+            ...originalSetting,
             providers: nextProviders.map(toProviderConfig),
             transcription: nextTranscription,
+            textGeneration: originalSetting.textGeneration && {
+              ...originalSetting.textGeneration,
+              enabled:
+                originalSetting.textGeneration.enabled &&
+                [originalSetting.textGeneration.planningProviderId, originalSetting.textGeneration.generationProviderId].every((id) =>
+                  nextProviders.some((provider) => provider.id === id && provider.writingEnabled),
+                ),
+            },
           }),
         },
       }),
@@ -391,6 +446,8 @@ const AISection = () => {
         />
       </SettingGroup>
 
+      <AIWorkflowEditor providers={providers.filter((provider) => provider.writingEnabled)} setting={originalSetting} />
+
       <AIProviderDialog
         provider={editingProvider}
         onOpenChange={(open) => !open && setEditingProvider(undefined)}
@@ -535,12 +592,36 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
       type,
       title: !current.title.trim() || current.title === previous?.title ? (next?.title ?? current.title) : current.title,
       endpoint: !current.endpoint.trim() || current.endpoint === previous?.endpoint ? (next?.endpoint ?? "") : current.endpoint,
+      reasoningEffort: [
+        InstanceSetting_AIProviderType.GEMINI,
+        InstanceSetting_AIProviderType.ANTHROPIC,
+        InstanceSetting_AIProviderType.JEV,
+      ].includes(type)
+        ? ""
+        : current.reasoningEffort,
+      azureApiVersion: type === InstanceSetting_AIProviderType.AZURE_OPENAI ? current.azureApiVersion : "",
+      writingEnabled: type === InstanceSetting_AIProviderType.JEV ? false : current.writingEnabled,
     }));
   };
 
   const handleSave = () => {
+    const names = draft.headers.map((header) => header.name.trim().toLowerCase());
+    if (names.some((name) => !name) || new Set(names).size !== names.length) {
+      toast.error(t("ai-options.invalid-headers"));
+      return;
+    }
     onSave(draft);
   };
+
+  const reasoningOptions = ["", "none", "minimal", "low", "medium", "high", "xhigh"].map((value) => ({
+    value: value || "__default__",
+    label: value || t("ai-options.provider-default"),
+  }));
+  const supportsReasoning = ![
+    InstanceSetting_AIProviderType.GEMINI,
+    InstanceSetting_AIProviderType.ANTHROPIC,
+    InstanceSetting_AIProviderType.JEV,
+  ].includes(draft.type);
 
   return (
     <Dialog open={!!provider} onOpenChange={onOpenChange}>
@@ -550,7 +631,7 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
           <DialogDescription>{t("setting.ai.dialog-description")}</DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 gap-3 [&>div]:min-w-0">
           <div className="flex flex-col gap-1.5">
             <Label>{t("setting.ai.provider-title")}</Label>
             <Input value={draft.title} onChange={(e) => updateDraft({ title: e.target.value })} placeholder="OpenAI" />
@@ -606,6 +687,140 @@ const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogPr
             )}
           </div>
         </div>
+
+        <SettingPanel className="shrink-0 space-y-3 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="ai-writing-enabled">{t("ai-review.writing-enabled")}</Label>
+            <Switch
+              id="ai-writing-enabled"
+              checked={draft.writingEnabled}
+              disabled={draft.type === InstanceSetting_AIProviderType.JEV}
+              onCheckedChange={(writingEnabled) => updateDraft({ writingEnabled })}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">{t("ai-review.writing-note")}</p>
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="ai-supports-vision">{t("ai-review.vision-capability")}</Label>
+            <Switch
+              id="ai-supports-vision"
+              checked={draft.supportsVision}
+              onCheckedChange={(supportsVision) => updateDraft({ supportsVision })}
+            />
+          </div>
+          {draft.type === InstanceSetting_AIProviderType.JEV && <p className="text-xs text-muted-foreground">{t("ai-review.jev-note")}</p>}
+        </SettingPanel>
+
+        <SettingPanel className="shrink-0 p-3">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 [&>div]:min-w-0">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ai-provider-default-model">
+                {t(draft.type === InstanceSetting_AIProviderType.AZURE_OPENAI ? "ai-options.deployment" : "ai-options.model")}
+              </Label>
+              <Input
+                id="ai-provider-default-model"
+                value={draft.defaultModel}
+                maxLength={256}
+                onChange={(event) => updateDraft({ defaultModel: event.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">{t("ai-options.model-note")}</p>
+            </div>
+            {supportsReasoning && (
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("ai-options.reasoning")}</Label>
+                <Select
+                  value={draft.reasoningEffort || "__default__"}
+                  items={reasoningOptions}
+                  onValueChange={(value) => updateDraft({ reasoningEffort: value === "__default__" ? "" : value })}
+                >
+                  <SelectTrigger className="w-full min-w-0">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {reasoningOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">{t("ai-options.reasoning-note")}</p>
+              </div>
+            )}
+            {draft.type === InstanceSetting_AIProviderType.AZURE_OPENAI && (
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <Label htmlFor="ai-azure-version">{t("ai-options.azure-version")}</Label>
+                <Input
+                  id="ai-azure-version"
+                  value={draft.azureApiVersion}
+                  placeholder="YYYY-MM-DD-preview"
+                  onChange={(event) => updateDraft({ azureApiVersion: event.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">{t("ai-options.azure-note")}</p>
+              </div>
+            )}
+          </div>
+        </SettingPanel>
+
+        <SettingPanel className="shrink-0 p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <Label>{t("ai-options.headers")}</Label>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={draft.headers.length >= 20}
+              onClick={() => updateDraft({ headers: [...draft.headers, { id: uuidv4(), name: "", value: "" }], headersChanged: true })}
+            >
+              <PlusIcon className="size-4" />
+              {t("ai-options.add-header")}
+            </Button>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+            {draft.headers.map((header) => (
+              <div
+                key={header.id}
+                className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_auto]"
+              >
+                <Input
+                  className="min-w-0"
+                  aria-label={t("ai-options.header-name")}
+                  placeholder="User-Agent"
+                  value={header.name}
+                  maxLength={128}
+                  onChange={(event) =>
+                    updateDraft({
+                      headers: draft.headers.map((row) => (row.id === header.id ? { ...row, name: event.target.value } : row)),
+                      headersChanged: true,
+                    })
+                  }
+                />
+                <Input
+                  className="col-start-1 row-start-2 min-w-0 sm:col-start-2 sm:row-start-1"
+                  type="password"
+                  aria-label={t("ai-options.header-value")}
+                  value={header.value}
+                  placeholder={t("ai-options.header-keep")}
+                  maxLength={8192}
+                  onChange={(event) =>
+                    updateDraft({
+                      headers: draft.headers.map((row) => (row.id === header.id ? { ...row, value: event.target.value } : row)),
+                      headersChanged: true,
+                    })
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="col-start-2 row-span-2 sm:col-start-3 sm:row-span-1"
+                  aria-label={t("ai-options.remove-header")}
+                  onClick={() => updateDraft({ headers: draft.headers.filter((row) => row.id !== header.id), headersChanged: true })}
+                >
+                  <Trash2Icon className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{t("ai-options.headers-note")}</p>
+        </SettingPanel>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>

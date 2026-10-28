@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { deriveBlogMemoText } from "@/components/BlogMemoView";
+import PoweredByMemosPlus from "@/components/PoweredByMemosPlus";
 import RelativeTime from "@/components/RelativeTime";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemos } from "@/hooks/useMemoQueries";
@@ -201,6 +202,7 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
           ))}
         </dl>
       </section>
+      <PoweredByMemosPlus />
     </div>
   );
 };

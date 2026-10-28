@@ -1,7 +1,8 @@
-import { CheckIcon, ChevronsUpDownIcon, LoaderCircleIcon, type LucideIcon, PlusIcon } from "lucide-react";
+import { CheckIcon, ChevronsUpDownIcon, LoaderCircleIcon, type LucideIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { type ReactNode, useRef, useState } from "react";
 import CreateSpaceDialog from "@/components/CreateSpaceDialog";
 import MemosLogo from "@/components/MemosLogo";
+import SpaceDirectoryDialog from "@/components/SpaceDirectoryDialog";
 import SpaceMark from "@/components/SpaceMark";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import { extractSpaceUidFromName, formatSpaceUidForDisplay } from "@/lib/space-d
 import { cn } from "@/lib/utils";
 import type { Space } from "@/types/proto/api/v1/space_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { pickSwitcherSpaces, readRecentSpaces, SWITCHER_LIST_LIMIT } from "@/utils/space-directory";
 
 // Icons in action and status rows sit in a glyph-width slot so every label in the menu
 // starts on the same text rail as the context rows.
@@ -55,9 +57,20 @@ const ContextItem = ({
 function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?: string; activeSpace?: Space; activeSpaceName?: string }) {
   const t = useTranslate();
   const currentUser = useCurrentUser();
-  const { spaces, duplicateSpaceTitles, selectedSpace, selectedSpaceName, isLoadingSpaces, isSpacesError, selectMemos, selectSpace } =
-    useSpaceContext();
+  const {
+    spaces,
+    totalSpaces,
+    spaceByName,
+    duplicateSpaceTitles,
+    selectedSpace,
+    selectedSpaceName,
+    isLoadingSpaces,
+    isSpacesError,
+    selectMemos,
+    selectSpace,
+  } = useSpaceContext();
   const [createOpen, setCreateOpen] = useState(false);
+  const [directoryOpen, setDirectoryOpen] = useState(false);
   const [menuWidth, setMenuWidth] = useState<number>();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const currentSpace = activeSpaceName ? activeSpace : selectedSpace;
@@ -65,6 +78,9 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
   const selectedSpaceIdentity = currentSpace?.name || currentSpaceName || "";
   const selectedSpaceUid = selectedSpaceIdentity ? extractSpaceUidFromName(selectedSpaceIdentity) : "";
   const showSelectedSpaceUid = currentSpace ? duplicateSpaceTitles.has(currentSpace.title) : Boolean(currentSpaceName);
+  // Past SWITCHER_LIST_LIMIT the menu lists only the current and recent Spaces; the directory has the rest.
+  const crowded = totalSpaces > SWITCHER_LIST_LIMIT;
+  const listedSpaces = crowded ? pickSwitcherSpaces(spaceByName, readRecentSpaces(currentUser?.name ?? ""), currentSpaceName) : spaces;
   const currentContextLabel = currentSpaceName
     ? `${currentSpace?.title || t("space.current")}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
     : t("common.memos");
@@ -135,10 +151,12 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
                 <MemosLogo compact size="sm" />
               </span>
             </ContextItem>
-            {spaces.length > 0 && (
+            {listedSpaces.length > 0 && (
               <>
-                <DropdownMenuLabel className="pb-0.5 pt-1.5 font-normal text-muted-foreground">{t("space.spaces")}</DropdownMenuLabel>
-                {spaces.map((space) => {
+                <DropdownMenuLabel className="pb-0.5 pt-1.5 font-normal text-muted-foreground">
+                  {crowded ? t("space.directory.recent") : t("space.spaces")}
+                </DropdownMenuLabel>
+                {listedSpaces.map((space) => {
                   const uid = extractSpaceUidFromName(space.name);
                   const showUid = duplicateSpaceTitles.has(space.title);
 
@@ -168,6 +186,12 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
               </>
             )}
           </DropdownMenuGroup>
+          {crowded && (
+            <DropdownMenuItem onClick={() => setDirectoryOpen(true)}>
+              <RowIcon icon={SearchIcon} />
+              {t("space.directory.find", { count: totalSpaces })}
+            </DropdownMenuItem>
+          )}
           {/* isLoadingSpaces implies no data yet, so these only ever show on an empty list. */}
           {isLoadingSpaces && (
             <DropdownMenuItem disabled>
@@ -193,6 +217,7 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
         </DropdownMenuContent>
       </DropdownMenu>
       {currentUser && <CreateSpaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={selectSpace} />}
+      {crowded && <SpaceDirectoryDialog open={directoryOpen} onOpenChange={setDirectoryOpen} />}
     </>
   );
 }

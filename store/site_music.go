@@ -26,7 +26,7 @@ func (s *Store) IsAttachmentInPublicMusicConfig(ctx context.Context, attachmentU
 
 	var config publicMusicConfig
 	if err := json.Unmarshal([]byte(setting.MusicConfigJson), &config); err != nil || !config.Enabled {
-		return false, nil
+		return false, nil //nolint:nilerr // Invalid optional playlist JSON must not grant public attachment access.
 	}
 	for _, track := range config.Tracks {
 		parsed, err := url.Parse(track.URL)

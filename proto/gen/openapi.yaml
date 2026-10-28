@@ -657,9 +657,7 @@ paths:
                     type: boolean
                 - name: space
                   in: query
-                  description: |-
-                    Optional. Limit results to readable non-comment memos in a space the
-                     caller may access according to its access mode.
+                  description: "Optional. Limit results to readable non-comment memos in a space the\r\n caller may access according to its access mode."
                   schema:
                     type: string
                 - name: unassigned
@@ -1216,6 +1214,167 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}/revisions:
+        get:
+            tags:
+                - MemoService
+            description: ListMemoRevisions requires permission to manage the memo, even for public memos.
+            operationId: MemoService_ListMemoRevisions
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListMemoRevisionsResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - MemoService
+            description: ClearMemoRevisions removes all historical versions of a memo.
+            operationId: MemoService_ClearMemoRevisions
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}/revisions/{revision}:
+        get:
+            tags:
+                - MemoService
+            description: GetMemoRevision returns a full historical version to a memo manager only.
+            operationId: MemoService_GetMemoRevision
+            parameters:
+                - name: revisionId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+                - name: revision
+                  in: path
+                  description: The revision id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/MemoRevision'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        delete:
+            tags:
+                - MemoService
+            description: DeleteMemoRevision removes one historical version, including its sensitive content.
+            operationId: MemoService_DeleteMemoRevision
+            parameters:
+                - name: revisionId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+                - name: revision
+                  in: path
+                  description: The revision id.
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}/revisions/{revision}:restore:
+        post:
+            tags:
+                - MemoService
+            description: RestoreMemoRevision uses the normal content update path.
+            operationId: MemoService_RestoreMemoRevision
+            parameters:
+                - name: revisionId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+                - name: revision
+                  in: path
+                  description: The revision id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RestoreMemoRevisionRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Memo'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/memos/{memo}/shares:
         get:
             tags:
@@ -1302,6 +1461,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}:purge:
+        post:
+            tags:
+                - MemoService
+            description: PurgeMemo permanently removes a memo that is already in trash.
+            operationId: MemoService_PurgeMemo
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PurgeMemoRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/memos/{memo}:recordView:
         post:
             tags:
@@ -1328,6 +1516,93 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/RecordMemoViewResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos/{memo}:restore:
+        post:
+            tags:
+                - MemoService
+            description: RestoreMemo restores a deleted memo and its jointly deleted comments.
+            operationId: MemoService_RestoreMemo
+            parameters:
+                - name: memo
+                  in: path
+                  description: The memo id.
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RestoreMemoRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Memo'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos:emptyTrash:
+        post:
+            tags:
+                - MemoService
+            description: EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+            operationId: MemoService_EmptyTrash
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/EmptyTrashRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/memos:trash:
+        get:
+            tags:
+                - MemoService
+            description: ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+            operationId: MemoService_ListDeletedMemos
+            parameters:
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageToken
+                  in: query
+                  schema:
+                    type: string
+                - name: showAll
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListDeletedMemosResponse'
                 default:
                     description: Default error response
                     content:
@@ -1367,6 +1642,26 @@ paths:
             description: ListSpaces lists spaces of which the authenticated caller is a member.
             operationId: SpaceService_ListSpaces
             parameters:
+                - name: scope
+                  in: query
+                  description: Optional. Visible spaces by default; JOINED requires a signed-in caller.
+                  schema:
+                    enum:
+                        - SCOPE_UNSPECIFIED
+                        - VISIBLE
+                        - JOINED
+                    type: string
+                    format: enum
+                - name: orderBy
+                  in: query
+                  description: Optional. create_time desc, member_count desc, last_activity_time desc, or title.
+                  schema:
+                    type: string
+                - name: showTotalSize
+                  in: query
+                  description: Optional. Include a matching total count.
+                  schema:
+                    type: boolean
                 - name: pageSize
                   in: query
                   description: Optional. The maximum number of spaces to return.
@@ -1385,9 +1680,7 @@ paths:
                     type: string
                 - name: showAll
                   in: query
-                  description: |-
-                    Optional. Lists every Space instead of only the caller's memberships.
-                     Available only to instance administrators.
+                  description: "Optional. Lists every Space instead of only the caller's memberships.\r\n Available only to instance administrators."
                   schema:
                     type: boolean
             responses:
@@ -1853,6 +2146,57 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/SpaceMember'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/spaces:batchGet:
+        get:
+            tags:
+                - SpaceService
+            description: BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+            operationId: SpaceService_BatchGetSpaces
+            parameters:
+                - name: names
+                  in: query
+                  schema:
+                    type: array
+                    items:
+                        type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/BatchGetSpacesResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/spaces:sample:
+        get:
+            tags:
+                - SpaceService
+            description: SampleSpaces returns a bounded sample from the caller's visible spaces.
+            operationId: SpaceService_SampleSpaces
+            parameters:
+                - name: count
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SampleSpacesResponse'
                 default:
                     description: Default error response
                     content:
@@ -3031,6 +3375,13 @@ components:
                     items:
                         $ref: '#/components/schemas/LinkMetadata'
                     description: The link metadata list, in the same order as the input URLs.
+        BatchGetSpacesResponse:
+            type: object
+            properties:
+                spaces:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Space'
         BatchGetUsersRequest:
             type: object
             properties:
@@ -3256,6 +3607,11 @@ components:
                 name:
                     type: string
                     description: 'Required. Format: spaces/{space}/invitations/{username}.'
+        EmptyTrashRequest:
+            type: object
+            properties:
+                showAll:
+                    type: boolean
         FieldMapping:
             type: object
             properties:
@@ -3295,6 +3651,9 @@ components:
                 context:
                     type: string
                     description: Optional. Current memo text supplied as editing context.
+                planFirst:
+                    type: boolean
+                    description: Use the administrator-configured planning and generation models.
         GenerateTextResponse:
             type: object
             properties:
@@ -3422,6 +3781,8 @@ components:
                         - DEEPSEEK
                         - OPENAI_COMPATIBLE
                         - OLLAMA
+                        - AZURE_OPENAI
+                        - JEV
                     type: string
                     format: enum
                 endpoint:
@@ -3438,6 +3799,36 @@ components:
                     readOnly: true
                     type: string
                     description: api_key_hint is a masked hint for the stored API key.
+                defaultModel:
+                    type: string
+                    description: Default text-generation model or Azure deployment name.
+                reasoningEffort:
+                    type: string
+                    description: Optional OpenAI-compatible reasoning effort; empty leaves the provider default.
+                customHeaders:
+                    writeOnly: true
+                    type: object
+                    additionalProperties:
+                        type: string
+                    description: Write-only header values; omitted values are never returned to clients.
+                customHeaderNames:
+                    readOnly: true
+                    type: array
+                    items:
+                        type: string
+                replaceCustomHeaders:
+                    writeOnly: true
+                    type: boolean
+                    description: Replace the header set; blank values retain an existing header of the same name.
+                azureApiVersion:
+                    type: string
+                    description: Azure legacy API version; empty uses Azure OpenAI v1.
+                writingEnabled:
+                    type: boolean
+                    description: Explicit opt-in for writing; absent/false providers cannot generate writing text.
+                supportsVision:
+                    type: boolean
+                    description: Administrator-confirmed capability of the configured default model.
             description: AIProviderConfig represents one callable AI provider connection.
         InstanceSetting_AISetting:
             type: object
@@ -3451,6 +3842,10 @@ components:
                     allOf:
                         - $ref: '#/components/schemas/InstanceSetting_TranscriptionConfig'
                     description: "transcription is the speech-to-text feature configuration.\r\n When unset or transcription.provider_id is empty, transcription is disabled."
+                textGeneration:
+                    allOf:
+                        - $ref: '#/components/schemas/InstanceSetting_TextGenerationConfig'
+                    description: Optional two-stage writing workflow managed by the administrator.
             description: AI provider configuration settings.
         InstanceSetting_AccessSetting:
             type: object
@@ -3529,6 +3924,23 @@ components:
                 musicConfigJson:
                     type: string
                     description: music_config_json stores the administrator-managed public site playlist.
+                trashRetentionDays:
+                    type: integer
+                    description: Optional. Days to retain trash; absent means 30, zero disables trash.
+                    format: int32
+                memoRevisionLimit:
+                    type: integer
+                    description: Optional. Maximum revisions per memo; absent means 20, zero disables history.
+                    format: int32
+                setupCompleted:
+                    type: boolean
+                    description: Whether the administrator has completed or skipped the setup wizard.
+                showPoweredBy:
+                    type: boolean
+                    description: Optional. Whether to show the Memos Plus footer; absent means true.
+                disableFestivalEffects:
+                    type: boolean
+                    description: Disable automatic holiday background effects for all visitors. Default is false.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object
@@ -3623,6 +4035,19 @@ components:
                         $ref: '#/components/schemas/InstanceSetting_TagMetadata'
                     description: "Map of tag name pattern to tag metadata.\r\n Each key is treated as an anchored regular expression (^pattern$),\r\n so a single entry like \"project/.*\" matches all tags under that prefix.\r\n Exact tag names are also valid (they are trivially valid regex patterns)."
             description: "Tag metadata configuration.\r\n Active tag metadata is stored in per-user tag settings.\r\n This message remains for backward compatibility with existing clients and migrations."
+        InstanceSetting_TextGenerationConfig:
+            type: object
+            properties:
+                enabled:
+                    type: boolean
+                planningProviderId:
+                    type: string
+                planningModel:
+                    type: string
+                generationProviderId:
+                    type: string
+                generationModel:
+                    type: string
         InstanceSetting_TranscriptionConfig:
             type: object
             properties:
@@ -3711,6 +4136,15 @@ components:
                 nextPageToken:
                     type: string
                     description: "A token that can be sent as `page_token` to retrieve the next page.\r\n If this field is omitted, there are no subsequent pages."
+        ListDeletedMemosResponse:
+            type: object
+            properties:
+                memos:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Memo'
+                nextPageToken:
+                    type: string
         ListIdentityProvidersResponse:
             type: object
             properties:
@@ -3771,6 +4205,13 @@ components:
                 nextPageToken:
                     type: string
                     description: A token for the next page of results.
+        ListMemoRevisionsResponse:
+            type: object
+            properties:
+                revisions:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/MemoRevision'
         ListMemoSharesResponse:
             type: object
             properties:
@@ -3834,6 +4275,9 @@ components:
         ListSpacesResponse:
             type: object
             properties:
+                totalSize:
+                    type: integer
+                    format: int32
                 spaces:
                     type: array
                     items:
@@ -3976,7 +4420,7 @@ components:
                         - PUBLIC
                         - SPACE
                     type: string
-                    description: "The visibility of the memo.\r\n One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC\r\n (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to\n PRIVATE on creation when unspecified."
+                    description: "The visibility of the memo.\r\n One of PRIVATE (creator only), PROTECTED (signed-in users), PUBLIC\r\n (anonymous-eligible), or SPACE (the assigned space's audience). Defaults to\r\n PRIVATE on creation when unspecified."
                     format: enum
                 tags:
                     readOnly: true
@@ -4056,13 +4500,21 @@ components:
                     description: "Optional. The space in which this memo is placed. Format: spaces/{space}.\r\n Every memo, including a comment, owns its placement independently."
                 hideTime:
                     type: boolean
-                    description: |-
-                        Optional. Hides this memo's timestamp and excludes it from time-based
-                         instance statistics. Only instance administrators may change this field.
+                    description: "Optional. Hides this memo's timestamp and excludes it from time-based\r\n instance statistics. Only instance administrators may change this field."
                 poll:
                     allOf:
                         - $ref: '#/components/schemas/Poll'
                     description: Optional. A poll attached to this memo.
+                deleteTime:
+                    readOnly: true
+                    type: string
+                    description: Output only. Present only in trash responses.
+                    format: date-time
+                purgeTime:
+                    readOnly: true
+                    type: string
+                    description: Output only. Expected permanent deletion time.
+                    format: date-time
         MemoRelation:
             required:
                 - memo
@@ -4098,6 +4550,31 @@ components:
                     type: string
                     description: Output only. The snippet of the memo content. Plain text only.
             description: Memo reference in relations.
+        MemoRevision:
+            type: object
+            properties:
+                id:
+                    type: string
+                memo:
+                    type: string
+                editor:
+                    type: string
+                createTime:
+                    type: string
+                    format: date-time
+                preview:
+                    type: string
+                content:
+                    type: string
+                visibility:
+                    enum:
+                        - VISIBILITY_UNSPECIFIED
+                        - PRIVATE
+                        - PROTECTED
+                        - PUBLIC
+                        - SPACE
+                    type: string
+                    format: enum
         MemoShare:
             type: object
             properties:
@@ -4288,9 +4765,7 @@ components:
                     description: Whether a voter may select more than one choice.
                 maxSelections:
                     type: integer
-                    description: |-
-                        Maximum choices a voter may select when allow_multiple is true.
-                         It must be between 2 and the number of options. Single-choice polls use 1.
+                    description: "Maximum choices a voter may select when allow_multiple is true.\r\n It must be between 2 and the number of options. Single-choice polls use 1."
                     format: int32
                 voterType:
                     enum:
@@ -4298,9 +4773,7 @@ components:
                         - AUTHENTICATED
                         - ANYONE
                     type: string
-                    description: |-
-                        Who may vote. AUTHENTICATED requires a signed-in user; ANYONE also allows
-                         guests to vote with a browser device identifier.
+                    description: "Who may vote. AUTHENTICATED requires a signed-in user; ANYONE also allows\r\n guests to vote with a browser device identifier."
                     format: enum
                 startTime:
                     type: string
@@ -4390,6 +4863,11 @@ components:
                         type: string
                     description: Output only. Present only when participant choices are visible.
             description: Public profile and optionally visible choices for a sampled poll participant.
+        PurgeMemoRequest:
+            type: object
+            properties:
+                name:
+                    type: string
         Reaction:
             required:
                 - reactionType
@@ -4442,6 +4920,25 @@ components:
                     type: string
                     description: When the access token expires.
                     format: date-time
+        RestoreMemoRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+        RestoreMemoRevisionRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                revisionId:
+                    type: string
+        SampleSpacesResponse:
+            type: object
+            properties:
+                spaces:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Space'
         SetMemoAttachmentsRequest:
             required:
                 - name
@@ -4566,20 +5063,24 @@ components:
                         - AUTHENTICATED
                         - PUBLIC
                     type: string
-                    description: |-
-                        Optional. Controls who can open the Space and read SPACE-audience memos.
-                         Members can always access their Space regardless of this setting.
+                    description: "Optional. Controls who can open the Space and read SPACE-audience memos.\r\n Members can always access their Space regardless of this setting."
                     format: enum
                 syncToMainFeed:
                     type: boolean
-                    description: |-
-                        Optional. Whether memos placed in this Space also appear in the main feeds.
-                         Defaults to true. Direct Space URLs remain available when disabled.
+                    description: "Optional. Whether memos placed in this Space also appear in the main feeds.\r\n Defaults to true. Direct Space URLs remain available when disabled."
                 urlSlug:
                     type: string
-                    description: |-
-                        Optional. A mutable, unique alias used by the friendly /space/{alias} URL.
-                         Only ASCII letters and digits are allowed. When empty, the immutable UID is used.
+                    description: "Optional. A mutable, unique alias used by the friendly /space/{alias} URL.\r\n Only ASCII letters and digits are allowed. When empty, the immutable UID is used."
+                memoCount:
+                    readOnly: true
+                    type: integer
+                    description: Output only. Counts published public memos only; never includes private drafts.
+                    format: int32
+                lastActivityTime:
+                    readOnly: true
+                    type: string
+                    description: Output only. Latest published public memo activity only.
+                    format: date-time
             description: Space is a collaboration boundary for placed memos.
         SpaceInvitation:
             required:

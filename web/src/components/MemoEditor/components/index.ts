@@ -7,4 +7,5 @@ export * from "./EditorMetadata";
 export { FocusModeExitButton, FocusModeOverlay } from "./FocusModeOverlay";
 export { default as LocalScriptDialog } from "./LocalScriptDialog";
 export { default as PollDialog } from "./PollDialog";
+export { default as PrivacyCheckDialog } from "./PrivacyCheckDialog";
 export { TimestampPopover } from "./TimestampPopover";

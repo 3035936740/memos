@@ -1,4 +1,5 @@
 import { ROUTES } from "@/router/routes";
+import { getUnscopedPath } from "./space-routes";
 
 export type MemoScope = "home" | "explore" | "archived";
 export type PrimaryMemoScope = Exclude<MemoScope, "archived">;
@@ -17,7 +18,7 @@ const cleanPathname = (value: string): string => {
 };
 
 export const isMemoScopeRoute = (pathname: string): boolean => {
-  const comparablePath = cleanPathname(pathname).toLowerCase();
+  const comparablePath = getUnscopedPath(cleanPathname(pathname)).toLowerCase();
   return comparablePath === ROUTES.HOME || comparablePath === ROUTES.EXPLORE || comparablePath === ROUTES.ARCHIVED;
 };
 
@@ -34,7 +35,7 @@ interface ResolveMemoScopeOptions {
 }
 
 export const resolveMemoScope = (pathname: string, options: ResolveMemoScopeOptions = {}): MemoScope => {
-  const cleanPath = cleanPathname(pathname);
+  const cleanPath = getUnscopedPath(cleanPathname(pathname));
   const comparablePath = cleanPath.toLowerCase();
   if (comparablePath === ROUTES.EXPLORE) return "explore";
   if (comparablePath === ROUTES.ARCHIVED) return "archived";

@@ -210,6 +210,7 @@ func (s *APIV1Service) deleteEmojiContent(ctx context.Context, emoji *store.Emoj
 		if err := driver.DeleteObject(ctx, emoji.StorageKey); err != nil {
 			return errors.Wrap(err, "failed to delete emoji object")
 		}
+	default:
 	}
 	return nil
 }

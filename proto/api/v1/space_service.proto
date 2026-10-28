@@ -8,11 +8,21 @@ import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "gen/api/v1";
 
 // SpaceService manages collaborative spaces and their memberships.
 service SpaceService {
+  // BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+  rpc BatchGetSpaces(BatchGetSpacesRequest) returns (BatchGetSpacesResponse) {
+    option (google.api.http) = {get: "/api/v1/spaces:batchGet"};
+  }
+  // SampleSpaces returns a bounded sample from the caller's visible spaces.
+  rpc SampleSpaces(SampleSpacesRequest) returns (SampleSpacesResponse) {
+    option (google.api.http) = {get: "/api/v1/spaces:sample"};
+  }
+
   // CreateSpace creates a space and makes the authenticated caller its first
   // administrator.
   rpc CreateSpace(CreateSpaceRequest) returns (Space) {
@@ -179,6 +189,10 @@ message Space {
   // Optional. A mutable, unique alias used by the friendly /space/{alias} URL.
   // Only ASCII letters and digits are allowed. When empty, the immutable UID is used.
   string url_slug = 9 [(google.api.field_behavior) = OPTIONAL];
+  // Output only. Counts published public memos only; never includes private drafts.
+  int32 memo_count = 10 [(google.api.field_behavior) = OUTPUT_ONLY];
+  // Output only. Latest published public memo activity only.
+  google.protobuf.Timestamp last_activity_time = 11 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // SpaceMember is a user's membership and governance role in a space.
@@ -248,6 +262,17 @@ message CreateSpaceRequest {
 }
 
 message ListSpacesRequest {
+  enum Scope {
+    SCOPE_UNSPECIFIED = 0;
+    VISIBLE = 1;
+    JOINED = 2;
+  }
+  // Optional. Visible spaces by default; JOINED requires a signed-in caller.
+  Scope scope = 5;
+  // Optional. create_time desc, member_count desc, last_activity_time desc, or title.
+  string order_by = 6;
+  // Optional. Include a matching total count.
+  bool show_total_size = 7;
   // Optional. The maximum number of spaces to return.
   int32 page_size = 1 [(google.api.field_behavior) = OPTIONAL];
 
@@ -263,6 +288,7 @@ message ListSpacesRequest {
 }
 
 message ListSpacesResponse {
+  int32 total_size = 3;
   repeated Space spaces = 1;
   string next_page_token = 2;
 }
@@ -413,4 +439,17 @@ message DeleteSpaceMemberRequest {
     (google.api.field_behavior) = REQUIRED,
     (google.api.resource_reference) = {type: "memos.api.v1/SpaceMember"}
   ];
+}
+
+message BatchGetSpacesRequest {
+  repeated string names = 1;
+}
+message BatchGetSpacesResponse {
+  repeated Space spaces = 1;
+}
+message SampleSpacesRequest {
+  int32 count = 1;
+}
+message SampleSpacesResponse {
+  repeated Space spaces = 1;
 }

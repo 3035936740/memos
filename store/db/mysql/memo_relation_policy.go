@@ -68,7 +68,7 @@ func validateMySQLMemoRelationEndpoints(ctx context.Context, tx *sql.Tx, mutatio
 func getMySQLRelationMemoState(ctx context.Context, tx *sql.Tx, memoID int32) (*mysqlRelationMemoState, error) {
 	state := &mysqlRelationMemoState{}
 	var spaceID sql.NullInt64
-	if err := tx.QueryRowContext(ctx, `SELECT id, creator_id, row_status, visibility, space_id FROM memo WHERE id = ?`, memoID).Scan(
+	if err := tx.QueryRowContext(ctx, `SELECT id, creator_id, row_status, visibility, space_id FROM memo WHERE deleted_ts IS NULL AND id = ?`, memoID).Scan(
 		&state.id, &state.creatorID, &state.rowStatus, &state.visibility, &spaceID,
 	); err != nil {
 		return nil, err

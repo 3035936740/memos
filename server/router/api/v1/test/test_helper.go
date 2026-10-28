@@ -44,7 +44,7 @@ func NewTestService(t *testing.T) *TestService {
 	// Align the profile data directory with the test store so attachment files and
 	// derived caches resolve against the same location as DeleteAttachmentStorage.
 	testProfile := &profile.Profile{
-		Demo:        true,
+		Demo:        false,
 		Version:     "test-1.0.0",
 		Commit:      "test-commit",
 		InstanceURL: "http://localhost:8080",

@@ -134,6 +134,18 @@ func (s *APIV1Service) prepareMemoCreate(ctx context.Context, user *store.User, 
 	if err != nil {
 		return nil, err
 	}
+	if err := s.reviewMemoImages(ctx, memo, attachments.normalized); err != nil {
+		return nil, err
+	}
+	if input.Poll != nil {
+		fields := []string{input.Poll.Question}
+		for _, option := range input.Poll.Options {
+			fields = append(fields, option.GetText())
+		}
+		if err := s.validateTextContent(ctx, fields...); err != nil {
+			return nil, err
+		}
+	}
 	relations, err := s.prepareMemoRelations(ctx, memo, input.Relations)
 	if err != nil {
 		return nil, err

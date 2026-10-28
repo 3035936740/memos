@@ -101,6 +101,9 @@ func deletePostgresMemoSetTx(ctx context.Context, tx *sql.Tx, memoIDs []int32) (
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to collect memo attachments")
 	}
+	if err := store.EnqueueAttachmentCleanup(ctx, tx, "postgres", attachments); err != nil {
+		return nil, err
+	}
 	if err := deletePostgresMemoSetShares(ctx, tx, memoIDs); err != nil {
 		return nil, errors.Wrap(err, "failed to delete memo shares")
 	}

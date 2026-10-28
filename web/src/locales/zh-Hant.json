@@ -1,5 +1,10 @@
 {
   "about": {
+    "tagline": "記錄日常，打造自己的部落格與空間。",
+    "plus-description": "Memos Plus 基於原版 Memos 0.31.rc 改進，擴充了部落格檢視與多種樣式風格、Space 空間、投票、音樂播放，以及備份、回收桶和歷史版本等功能。感謝原版 Memos 的作者與所有貢獻者。",
+    "demo-site": "示範站",
+    "plus-documents-note": "Memos Plus 功能、部署與升級說明",
+    "upstream-project": "原版 Memos 專案",
     "api-docs": "API 文件",
     "api-docs-note": "REST 與 gRPC 參考",
     "blogs": "部落格",
@@ -121,6 +126,7 @@
     }
   },
   "common": {
+    "blocked-word": "提交的文字包含屏蔽詞，請修改後再試。",
     "about": "關於",
     "actions": "操作",
     "add": "新增",
@@ -1034,6 +1040,8 @@
       "warning-text": "您確定要刪除儲存服務 `{{name}}` 嗎？此操作無法恢復。"
     },
     "system": {
+      "festival-effects": "節日背景特效",
+      "festival-effects-description": "節日期間自動顯示萬聖節蝙蝠、聖誕／冬季飄雪、春節燈籠等效果。關閉後全站停用節日特效；主題本身特效與標籤特效不受影響。儲存後生效。",
       "additional-script": "自訂腳本",
       "additional-script-description": "在每個網頁中注入 JavaScript。僅使用受信任的程式碼。",
       "additional-script-placeholder": "自訂 JavaScript 代碼",

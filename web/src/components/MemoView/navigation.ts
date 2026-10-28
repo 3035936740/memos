@@ -1,4 +1,5 @@
 import { isMemoScopeRoute } from "@/lib/memo-views";
+import { getUnscopedPath } from "@/lib/space-routes";
 import { ROUTES } from "@/router/routes";
 
 export type MemoOriginScope = "all" | "preserve";
@@ -43,7 +44,7 @@ export const isMemoResourcePath = (pathname: string): boolean => {
 /** Whether returning from this collection should preserve the remembered All / Space state. */
 export const isMemoCollectionOrigin = (page: string): boolean => {
   const pathname = page.split(/[?#]/, 1)[0] || ROUTES.HOME;
-  return isMemoScopeRoute(pathname) || normalizePathname(pathname) === ROUTES.ATTACHMENTS;
+  return isMemoScopeRoute(pathname) || normalizePathname(getUnscopedPath(pathname)) === ROUTES.ATTACHMENTS;
 };
 
 export const createMemoNavigationState = (from: string, fromScope: MemoOriginScope): MemoNavigationState => ({ from, fromScope });

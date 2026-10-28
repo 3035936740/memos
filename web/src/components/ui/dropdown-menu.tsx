@@ -25,7 +25,7 @@ type DropdownMenuContentProps = DropdownMenuPrimitive.Popup.Props &
   };
 
 const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContentProps>(
-  ({ className, align, alignOffset, side, sideOffset = 4, size = "default", ...props }, ref) => {
+  ({ className, children, align, alignOffset, side, sideOffset = 4, size = "default", ...props }, ref) => {
     return (
       <DropdownMenuSizeContext.Provider value={size}>
         <DropdownMenuPrimitive.Portal>
@@ -41,13 +41,20 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
               data-slot="dropdown-menu-content"
               data-size={size}
               className={cn(
-                "bg-popover text-popover-foreground z-dropdown max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto border outline-none",
+                "bg-popover text-popover-foreground relative z-dropdown flex max-h-[min(24rem,var(--available-height))] max-w-(--available-width) flex-col origin-(--transform-origin) overflow-hidden border outline-none",
                 size === "sm" ? "min-w-24 rounded p-0.5 shadow-sm" : "min-w-[8rem] rounded-md p-1 shadow-md",
                 popupMotionClasses,
                 className,
               )}
               {...props}
-            />
+            >
+              <div
+                data-slot="dropdown-menu-viewport"
+                className="relative z-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [display:inherit] [flex-direction:inherit] [gap:inherit]"
+              >
+                {children}
+              </div>
+            </DropdownMenuPrimitive.Popup>
           </DropdownMenuPrimitive.Positioner>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuSizeContext.Provider>

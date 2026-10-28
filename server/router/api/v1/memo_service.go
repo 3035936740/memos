@@ -520,6 +520,15 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 	update := &store.UpdateMemo{
 		ID: memo.ID,
 	}
+	_, revisionLimit, err := s.historyLimits(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to load revision settings")
+	}
+	update.RevisionLimit = &revisionLimit
+	if forced, ok := ctx.Value(revisionRestoreKey{}).(bool); ok {
+		update.RevisionForce = forced
+	}
+
 	lifecycleOnly := updatePaths["space"]
 	for path := range updatePaths {
 		if path != "space" && path != "visibility" {
@@ -787,6 +796,35 @@ func (s *APIV1Service) UpdateMemo(ctx context.Context, request *v1pb.UpdateMemoR
 		}
 	}
 
+	if contentUpdated || attachmentsUpdated || updatePaths["poll"] || updatePaths["draft"] || updatePaths["visibility"] || updatePaths["publish_time"] {
+		if !contentUpdated && (updatePaths["draft"] || updatePaths["visibility"] || updatePaths["publish_time"]) {
+			if err := s.validateMemoContentAgainstBlockedWords(ctx, nextMemo.Content); err != nil {
+				return nil, err
+			}
+		}
+		if updatePaths["poll"] && nextMemo.Payload.GetPoll() != nil {
+			poll := nextMemo.Payload.GetPoll()
+			fields := []string{poll.Question}
+			for _, option := range poll.Options {
+				fields = append(fields, option.GetText())
+			}
+			if err := s.validateTextContent(ctx, fields...); err != nil {
+				return nil, err
+			}
+		}
+		var reviewAttachments []*store.Attachment
+		if preparedAttachments != nil {
+			reviewAttachments = preparedAttachments.normalized
+		} else {
+			reviewAttachments, err = s.Store.ListAttachments(ctx, &store.FindAttachment{MemoID: &memo.ID})
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to load review attachments")
+			}
+		}
+		if err := s.reviewMemoImages(ctx, &nextMemo, reviewAttachments); err != nil {
+			return nil, err
+		}
+	}
 	if contentUpdated || attachmentsUpdated || relationsUpdated {
 		var relations *[]*store.MemoRelation
 		if relationsUpdated {
@@ -887,7 +925,17 @@ func (s *APIV1Service) DeleteMemo(ctx context.Context, request *v1pb.DeleteMemoR
 		}
 	}
 
+	days, _, err := s.historyLimits(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to load trash settings")
+	}
+	var deletedAt *int64
+	if days > 0 {
+		atMicro := time.Now().UnixMicro()
+		deletedAt = &atMicro
+	}
 	deleteResult, err := s.Store.DeleteMemoWithPolicy(ctx, &store.DeleteMemoWithPolicy{
+		DeletedTs:     deletedAt,
 		MemoID:        memo.ID,
 		ActorUserID:   user.ID,
 		AdminOverride: memo.CreatorID != user.ID,

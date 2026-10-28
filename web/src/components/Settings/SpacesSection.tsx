@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useSpaceContext } from "@/contexts/SpaceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import {
   useAcceptSpaceInvitation,
@@ -41,6 +42,7 @@ import {
   useDeleteSpaceInvitation,
   useDeleteSpaceMember,
   usePagedSpaces,
+  useSpace,
   useSpaceInvitations,
   useSpaceMembers,
   useUpdateSpace,
@@ -134,7 +136,12 @@ const SpacesSection = () => {
   const receivedInvitationsQuery = useUserSpaceInvitations(viewerName);
   const spaces = isHost ? (adminSpacesQuery.data?.spaces ?? []) : (pagedSpacesQuery.data?.spaces ?? []);
   const receivedInvitations = receivedInvitationsQuery.data ?? [];
-  const managedSpace = spaces.find((space) => space.name === managedSpaceName);
+  // A Space beyond the listed page is fetched by name, so opening it (say, the current one) never bounces back.
+  const managedSpaceQuery = useSpace(viewerName, managedSpaceName || undefined);
+  const managedSpace =
+    spaces.find((space) => space.name === managedSpaceName) ??
+    (managedSpaceQuery.data?.name === managedSpaceName ? managedSpaceQuery.data : undefined);
+  const { selectedSpace } = useSpaceContext();
   const activeSpacesQuery = isHost ? adminSpacesQuery : pagedSpacesQuery;
   const nextPageToken = activeSpacesQuery.data?.nextPageToken ?? "";
   const [createOpen, setCreateOpen] = useState(false);
@@ -142,10 +149,10 @@ const SpacesSection = () => {
   const declineInvitation = useDeclineSpaceInvitation(viewerName);
 
   useEffect(() => {
-    if (managedSpaceName && activeSpacesQuery.isSuccess && !managedSpace) {
+    if (managedSpaceName && activeSpacesQuery.isSuccess && !managedSpace && !managedSpaceQuery.isPending) {
       navigate(getSpacesSettingsLocation(), { replace: true });
     }
-  }, [activeSpacesQuery.isSuccess, managedSpace, managedSpaceName, navigate]);
+  }, [activeSpacesQuery.isSuccess, managedSpace, managedSpaceName, managedSpaceQuery.isPending, navigate]);
 
   const handleOpenSpace = (spaceName: string) => {
     navigate(getSpacesSettingsLocation(spaceName));
@@ -173,7 +180,7 @@ const SpacesSection = () => {
     }
   };
 
-  if (managedSpaceName && !managedSpace && activeSpacesQuery.isLoading) {
+  if (managedSpaceName && !managedSpace && (activeSpacesQuery.isLoading || managedSpaceQuery.isLoading)) {
     return (
       <SettingSection title={t("setting.spaces.title")} description={t("setting.spaces.description")}>
         <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
@@ -216,7 +223,10 @@ const SpacesSection = () => {
                   {t("setting.spaces.pending-count", { count: receivedInvitations.length })}
                 </span>
               </div>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+              <div
+                data-settings-surface=""
+                className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background"
+              >
                 {receivedInvitations.map((invitation) => {
                   const uid = invitation.space ? extractSpaceUidFromName(invitation.space.name) : "";
                   const title = invitation.space?.title || t("setting.spaces.untitled");
@@ -269,6 +279,36 @@ const SpacesSection = () => {
             </section>
           ) : null}
 
+          {selectedSpace ? (
+            <section aria-labelledby="current-space-heading" data-current-space="" className="space-y-2.5">
+              <h4 id="current-space-heading" className="text-sm font-medium">
+                {t("setting.spaces.current-space")}
+              </h4>
+              <button
+                type="button"
+                aria-label={t("setting.spaces.manage-space", { space: selectedSpace.title })}
+                onClick={() => handleOpenSpace(selectedSpace.name)}
+                className="group flex w-full min-w-0 items-center gap-3 rounded-lg border border-primary/40 bg-primary/5 px-3 py-3 text-left transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/45"
+              >
+                <SpaceMark size="lg" avatarUrl={selectedSpace.avatarUrl} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <p className="truncate text-sm font-medium">{selectedSpace.title}</p>
+                    {selectedSpace.currentUserRole !== SpaceMember_Role.ROLE_UNSPECIFIED && (
+                      <SpaceRoleBadge role={selectedSpace.currentUserRole} />
+                    )}
+                  </div>
+                  <p className="mt-0.5 flex min-w-0 items-baseline gap-1 text-[11px] text-muted-foreground">
+                    <span className="shrink-0">{t("space.custom-id-label")}:</span>
+                    <span className="min-w-0 break-all font-mono">{extractSpaceUidFromName(selectedSpace.name)}</span>
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs font-medium text-primary">{t("setting.spaces.manage")}</span>
+                <ChevronRightIcon className="size-4 shrink-0 text-primary/70 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </section>
+          ) : null}
+
           <section aria-labelledby="your-spaces-heading" className="space-y-2.5">
             <div className="relative max-w-md">
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -296,16 +336,19 @@ const SpacesSection = () => {
               ) : null}
             </div>
             {activeSpacesQuery.isLoading ? (
-              <div className="flex items-center justify-center gap-2 rounded-lg border border-border py-10 text-sm text-muted-foreground">
+              <div
+                data-settings-surface=""
+                className="flex items-center justify-center gap-2 rounded-lg border border-border py-10 text-sm text-muted-foreground"
+              >
                 <LoaderCircleIcon className="size-4 animate-spin" />
                 {t("setting.spaces.loading")}
               </div>
             ) : activeSpacesQuery.isError ? (
-              <div className="rounded-lg border border-border px-3 py-8 text-center text-sm text-muted-foreground">
+              <div data-settings-surface="" className="rounded-lg border border-border px-3 py-8 text-center text-sm text-muted-foreground">
                 {t("setting.spaces.load-error")}
               </div>
             ) : spaces.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-4 py-9 text-center">
+              <div data-settings-surface="" className="rounded-lg border border-dashed border-border px-4 py-9 text-center">
                 <p className="text-sm font-medium">{t("setting.spaces.no-spaces")}</p>
                 <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{t("setting.spaces.no-spaces-description")}</p>
                 <Button variant="outline" size="sm" className="mt-4" onClick={() => setCreateOpen(true)}>
@@ -314,7 +357,10 @@ const SpacesSection = () => {
                 </Button>
               </div>
             ) : (
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+              <div
+                data-settings-surface=""
+                className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background"
+              >
                 {spaces.map((space) => {
                   const uid = extractSpaceUidFromName(space.name);
                   const manageLabel = t("setting.spaces.manage-space", { space: space.title });
@@ -673,7 +719,7 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
               <h4 className="text-sm font-medium">{t("setting.spaces.space-details")}</h4>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{t("setting.spaces.space-details-description")}</p>
             </div>
-            <div className="overflow-hidden rounded-lg border border-border bg-background">
+            <div data-settings-surface="" className="overflow-hidden rounded-lg border border-border bg-background">
               <div className="grid gap-2 border-b border-border px-3 py-3 sm:grid-cols-[170px_1fr] sm:items-center">
                 <div>
                   <span className="text-sm font-medium">{t("setting.spaces.avatar")}</span>
@@ -714,7 +760,10 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
                     {t(!isURLSlugValid ? "space.url-slug-invalid" : urlSlugConflict ? "space.url-slug-conflict" : "space.url-slug-help")}
                   </p>
                 </div>
-                <div className="flex items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/50">
+                <div
+                  data-settings-surface=""
+                  className="flex items-center rounded-md border border-input bg-background focus-within:ring-2 focus-within:ring-ring/50"
+                >
                   <span className="shrink-0 pl-3 font-mono text-xs text-muted-foreground">/space/</span>
                   <Input
                     id="space-settings-url-slug"
@@ -841,7 +890,10 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
 
           <section className="space-y-2.5">
             <h4 className="text-sm font-medium">{t("setting.spaces.your-access")}</h4>
-            <div className="flex flex-col gap-3 rounded-lg border border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              data-settings-surface=""
+              className="flex flex-col gap-3 rounded-lg border border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="flex items-start gap-2">
                 <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                 <div>
@@ -855,7 +907,7 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
             </div>
           </section>
 
-          <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <section data-settings-surface="" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
@@ -912,7 +964,7 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
               ) : null}
             </div>
 
-            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+            <div data-settings-surface="" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
               {membersQuery.isLoading ? (
                 <div className="flex items-center justify-center gap-2 px-3 py-8 text-sm text-muted-foreground">
                   <LoaderCircleIcon className="size-4 animate-spin" />
@@ -977,7 +1029,10 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
                 <h4 className="text-sm font-medium">{t("setting.spaces.pending-invitations")}</h4>
                 <span className="text-xs text-muted-foreground">{invitations.length}</span>
               </div>
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+              <div
+                data-settings-surface=""
+                className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background"
+              >
                 {invitationsQuery.isLoading ? (
                   <div className="flex items-center justify-center gap-2 px-3 py-5 text-sm text-muted-foreground">
                     <LoaderCircleIcon className="size-4 animate-spin" />

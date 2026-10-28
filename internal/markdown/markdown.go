@@ -13,6 +13,7 @@ import (
 	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
+	"golang.org/x/net/html"
 
 	"github.com/usememos/memos/internal/base"
 	mast "github.com/usememos/memos/internal/markdown/ast"
@@ -424,6 +425,24 @@ func (s *service) ExtractAll(content []byte) (*ExtractedData, error) {
 			}
 		}
 		if raw, ok := extractRawHTML(n, content); ok {
+			tokens := html.NewTokenizer(strings.NewReader(raw))
+			for tokenType := tokens.Next(); tokenType != html.ErrorToken; tokenType = tokens.Next() {
+				if tokenType != html.StartTagToken && tokenType != html.SelfClosingTagToken {
+					continue
+				}
+				token := tokens.Token()
+				if token.Data != "img" && token.Data != "source" {
+					continue
+				}
+				for _, attribute := range token.Attr {
+					if attribute.Key == "src" {
+						data.ImageDestinations = append(data.ImageDestinations, attribute.Val)
+					}
+					if attribute.Key == "srcset" {
+						data.ImageDestinations = append(data.ImageDestinations, "unsupported-srcset:")
+					}
+				}
+			}
 			if strings.Contains(raw, "/file/attachments/") {
 				// Managed attachment URLs are deliberately supported only through
 				// Markdown image nodes. Raw HTML would require a second, security-

@@ -14,6 +14,8 @@ const frontendErrorReportPath = "/api/v1/diagnostics/frontend-errors"
 // Format: Full gRPC procedure path as returned by req.Spec().Procedure (Connect)
 // or info.FullMethod (gRPC interceptor).
 var PublicMethods = map[string]struct{}{
+	"/memos.api.v1.SpaceService/BatchGetSpaces": {},
+	"/memos.api.v1.SpaceService/SampleSpaces":   {},
 	// Auth Service - login/token endpoints must be accessible without auth
 	"/memos.api.v1.AuthService/SignIn":       {},
 	"/memos.api.v1.AuthService/RefreshToken": {}, // Token refresh uses cookie, must be accessible when access token expired

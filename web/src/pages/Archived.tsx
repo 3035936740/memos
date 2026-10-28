@@ -41,6 +41,7 @@ const Archived = () => {
       state={State.ARCHIVED}
       orderBy={orderBy}
       filter={memoFilter}
+      selectable
       renderLeading={({ useGrid }) => (
         <header className={cn("flex items-center gap-2 px-1", !useGrid && "mb-4")}>
           <ArchiveIcon className="size-5 text-muted-foreground" strokeWidth={1.8} />

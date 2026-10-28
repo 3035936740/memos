@@ -238,8 +238,8 @@ func pollVotingRulesChanged(previous, next *storepb.MemoPayload_Poll) bool {
 	if previous == nil || next == nil {
 		return previous != next
 	}
-	before := proto.Clone(previous).(*storepb.MemoPayload_Poll)
-	after := proto.Clone(next).(*storepb.MemoPayload_Poll)
+	before := proto.CloneOf(previous)
+	after := proto.CloneOf(next)
 	for _, poll := range []*storepb.MemoPayload_Poll{before, after} {
 		poll.HideResultsUntilVoted = false
 		poll.ShowVotersBeforeVoting = false

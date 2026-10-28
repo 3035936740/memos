@@ -5,19 +5,20 @@ import Blog2MemoView from "@/components/Blog2MemoView";
 import BlogSidebar from "@/components/BlogSidebar";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import BlogHero from "@/components/StyledBlog/BlogHero";
-import SketchFilters from "@/components/StyledBlog/SketchFilters";
 import StyledBlogCard from "@/components/StyledBlog/StyledBlogCard";
 import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMemoFilterContext } from "@/contexts/MemoFilterContext";
+import { MemoSpacesProvider } from "@/contexts/MemoSpacesContext";
 import { useNewMemo } from "@/contexts/NewMemoContext";
 import { useSpaceContext } from "@/contexts/SpaceContext";
 import { useView } from "@/contexts/ViewContext";
 import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { hoistMemoToFront } from "@/hooks/useMemoSorting";
+import { useStickySidebar } from "@/hooks/useStickySidebar";
 import { combineCELFilters } from "@/lib/cel-filter";
 import { LOADING_INDICATOR_DELAY_MS, normalizeMemoFeedPageSize } from "@/lib/constants";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
@@ -30,6 +31,7 @@ import ColumnGrid, { columnCountForWidth, GRID_GAP } from "../ColumnGrid";
 import MemoFilters from "../MemoFilters";
 import Placeholder from "../Placeholder";
 import MemoPagination from "./MemoPagination";
+import { MemoBatchBar, MemoSelectionProvider, SelectableMemo } from "./MemoSelection";
 import { estimateMemoCardHeight } from "./memoCardHeight";
 
 // Memo identity for React keys and grid planning. The pages use it for their renderer keys too,
@@ -64,6 +66,8 @@ interface Props {
   renderLeading?: (options: { useGrid: boolean }) => ReactNode;
   /** Show the site title above the feed when a Blog 2 style is active (the default style has none). */
   blogHero?: boolean;
+  /** Lets the visitor tidy the memos on the page in a batch; for their own lists (Home, Archived). */
+  selectable?: boolean;
 }
 
 const PagedMemoList = (props: Props) => {
@@ -140,14 +144,18 @@ const PagedMemoList = (props: Props) => {
   // Once in a hundred list loads one card comes up shiny (Blog 2 only).
   const [shinyIndex] = useState(() => (Math.random() < SHINY_CHANCE ? Math.floor(Math.random() * 10) : -1));
   const SidebarComponent = styledBlog ? StyledBlogSidebar : BlogSidebar;
+  const styledAsideRef = useRef<HTMLElement>(null);
+  useStickySidebar(styledAsideRef, styledBlog && !useGrid);
 
   const renderMemo = (memo: Memo) => (
     <Fragment key={getMemoKey(memo)}>
-      {isBlogFeed ? (
-        <Blog2MemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
-      ) : (
-        props.renderer(memo, { compact: effectiveCompact, parentPage, navigationScope })
-      )}
+      <SelectableMemo memo={memo}>
+        {isBlogFeed ? (
+          <Blog2MemoView memo={memo} showCreator={props.showCreator} parentPage={parentPage} navigationScope={navigationScope} />
+        ) : (
+          props.renderer(memo, { compact: effectiveCompact, parentPage, navigationScope })
+        )}
+      </SelectableMemo>
     </Fragment>
   );
 
@@ -222,9 +230,10 @@ const PagedMemoList = (props: Props) => {
   // grid's x-spacing exactly.
   const hasFilters = filters.length > 0;
   const gridLeading =
-    leadingContent || hasFilters || initialLoader || emptyPlaceholder ? (
+    leadingContent || props.selectable || hasFilters || initialLoader || emptyPlaceholder ? (
       <div className="flex w-full flex-col" style={{ gap: GRID_GAP }}>
         {leadingContent}
+        <MemoBatchBar />
         <MemoFilters />
         {initialLoader}
         {emptyPlaceholder}
@@ -249,103 +258,111 @@ const PagedMemoList = (props: Props) => {
   );
 
   const children = (
-    <MentionResolutionProvider contents={contents} userNames={userNames}>
-      <div ref={layoutMeasureRef} className="w-full">
-        {styledBlog && !useGrid ? (
-          <div data-feed-layout="blog2" data-styled-blog="" className="w-full">
-            <SketchFilters />
-            {props.blogHero && (
-              <BlogHero
-                title={selectedSpaceName ? selectedSpace?.title || t("space.current") : generalSetting.customProfile?.title || "Memos"}
-                description={selectedSpaceName ? selectedSpace?.description : generalSetting.customProfile?.description}
-              />
-            )}
-            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
-              <main className="flex min-w-0 flex-col justify-start">
-                {leadingContent}
-                <MemoFilters className="mb-2" />
-                {initialLoader}
-                <div className="flex flex-col gap-[1.125rem]">
-                  {displayMemoList.map((memo, index) => (
-                    <StyledBlogCard
-                      key={getMemoKey(memo)}
-                      memo={memo}
-                      showCreator={props.showCreator}
-                      parentPage={parentPage}
-                      navigationScope={navigationScope}
-                      shiny={index === shinyIndex}
-                    />
-                  ))}
+    <MemoSelectionProvider memos={displayMemoList} enabled={!!props.selectable}>
+      <MemoSpacesProvider memos={displayMemoList}>
+        <MentionResolutionProvider contents={contents} userNames={userNames}>
+          <div ref={layoutMeasureRef} className="w-full">
+            {styledBlog && !useGrid ? (
+              <div data-feed-layout="blog2" data-styled-blog="" className="w-full">
+                {props.blogHero && (
+                  <BlogHero
+                    title={selectedSpaceName ? selectedSpace?.title || t("space.current") : generalSetting.customProfile?.title || "Memos"}
+                    description={selectedSpaceName ? selectedSpace?.description : generalSetting.customProfile?.description}
+                  />
+                )}
+                <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
+                  <main className="flex min-w-0 flex-col justify-start">
+                    {leadingContent}
+                    <MemoBatchBar className="mb-2" />
+                    <MemoFilters className="mb-2" />
+                    {initialLoader}
+                    <div className="flex flex-col gap-[1.125rem]">
+                      {displayMemoList.map((memo, index) => (
+                        <SelectableMemo key={getMemoKey(memo)} memo={memo}>
+                          <StyledBlogCard
+                            memo={memo}
+                            showCreator={props.showCreator}
+                            parentPage={parentPage}
+                            navigationScope={navigationScope}
+                            shiny={index === shinyIndex}
+                          />
+                        </SelectableMemo>
+                      ))}
+                    </div>
+                    {emptyPlaceholder}
+                    {!isDisplayPending && footer}
+                  </main>
+                  <aside ref={styledAsideRef} className="hidden min-w-0 lg:block">
+                    <StyledBlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
+                  </aside>
                 </div>
-                {emptyPlaceholder}
-                {!isDisplayPending && footer}
-              </main>
-              <aside className="hidden min-w-0 lg:block">
-                <StyledBlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
-              </aside>
-            </div>
-          </div>
-        ) : isBlogFeed && !useGrid ? (
-          <div
-            data-feed-layout="blog2"
-            className={cn("mx-auto w-full lg:grid lg:items-start lg:gap-5", "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]")}
-          >
-            <main className="flex min-w-0 flex-col justify-start">
-              {leadingContent}
-              <MemoFilters className="mb-2" />
-              {initialLoader}
-              {isBlogFeed ? (
-                <div className="flex flex-col gap-4">
-                  {displayMemoList.map((memo) => (
-                    <Blog2MemoView
-                      key={getMemoKey(memo)}
-                      memo={memo}
-                      showCreator={props.showCreator}
-                      parentPage={parentPage}
-                      navigationScope={navigationScope}
-                    />
-                  ))}
-                </div>
-              ) : (
-                displayMemoList.map(renderMemo)
-              )}
-              {emptyPlaceholder}
-              {!isDisplayPending && footer}
-            </main>
-            <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
-              <BlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
-            </aside>
-          </div>
-        ) : (
-          <div className={cn("mx-auto flex w-full flex-col justify-start", useGrid ? "max-w-none" : "max-w-2xl")}>
-            {useGrid ? (
-              <>
-                <ColumnGrid
-                  items={displayMemoList}
-                  getKey={getMemoKey}
-                  renderItem={renderMemo}
-                  estimateHeight={estimateMemoCardHeight}
-                  leading={gridLeading}
-                  priorityKey={priorityKey}
-                  maxColumns={maxColumns}
-                  maxColumnWidth={MAX_COLUMN_WIDTH}
-                />
-                {!isDisplayPending && footer}
-              </>
+              </div>
+            ) : isBlogFeed && !useGrid ? (
+              <div
+                data-feed-layout="blog2"
+                className={cn("mx-auto w-full lg:grid lg:items-start lg:gap-5", "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem]")}
+              >
+                <main className="flex min-w-0 flex-col justify-start">
+                  {leadingContent}
+                  <MemoBatchBar className="mb-2" />
+                  <MemoFilters className="mb-2" />
+                  {initialLoader}
+                  {isBlogFeed ? (
+                    <div className="flex flex-col gap-4">
+                      {displayMemoList.map((memo) => (
+                        <SelectableMemo key={getMemoKey(memo)} memo={memo}>
+                          <Blog2MemoView
+                            memo={memo}
+                            showCreator={props.showCreator}
+                            parentPage={parentPage}
+                            navigationScope={navigationScope}
+                          />
+                        </SelectableMemo>
+                      ))}
+                    </div>
+                  ) : (
+                    displayMemoList.map(renderMemo)
+                  )}
+                  {emptyPlaceholder}
+                  {!isDisplayPending && footer}
+                </main>
+                <aside className="sticky top-16 hidden max-h-[calc(100dvh-5rem)] min-w-0 self-start overflow-y-auto lg:block">
+                  <BlogSidebar state={props.state} orderBy={props.orderBy} filter={effectiveFilter} parentPage={parentPage} />
+                </aside>
+              </div>
             ) : (
-              <>
-                {leadingContent}
-                <MemoFilters className="mb-2" />
-                {initialLoader}
-                {displayMemoList.map(renderMemo)}
-                {emptyPlaceholder}
-                {!isDisplayPending && footer}
-              </>
+              <div className={cn("mx-auto flex w-full flex-col justify-start", useGrid ? "max-w-none" : "max-w-2xl")}>
+                {useGrid ? (
+                  <>
+                    <ColumnGrid
+                      items={displayMemoList}
+                      getKey={getMemoKey}
+                      renderItem={renderMemo}
+                      estimateHeight={estimateMemoCardHeight}
+                      leading={gridLeading}
+                      priorityKey={priorityKey}
+                      maxColumns={maxColumns}
+                      maxColumnWidth={MAX_COLUMN_WIDTH}
+                    />
+                    {!isDisplayPending && footer}
+                  </>
+                ) : (
+                  <>
+                    {leadingContent}
+                    <MemoBatchBar className="mb-2" />
+                    <MemoFilters className="mb-2" />
+                    {initialLoader}
+                    {displayMemoList.map(renderMemo)}
+                    {emptyPlaceholder}
+                    {!isDisplayPending && footer}
+                  </>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </MentionResolutionProvider>
+        </MentionResolutionProvider>
+      </MemoSpacesProvider>
+    </MemoSelectionProvider>
   );
 
   return children;

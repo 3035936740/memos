@@ -34,6 +34,12 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// SpaceServiceBatchGetSpacesProcedure is the fully-qualified name of the SpaceService's
+	// BatchGetSpaces RPC.
+	SpaceServiceBatchGetSpacesProcedure = "/memos.api.v1.SpaceService/BatchGetSpaces"
+	// SpaceServiceSampleSpacesProcedure is the fully-qualified name of the SpaceService's SampleSpaces
+	// RPC.
+	SpaceServiceSampleSpacesProcedure = "/memos.api.v1.SpaceService/SampleSpaces"
 	// SpaceServiceCreateSpaceProcedure is the fully-qualified name of the SpaceService's CreateSpace
 	// RPC.
 	SpaceServiceCreateSpaceProcedure = "/memos.api.v1.SpaceService/CreateSpace"
@@ -84,6 +90,10 @@ const (
 
 // SpaceServiceClient is a client for the memos.api.v1.SpaceService service.
 type SpaceServiceClient interface {
+	// BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+	BatchGetSpaces(context.Context, *connect.Request[v1.BatchGetSpacesRequest]) (*connect.Response[v1.BatchGetSpacesResponse], error)
+	// SampleSpaces returns a bounded sample from the caller's visible spaces.
+	SampleSpaces(context.Context, *connect.Request[v1.SampleSpacesRequest]) (*connect.Response[v1.SampleSpacesResponse], error)
 	// CreateSpace creates a space and makes the authenticated caller its first
 	// administrator.
 	CreateSpace(context.Context, *connect.Request[v1.CreateSpaceRequest]) (*connect.Response[v1.Space], error)
@@ -132,6 +142,18 @@ func NewSpaceServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 	baseURL = strings.TrimRight(baseURL, "/")
 	spaceServiceMethods := v1.File_api_v1_space_service_proto.Services().ByName("SpaceService").Methods()
 	return &spaceServiceClient{
+		batchGetSpaces: connect.NewClient[v1.BatchGetSpacesRequest, v1.BatchGetSpacesResponse](
+			httpClient,
+			baseURL+SpaceServiceBatchGetSpacesProcedure,
+			connect.WithSchema(spaceServiceMethods.ByName("BatchGetSpaces")),
+			connect.WithClientOptions(opts...),
+		),
+		sampleSpaces: connect.NewClient[v1.SampleSpacesRequest, v1.SampleSpacesResponse](
+			httpClient,
+			baseURL+SpaceServiceSampleSpacesProcedure,
+			connect.WithSchema(spaceServiceMethods.ByName("SampleSpaces")),
+			connect.WithClientOptions(opts...),
+		),
 		createSpace: connect.NewClient[v1.CreateSpaceRequest, v1.Space](
 			httpClient,
 			baseURL+SpaceServiceCreateSpaceProcedure,
@@ -233,6 +255,8 @@ func NewSpaceServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 
 // spaceServiceClient implements SpaceServiceClient.
 type spaceServiceClient struct {
+	batchGetSpaces           *connect.Client[v1.BatchGetSpacesRequest, v1.BatchGetSpacesResponse]
+	sampleSpaces             *connect.Client[v1.SampleSpacesRequest, v1.SampleSpacesResponse]
 	createSpace              *connect.Client[v1.CreateSpaceRequest, v1.Space]
 	listSpaces               *connect.Client[v1.ListSpacesRequest, v1.ListSpacesResponse]
 	getSpace                 *connect.Client[v1.GetSpaceRequest, v1.Space]
@@ -249,6 +273,16 @@ type spaceServiceClient struct {
 	getSpaceMember           *connect.Client[v1.GetSpaceMemberRequest, v1.SpaceMember]
 	updateSpaceMember        *connect.Client[v1.UpdateSpaceMemberRequest, v1.SpaceMember]
 	deleteSpaceMember        *connect.Client[v1.DeleteSpaceMemberRequest, emptypb.Empty]
+}
+
+// BatchGetSpaces calls memos.api.v1.SpaceService.BatchGetSpaces.
+func (c *spaceServiceClient) BatchGetSpaces(ctx context.Context, req *connect.Request[v1.BatchGetSpacesRequest]) (*connect.Response[v1.BatchGetSpacesResponse], error) {
+	return c.batchGetSpaces.CallUnary(ctx, req)
+}
+
+// SampleSpaces calls memos.api.v1.SpaceService.SampleSpaces.
+func (c *spaceServiceClient) SampleSpaces(ctx context.Context, req *connect.Request[v1.SampleSpacesRequest]) (*connect.Response[v1.SampleSpacesResponse], error) {
+	return c.sampleSpaces.CallUnary(ctx, req)
 }
 
 // CreateSpace calls memos.api.v1.SpaceService.CreateSpace.
@@ -333,6 +367,10 @@ func (c *spaceServiceClient) DeleteSpaceMember(ctx context.Context, req *connect
 
 // SpaceServiceHandler is an implementation of the memos.api.v1.SpaceService service.
 type SpaceServiceHandler interface {
+	// BatchGetSpaces omits missing and inaccessible resources without exposing their existence.
+	BatchGetSpaces(context.Context, *connect.Request[v1.BatchGetSpacesRequest]) (*connect.Response[v1.BatchGetSpacesResponse], error)
+	// SampleSpaces returns a bounded sample from the caller's visible spaces.
+	SampleSpaces(context.Context, *connect.Request[v1.SampleSpacesRequest]) (*connect.Response[v1.SampleSpacesResponse], error)
 	// CreateSpace creates a space and makes the authenticated caller its first
 	// administrator.
 	CreateSpace(context.Context, *connect.Request[v1.CreateSpaceRequest]) (*connect.Response[v1.Space], error)
@@ -377,6 +415,18 @@ type SpaceServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewSpaceServiceHandler(svc SpaceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	spaceServiceMethods := v1.File_api_v1_space_service_proto.Services().ByName("SpaceService").Methods()
+	spaceServiceBatchGetSpacesHandler := connect.NewUnaryHandler(
+		SpaceServiceBatchGetSpacesProcedure,
+		svc.BatchGetSpaces,
+		connect.WithSchema(spaceServiceMethods.ByName("BatchGetSpaces")),
+		connect.WithHandlerOptions(opts...),
+	)
+	spaceServiceSampleSpacesHandler := connect.NewUnaryHandler(
+		SpaceServiceSampleSpacesProcedure,
+		svc.SampleSpaces,
+		connect.WithSchema(spaceServiceMethods.ByName("SampleSpaces")),
+		connect.WithHandlerOptions(opts...),
+	)
 	spaceServiceCreateSpaceHandler := connect.NewUnaryHandler(
 		SpaceServiceCreateSpaceProcedure,
 		svc.CreateSpace,
@@ -475,6 +525,10 @@ func NewSpaceServiceHandler(svc SpaceServiceHandler, opts ...connect.HandlerOpti
 	)
 	return "/memos.api.v1.SpaceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case SpaceServiceBatchGetSpacesProcedure:
+			spaceServiceBatchGetSpacesHandler.ServeHTTP(w, r)
+		case SpaceServiceSampleSpacesProcedure:
+			spaceServiceSampleSpacesHandler.ServeHTTP(w, r)
 		case SpaceServiceCreateSpaceProcedure:
 			spaceServiceCreateSpaceHandler.ServeHTTP(w, r)
 		case SpaceServiceListSpacesProcedure:
@@ -515,6 +569,14 @@ func NewSpaceServiceHandler(svc SpaceServiceHandler, opts ...connect.HandlerOpti
 
 // UnimplementedSpaceServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSpaceServiceHandler struct{}
+
+func (UnimplementedSpaceServiceHandler) BatchGetSpaces(context.Context, *connect.Request[v1.BatchGetSpacesRequest]) (*connect.Response[v1.BatchGetSpacesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.SpaceService.BatchGetSpaces is not implemented"))
+}
+
+func (UnimplementedSpaceServiceHandler) SampleSpaces(context.Context, *connect.Request[v1.SampleSpacesRequest]) (*connect.Response[v1.SampleSpacesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.SpaceService.SampleSpaces is not implemented"))
+}
 
 func (UnimplementedSpaceServiceHandler) CreateSpace(context.Context, *connect.Request[v1.CreateSpaceRequest]) (*connect.Response[v1.Space], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.SpaceService.CreateSpace is not implemented"))

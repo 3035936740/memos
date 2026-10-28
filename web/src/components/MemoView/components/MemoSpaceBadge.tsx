@@ -1,5 +1,6 @@
 import { AstroidIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useMemoSpace } from "@/contexts/MemoSpacesContext";
 import { useSpaceContext } from "@/contexts/SpaceContext";
 import { extractSpaceUidFromName, formatSpaceUidForDisplay } from "@/lib/space-display";
 import { cn } from "@/lib/utils";
@@ -11,12 +12,12 @@ interface MemoSpaceBadgeProps {
 
 const MemoSpaceBadge = ({ spaceName }: MemoSpaceBadgeProps) => {
   const t = useTranslate();
-  const { duplicateSpaceTitles, spaceByName } = useSpaceContext();
+  const { duplicateSpaceTitles } = useSpaceContext();
 
+  const knownSpace = useMemoSpace(spaceName);
   if (!spaceName) return null;
 
   const spaceLabel = t("space.current");
-  const knownSpace = spaceByName.get(spaceName);
   const knownTitle = knownSpace?.title.trim();
   const identityName = knownSpace?.name ?? spaceName;
   const uid = extractSpaceUidFromName(identityName);

@@ -67,23 +67,23 @@ func (s *APIV1Service) banModerationUser(ctx context.Context, user *store.User, 
 	if existing != nil {
 		strikeCount = existing.StrikeCount
 	}
-	expiresTs := int64(0)
+	expiresTsSec := int64(0)
 	if source == "AUTO" {
 		strikeCount++
 		initialDays := int32(30)
 		if days != nil {
 			initialDays = *days
 		}
-		expiresTs = time.Now().Add(time.Duration(scaledAutomaticBanDays(initialDays, strikeCount)) * 24 * time.Hour).Unix()
+		expiresTsSec = time.Now().Add(time.Duration(scaledAutomaticBanDays(initialDays, strikeCount)) * 24 * time.Hour).Unix()
 	} else if days != nil {
-		expiresTs = time.Now().Add(time.Duration(*days) * 24 * time.Hour).Unix()
+		expiresTsSec = time.Now().Add(time.Duration(*days) * 24 * time.Hour).Unix()
 	}
 
 	archived := store.Archived
 	if _, err := s.Store.UpdateUser(ctx, &store.UpdateUser{ID: user.ID, RowStatus: &archived}); err != nil {
 		return nil, errors.Wrap(err, "failed to archive user")
 	}
-	ban := &store.ModerationUserBan{UserID: user.ID, ExpiresTs: expiresTs, StrikeCount: strikeCount, Source: source, Active: true}
+	ban := &store.ModerationUserBan{UserID: user.ID, ExpiresTs: expiresTsSec, StrikeCount: strikeCount, Source: source, Active: true}
 	if err := s.Store.UpsertModerationUserBan(ctx, ban); err != nil {
 		if user.RowStatus != store.Archived {
 			normal := store.Normal

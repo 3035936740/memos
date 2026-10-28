@@ -20,6 +20,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	MemoService_ListDeletedMemos_FullMethodName     = "/memos.api.v1.MemoService/ListDeletedMemos"
+	MemoService_RestoreMemo_FullMethodName          = "/memos.api.v1.MemoService/RestoreMemo"
+	MemoService_PurgeMemo_FullMethodName            = "/memos.api.v1.MemoService/PurgeMemo"
+	MemoService_EmptyTrash_FullMethodName           = "/memos.api.v1.MemoService/EmptyTrash"
+	MemoService_ListMemoRevisions_FullMethodName    = "/memos.api.v1.MemoService/ListMemoRevisions"
+	MemoService_GetMemoRevision_FullMethodName      = "/memos.api.v1.MemoService/GetMemoRevision"
+	MemoService_RestoreMemoRevision_FullMethodName  = "/memos.api.v1.MemoService/RestoreMemoRevision"
+	MemoService_DeleteMemoRevision_FullMethodName   = "/memos.api.v1.MemoService/DeleteMemoRevision"
+	MemoService_ClearMemoRevisions_FullMethodName   = "/memos.api.v1.MemoService/ClearMemoRevisions"
 	MemoService_CreateMemo_FullMethodName           = "/memos.api.v1.MemoService/CreateMemo"
 	MemoService_ListMemos_FullMethodName            = "/memos.api.v1.MemoService/ListMemos"
 	MemoService_GetMemo_FullMethodName              = "/memos.api.v1.MemoService/GetMemo"
@@ -47,6 +56,24 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MemoServiceClient interface {
+	// ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+	ListDeletedMemos(ctx context.Context, in *ListDeletedMemosRequest, opts ...grpc.CallOption) (*ListDeletedMemosResponse, error)
+	// RestoreMemo restores a deleted memo and its jointly deleted comments.
+	RestoreMemo(ctx context.Context, in *RestoreMemoRequest, opts ...grpc.CallOption) (*Memo, error)
+	// PurgeMemo permanently removes a memo that is already in trash.
+	PurgeMemo(ctx context.Context, in *PurgeMemoRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+	EmptyTrash(ctx context.Context, in *EmptyTrashRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ListMemoRevisions requires permission to manage the memo, even for public memos.
+	ListMemoRevisions(ctx context.Context, in *ListMemoRevisionsRequest, opts ...grpc.CallOption) (*ListMemoRevisionsResponse, error)
+	// GetMemoRevision returns a full historical version to a memo manager only.
+	GetMemoRevision(ctx context.Context, in *GetMemoRevisionRequest, opts ...grpc.CallOption) (*MemoRevision, error)
+	// RestoreMemoRevision uses the normal content update path.
+	RestoreMemoRevision(ctx context.Context, in *RestoreMemoRevisionRequest, opts ...grpc.CallOption) (*Memo, error)
+	// DeleteMemoRevision removes one historical version, including its sensitive content.
+	DeleteMemoRevision(ctx context.Context, in *DeleteMemoRevisionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// ClearMemoRevisions removes all historical versions of a memo.
+	ClearMemoRevisions(ctx context.Context, in *ClearMemoRevisionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// CreateMemo creates a memo. The request body is a Memo; set its content
 	// (Markdown) and visibility (PRIVATE | PROTECTED | PUBLIC | SPACE,
 	// default PRIVATE).
@@ -108,6 +135,96 @@ type memoServiceClient struct {
 
 func NewMemoServiceClient(cc grpc.ClientConnInterface) MemoServiceClient {
 	return &memoServiceClient{cc}
+}
+
+func (c *memoServiceClient) ListDeletedMemos(ctx context.Context, in *ListDeletedMemosRequest, opts ...grpc.CallOption) (*ListDeletedMemosResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListDeletedMemosResponse)
+	err := c.cc.Invoke(ctx, MemoService_ListDeletedMemos_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) RestoreMemo(ctx context.Context, in *RestoreMemoRequest, opts ...grpc.CallOption) (*Memo, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Memo)
+	err := c.cc.Invoke(ctx, MemoService_RestoreMemo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) PurgeMemo(ctx context.Context, in *PurgeMemoRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, MemoService_PurgeMemo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) EmptyTrash(ctx context.Context, in *EmptyTrashRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, MemoService_EmptyTrash_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) ListMemoRevisions(ctx context.Context, in *ListMemoRevisionsRequest, opts ...grpc.CallOption) (*ListMemoRevisionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMemoRevisionsResponse)
+	err := c.cc.Invoke(ctx, MemoService_ListMemoRevisions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) GetMemoRevision(ctx context.Context, in *GetMemoRevisionRequest, opts ...grpc.CallOption) (*MemoRevision, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MemoRevision)
+	err := c.cc.Invoke(ctx, MemoService_GetMemoRevision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) RestoreMemoRevision(ctx context.Context, in *RestoreMemoRevisionRequest, opts ...grpc.CallOption) (*Memo, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Memo)
+	err := c.cc.Invoke(ctx, MemoService_RestoreMemoRevision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) DeleteMemoRevision(ctx context.Context, in *DeleteMemoRevisionRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, MemoService_DeleteMemoRevision_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memoServiceClient) ClearMemoRevisions(ctx context.Context, in *ClearMemoRevisionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, MemoService_ClearMemoRevisions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *memoServiceClient) CreateMemo(ctx context.Context, in *CreateMemoRequest, opts ...grpc.CallOption) (*Memo, error) {
@@ -324,6 +441,24 @@ func (c *memoServiceClient) BatchGetLinkMetadata(ctx context.Context, in *BatchG
 // All implementations must embed UnimplementedMemoServiceServer
 // for forward compatibility.
 type MemoServiceServer interface {
+	// ListDeletedMemos lists the caller's trash; show_all requires an administrator.
+	ListDeletedMemos(context.Context, *ListDeletedMemosRequest) (*ListDeletedMemosResponse, error)
+	// RestoreMemo restores a deleted memo and its jointly deleted comments.
+	RestoreMemo(context.Context, *RestoreMemoRequest) (*Memo, error)
+	// PurgeMemo permanently removes a memo that is already in trash.
+	PurgeMemo(context.Context, *PurgeMemoRequest) (*emptypb.Empty, error)
+	// EmptyTrash permanently empties the caller's trash, or all trash for an administrator.
+	EmptyTrash(context.Context, *EmptyTrashRequest) (*emptypb.Empty, error)
+	// ListMemoRevisions requires permission to manage the memo, even for public memos.
+	ListMemoRevisions(context.Context, *ListMemoRevisionsRequest) (*ListMemoRevisionsResponse, error)
+	// GetMemoRevision returns a full historical version to a memo manager only.
+	GetMemoRevision(context.Context, *GetMemoRevisionRequest) (*MemoRevision, error)
+	// RestoreMemoRevision uses the normal content update path.
+	RestoreMemoRevision(context.Context, *RestoreMemoRevisionRequest) (*Memo, error)
+	// DeleteMemoRevision removes one historical version, including its sensitive content.
+	DeleteMemoRevision(context.Context, *DeleteMemoRevisionRequest) (*emptypb.Empty, error)
+	// ClearMemoRevisions removes all historical versions of a memo.
+	ClearMemoRevisions(context.Context, *ClearMemoRevisionsRequest) (*emptypb.Empty, error)
 	// CreateMemo creates a memo. The request body is a Memo; set its content
 	// (Markdown) and visibility (PRIVATE | PROTECTED | PUBLIC | SPACE,
 	// default PRIVATE).
@@ -387,6 +522,33 @@ type MemoServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedMemoServiceServer struct{}
 
+func (UnimplementedMemoServiceServer) ListDeletedMemos(context.Context, *ListDeletedMemosRequest) (*ListDeletedMemosResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListDeletedMemos not implemented")
+}
+func (UnimplementedMemoServiceServer) RestoreMemo(context.Context, *RestoreMemoRequest) (*Memo, error) {
+	return nil, status.Error(codes.Unimplemented, "method RestoreMemo not implemented")
+}
+func (UnimplementedMemoServiceServer) PurgeMemo(context.Context, *PurgeMemoRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method PurgeMemo not implemented")
+}
+func (UnimplementedMemoServiceServer) EmptyTrash(context.Context, *EmptyTrashRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method EmptyTrash not implemented")
+}
+func (UnimplementedMemoServiceServer) ListMemoRevisions(context.Context, *ListMemoRevisionsRequest) (*ListMemoRevisionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListMemoRevisions not implemented")
+}
+func (UnimplementedMemoServiceServer) GetMemoRevision(context.Context, *GetMemoRevisionRequest) (*MemoRevision, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMemoRevision not implemented")
+}
+func (UnimplementedMemoServiceServer) RestoreMemoRevision(context.Context, *RestoreMemoRevisionRequest) (*Memo, error) {
+	return nil, status.Error(codes.Unimplemented, "method RestoreMemoRevision not implemented")
+}
+func (UnimplementedMemoServiceServer) DeleteMemoRevision(context.Context, *DeleteMemoRevisionRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteMemoRevision not implemented")
+}
+func (UnimplementedMemoServiceServer) ClearMemoRevisions(context.Context, *ClearMemoRevisionsRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method ClearMemoRevisions not implemented")
+}
 func (UnimplementedMemoServiceServer) CreateMemo(context.Context, *CreateMemoRequest) (*Memo, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateMemo not implemented")
 }
@@ -469,6 +631,168 @@ func RegisterMemoServiceServer(s grpc.ServiceRegistrar, srv MemoServiceServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&MemoService_ServiceDesc, srv)
+}
+
+func _MemoService_ListDeletedMemos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListDeletedMemosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).ListDeletedMemos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_ListDeletedMemos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).ListDeletedMemos(ctx, req.(*ListDeletedMemosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_RestoreMemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestoreMemoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).RestoreMemo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_RestoreMemo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).RestoreMemo(ctx, req.(*RestoreMemoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_PurgeMemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PurgeMemoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).PurgeMemo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_PurgeMemo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).PurgeMemo(ctx, req.(*PurgeMemoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_EmptyTrash_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EmptyTrashRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).EmptyTrash(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_EmptyTrash_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).EmptyTrash(ctx, req.(*EmptyTrashRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_ListMemoRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMemoRevisionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).ListMemoRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_ListMemoRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).ListMemoRevisions(ctx, req.(*ListMemoRevisionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_GetMemoRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMemoRevisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).GetMemoRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_GetMemoRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).GetMemoRevision(ctx, req.(*GetMemoRevisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_RestoreMemoRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestoreMemoRevisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).RestoreMemoRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_RestoreMemoRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).RestoreMemoRevision(ctx, req.(*RestoreMemoRevisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_DeleteMemoRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteMemoRevisionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).DeleteMemoRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_DeleteMemoRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).DeleteMemoRevision(ctx, req.(*DeleteMemoRevisionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemoService_ClearMemoRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClearMemoRevisionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemoServiceServer).ClearMemoRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemoService_ClearMemoRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemoServiceServer).ClearMemoRevisions(ctx, req.(*ClearMemoRevisionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _MemoService_CreateMemo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -856,6 +1180,42 @@ var MemoService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "memos.api.v1.MemoService",
 	HandlerType: (*MemoServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListDeletedMemos",
+			Handler:    _MemoService_ListDeletedMemos_Handler,
+		},
+		{
+			MethodName: "RestoreMemo",
+			Handler:    _MemoService_RestoreMemo_Handler,
+		},
+		{
+			MethodName: "PurgeMemo",
+			Handler:    _MemoService_PurgeMemo_Handler,
+		},
+		{
+			MethodName: "EmptyTrash",
+			Handler:    _MemoService_EmptyTrash_Handler,
+		},
+		{
+			MethodName: "ListMemoRevisions",
+			Handler:    _MemoService_ListMemoRevisions_Handler,
+		},
+		{
+			MethodName: "GetMemoRevision",
+			Handler:    _MemoService_GetMemoRevision_Handler,
+		},
+		{
+			MethodName: "RestoreMemoRevision",
+			Handler:    _MemoService_RestoreMemoRevision_Handler,
+		},
+		{
+			MethodName: "DeleteMemoRevision",
+			Handler:    _MemoService_DeleteMemoRevision_Handler,
+		},
+		{
+			MethodName: "ClearMemoRevisions",
+			Handler:    _MemoService_ClearMemoRevisions_Handler,
+		},
 		{
 			MethodName: "CreateMemo",
 			Handler:    _MemoService_CreateMemo_Handler,

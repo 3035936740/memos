@@ -66,7 +66,7 @@ const AdminSpacesSection = () => {
         />
       </div>
 
-      <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
+      <div data-settings-surface="" className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-background">
         {spacesQuery.isPending ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">{t("setting.spaces.loading")}</p>
         ) : spaces.length === 0 ? (

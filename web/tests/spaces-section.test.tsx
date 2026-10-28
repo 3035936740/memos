@@ -43,6 +43,7 @@ vi.mock("@/hooks/useSpaceQueries", () => ({
   useUserSpaceInvitations: () => ({ data: state.receivedInvitations, isLoading: false }),
   useAcceptSpaceInvitation: () => ({ isPending: false, mutateAsync: state.acceptInvitation }),
   useDeclineSpaceInvitation: () => ({ isPending: false, mutateAsync: state.declineInvitation }),
+  useSpace: () => ({ data: undefined, isLoading: false, isPending: false }),
   useSpaceMembers: () => ({ data: state.members, isError: false, isLoading: false }),
   useSpaceInvitations: () => ({ data: state.managedInvitations, isLoading: false }),
   useUpdateSpace: () => ({ isPending: false, mutateAsync: state.updateSpace }),
@@ -86,6 +87,7 @@ vi.mock("@/components/CreateSpaceDialog", () => ({
               syncToMainFeed: true,
               currentUserRole: 1,
               memberCount: 1,
+ memoCount: 0,
             };
             state.spaces = [...state.spaces, createdSpace];
             onCreated?.(createdSpace);
@@ -140,6 +142,7 @@ const adminSpace: Space = {
   syncToMainFeed: true,
   currentUserRole: 1,
   memberCount: 2,
+ memoCount: 0,
 };
 
 const userSpace: Space = {
@@ -177,6 +180,7 @@ const receivedInvitation: SpaceInvitation = {
     syncToMainFeed: true,
     currentUserRole: 0,
     memberCount: 0,
+ memoCount: 0,
   },
 };
 

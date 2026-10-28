@@ -118,6 +118,7 @@ func (s *FileServerService) RegisterRoutes(echoServer *echo.Echo) {
 	fileGroup.GET("/attachments/:uid", s.serveAttachmentFile)
 	fileGroup.GET("/attachments/:uid/:filename", s.serveAttachmentFile)
 	fileGroup.GET("/users/:identifier/avatar", s.serveUserAvatar)
+	fileGroup.GET("/spaces/:uid/avatar", s.serveSpaceAvatar)
 	s.registerStorageRoutes(echoServer)
 }
 

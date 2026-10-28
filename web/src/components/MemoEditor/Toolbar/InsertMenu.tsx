@@ -28,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useInstance } from "@/contexts/InstanceContext";
 import { useDebouncedEffect } from "@/hooks";
 import type { MemoRelation } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -41,6 +42,7 @@ import type { LocalFile } from "../types/attachment";
 
 const InsertMenu = (props: InsertMenuProps) => {
   const t = useTranslate();
+  const { aiSetting } = useInstance();
   const { actions, dispatch, getState } = useEditorContext();
   const relations = useEditorSelector((s) => s.metadata.relations);
   const poll = useEditorSelector((s) => s.metadata.poll);
@@ -185,15 +187,19 @@ const InsertMenu = (props: InsertMenuProps) => {
     { key: "inline-image", label: t("editor.insert-menu.insert-image"), icon: ImageIcon, onClick: handleInlineImageUploadClick },
     { key: "inline-video", label: t("editor.insert-menu.insert-video"), icon: VideoIcon, onClick: handleInlineVideoUploadClick },
     { key: "emoji", label: t("editor.insert-menu.insert-emoji"), icon: SmilePlusIcon, onClick: () => setEmojiDialogOpen(true) },
-    {
-      key: "ai",
-      label: t("editor.insert-menu.ai-assistant"),
-      icon: SparklesIcon,
-      onClick: () => {
-        setAIContext(getState().content);
-        setAIDialogOpen(true);
-      },
-    },
+    ...(aiSetting.providers.some((provider) => provider.writingEnabled)
+      ? [
+          {
+            key: "ai",
+            label: t("editor.insert-menu.ai-assistant"),
+            icon: SparklesIcon,
+            onClick: () => {
+              setAIContext(getState().content);
+              setAIDialogOpen(true);
+            },
+          },
+        ]
+      : []),
     { key: "audio", label: t("editor.audio-recorder.trigger"), icon: MicIcon, onClick: props.onAudioRecorderClick },
     { key: "link", label: t("editor.insert-menu.link-memo"), icon: LinkIcon, onClick: handleOpenLinkDialog },
     { key: "location", label: t("editor.insert-menu.add-location"), icon: MapPinIcon, onClick: handleLocationClick },

@@ -163,11 +163,11 @@ describe("<PagedMemoList>", () => {
     expect(screen.getByTestId("leading-content")).toBeInTheDocument();
   });
 
-  it("uses the tile sprite Placeholder for the empty state", () => {
+  it("uses the SVG Placeholder for the empty state", () => {
     renderList();
 
     expect(screen.getByText("No data found.")).toBeInTheDocument();
-    expect(screen.getByTestId("placeholder-sprite")).toBeInTheDocument();
+    expect(screen.getByText("No data found.").parentElement?.querySelector("svg")).toBeInTheDocument();
   });
 
   it("combines the selected Space filter with the memo list filter", () => {
@@ -189,7 +189,7 @@ describe("<PagedMemoList>", () => {
 
     expect(screen.getByTestId("leading-content")).toBeInTheDocument();
     expect(screen.getByText("No data found.")).toBeInTheDocument();
-    expect(screen.getByTestId("placeholder-sprite")).toBeInTheDocument();
+    expect(screen.getByText("No data found.").parentElement?.querySelector("svg")).toBeInTheDocument();
   });
 
   it("places the blog sidebar beside the feed on desktop and after pagination on narrow screens", () => {

@@ -70,7 +70,32 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 	}
 	actorCanRead := store.MemoDeleteActorCanRead(rowStatus, visibility, spaceID, spaceExists, actorMember)
 
-	attachments, err := deleteSQLiteMemoSetTx(ctx, tx, []int32{delete.MemoID})
+	if delete.RequireDeleted {
+		var deleted sql.NullInt64
+		if err := tx.QueryRowContext(ctx, store.BindSQL("sqlite", "SELECT deleted_ts FROM memo WHERE id=?"), delete.MemoID).Scan(&deleted); err != nil {
+			return nil, err
+		}
+		if !deleted.Valid {
+			return nil, store.ErrMemoMutationConflict
+		}
+	}
+	if delete.DeletedTs != nil {
+		if err := store.SoftDeleteMemoSet(ctx, tx, "sqlite", delete.MemoID, *delete.DeletedTs); err != nil {
+			return nil, err
+		}
+		if err := tx.Commit(); err != nil {
+			return nil, err
+		}
+		return &store.DeleteMemoWithPolicyResult{ActorCanRead: actorCanRead}, nil
+	}
+	memoIDs := []int32{delete.MemoID}
+	if delete.RequireDeleted {
+		memoIDs, err = store.MemoCommentTree(ctx, tx, "sqlite", delete.MemoID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	attachments, err := deleteSQLiteMemoSetTx(ctx, tx, memoIDs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to delete memo set")
 	}
@@ -78,4 +103,37 @@ func (d *DB) DeleteMemoWithPolicy(ctx context.Context, delete *store.DeleteMemoW
 		return nil, errors.Wrap(err, "failed to commit memo delete transaction")
 	}
 	return &store.DeleteMemoWithPolicyResult{ActorCanRead: actorCanRead, Attachments: attachments}, nil
+}
+
+// PurgeDeletedMemo is reserved for the expiration runner; interactive purges use DeleteMemoWithPolicy.
+func (d *DB) PurgeDeletedMemo(ctx context.Context, id int32) (*store.DeleteMemoWithPolicyResult, error) {
+	tx, err := d.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	var deleted sql.NullInt64
+	query := "SELECT deleted_ts FROM memo WHERE id=?"
+
+	if err := tx.QueryRowContext(ctx, store.BindSQL("sqlite", query), id).Scan(&deleted); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &store.DeleteMemoWithPolicyResult{}, nil
+		}
+		return nil, err
+	}
+	if !deleted.Valid {
+		return nil, store.ErrMemoMutationConflict
+	}
+	ids, err := store.MemoCommentTree(ctx, tx, "sqlite", id)
+	if err != nil {
+		return nil, err
+	}
+	attachments, err := deleteSQLiteMemoSetTx(ctx, tx, ids)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return &store.DeleteMemoWithPolicyResult{Attachments: attachments}, nil
 }

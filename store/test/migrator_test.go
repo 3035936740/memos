@@ -310,6 +310,12 @@ func TestMigrationSpaceMemberStatusBackfillsActive(t *testing.T) {
 	require.NoError(t, err)
 
 	db := ts.GetDriver().GetDB()
+	if getDriverFromEnv() == "sqlite" {
+		// Recreate an upstream-era fixture, including its named indexes rather
+		// than SQLite's non-droppable inline UNIQUE constraint.
+		_, err = db.ExecContext(ctx, "DROP TABLE IF EXISTS poll_vote; DROP INDEX IF EXISTS idx_space_url_slug; DROP INDEX IF EXISTS idx_space_access_id; DELETE FROM memos_plus_migration")
+		require.NoError(t, err)
+	}
 	_, err = db.ExecContext(ctx, "ALTER TABLE space_member DROP COLUMN status")
 	require.NoError(t, err)
 	for _, statement := range []string{

@@ -15,10 +15,6 @@ import (
 // delegates memo creation to another service method that dispatches its own.
 type suppressMentionKey struct{}
 
-func withSuppressMentionNotifications(ctx context.Context) context.Context {
-	return context.WithValue(ctx, suppressMentionKey{}, true)
-}
-
 func isMentionNotificationSuppressed(ctx context.Context) bool {
 	v, ok := ctx.Value(suppressMentionKey{}).(bool)
 	return ok && v

@@ -36,9 +36,11 @@ export function handleError(
   const raw = getErrorMessage(error, fallback);
 
   let mapped = raw;
+  if (raw.includes("AI review rejected")) mapped = i18n.t("ai-review.rejected");
+  if (raw.includes("AI review failed;") || raw.includes("AI review unavailable")) mapped = i18n.t("ai-review.unavailable");
   // Map backend blocked-word response to a localized message.
   if (typeof raw === "string" && raw.includes("content contains a blocked word")) {
-    mapped = i18n.t("editor.blocked-word");
+    mapped = i18n.t("common.blocked-word");
   }
 
   const errorMessage = options?.context ? `${contextPrefix}${mapped}` : mapped;

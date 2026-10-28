@@ -16,6 +16,10 @@ const (
 	ProviderOpenAICompatible ProviderType = "OPENAI_COMPATIBLE"
 	// ProviderOllama is an Ollama server exposing its OpenAI-compatible endpoint.
 	ProviderOllama ProviderType = "OLLAMA"
+	// ProviderAzureOpenAI is Azure's OpenAI-compatible text API.
+	ProviderAzureOpenAI ProviderType = "AZURE_OPENAI"
+	// ProviderJev is TypeSafe's typed System One decision API.
+	ProviderJev ProviderType = "JEV"
 )
 
 // SupportsTranscription reports whether Memos has an audio transcription
@@ -31,9 +35,15 @@ func SupportsTranscription(providerType ProviderType) bool {
 
 // ProviderConfig configures a callable AI provider connection.
 type ProviderConfig struct {
-	ID       string
-	Title    string
-	Type     ProviderType
-	Endpoint string
-	APIKey   string
+	ID              string
+	Title           string
+	Type            ProviderType
+	Endpoint        string
+	APIKey          string
+	DefaultModel    string
+	ReasoningEffort string
+	CustomHeaders   map[string]string
+	AzureAPIVersion string
+	WritingEnabled  bool
+	SupportsVision  bool
 }

@@ -1,0 +1,11 @@
+# Memos Plus with Docker Compose. Data (database and uploads) lives in ./data next to this file; back it up
+# before upgrading. Works the same in 1Panel, BaoTa and other panels' Compose editors.
+services:
+  memos-plus:
+    image: ghcr.io/3035936740/memos-plus:latest
+    container_name: memos-plus
+    restart: unless-stopped
+    ports:
+      - "5230:5230"
+    volumes:
+      - ./data:/var/opt/memos

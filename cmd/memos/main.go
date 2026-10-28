@@ -33,6 +33,7 @@ func initSlogDefault() {
 var (
 	rootCmd = &cobra.Command{
 		Use:           "memos",
+		Version:       version.GetDisplayVersion(),
 		Short:         `An open source, lightweight note-taking service. Easily capture and share your great thoughts.`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -44,7 +45,7 @@ var (
 		Use:   "version",
 		Short: "Print the current Memos version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Println(version.GetCurrentVersion())
+			fmt.Println(version.GetDisplayVersion())
 		},
 	}
 )
@@ -106,7 +107,7 @@ func runServer() error {
 		Driver:      viper.GetString("driver"),
 		DSN:         viper.GetString("dsn"),
 		InstanceURL: viper.GetString("instance-url"),
-		Version:     version.GetCurrentVersion(),
+		Version:     version.GetDisplayVersion(),
 		Commit:      version.Commit,
 	}
 

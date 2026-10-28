@@ -210,7 +210,7 @@ const MarkdownField = ({ value, onChange }: { value: string; onChange: (value: s
         </div>
         <div className="space-y-1.5">
           <Label>{t("setting.content.live-preview")}</Label>
-          <div className="min-h-64 overflow-auto rounded-md border bg-background/60 p-4 text-sm">
+          <div data-settings-surface="" className="min-h-64 overflow-auto rounded-md border bg-background/60 p-4 text-sm">
             {value.trim() ? (
               <MemoMarkdownRenderer content={value} resolvedMentionUsernames={new Set()} standalone />
             ) : (
@@ -319,7 +319,7 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
       </div>
 
       {entries.length === 0 && (
-        <div className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
+        <div data-settings-surface="" className="rounded-md border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
           {t("setting.content.empty")}
         </div>
       )}
@@ -328,7 +328,11 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
         {entries.map((entry, index) => {
           const open = openKey === entryKey(entry);
           return (
-            <section key={`${entry.kind}-${index}`} className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}>
+            <section
+              data-settings-surface=""
+              key={`${entry.kind}-${index}`}
+              className={cn("rounded-lg border bg-card/50", open ? "space-y-4 p-4" : "px-3 py-1.5")}
+            >
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -395,7 +399,10 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
                     {entry.kind === "page" ? (
                       <div className="space-y-1.5">
                         <Label>{t("setting.content.page-path")}</Label>
-                        <div className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50">
+                        <div
+                          data-settings-surface=""
+                          className="flex overflow-hidden rounded-md border focus-within:ring-2 focus-within:ring-ring/50"
+                        >
                           <span className="flex items-center bg-muted px-2 text-sm text-muted-foreground">/pages/</span>
                           <Input
                             value={entry.slug}
@@ -460,7 +467,10 @@ const InstanceContentEditor = ({ navigationJson, pagesJson, onNavigationChange, 
 
                   {entry.kind === "page" && (
                     <>
-                      <div className="flex items-center justify-between rounded-md border bg-background/40 px-3 py-2">
+                      <div
+                        data-settings-surface=""
+                        className="flex items-center justify-between rounded-md border bg-background/40 px-3 py-2"
+                      >
                         <div>
                           <Label>{t("setting.content.show-in-navigation")}</Label>
                           <p className="text-xs text-muted-foreground">{t("setting.content.show-in-navigation-description")}</p>

@@ -3,22 +3,26 @@ import { ArrowLeftIcon, ArrowRightIcon, ArrowUpLeftFromCircleIcon, FolderIcon } 
 import { useCallback, useEffect, useMemo as useReactMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import BlogSidebar from "@/components/BlogSidebar";
+import MemoAgeNotice from "@/components/MemoAgeNotice";
 import MemoCommentSection, { type CommentSortOrder } from "@/components/MemoCommentSection";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
+import MemoSeries from "@/components/MemoSeries";
 import MemoView from "@/components/MemoView";
 import { createMemoNavigationState, type MemoOriginScope, resolveMemoDetailOrigin } from "@/components/MemoView/navigation";
+import ResumeReading from "@/components/ResumeReading";
 import ReadingProgress from "@/components/StyledBlog/ReadingProgress";
-import SketchFilters from "@/components/StyledBlog/SketchFilters";
 import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
 import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
+import { MemoSpacesProvider } from "@/contexts/MemoSpacesContext";
 import { useView } from "@/contexts/ViewContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMemoDetailError from "@/hooks/useMemoDetailError";
 import { useInfiniteMemoComments, useMemo, useMemos, useRecordMemoView } from "@/hooks/useMemoQueries";
 import { useSharedMemo, withShareAttachmentLinks } from "@/hooks/useMemoShareQueries";
+import { useStickySidebar } from "@/hooks/useStickySidebar";
 import { canAccessInstanceContent, parseInstanceCategories } from "@/lib/instance-content";
 import { isMemoNavigationScope, type MemoNavigationScope } from "@/lib/memo-navigation";
 import { memoNamePrefix } from "@/lib/resource-names";
@@ -105,6 +109,7 @@ const MemoDetail = () => {
   const SidebarComponent = styledBlog ? StyledBlogSidebar : BlogSidebar;
   const [shareImageDialogOpen, setShareImageDialogOpen] = useState(false);
   const readingArticleRef = useRef<HTMLDivElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
   const [commentSortOrder, setCommentSortOrder] = useState<CommentSortOrder>("asc");
   const params = useParams();
   const location = useLocation();
@@ -219,6 +224,10 @@ const MemoDetail = () => {
     void fetchNextComments();
   }, [commentTarget, fetchNextComments, hasNextComments, hash, isFetchingNextComments, isShareMode, memoName, comments]);
 
+  // Blog 1 keeps its own sticky, inner-scrolling column; Blog 2's widget cards follow the page like Twitter's. The
+  // column only exists once the article renders (the checks below), so the effect waits for the same conditions.
+  useStickySidebar(asideRef, styledBlog && !isLoading && !!displayMemo && authInitialized && instanceInitialized);
+
   if (isShareMode) {
     const isNotFound = error instanceof ConnectError && (error.code === Code.NotFound || error.code === Code.Unauthenticated);
     if (isNotFound || (!isLoading && !memo)) {
@@ -242,187 +251,194 @@ const MemoDetail = () => {
       data-memo-detail=""
       className="@container flex min-h-full w-full flex-col items-center pb-8 pt-2 sm:pt-4"
     >
-      <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
-        <MemoDetailScript memo={displayMemo} />
-        {styledBlog && <SketchFilters />}
-        {styledBlog && (
-          <ReadingProgress memoName={displayMemo.name} tags={displayMemo.tags} style={blogStyle} articleRef={readingArticleRef} />
-        )}
-        <MemoSidebarRegistration
-          memo={displayMemo}
-          from={resolvedParentPage}
-          fromScope={parentScope}
-          readonly={isShareMode}
-          onShareImageOpen={handleShareImageOpen}
-        />
-        <div
-          className={cn(
-            "w-full lg:grid lg:items-start",
-            isBlog2 && !styledBlog ? "px-2 sm:px-3" : "px-4 sm:px-6",
-            styledBlog
-              ? "lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6"
-              : isBlog2
-                ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
-                : "max-w-6xl lg:grid-cols-[minmax(0,48rem)_15rem] lg:gap-4",
+      <MemoSpacesProvider memos={[displayMemo, ...comments]}>
+        <MentionResolutionProvider contents={mentionResolutionContents} userNames={userResolutionNames}>
+          <MemoDetailScript memo={displayMemo} />
+          {styledBlog && (
+            <ReadingProgress memoName={displayMemo.name} tags={displayMemo.tags} style={blogStyle} articleRef={readingArticleRef} />
           )}
-        >
-          <main className="min-w-0">
-            <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={handleBack}
-              >
-                <ArrowLeftIcon className="size-4" />
-                {t("memo.back-to-list")}
-              </button>
-              {!isShareMode && currentCategory ? (
-                <Button
-                  render={<Link to={`/categories/${currentCategory.slug}`} />}
-                  variant="ghost"
-                  className="min-w-0 text-muted-foreground"
-                >
-                  <FolderIcon className="shrink-0" />
-                  <span className="max-w-40 truncate">{currentCategory.title}</span>
-                </Button>
-              ) : null}
-            </div>
-            {!isShareMode && parentMemo && (
-              <div className="w-auto inline-block mb-2">
-                <Link
-                  className="px-3 py-1 border border-border rounded-lg max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-muted-foreground hover:shadow hover:opacity-80"
-                  to={`/${parentMemo.name}`}
-                  state={createMemoNavigationState(parentPage, parentScope)}
-                  viewTransition
-                >
-                  <ArrowUpLeftFromCircleIcon className="w-4 h-auto shrink-0 opacity-60 mr-2" />
-                  <span className="truncate">{parentMemo.content}</span>
-                </Link>
-              </div>
+          {!displayMemo.parent && <ResumeReading memoName={displayMemo.name} articleRef={readingArticleRef} />}
+          <MemoSidebarRegistration
+            memo={displayMemo}
+            from={resolvedParentPage}
+            fromScope={parentScope}
+            readonly={isShareMode}
+            onShareImageOpen={handleShareImageOpen}
+          />
+          <div
+            className={cn(
+              "w-full lg:grid lg:items-start",
+              isBlog2 && !styledBlog ? "px-2 sm:px-3" : "px-4 sm:px-6",
+              styledBlog
+                ? "lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-6"
+                : isBlog2
+                  ? "max-w-7xl lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-5"
+                  : "max-w-6xl lg:grid-cols-[minmax(0,48rem)_15rem] lg:gap-4",
             )}
-            <div ref={readingArticleRef}>
-              <MemoView
-                key={displayMemo.name}
-                memo={displayMemo}
-                compact={false}
-                parentPage={resolvedParentPage}
-                navigationScope={navigationScope}
-                parentScope={parentScope}
-                shareImageDialogOpen={shareImageDialogOpen}
-                showCreator
-                showVisibility
-                showPinned
-                showSpace
-                className={
-                  styledBlog
-                    ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                    : isBlog2
-                      ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                      : undefined
-                }
-                onShareImageDialogOpenChange={setShareImageDialogOpen}
-              />
-            </div>
-            {!isShareMode && !displayMemo.parent && (previousMemo || nextMemo) ? (
-              <nav
-                className={cn(
-                  "mt-4 gap-3",
-                  isBlog2 ? "flex items-center justify-between py-2" : "grid border-y border-border/70 py-4 sm:grid-cols-2",
-                )}
-                aria-label={t("memo.article-navigation")}
-              >
-                {previousMemo ? (
-                  <Link
-                    to={`/${previousMemo.name}`}
-                    state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
-                    data-sb-nav-link={styledBlog ? "" : undefined}
-                    className={cn(
-                      isBlog2
-                        ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
-                        : "group min-w-0 rounded-lg p-3 transition-colors hover:bg-accent/40",
-                    )}
+          >
+            <main className="min-w-0">
+              <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={handleBack}
+                >
+                  <ArrowLeftIcon className="size-4" />
+                  {t("memo.back-to-list")}
+                </button>
+                {!isShareMode && currentCategory ? (
+                  <Button
+                    render={<Link to={`/categories/${currentCategory.slug}`} />}
+                    variant="ghost"
+                    className="min-w-0 text-muted-foreground"
                   >
-                    {isBlog2 ? (
-                      <>
-                        <ArrowLeftIcon className="size-3.5" />
-                        {t("memo.previous-article")}
-                      </>
-                    ) : (
-                      <>
-                        <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <FolderIcon className="shrink-0" />
+                    <span className="max-w-40 truncate">{currentCategory.title}</span>
+                  </Button>
+                ) : null}
+              </div>
+              {!isShareMode && parentMemo && (
+                <div className="w-auto inline-block mb-2">
+                  <Link
+                    className="px-3 py-1 border border-border rounded-lg max-w-xs w-auto text-sm flex flex-row justify-start items-center flex-nowrap text-muted-foreground hover:shadow hover:opacity-80"
+                    to={`/${parentMemo.name}`}
+                    state={createMemoNavigationState(parentPage, parentScope)}
+                    viewTransition
+                  >
+                    <ArrowUpLeftFromCircleIcon className="w-4 h-auto shrink-0 opacity-60 mr-2" />
+                    <span className="truncate">{parentMemo.content}</span>
+                  </Link>
+                </div>
+              )}
+              {!displayMemo.parent && <MemoAgeNotice memo={displayMemo} />}
+              <div ref={readingArticleRef}>
+                <MemoView
+                  key={displayMemo.name}
+                  memo={displayMemo}
+                  compact={false}
+                  parentPage={resolvedParentPage}
+                  navigationScope={navigationScope}
+                  parentScope={parentScope}
+                  shareImageDialogOpen={shareImageDialogOpen}
+                  showCreator
+                  showVisibility
+                  showPinned
+                  showSpace
+                  className={
+                    styledBlog
+                      ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                      : isBlog2
+                        ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                        : undefined
+                  }
+                  onShareImageDialogOpenChange={setShareImageDialogOpen}
+                />
+              </div>
+              {!isShareMode && !displayMemo.parent && (
+                <MemoSeries memo={displayMemo} parentPage={resolvedParentPage} parentScope={parentScope} />
+              )}
+              {!isShareMode && !displayMemo.parent && (previousMemo || nextMemo) ? (
+                <nav
+                  className={cn(
+                    "mt-4 gap-3",
+                    isBlog2 ? "flex items-center justify-between py-2" : "grid border-y border-border/70 py-4 sm:grid-cols-2",
+                  )}
+                  aria-label={t("memo.article-navigation")}
+                >
+                  {previousMemo ? (
+                    <Link
+                      to={`/${previousMemo.name}`}
+                      state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
+                      data-sb-nav-link={styledBlog ? "" : undefined}
+                      className={cn(
+                        isBlog2
+                          ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
+                          : "group min-w-0 rounded-lg p-3 transition-colors hover:bg-accent/40",
+                      )}
+                    >
+                      {isBlog2 ? (
+                        <>
                           <ArrowLeftIcon className="size-3.5" />
                           {t("memo.previous-article")}
-                        </span>
-                        <span className="block truncate font-medium">{previousMemo.property?.title || previousMemo.snippet}</span>
-                      </>
-                    )}
-                  </Link>
-                ) : (
-                  <span />
-                )}
-                {nextMemo ? (
-                  <Link
-                    to={`/${nextMemo.name}`}
-                    state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
-                    data-sb-nav-link={styledBlog ? "" : undefined}
-                    className={cn(
-                      isBlog2
-                        ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
-                        : "group min-w-0 rounded-lg p-3 text-right transition-colors hover:bg-accent/40",
-                    )}
-                  >
-                    {isBlog2 ? (
-                      <>
-                        {t("memo.next-article")}
-                        <ArrowRightIcon className="size-3.5" />
-                      </>
-                    ) : (
-                      <>
-                        <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                        </>
+                      ) : (
+                        <>
+                          <span className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
+                            <ArrowLeftIcon className="size-3.5" />
+                            {t("memo.previous-article")}
+                          </span>
+                          <span className="block truncate font-medium">{previousMemo.property?.title || previousMemo.snippet}</span>
+                        </>
+                      )}
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                  {nextMemo ? (
+                    <Link
+                      to={`/${nextMemo.name}`}
+                      state={{ ...createMemoNavigationState(resolvedParentPage, parentScope), navigationScope }}
+                      data-sb-nav-link={styledBlog ? "" : undefined}
+                      className={cn(
+                        isBlog2
+                          ? "inline-flex shrink-0 items-center gap-1.5 rounded-full border-0 bg-card px-3.5 py-1.5 text-sm shadow-xs transition-colors hover:bg-accent/50"
+                          : "group min-w-0 rounded-lg p-3 text-right transition-colors hover:bg-accent/40",
+                      )}
+                    >
+                      {isBlog2 ? (
+                        <>
                           {t("memo.next-article")}
                           <ArrowRightIcon className="size-3.5" />
-                        </span>
-                        <span className="block truncate font-medium">{nextMemo.property?.title || nextMemo.snippet}</span>
-                      </>
-                    )}
-                  </Link>
-                ) : null}
-              </nav>
-            ) : null}
-            {!isShareMode && (
-              <MemoCommentSection
-                memo={displayMemo}
-                comments={comments}
-                parentPage={resolvedParentPage}
-                parentScope={parentScope}
-                hasMoreComments={hasNextComments}
-                isFetchingMoreComments={isFetchingNextComments}
-                onLoadMoreComments={fetchNextComments}
-                sortOrder={commentSortOrder}
-                onSortOrderChange={setCommentSortOrder}
-              />
-            )}
-            <div className="mt-4 lg:hidden">
+                        </>
+                      ) : (
+                        <>
+                          <span className="mb-1 flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                            {t("memo.next-article")}
+                            <ArrowRightIcon className="size-3.5" />
+                          </span>
+                          <span className="block truncate font-medium">{nextMemo.property?.title || nextMemo.snippet}</span>
+                        </>
+                      )}
+                    </Link>
+                  ) : null}
+                </nav>
+              ) : null}
+              {!isShareMode && (
+                <MemoCommentSection
+                  memo={displayMemo}
+                  comments={comments}
+                  parentPage={resolvedParentPage}
+                  parentScope={parentScope}
+                  hasMoreComments={hasNextComments}
+                  isFetchingMoreComments={isFetchingNextComments}
+                  onLoadMoreComments={fetchNextComments}
+                  sortOrder={commentSortOrder}
+                  onSortOrderChange={setCommentSortOrder}
+                />
+              )}
+              <div className="mt-4 lg:hidden">
+                <SidebarComponent
+                  state={navigationScope.state}
+                  orderBy={navigationScope.orderBy}
+                  filter={navigationScope.filter}
+                  parentPage={resolvedParentPage}
+                />
+              </div>
+            </main>
+            <aside
+              ref={asideRef}
+              className={cn("hidden min-w-0 lg:block", !styledBlog && "sticky top-16 max-h-[calc(100dvh-5rem)] self-start overflow-y-auto")}
+            >
               <SidebarComponent
                 state={navigationScope.state}
                 orderBy={navigationScope.orderBy}
                 filter={navigationScope.filter}
                 parentPage={resolvedParentPage}
               />
-            </div>
-          </main>
-          <aside
-            className={cn("hidden min-w-0 lg:block", !styledBlog && "sticky top-16 max-h-[calc(100dvh-5rem)] self-start overflow-y-auto")}
-          >
-            <SidebarComponent
-              state={navigationScope.state}
-              orderBy={navigationScope.orderBy}
-              filter={navigationScope.filter}
-              parentPage={resolvedParentPage}
-            />
-          </aside>
-        </div>
-      </MentionResolutionProvider>
+            </aside>
+          </div>
+        </MentionResolutionProvider>
+      </MemoSpacesProvider>
     </section>
   );
 };

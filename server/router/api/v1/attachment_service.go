@@ -144,6 +144,9 @@ func (s *APIV1Service) CreateAttachment(ctx context.Context, request *v1pb.Creat
 	if uploadSizeLimit == 0 {
 		uploadSizeLimit = MaxUploadBufferSizeBytes
 	}
+	if s.Profile.Demo {
+		uploadSizeLimit = min(uploadSizeLimit, MebiByte)
+	}
 	if size > uploadSizeLimit {
 		return nil, status.Errorf(codes.InvalidArgument, "file size exceeds the limit")
 	}
@@ -200,6 +203,11 @@ func (s *APIV1Service) CreateAttachment(ctx context.Context, request *v1pb.Creat
 		}
 	}
 
+	if strings.HasPrefix(create.Type, "image/") || strings.HasPrefix(http.DetectContentType(create.Blob), "image/") {
+		if err := s.reviewImageBytes(ctx, create.Blob); err != nil {
+			return nil, err
+		}
+	}
 	if err := saveAttachmentBlobWithInstanceStorageSetting(ctx, s.Profile, s.Store, create, instanceStorageSetting); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to save attachment blob: %v", err)
 	}

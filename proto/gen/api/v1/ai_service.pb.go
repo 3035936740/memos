@@ -31,7 +31,9 @@ type GenerateTextRequest struct {
 	// Required. Instruction for the model.
 	Prompt string `protobuf:"bytes,3,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	// Optional. Current memo text supplied as editing context.
-	Context       string `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`
+	Context string `protobuf:"bytes,4,opt,name=context,proto3" json:"context,omitempty"`
+	// Use the administrator-configured planning and generation models.
+	PlanFirst     bool `protobuf:"varint,5,opt,name=plan_first,json=planFirst,proto3" json:"plan_first,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -92,6 +94,13 @@ func (x *GenerateTextRequest) GetContext() string {
 		return x.Context
 	}
 	return ""
+}
+
+func (x *GenerateTextRequest) GetPlanFirst() bool {
+	if x != nil {
+		return x.PlanFirst
+	}
+	return false
 }
 
 type GenerateTextResponse struct {
@@ -335,13 +344,15 @@ var File_api_v1_ai_service_proto protoreflect.FileDescriptor
 
 const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/v1/ai_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\"\x92\x01\n" +
+	"\x17api/v1/ai_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\"\xb6\x01\n" +
 	"\x13GenerateTextRequest\x12$\n" +
 	"\vprovider_id\x18\x01 \x01(\tB\x03\xe0A\x02R\n" +
 	"providerId\x12\x19\n" +
 	"\x05model\x18\x02 \x01(\tB\x03\xe0A\x01R\x05model\x12\x1b\n" +
 	"\x06prompt\x18\x03 \x01(\tB\x03\xe0A\x02R\x06prompt\x12\x1d\n" +
-	"\acontext\x18\x04 \x01(\tB\x03\xe0A\x01R\acontext\"*\n" +
+	"\acontext\x18\x04 \x01(\tB\x03\xe0A\x01R\acontext\x12\"\n" +
+	"\n" +
+	"plan_first\x18\x05 \x01(\bB\x03\xe0A\x01R\tplanFirst\"*\n" +
 	"\x14GenerateTextResponse\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\"P\n" +
 	"\x11TranscribeRequest\x12;\n" +

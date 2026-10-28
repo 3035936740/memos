@@ -9,6 +9,7 @@ import {
   PaletteIcon,
   SettingsIcon,
   SquareUserIcon,
+  Trash2Icon,
   User2Icon,
 } from "lucide-react";
 import { matchPath, useLocation } from "react-router-dom";
@@ -202,13 +203,17 @@ const UserMenu = (props: Props) => {
           <ArchiveIcon className="size-4 text-muted-foreground" />
           {t("common.archived")}
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigateFromMenu("/trash")}>
+          <Trash2Icon className="size-4 text-muted-foreground" />
+          {t("trash.title")}
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <GlobeIcon className="size-4 text-muted-foreground" />
             {t("common.language")}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="max-h-[min(24rem,var(--available-height))] overflow-y-auto p-0">
+          <DropdownMenuSubContent className="max-h-[min(24rem,var(--available-height))] p-0">
             <LocaleSearchList value={currentLocale} onChange={handleLocaleChange} className="w-64" />
           </DropdownMenuSubContent>
         </DropdownMenuSub>

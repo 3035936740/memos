@@ -143,7 +143,6 @@ export const useMemoActionHandlers = ({ memo, parentScope, onEdit, setDeleteDial
       handleError(error, toast.error, { context: "Delete memo", fallbackMessage: "An error occurred" });
       return;
     }
-    toast.success(t("message.deleted-successfully"));
     if (memo.parent) {
       queryClient.invalidateQueries({ queryKey: memoKeys.comments(memo.parent) });
     }

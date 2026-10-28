@@ -2,6 +2,8 @@ package v1
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
@@ -133,6 +135,11 @@ func convertInstanceGeneralSettingFromStore(setting *storepb.InstanceGeneralSett
 		FirstVisitDefaultStyle:         setting.FirstVisitDefaultStyle,
 		PreferencesResetAt:             setting.PreferencesResetAt,
 		MusicConfigJson:                setting.MusicConfigJson,
+		TrashRetentionDays:             setting.TrashRetentionDays,
+		MemoRevisionLimit:              setting.MemoRevisionLimit,
+		SetupCompleted:                 setting.SetupCompleted,
+		ShowPoweredBy:                  setting.ShowPoweredBy,
+		DisableFestivalEffects:         setting.DisableFestivalEffects,
 		DefaultBackgroundImageUrl:      setting.DefaultBackgroundImageUrl,
 		DefaultMemberMemoVisibility:    setting.DefaultMemberMemoVisibility,
 		DefaultMemberSaveMediaMetadata: setting.DefaultMemberSaveMediaMetadata,
@@ -168,6 +175,11 @@ func convertInstanceGeneralSettingToStore(setting *v1pb.InstanceSetting_GeneralS
 		FirstVisitDefaultStyle:         setting.FirstVisitDefaultStyle,
 		PreferencesResetAt:             setting.PreferencesResetAt,
 		MusicConfigJson:                setting.MusicConfigJson,
+		TrashRetentionDays:             setting.TrashRetentionDays,
+		MemoRevisionLimit:              setting.MemoRevisionLimit,
+		SetupCompleted:                 setting.SetupCompleted,
+		ShowPoweredBy:                  setting.ShowPoweredBy,
+		DisableFestivalEffects:         setting.DisableFestivalEffects,
 		DefaultBackgroundImageUrl:      setting.DefaultBackgroundImageUrl,
 		DefaultMemberMemoVisibility:    setting.DefaultMemberMemoVisibility,
 		DefaultMemberSaveMediaMetadata: setting.DefaultMemberSaveMediaMetadata,
@@ -392,21 +404,29 @@ func convertInstanceAISettingFromStore(setting *storepb.InstanceAISetting) *v1pb
 	}
 
 	aiSetting := &v1pb.InstanceSetting_AISetting{
-		Providers:     make([]*v1pb.InstanceSetting_AIProviderConfig, 0, len(setting.Providers)),
-		Transcription: convertTranscriptionConfigFromStore(setting.GetTranscription()),
+		Providers:      make([]*v1pb.InstanceSetting_AIProviderConfig, 0, len(setting.Providers)),
+		Transcription:  convertTranscriptionConfigFromStore(setting.GetTranscription()),
+		TextGeneration: convertTextGenerationConfigFromStore(setting.GetTextGeneration()),
 	}
 	for _, provider := range setting.Providers {
 		if provider == nil {
 			continue
 		}
 		apiKey := provider.GetApiKey()
+		headerNames := slices.Sorted(maps.Keys(provider.GetCustomHeaders()))
 		aiSetting.Providers = append(aiSetting.Providers, &v1pb.InstanceSetting_AIProviderConfig{
-			Id:         provider.GetId(),
-			Title:      provider.GetTitle(),
-			Type:       v1pb.InstanceSetting_AIProviderType(provider.GetType()),
-			Endpoint:   provider.GetEndpoint(),
-			ApiKeySet:  apiKey != "",
-			ApiKeyHint: maskAPIKey(apiKey),
+			Id:                provider.GetId(),
+			Title:             provider.GetTitle(),
+			Type:              v1pb.InstanceSetting_AIProviderType(provider.GetType()),
+			Endpoint:          provider.GetEndpoint(),
+			ApiKeySet:         apiKey != "",
+			ApiKeyHint:        maskAPIKey(apiKey),
+			DefaultModel:      provider.GetDefaultModel(),
+			ReasoningEffort:   provider.GetReasoningEffort(),
+			CustomHeaderNames: headerNames,
+			AzureApiVersion:   provider.GetAzureApiVersion(),
+			WritingEnabled:    provider.GetWritingEnabled(),
+			SupportsVision:    provider.GetSupportsVision(),
 		})
 	}
 	return aiSetting
@@ -418,19 +438,27 @@ func convertInstanceAISettingToStore(setting *v1pb.InstanceSetting_AISetting) *s
 	}
 
 	aiSetting := &storepb.InstanceAISetting{
-		Providers:     make([]*storepb.AIProviderConfig, 0, len(setting.Providers)),
-		Transcription: convertTranscriptionConfigToStore(setting.GetTranscription()),
+		Providers:      make([]*storepb.AIProviderConfig, 0, len(setting.Providers)),
+		Transcription:  convertTranscriptionConfigToStore(setting.GetTranscription()),
+		TextGeneration: convertTextGenerationConfigToStore(setting.GetTextGeneration()),
 	}
 	for _, provider := range setting.Providers {
 		if provider == nil {
 			continue
 		}
 		aiSetting.Providers = append(aiSetting.Providers, &storepb.AIProviderConfig{
-			Id:       provider.GetId(),
-			Title:    provider.GetTitle(),
-			Type:     storepb.AIProviderType(provider.GetType()),
-			Endpoint: provider.GetEndpoint(),
-			ApiKey:   provider.GetApiKey(),
+			Id:                   provider.GetId(),
+			Title:                provider.GetTitle(),
+			Type:                 storepb.AIProviderType(provider.GetType()),
+			Endpoint:             provider.GetEndpoint(),
+			ApiKey:               provider.GetApiKey(),
+			DefaultModel:         provider.GetDefaultModel(),
+			ReasoningEffort:      provider.GetReasoningEffort(),
+			CustomHeaders:        maps.Clone(provider.GetCustomHeaders()),
+			ReplaceCustomHeaders: provider.GetReplaceCustomHeaders(),
+			AzureApiVersion:      provider.GetAzureApiVersion(),
+			WritingEnabled:       provider.GetWritingEnabled(),
+			SupportsVision:       provider.GetSupportsVision(),
 		})
 	}
 	return aiSetting

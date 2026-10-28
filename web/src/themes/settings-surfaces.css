@@ -1,0 +1,291 @@
+/* Shared settings panels, form controls and portaled menus. */
+
+/* Fields share each style's materials. Scope these to settings and their dialogs
+   so editor toolbar icon triggers and borderless code editors keep their layout. */
+html[data-style]:not([data-style="default"]) :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
+  :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [contenteditable="true"][role="textbox"]):not(
+    [class~="border-0"]
+  ) {
+  border: var(--sb-field-border, 1px solid var(--border));
+  border-radius: var(--sb-field-radius, 6px);
+  background: var(--sb-field-fill, var(--card));
+  box-shadow: var(--sb-field-shadow, none);
+}
+
+html[data-style="glass"] {
+  --sb-field-border: 1px solid var(--sb-glass-edge, var(--border));
+  --sb-field-fill: color-mix(in oklch, var(--card) 78%, transparent);
+  --sb-field-radius: 10px;
+  --sb-field-shadow: inset 0 1px 0 rgb(255 255 255 / 15%);
+}
+
+html[data-style="neumorphism"] {
+  --sb-field-fill: var(--sb-neu-base);
+  --sb-field-radius: 10px;
+  --sb-field-shadow: var(--sb-neu-pressed);
+}
+
+html[data-style="aero"] {
+  --sb-field-border: 1px solid var(--input);
+  --sb-field-fill: var(--sb-settings-fill, var(--card));
+  --sb-field-radius: 6px;
+  --sb-field-shadow: inset 0 1px 2px rgb(0 35 65 / 15%), 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+html[data-style="y2k"] {
+  --sb-field-border: 2px solid var(--sb-bevel-dark);
+  --sb-field-radius: 2px;
+  --sb-checkbox-radius: 2px;
+  --sb-field-shadow: inset 1px 1px 0 var(--sb-bevel-dark), inset -1px -1px 0 var(--sb-bevel-light);
+}
+
+html[data-style="pixel"] {
+  --sb-field-border: 2px solid var(--sb-px-ink);
+  --sb-field-radius: 0;
+  --sb-checkbox-radius: 0;
+  --sb-field-shadow: inset 2px 2px 0 var(--sb-px-shade);
+}
+
+html[data-style="terminal"] {
+  --sb-field-border: 1px solid var(--sb-line, var(--border));
+  --sb-field-radius: 0;
+  --sb-checkbox-radius: 0;
+}
+
+html[data-style="vaporwave"] {
+  --sb-field-border: 2px solid var(--sb-vw-ink);
+  --sb-field-fill: var(--sb-vw-window);
+  --sb-field-radius: 0;
+  --sb-checkbox-radius: 0;
+  --sb-field-shadow: inset 1px 1px 0 var(--sb-vw-drop);
+}
+
+html[data-style="golden"] {
+  --sb-field-border: 1px solid var(--sb-gold-line);
+  --sb-field-radius: 6px;
+}
+
+html[data-style]:not([data-style="default"])
+  :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
+  [data-slot="checkbox"] {
+  border: var(--sb-field-border, 1px solid var(--border));
+  border-radius: var(--sb-checkbox-radius, 4px);
+  box-shadow: var(--sb-field-shadow, none);
+}
+
+html[data-style="y2k"]
+  :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
+  :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="checkbox"]):not([class~="border-0"]) {
+  border-color: var(--sb-bevel-dark) var(--sb-bevel-light) var(--sb-bevel-light) var(--sb-bevel-dark);
+}
+
+/* Native input/textarea elements cannot own an outline pseudo-element. A sliced
+   SVG draws only their border, leaving text, caret, resize handle and hit area intact.
+   Hover swaps three ink paths; no displacement filter runs over editable content. */
+html[data-style="handdrawn"] {
+  --sb-field-border: 1.5px solid transparent;
+  --sb-field-radius: 3px 5px 2px 4px / 4px 2px 5px 3px;
+  --sb-field-sketch-1: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M4%204%20Q24%202%2047%204%20T96%203%20L97%2020%2096%2039%2097%2056%20Q76%2058%2052%2056%20T4%2057%20L3%2039%204%2021%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2349473f%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+  --sb-field-sketch-2: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M3%203%20Q27%205%2051%203%20T97%204%20L96%2022%2097%2040%2096%2057%20Q73%2055%2048%2057%20T3%2056%20L4%2037%203%2020%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2349473f%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+  --sb-field-sketch-3: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M4%203%20Q25%204%2049%203%20T96%204%20L97%2021%2096%2038%2097%2056%20Q74%2057%2050%2056%20T4%2057%20L3%2038%204%2020%20Z%22%20fill%3D%22none%22%20stroke%3D%22%2349473f%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+}
+
+html[data-style="handdrawn"][data-theme$="-dark"] {
+  --sb-field-sketch-1: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M4%204%20Q24%202%2047%204%20T96%203%20L97%2020%2096%2039%2097%2056%20Q76%2058%2052%2056%20T4%2057%20L3%2039%204%2021%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23d5cfc0%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+  --sb-field-sketch-2: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M3%203%20Q27%205%2051%203%20T97%204%20L96%2022%2097%2040%2096%2057%20Q73%2055%2048%2057%20T3%2056%20L4%2037%203%2020%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23d5cfc0%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+  --sb-field-sketch-3: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%2260%22%20viewBox%3D%220%200%20100%2060%22%3E%3Cpath%20d%3D%22M4%203%20Q25%204%2049%203%20T96%204%20L97%2021%2096%2038%2097%2056%20Q74%2057%2050%2056%20T4%2057%20L3%2038%204%2020%20Z%22%20fill%3D%22none%22%20stroke%3D%22%23d5cfc0%22%20stroke-width%3D%221.3%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+}
+
+html[data-style="handdrawn"]
+  :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
+  :is(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"],
+    [data-slot="checkbox"],
+    [contenteditable="true"][role="textbox"]
+  ):not([class~="border-0"]) {
+  border-image: var(--sb-field-sketch-1) 6 / 4px / 0 stretch;
+}
+
+html[data-style]:not([data-style="default"]) [data-settings-option]:has([data-slot="checkbox"][data-checked]) {
+  background: color-mix(in oklch, var(--primary) 8%, var(--card));
+}
+
+@keyframes sb-field-sketch-boil {
+  0%,
+  100% {
+    border-image-source: var(--sb-field-sketch-1);
+  }
+  33% {
+    border-image-source: var(--sb-field-sketch-2);
+  }
+  66% {
+    border-image-source: var(--sb-field-sketch-3);
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html[data-style="handdrawn"]
+    :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
+    :is(
+      [data-slot="input"],
+      [data-slot="textarea"],
+      [data-slot="select-trigger"],
+      [data-slot="checkbox"],
+      [contenteditable="true"][role="textbox"]
+    ):not([class~="border-0"]):not(:disabled):not([data-disabled]):is(:hover, :focus-visible) {
+    animation: sb-field-sketch-boil 450ms steps(1) infinite;
+  }
+}
+
+html[data-style]:not([data-style="default"]) [data-settings-surface] {
+  position: relative;
+  border: var(--sb-border, 1px solid var(--border));
+  border-radius: var(--sb-radius, 10px);
+  background: var(--sb-surface, var(--card));
+  box-shadow: var(--sb-control-shadow, none);
+}
+
+html[data-style="y2k"] [data-settings-surface] {
+  border-color: var(--sb-bevel-light) var(--sb-bevel-dark) var(--sb-bevel-dark) var(--sb-bevel-light);
+}
+
+html[data-style="pixel"] [data-settings-surface] {
+  border: 3px solid var(--sb-px-ink);
+  border-radius: 0;
+  box-shadow: 4px 4px 0 var(--sb-px-shadow, var(--sb-px-ink));
+}
+
+html[data-style="terminal"] [data-settings-surface] {
+  border: 1px solid var(--sb-line, var(--border));
+  border-radius: 0;
+  background: var(--card);
+  box-shadow: none;
+}
+
+html[data-style="aero"] [data-settings-surface] {
+  background: var(--sb-settings-fill, var(--sb-surface, var(--card)));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 15%),
+    0 3px 10px rgb(0 35 65 / 8%);
+}
+
+html[data-style="golden"] [data-settings-surface] {
+  border: 1px solid var(--sb-gold-line, var(--border));
+}
+
+/* A transparent outline layer roughens only ink; text, inputs and popover
+   positioning stay sharp. One set of SVG filters lives in RootLayout. */
+html[data-style="handdrawn"]
+:is(
+  [data-page-panel],
+  [data-settings-surface],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"],
+  [role="dialog"]:not([data-slot="sheet-content"])
+) {
+  border: 1.5px solid transparent;
+  border-radius: 2px 5px 3px 4px / 5px 2px 4px 3px;
+}
+
+html[data-style="handdrawn"]
+  :is(
+    [data-page-panel],
+    [data-settings-surface],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="popover-content"],
+    [data-slot="select-content"],
+    [role="dialog"]:not([data-slot="sheet-content"])
+  )::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 2;
+  border: 1.5px solid var(--sb-ink, var(--foreground));
+  border-radius: inherit;
+  pointer-events: none;
+  filter: url(#sb-sketch-1);
+}
+
+/* Prefer the innermost hovered frame so large settings pages do not animate
+   every ancestor outline or continuously invalidate the whole page. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html[data-style="handdrawn"]
+    :is(
+      [data-page-panel],
+      [data-settings-surface],
+      [data-slot="dropdown-menu-content"],
+      [data-slot="popover-content"],
+      [data-slot="select-content"],
+      [role="dialog"]:not([data-slot="sheet-content"])
+    ):hover:not(
+      :has(
+        :is(
+            [data-settings-surface],
+            [data-slot="input"],
+            [data-slot="textarea"],
+            [data-slot="select-trigger"],
+            [data-slot="checkbox"]
+          ):hover
+      )
+    )::before {
+    animation: sb-sketch-boil 450ms steps(1) infinite;
+  }
+}
+
+html[data-style="handdrawn"] [data-settings-surface][class*="border-destructive"]::before {
+  border-color: var(--destructive);
+}
+
+/* A grouped choice owns one frame; rows contribute only internal separators. */
+html[data-style="handdrawn"] [data-settings-choice-marker] {
+  display: none;
+}
+
+html[data-style="handdrawn"] [data-settings-choice-group] > [data-settings-choice-row] {
+  border-width: 0;
+}
+
+html[data-style="handdrawn"] [data-settings-choice-group] > [data-settings-choice-row] + [data-settings-choice-row]::after {
+  content: "";
+  position: absolute;
+  inset: 0 2px auto;
+  z-index: 1;
+  border-top: 1px solid var(--sb-ink, var(--foreground));
+  pointer-events: none;
+  filter: url(#sb-sketch-2);
+}
+
+/* Popup frames share their background's animation and stacking context.
+   Only the inner viewport scrolls, keeping the ink above it and stationary. */
+html[data-style="handdrawn"] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="select-content"]) {
+  isolation: isolate;
+}
+
+html[data-style="handdrawn"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+  border-radius: 3px 5px 2px 4px / 4px 2px 5px 3px;
+  border-color: color-mix(in oklch, var(--sb-ink, var(--foreground)) 60%, transparent);
+  box-shadow: none;
+}
+
+html[data-style="handdrawn"] :is([data-slot="dropdown-menu-separator"], [data-slot="select-separator"]) {
+  background: var(--sb-ink, var(--foreground));
+  opacity: 0.25;
+  filter: url(#sb-sketch-2);
+}
+
+/* Dialogs retain their fixed positioning; popups have separate positioners. */
+html[data-style="handdrawn"]
+:is(
+  [data-page-panel],
+  [data-settings-surface],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="popover-content"],
+  [data-slot="select-content"]
+):not([role="dialog"]) {
+  position: relative;
+}

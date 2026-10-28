@@ -227,7 +227,10 @@ func filterInstanceContentJSON(value string, isAuthenticated bool) string {
 	}
 	filtered := make([]map[string]any, 0, len(items))
 	for _, item := range items {
-		access, _ := item["access"].(string)
+		access := ""
+		if value, ok := item["access"].(string); ok {
+			access = value
+		}
 		if access == "admin" || (access == "authenticated" && !isAuthenticated) {
 			continue
 		}
@@ -241,6 +244,9 @@ func filterInstanceContentJSON(value string, isAuthenticated bool) string {
 }
 
 func (s *APIV1Service) UpdateInstanceSetting(ctx context.Context, request *v1pb.UpdateInstanceSettingRequest) (*v1pb.InstanceSetting, error) {
+	if s.Profile.Demo {
+		return nil, status.Errorf(codes.PermissionDenied, "system settings are read-only on the demo instance")
+	}
 	user, err := s.fetchCurrentUser(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to get current user: %v", err)

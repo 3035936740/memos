@@ -27,7 +27,7 @@ const SettingTable = <T extends Record<string, unknown>>({
 }: SettingTableProps<T>) => {
   return (
     <div className={cn("w-full overflow-x-auto", className)}>
-      <div className="inline-block min-w-full align-middle border border-border rounded-lg">
+      <div data-settings-surface="" className="inline-block min-w-full align-middle border border-border rounded-lg">
         <table className="min-w-full divide-y divide-border">
           <thead>
             <tr className="text-sm font-semibold text-left text-foreground">

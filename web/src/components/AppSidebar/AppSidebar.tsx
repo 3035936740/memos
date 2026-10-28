@@ -66,6 +66,7 @@ import {
   type PrimaryMemoScope,
   resolveMemoScope,
 } from "@/lib/memo-views";
+import { getSpaceNavigationPath, getUnscopedPath } from "@/lib/space-routes";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/router/routes";
 import { State } from "@/types/proto/api/v1/common_pb";
@@ -506,6 +507,9 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
+  const { selectedSpacePath } = useSpaceContext();
+  const navigationPath = getUnscopedPath(location.pathname);
+  const inCurrentSpace = (path: string) => (selectedSpacePath ? getSpaceNavigationPath(selectedSpacePath, path) || path : path);
   const { generalSetting } = useInstance();
   const { memoDetail, memoScope, setMemoScope, setMobileOpen } = useAppSidebar();
   const { filters } = useMemoFilterContext();
@@ -537,7 +541,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
   const navigateToScope = (scope: PrimaryMemoScope) => {
     const filterQuery = stringifyFilters(filters);
     setMemoScope(scope);
-    navigate({ pathname: getMemoScopePath(scope), search: filterQuery ? `?filter=${filterQuery}` : "" });
+    navigate({ pathname: inCurrentSpace(getMemoScopePath(scope)), search: filterQuery ? `?filter=${filterQuery}` : "" });
     setMobileOpen(false);
   };
 
@@ -548,7 +552,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
           label: t("memo.read-later.title"),
           path: ROUTES.READ_LATER,
           icon: BookmarkIcon,
-          active: location.pathname === ROUTES.READ_LATER,
+          active: navigationPath === ROUTES.READ_LATER,
         },
         {
           id: "attachments",
@@ -593,16 +597,15 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
       path: item.path,
       icon: customIconMap[item.icon?.toLowerCase() ?? ""] ?? LinkIcon,
       iconUrl: item.iconUrl,
-      active: location.pathname === item.path,
+      active: navigationPath === item.path || location.pathname === item.path,
     }));
   const categories = parseInstanceCategories(generalSetting?.memoCategoriesJson ?? "").filter(
     (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
   );
-  const memoDetailFromPath = memoDetail?.from?.split(/[?#]/, 1)[0] ?? "";
+  const memoDetailFromPath = getUnscopedPath(memoDetail?.from?.split(/[?#]/, 1)[0] ?? "");
   const activeCategory = categories.find(
     (category) =>
-      location.pathname === `/categories/${category.slug}` ||
-      (routeKind === "memo" && memoDetailFromPath === `/categories/${category.slug}`),
+      navigationPath === `/categories/${category.slug}` || (routeKind === "memo" && memoDetailFromPath === `/categories/${category.slug}`),
   );
   const activeCustomItem = customItems.find((item) => item.active);
   const CustomNavigationIcon = activeCustomItem?.icon ?? LinkIcon;
@@ -626,7 +629,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
 
   const navigateToCategory = (slug: string) => {
     rememberCategory(slug);
-    navigate(`/categories/${slug}`);
+    navigate(inCurrentSpace(`/categories/${slug}`));
     setMobileOpen(false);
   };
 
@@ -634,7 +637,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
     if (/^https?:\/\//i.test(item.path)) {
       window.open(item.path, "_blank", "noopener,noreferrer");
     } else {
-      navigate(item.path);
+      navigate(inCurrentSpace(item.path));
     }
     setMobileOpen(false);
   };
@@ -707,7 +710,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
     ) : (
       <Link
         key={item.id}
-        to={item.path}
+        to={inCurrentSpace(item.path)}
         onClick={() => {
           setMobileOpen(false);
         }}
@@ -763,7 +766,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
       return (
         <Link
           key={item.id}
-          to={item.path}
+          to={inCurrentSpace(item.path)}
           aria-current={item.active ? "page" : undefined}
           className={className}
           onClick={() => setMobileOpen(false)}

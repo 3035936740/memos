@@ -17,7 +17,7 @@ type rowQuerier interface {
 }
 
 func insertUser(ctx context.Context, q rowQuerier, create *store.User) error {
-	stmt := "INSERT INTO user (`username`, `role`, `email`, `nickname`, `password_hash`, `avatar_url`) VALUES (?, ?, ?, ?, ?, ?) RETURNING id, description, created_ts, updated_ts, row_status"
+	stmt := "INSERT INTO user (`username`, `role`, `email`, `nickname`, `password_hash`, `avatar_url`, `description`) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, description, created_ts, updated_ts, row_status"
 	return q.QueryRowContext(
 		ctx,
 		stmt,
@@ -27,6 +27,7 @@ func insertUser(ctx context.Context, q rowQuerier, create *store.User) error {
 		create.Nickname,
 		create.PasswordHash,
 		create.AvatarURL,
+		create.Description,
 	).Scan(
 		&create.ID,
 		&create.Description,

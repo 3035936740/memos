@@ -71,7 +71,11 @@ const EmojiGroupEditor = ({ group }: { group: EmojiGroup }) => {
 
       <div className="grid grid-cols-3 gap-2 p-3 sm:grid-cols-5 md:grid-cols-6">
         {group.emojis.map((emoji) => (
-          <div key={emoji.id} className="group relative flex min-w-0 flex-col items-center rounded-md border border-border p-2">
+          <div
+            data-settings-surface=""
+            key={emoji.id}
+            className="group relative flex min-w-0 flex-col items-center rounded-md border border-border p-2"
+          >
             <img src={emoji.url} alt={emoji.name} loading="lazy" className="size-16 object-contain" />
             <span className="mt-1 w-full truncate text-center text-xs">{emoji.name}</span>
             <Badge variant="outline" className="mt-1 max-w-full truncate px-1 py-0 text-[9px] font-normal">

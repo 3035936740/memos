@@ -26,6 +26,7 @@ import { BLOG_STYLE_OPTIONS, DEFAULT_BLOG_STYLE, isBlogStyle, SECRET_BLOG_STYLES
 import { isValidLocale, useTranslate } from "@/utils/i18n";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
+import AppearancePackGroup from "./AppearancePackGroup";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
 import InstanceMusicEditor from "./InstanceMusicEditor";
@@ -188,6 +189,12 @@ const InstanceSection = () => {
               value={instanceGeneralSetting.defaultBackgroundImageUrl}
               placeholder="https://example.com/background.webp"
               onChange={(event) => updatePartialSetting({ defaultBackgroundImageUrl: event.target.value.trim() })}
+            />
+          </SettingListItem>
+          <SettingListItem label={t("setting.system.festival-effects")} description={t("setting.system.festival-effects-description")}>
+            <Switch
+              checked={!instanceGeneralSetting.disableFestivalEffects}
+              onCheckedChange={(checked) => updatePartialSetting({ disableFestivalEffects: !checked })}
             />
           </SettingListItem>
         </SettingList>
@@ -393,6 +400,30 @@ const InstanceSection = () => {
       <SettingGroup title={t("music-admin.title-group")} description={t("music-admin.description")} showSeparator>
         <InstanceMusicEditor value={musicConfig} onChange={(music) => updatePartialSetting({ musicConfigJson: JSON.stringify(music) })} />
       </SettingGroup>
+
+      <SettingGroup title={t("history.storage-settings")} showSeparator>
+        <SettingList>
+          <SettingListItem label={t("trash.retention")} description={t("trash.retention-description")}>
+            <Input
+              type="number"
+              min={0}
+              max={3650}
+              value={instanceGeneralSetting.trashRetentionDays ?? 30}
+              onChange={(e) => updatePartialSetting({ trashRetentionDays: Math.max(0, Math.min(3650, Number(e.target.value) || 0)) })}
+            />
+          </SettingListItem>
+          <SettingListItem label={t("history.limit")} description={t("history.limit-description")}>
+            <Input
+              type="number"
+              min={0}
+              max={200}
+              value={instanceGeneralSetting.memoRevisionLimit ?? 20}
+              onChange={(e) => updatePartialSetting({ memoRevisionLimit: Math.max(0, Math.min(200, Number(e.target.value) || 0)) })}
+            />
+          </SettingListItem>
+        </SettingList>
+      </SettingGroup>
+      <AppearancePackGroup setting={instanceGeneralSetting} onChange={updatePartialSetting} />
 
       <div className="w-full flex justify-end">
         <Button disabled={!hasUnsavedChanges} onClick={handleSaveSettings}>

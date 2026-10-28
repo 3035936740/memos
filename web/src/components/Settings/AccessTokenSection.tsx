@@ -28,7 +28,7 @@ const ApiUsageExample = () => {
   };
 
   return (
-    <div className="relative w-full min-w-0 rounded-lg border border-border/60 bg-muted/30">
+    <div data-settings-surface="" className="relative w-full min-w-0 rounded-lg border border-border/60 bg-muted/30">
       <pre className="overflow-x-auto p-3 pe-12 font-mono text-xs leading-5 text-foreground/85">
         <code>{example}</code>
       </pre>
@@ -71,7 +71,7 @@ const HowToUseDisclosure = () => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-border/60">
+    <div data-settings-surface="" className="rounded-lg border border-border/60">
       <button
         type="button"
         className="flex w-full items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium text-muted-foreground hover:text-foreground"
@@ -130,7 +130,7 @@ const HowToUseDisclosure = () => {
 const EmptyState = ({ onCreate }: { onCreate: () => void }) => {
   const t = useTranslate();
   return (
-    <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
+    <div data-settings-surface="" className="rounded-xl border border-dashed border-border px-6 py-10 text-center">
       <span className="mx-auto flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
         <KeyRoundIcon className="size-4" />
       </span>

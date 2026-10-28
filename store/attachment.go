@@ -44,16 +44,17 @@ type Attachment struct {
 }
 
 type FindAttachment struct {
-	GetBlob        bool
-	ID             *int32
-	UID            *string
-	CreatorID      *int32
-	Filename       *string
-	FilenameSearch *string
-	MemoID         *int32
-	MemoIDList     []int32
-	HasRelatedMemo bool
-	Filters        []string
+	IncludeDeletedMemos bool
+	GetBlob             bool
+	ID                  *int32
+	UID                 *string
+	CreatorID           *int32
+	Filename            *string
+	FilenameSearch      *string
+	MemoID              *int32
+	MemoIDList          []int32
+	HasRelatedMemo      bool
+	Filters             []string
 	// Access applies memo-local authorization to linked attachments
 	// before pagination. Unlinked attachments are visible only to the active
 	// matching creator. Nil is reserved for trusted internal callers.
@@ -254,12 +255,20 @@ func (s *Store) deleteAttachmentStorageSnapshots(ctx context.Context, attachment
 }
 
 func (s *Store) DeleteAttachmentStorage(ctx context.Context, attachment *Attachment) error {
-	return s.deleteAttachmentStorageImpl(ctx, attachment, nil)
+	err := s.deleteAttachmentStorageImpl(ctx, attachment, nil)
+	if err == nil && attachment != nil {
+		return s.acknowledgeAttachmentCleanup(ctx, attachment.ID)
+	}
+	return err
 }
 
 // DeleteAttachmentStorageWithInstanceSetting deletes attachment storage using a preloaded instance storage setting.
 func (s *Store) DeleteAttachmentStorageWithInstanceSetting(ctx context.Context, attachment *Attachment, instanceStorageSetting *storepb.InstanceStorageSetting) error {
-	return s.deleteAttachmentStorageImpl(ctx, attachment, instanceStorageSetting)
+	err := s.deleteAttachmentStorageImpl(ctx, attachment, instanceStorageSetting)
+	if err == nil && attachment != nil {
+		return s.acknowledgeAttachmentCleanup(ctx, attachment.ID)
+	}
+	return err
 }
 
 func (s *Store) deleteAttachmentStorageImpl(ctx context.Context, attachment *Attachment, instanceStorageSetting *storepb.InstanceStorageSetting) error {

@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import MemoEditor from "@/components/MemoEditor";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
+import { takeSharedNote } from "@/components/MemoEditor/utils/sharedNote";
 import MemoView from "@/components/MemoView";
 import PagedMemoList, { getMemoKey } from "@/components/PagedMemoList";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +25,9 @@ const Home = () => {
   // Doubles as the remount key: the draft cache only reloads on mount, so the editor
   // has to be rebuilt for the new Space rather than just re-pointed at another cache.
   const editorCacheKey = spaceScopedCacheKey("home-memo-editor", selectedSpaceName);
+
+  // A page shared to Memos joins the draft here; a layout effect runs before the editor's mount effect reads it.
+  useLayoutEffect(() => takeSharedNote(user?.name ?? "", editorCacheKey), [editorCacheKey, user?.name]);
 
   const memoFilter = useMemoFilters({
     creatorName: user?.name,
@@ -57,6 +61,7 @@ const Home = () => {
           filter={memoFilter}
           contextFilter={contextFilter}
           blogHero
+          selectable
           renderLeading={({ useGrid }) => {
             if (!isUserSettingsInitialized) return null;
 

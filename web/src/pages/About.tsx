@@ -4,11 +4,11 @@ import { useInstance } from "@/contexts/InstanceContext";
 import { WEB_CLIPPER_URL } from "@/lib/constants";
 import { useTranslate } from "@/utils/i18n";
 
-const GITHUB_COMMIT_URL_PREFIX = "https://github.com/usememos/memos/commit/";
-const GITHUB_RELEASE_URL_PREFIX = "https://github.com/usememos/memos/releases/tag/v";
+const PROJECT_REPOSITORY = "https://github.com/3035936740/memos";
+const GITHUB_COMMIT_URL_PREFIX = `${PROJECT_REPOSITORY}/commit/`;
+const GITHUB_RELEASE_URL_PREFIX = `${PROJECT_REPOSITORY}/releases/tag/v`;
 
-const DEFAULT_TITLE = "Memos";
-const DEFAULT_TAGLINE = "Capture first. Keep it yours.";
+const DEFAULT_TITLE = "Memos Plus";
 const DEFAULT_LOGO = "/logo.webp";
 
 const isCommitSha = (commit: string) => /^[0-9a-f]{7,40}$/i.test(commit);
@@ -36,9 +36,8 @@ const About = () => {
 
   const customProfile = generalSetting.customProfile;
   const instanceTitle = customProfile?.title || DEFAULT_TITLE;
-  const instanceTagline = customProfile?.description || DEFAULT_TAGLINE;
+  const instanceTagline = customProfile?.description || t("about.tagline");
   const instanceLogo = customProfile?.logoUrl || DEFAULT_LOGO;
-  const isCustomBranded = instanceTitle !== DEFAULT_TITLE;
 
   const hasSemver = isSemver(profile.version);
   const releaseUrl = hasSemver ? `${GITHUB_RELEASE_URL_PREFIX}${profile.version}` : "";
@@ -54,23 +53,22 @@ const About = () => {
   if (shortCommit) {
     buildRows.push({ label: t("about.commit"), value: <Chip href={commitUrl}>{shortCommit}</Chip> });
   }
-  buildRows.push({ label: t("about.license"), value: <Chip href="https://github.com/usememos/memos/blob/main/LICENSE">MIT</Chip> });
-  if (isCustomBranded) {
-    buildRows.push({
-      label: t("about.distribution"),
-      value: <span className="text-[13px] text-muted-foreground">{t("about.powered-by")}</span>,
-    });
-  }
+  buildRows.push({ label: t("about.license"), value: <Chip href={`${PROJECT_REPOSITORY}/blob/main/LICENSE`}>MIT</Chip> });
+  buildRows.push({
+    label: t("about.distribution"),
+    value: <span className="text-[13px] text-muted-foreground">Memos Plus</span>,
+  });
 
   const projectLinks = [
-    { label: t("about.official-website"), note: t("about.official-website-note"), href: "https://usememos.com/" },
-    { label: t("about.documents"), note: t("about.documents-note"), href: "https://usememos.com/docs" },
+    { label: t("about.demo-site"), note: "Memos Plus", href: "https://memos.bing.tomato-universe.tech/" },
+    { label: t("about.documents"), note: t("about.plus-documents-note"), href: `${PROJECT_REPOSITORY}#readme` },
     { label: t("about.api-docs"), note: t("about.api-docs-note"), href: "https://usememos.com/docs/api" },
     {
       label: t("about.github-repository"),
       note: t("about.github-repository-note"),
-      href: "https://github.com/usememos/memos",
+      href: PROJECT_REPOSITORY,
     },
+    { label: t("about.upstream-project"), note: "usememos/memos", href: "https://github.com/usememos/memos" },
     { label: t("about.web-clipper"), note: t("about.web-clipper-platforms"), href: WEB_CLIPPER_URL, icon: ScissorsIcon },
   ];
 
@@ -81,9 +79,11 @@ const About = () => {
           <img className="size-10 shrink-0 select-none rounded-md" src={instanceLogo} alt="" draggable={false} />
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <h1 className="text-lg font-semibold tracking-tight text-foreground">{instanceTitle}</h1>
+            {instanceTitle !== DEFAULT_TITLE && <Badge variant="secondary">Memos Plus</Badge>}
             {profile.demo && <Badge variant="warning">{t("about.demo")}</Badge>}
           </div>
           <p className="mt-1 max-w-md text-[26px] font-light leading-snug tracking-[-0.015em] text-foreground">{instanceTagline}</p>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{t("about.plus-description")}</p>
         </header>
 
         <section className="mt-9">

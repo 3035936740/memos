@@ -5,10 +5,10 @@ import type { Translations } from "./i18n";
  * elements, each reactive style answers every element in its own way (particles drawn in that style), and a few
  * hand-picked pairs are legendary, with a scene of their own. Plain styles (default, glass, neumorphism) and the
  * stock light/dark themes never react; on those themes a reactive style keeps its own palette ("pure"), on any
- * other theme it takes the theme's colours ("fused").
+ * other theme it takes the theme's colours ("fused"). The secret golden style reacts too, gilding the theme.
  */
 
-export const REACTIVE_STYLES = ["aero", "y2k", "vaporwave", "pixel", "handdrawn", "terminal"] as const;
+export const REACTIVE_STYLES = ["aero", "y2k", "vaporwave", "pixel", "handdrawn", "terminal", "golden"] as const;
 export type ReactiveStyle = (typeof REACTIVE_STYLES)[number];
 
 export const isReactiveStyle = (style: string | undefined): style is ReactiveStyle =>
