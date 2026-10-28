@@ -28,7 +28,10 @@ vi.mock("@/components/MemoContent/MentionResolutionContext", () => ({
 vi.mock("@/contexts/AppSidebarContext", () => ({ useAppSidebar: () => ({ setMemoDetail: vi.fn() }) }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ isInitialized: true }) }));
 vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ isInitialized: true }) }));
-vi.mock("@/contexts/ViewContext", () => ({ MAX_COLUMNS_VALUES: [0, 1, 2, 3], useView: () => ({ feedLayout: "blog-classic" }) }));
+vi.mock("@/contexts/ViewContext", () => ({
+  MAX_COLUMNS_VALUES: [0, 1, 2, 3],
+  useView: () => ({ feedLayout: "blog-classic", stylePacks: [] }),
+}));
 vi.mock("@/hooks/useMemoDetailError", () => ({ default: () => undefined }));
 vi.mock("@/hooks/useMemoQueries", () => ({
   useMemo: (name: string) => ({ data: name === memo.name ? memo : undefined, error: null, isLoading: false }),

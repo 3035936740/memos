@@ -44,6 +44,7 @@
 - 文章顶部会提示「作者为这篇文章选了外观」，读者可以点「用我自己的外观」，或者自己换一个风格、配色，都会立刻改回读者的选择。
 - 标签不区分大小写，写错的名字会被忽略；同一种标签写了好几个时，以第一个为准。
 - 金色传说要读者自己解锁，不能用标签指定。
+- 管理员装了[社区风格包](#社区风格包)的话，也可以写 `#style/<风格包 ID>`。
 - 这两个标签和普通标签一样会显示在文章里，也能用来筛选，比如找出所有蒸汽波风格的文章。
 
 **风格**
@@ -133,11 +134,30 @@ docker compose up -d
 
 **小服务器**：优先选择 SQLite，并把新访客风格设为「默认」以减少浏览器特效开销。1 核 1 GB 的 Linux 容器部署还需要实机验收，当前不把它作为已验证的最低配置承诺。
 
-## 从 WordPress / Hexo 搬家与社区风格包
+## 从别的博客搬家
 
-后端现已提供 WordPress WXR、带 YAML/TOML front matter 的 Markdown ZIP 导入，以及独立 CSS 风格包的安装、启停和导出接口。导入先预览、默认私有，保留文章时间、草稿、标签和分类；重复导入会跳过。外部图片链接保留，不由服务器抓取。
+在「设置 → 导入」里把旧博客的文章搬过来：
 
-这两项的新界面尚待接入，接口、格式、安全限制和发布验证步骤见 [前端接入约定](docs/style-packs-and-import-api.md)。风格包更新使用版本化资源，停用/删除时回退站点默认风格。
+1. 填上旧博客的名字或地址，选择导出文件：
+   - WordPress 导出的 `.xml` 文件
+   - 装着 `.md` 文件的 `.zip`，比如 Hexo、Hugo、Jekyll 的文章文件夹，开头可以带 YAML 或 TOML 的 front matter
+   - Typecho 等程序先用插件导出成 WordPress 格式
+2. 预览：逐篇勾选要导入的文章，选择导入后谁能看（默认私有），也可以放进某个空间。
+3. 确认后开始导入，可以随时停止；结束后会列出导入、跳过和失败的文章。
+
+文章保留原来的发布时间、草稿状态、标签和分类。ZIP 里的图片会一起上传，外链图片保留原地址，服务器不会去抓取。以后再从同一个旧博客导入时填一样的名字，已经导入过的文章会自动跳过。导入的内容同样要经过屏蔽词和 AI 审核（如果开启了）。
+
+管理员可以在同一页调整上传文件的大小上限，默认 100 MiB。
+
+## 社区风格包
+
+除了内置的风格，管理员可以在「设置 → 风格包」安装别人做好的风格：
+
+- 风格包是一个 ZIP 文件，里面有 `style.json` 和 `style.css`，可以附带图片和字体。格式见[风格包格式说明](docs/style-packs-and-import-api.md#社区风格包)。
+- 新装的风格包默认关闭。打开后，所有访客都能在风格选择里看到它，作者也能用 `#style/<风格包 ID>` 给文章指定它。
+- 风格包可以借用某个内置风格的配色反应，也可以完全不起反应。
+- 为了安全，风格包不能带脚本，也不能从外部网站加载任何东西；安装时服务器会检查，不合规的文件会被拒绝。
+- 关闭或删除风格包后，正在用它的访客、新访客默认风格和指定了它的文章都会改回默认风格。
 
 ## 备份和数据安全
 
@@ -191,6 +211,8 @@ Memos Plus 基于 [usememos/memos](https://github.com/usememos/memos) 开发，�
 - Give a single post its own look with `#style/<name>` and `#theme/<name>` tags, for example `#style/vaporwave #theme/neon-rain`. Readers can switch back to their own look at any time. Names are listed in the tables above.
 - Background music with a visualizer per style.
 - Share images that wear the current style and theme, with the site name and address at the bottom.
+- Community style packs: admins install them under Settings → Style packs; once switched on, everyone can wear them.
+- Move in from WordPress (WXR export) or a ZIP of Markdown files (Hexo, Hugo, Jekyll…) under Settings → Import, with a preview first and original dates kept.
 - Spaces for small communities, each at its own `/space/<slug>` address: public, signed-in only or invite-only, with search and sorting when there are many.
 - Safer writing: a privacy check before publishing, a trash with a 30-day grace period, private revision history, batch tidying and Ctrl/⌘ + K quick find.
 - Easier running: a setup wizard on first sign-in, shareable appearance packs, one-click site backup as a ZIP, and optional AI text and image moderation (off by default).

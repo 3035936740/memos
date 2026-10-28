@@ -16,7 +16,7 @@ import {
   updateProgress,
   useBlogProgress,
 } from "@/utils/blog-progress";
-import { blogStyleLabelKey, isBlogStyle } from "@/utils/blog-style";
+import { blogStyleLabelKey } from "@/utils/blog-style";
 import { isMotionReduced, watchFrameRate } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
 import {
@@ -34,6 +34,7 @@ import {
 } from "@/utils/style-reactions";
 import PixelBoss from "./PixelBoss";
 import ReactionCanvas, { type ParticleLook } from "./ReactionCanvas";
+import useStylePackLoader from "./useStylePackLoader";
 
 const LOOKS: Record<string, ParticleLook> = {
   pixel: "pixel",
@@ -105,6 +106,7 @@ const StyleReactionEngine = () => {
   const { generalSetting, isInitialized } = useInstance();
   const { feedLayout, blogStyle, applyFirstVisitStyle, resetToDefaults } = useView();
   const { getEnergy, resetPrefs } = useMusicEffects();
+  useStylePackLoader();
   const progress = useBlogProgress();
   const theme = useCurrentTheme();
   const [now, setNow] = useState(() => new Date());
@@ -122,7 +124,7 @@ const StyleReactionEngine = () => {
   const preferencesResetAt = Number(generalSetting?.preferencesResetAt ?? 0n) || siteConfig.preferencesResetAt;
 
   useEffect(() => {
-    if (isBlogStyle(firstVisitStyle)) applyFirstVisitStyle(firstVisitStyle);
+    if (firstVisitStyle) applyFirstVisitStyle(firstVisitStyle);
   }, [applyFirstVisitStyle, firstVisitStyle]);
 
   // The admin initialized every member's preferences: this browser drops its own display choices, once per reset.
@@ -132,7 +134,7 @@ const StyleReactionEngine = () => {
     writeLocal(RESET_HANDLED_KEY, String(preferencesResetAt));
     resetToDefaults();
     resetPrefs();
-    if (isBlogStyle(firstVisitStyle)) applyFirstVisitStyle(firstVisitStyle);
+    if (firstVisitStyle) applyFirstVisitStyle(firstVisitStyle);
     if (hadChoices) toast(t("blog-extra.preferences-reset"), { icon: <RotateCcwIcon aria-hidden className="size-5 text-primary" /> });
     // Once per reset value; the reset functions are recreated every render.
   }, [preferencesResetAt]);

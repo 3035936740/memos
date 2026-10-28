@@ -3266,7 +3266,7 @@ html[data-style="aero"] body::before {
 html[data-style="handdrawn"] [data-styled-blog] [data-sb-card][data-sb-pinned]::after {
   content: attr(data-sb-pinned);
   position: absolute;
-  top: -28px;
+  top: -22px;
   inset-inline-end: 24px;
   z-index: 2;
   padding-inline-start: 32px;

@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { identityProviderServiceClient } from "@/connect";
 import { useInstance } from "@/contexts/InstanceContext";
+import { useStylePackList } from "@/contexts/ViewContext";
 import useDialog from "@/hooks/useDialog";
+import i18n from "@/i18n";
 import { DEFAULT_MEMO_FEED_PAGE_SIZE, MAX_MEMO_FEED_PAGE_SIZE, MIN_MEMO_FEED_PAGE_SIZE } from "@/lib/constants";
 import { keepInstanceSiteConfig, parseInstanceSiteConfig, resolveMusicConfig } from "@/lib/instance-content";
 import { cn } from "@/lib/utils";
@@ -26,6 +28,7 @@ import {
 } from "@/types/proto/api/v1/instance_service_pb";
 import { BLOG_STYLE_OPTIONS, DEFAULT_BLOG_STYLE, isBlogStyle, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { isValidLocale, useTranslate } from "@/utils/i18n";
+import { stylePackLabel } from "@/utils/style-packs";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import AppearancePackGroup from "./AppearancePackGroup";
@@ -110,15 +113,23 @@ const InstanceSection = () => {
     ? instanceGeneralSetting.defaultMemberMemoVisibility
     : "PUBLIC";
   const themeOptions = THEME_OPTIONS.map((option) => ({ ...option, label: t(option.labelKey) }));
-  const styleOptions = BLOG_STYLE_OPTIONS.filter((option) => !SECRET_BLOG_STYLES.includes(option.value)).map((option) => ({
-    value: option.value as string,
-    label: t(option.labelKey),
-  }));
+  const stylePacks = useStylePackList();
+  const styleOptions = [
+    ...BLOG_STYLE_OPTIONS.filter((option) => !SECRET_BLOG_STYLES.includes(option.value)).map((option) => ({
+      value: option.value as string,
+      label: t(option.labelKey),
+    })),
+    // Enabled community packs can be the newcomers' style too; the server refuses disabled or missing ones.
+    ...stylePacks.map((pack) => ({ value: pack.id, label: stylePackLabel(pack, i18n.language) })),
+  ];
   // Keep reading the old reserved entry so existing installations migrate without losing their choices.
   const siteConfig = parseInstanceSiteConfig(instanceGeneralSetting.customPagesJson);
   const musicConfig = resolveMusicConfig(siteConfig, instanceGeneralSetting.musicConfigJson);
   const storedFirstVisitStyle = instanceGeneralSetting.firstVisitDefaultStyle || siteConfig.firstVisitStyle;
-  const firstVisitStyle = isBlogStyle(storedFirstVisitStyle) ? storedFirstVisitStyle : DEFAULT_BLOG_STYLE;
+  const firstVisitStyle =
+    isBlogStyle(storedFirstVisitStyle) || stylePacks.some((pack) => pack.id === storedFirstVisitStyle)
+      ? storedFirstVisitStyle
+      : DEFAULT_BLOG_STYLE;
 
   const updatePartialSetting = (partial: Partial<InstanceSetting_GeneralSetting>) => {
     setInstanceGeneralSetting((currentSetting) =>

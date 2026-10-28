@@ -106,6 +106,8 @@ message InstanceGeneralSetting {
   optional bool show_powered_by = 25;
   // Disable automatic holiday background effects for all visitors. Default is false.
   bool disable_festival_effects = 26;
+  // Hide the built-in About navigation entry. False (including older settings) shows it.
+  bool hide_about_navigation = 27;
 }
 
 message InstanceCustomProfile {

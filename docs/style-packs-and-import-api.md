@@ -1,6 +1,6 @@
 # 风格包与博客搬家：前端接入约定
 
-后端为本轮新增；本文件供后续 Claude 接入界面。风格选择、安装向导、文章 `#style/ID`、导入页面尚需前端接线。已有“外观包” `memos-plus.appearance` 与本轮 CSS 风格包是两种格式。
+本文记录后端接口及前端接入约定。已有“外观包” `memos-plus.appearance` 与 CSS 风格包是两种格式。导入入口与权限见下文。
 
 ## 社区风格包
 
@@ -34,7 +34,11 @@ CSS 地址 `/style-packs/<id>/<version>.css`，资源地址 `/style-packs/<id>/<
 
 以下是经过鉴权的 REST JSON 接口；不使用 Connect 的 base64 上传，避免放大 100 MB 归档的内存。均携带现有 `Authorization: Bearer …`，所有返回为 `no-store`。不同用户无法访问对方预览或任务。
 
+入口位于“设置 → 空间”：空间详情的“常规”后有“导入”标签，仅空间管理员（沿用站点管理员的管理权限）可见，目标固定为当前空间。空间列表右上方的“主站导入”仅站点管理员可见，目标固定为主站。导入已从基础设置导航移除。全站上传上限在主站导入页面由站点管理员配置。
+
 ### 1. `POST /api/v1/imports/preview`
+
+空间导入必须加查询参数 `?space=spaces/<UID>`，后端要求该空间管理权限及发文权限；省略时为主站导入，仅站点管理员可用。预览记录会绑定这个目标。
 
 `multipart/form-data`，字段：
 
@@ -59,7 +63,7 @@ CSS 地址 `/style-packs/<id>/<version>.css`，资源地址 `/style-packs/<id>/<
 }
 ```
 
-`selectedIds` 省略表示全部，空数组表示不选；`visibility` 省略为 PRIVATE，可选 PRIVATE/PUBLIC/PROTECTED/SPACE；SPACE 必须提供 space。其他可见性也可以指定目标 Space，运行前及写入时都会检查发文权限。草稿和 WordPress private 始终覆盖为 PRIVATE，草稿标志保留。
+`selectedIds` 省略表示全部，空数组表示不选；`visibility` 省略为 PRIVATE，可选 PRIVATE/PUBLIC/PROTECTED/SPACE；SPACE 必须提供 space。`space` 必须与预览绑定的目标一致，不能在确认时换空间或切到主站。开始任务、处理文章及 SQL 写入事务内都会检查管理员权限；Space 导入同时保留既有发文权限检查。草稿和 WordPress private 始终覆盖为 PRIVATE，草稿标志保留。
 
 返回 HTTP 202，任务元数据 `{id, state, source, createdTs, updatedTs, cancelRequested}`。每个用户只有一个运行任务，冲突返回 409。任务按文章串行处理，保留原时间，经过既有屏蔽词及 AI 文本/图片审核；一篇失败不终止其余文章。余额/服务异常不放行该篇。
 

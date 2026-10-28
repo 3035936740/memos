@@ -166,12 +166,12 @@ const TimeMachine = () => {
   const requested = searchParams.get("year");
   const era: Era = isEra(requested) ? requested : "1999";
   const { generalSetting } = useInstance();
-  const { feedLayout, blogStyle, setBlogStyle, setFeedLayout } = useView();
+  const { feedLayout, styleId, setBlogStyle, setFeedLayout } = useView();
   const { data } = useMemos({ pageSize: POST_COUNT });
   const [visits, setVisits] = useState(0);
   const site = generalSetting.customProfile?.title || "Memos Plus";
   const eraStyle = ERA_STYLES[era];
-  const staying = isStyledBlog(feedLayout) && blogStyle === eraStyle;
+  const staying = isStyledBlog(feedLayout) && styleId === eraStyle;
 
   // Every trip to 1999 is one more visitor, the way counters always were.
   useEffect(() => {

@@ -4078,6 +4078,9 @@ components:
                 disableFestivalEffects:
                     type: boolean
                     description: Disable automatic holiday background effects for all visitors. Default is false.
+                hideAboutNavigation:
+                    type: boolean
+                    description: Hide the built-in About navigation entry. False (including older settings) shows it.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object

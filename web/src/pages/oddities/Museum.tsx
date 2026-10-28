@@ -43,9 +43,9 @@ const Miniature = ({ style, locked }: { style: BlogStyle; locked?: boolean }) =>
  */
 const Museum = () => {
   const t = useTranslate();
-  const { feedLayout, blogStyle, setBlogStyle, setFeedLayout } = useView();
+  const { feedLayout, styleId, setBlogStyle, setFeedLayout } = useView();
   const progress = useBlogProgress();
-  const current = isStyledBlog(feedLayout) ? blogStyle : undefined;
+  const current = isStyledBlog(feedLayout) ? styleId : undefined;
 
   const enter = (style: BlogStyle) => {
     setBlogStyle(style);

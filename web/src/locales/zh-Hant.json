@@ -1,6 +1,6 @@
 {
   "about": {
-    "tagline": "記錄日常，打造自己的部落格與空間。",
+    "tagline": "支援個人化部落格與多空間協作的自架內容平台。",
     "plus-description": "Memos Plus 基於原版 Memos 0.31.rc 改進，擴充了部落格檢視與多種樣式風格、Space 空間、投票、音樂播放，以及備份、回收桶和歷史版本等功能。感謝原版 Memos 的作者與所有貢獻者。",
     "demo-site": "示範站",
     "plus-documents-note": "Memos Plus 功能、部署與升級說明",

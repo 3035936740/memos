@@ -27,6 +27,24 @@ func RecordMemoImport(ctx context.Context, tx SQLExecutor, driver string, m *Mem
 	if m.MemoCreate == nil || r.Source == "" || r.SourceID == "" || r.JobID == "" {
 		return errors.New("invalid memo import mutation")
 	}
+	// Recheck administration in the write transaction so a removed/demoted
+	// administrator cannot finish publishing a stale queued import.
+	var role Role
+	if err := tx.QueryRowContext(ctx, BindSQL(driver, "SELECT role FROM `user` WHERE id=? AND row_status='NORMAL'"), m.MemoCreatorID).Scan(&role); err != nil {
+		return errors.Wrap(err, "check import administrator")
+	}
+	if role != RoleAdmin {
+		if m.MemoCreate.SpaceID == nil {
+			return ErrMemoPermissionDenied
+		}
+		var count int
+		if err := tx.QueryRowContext(ctx, BindSQL(driver, `SELECT COUNT(*) FROM space_member WHERE space_id=? AND user_id=? AND role='ADMIN'`), *m.MemoCreate.SpaceID, m.MemoCreatorID).Scan(&count); err != nil {
+			return errors.Wrap(err, "check Space import administrator")
+		}
+		if count != 1 {
+			return ErrMemoPermissionDenied
+		}
+	}
 	query := `UPDATE memo SET created_ts=?,updated_ts=? WHERE id=? AND creator_id=?`
 	if driver == "mysql" {
 		if r.CreatedTs <= 0 || r.UpdatedTs <= 0 || r.CreatedTs > 2147483647 || r.UpdatedTs > 2147483647 {

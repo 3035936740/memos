@@ -6,6 +6,7 @@ import {
   Clock3Icon,
   CopyIcon,
   ExternalLinkIcon,
+  ImportIcon,
   LoaderCircleIcon,
   LogOutIcon,
   PlusIcon,
@@ -20,6 +21,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import CreateSpaceDialog from "@/components/CreateSpaceDialog";
+import BlogImportSection from "@/components/Settings/BlogImportSection";
 import InviteSpaceMemberDialog from "@/components/Settings/InviteSpaceMemberDialog";
 import SettingSection from "@/components/Settings/SettingSection";
 import SpaceMark from "@/components/SpaceMark";
@@ -65,7 +67,7 @@ import {
 import { type User, User_Role } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
-type DetailTab = "general" | "members";
+type DetailTab = "general" | "import" | "members";
 
 const SPACE_URL_SLUG_PATTERN = /^[a-z0-9]{0,64}$/;
 
@@ -191,6 +193,18 @@ const SpacesSection = () => {
     );
   }
 
+  if (isHost && !managedSpaceName && searchParams.get("import") === "main") {
+    return (
+      <div className="flex min-w-0 flex-col gap-4">
+        <Button variant="ghost" size="sm" className="self-start" onClick={() => navigate(getSpacesSettingsLocation())}>
+          <ArrowLeftIcon className="size-4" />
+          {t("setting.spaces.label")}
+        </Button>
+        <BlogImportSection />
+      </div>
+    );
+  }
+
   return managedSpace ? (
     <SpaceDetail
       key={managedSpace.name}
@@ -205,10 +219,22 @@ const SpacesSection = () => {
         title={t("setting.spaces.title")}
         description={t("setting.spaces.description")}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <PlusIcon data-icon="inline-start" />
-            {t("setting.spaces.create-space")}
-          </Button>
+          <>
+            {isHost && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate({ pathname: ROUTES.SETTING, search: "?import=main", hash: "#spaces" })}
+              >
+                <ImportIcon data-icon="inline-start" />
+                {t("blog-import.main-site")}
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <PlusIcon data-icon="inline-start" />
+              {t("setting.spaces.create-space")}
+            </Button>
+          </>
         }
         className="gap-5"
       >
@@ -536,6 +562,10 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
     }
   }, [accessMode, tab]);
 
+  useEffect(() => {
+    if (!isAdmin && tab === "import") setTab("general");
+  }, [isAdmin, tab]);
+
   const handleSave = async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle || hasURLSlugError || !isAdmin || updateSpace.isPending) return;
@@ -703,6 +733,11 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
           <TabsTrigger value="general" className="flex-none px-3">
             {t("setting.spaces.general")}
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="import" className="flex-none px-3">
+              {t("setting.import.label")}
+            </TabsTrigger>
+          )}
           {accessMode === Space_AccessMode.INVITE_ONLY ? (
             <TabsTrigger value="members" className="flex-none px-3">
               {t("setting.spaces.members")}
@@ -948,6 +983,10 @@ const SpaceDetail = ({ space, viewerName, isHost, onBack }: SpaceDetailProps) =>
             ) : null}
           </section>
         </div>
+      ) : tab === "import" ? (
+        isAdmin ? (
+          <BlogImportSection key={space.name} targetSpace={space} />
+        ) : null
       ) : (
         <div data-critical-surface="space-members" className="space-y-5 pt-3">
           <section className="space-y-2.5">

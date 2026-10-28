@@ -39,7 +39,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const { generalSetting } = useInstance();
-  const { setBlogStyle } = useView();
+  const { setBlogStyle, setStylePack, stylePacks } = useView();
   const { data: recentData } = useMemos({ state: State.NORMAL, orderBy: "create_time desc", pageSize: 10 });
   const { data: stats = [] } = useAllUserStats({ state: State.NORMAL });
   const [lines, setLines] = useState<string[]>(BANNER);
@@ -142,8 +142,11 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
         if (isBlogStyle(styleName)) {
           setBlogStyle(styleName);
           output.push(`style: switched to ${styleName}`);
+        } else if (stylePacks.some((pack) => pack.id === styleName)) {
+          setStylePack(styleName);
+          output.push(`style: switched to ${styleName} (style pack)`);
         } else {
-          output.push(`usage: style <${BLOG_STYLES.join(" | ")}>`);
+          output.push(`usage: style <${[...BLOG_STYLES, ...stylePacks.map((pack) => pack.id)].join(" | ")}>`);
         }
         break;
       }

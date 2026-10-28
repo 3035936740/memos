@@ -119,6 +119,13 @@ const AppearancePackGroup = ({ setting, onChange }: Props) => {
             {t("memos-plus.setup-open")}
           </Button>
         </SettingListItem>
+        <SettingListItem label={t("memos-plus.hide-about")} description={t("memos-plus.hide-about-description")}>
+          <Switch
+            aria-label={t("memos-plus.hide-about")}
+            checked={setting.hideAboutNavigation}
+            onCheckedChange={(checked: boolean) => onChange({ hideAboutNavigation: checked })}
+          />
+        </SettingListItem>
       </SettingList>
 
       <ConfirmDialog

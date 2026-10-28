@@ -86,7 +86,12 @@ export const useQuickFindJumps = (query: string): QuickJump[] => {
 
     const jumps: QuickJump[] = [
       ...pages
-        .filter((page) => (!page.signedIn || signedIn) && matchesQuery(term, page.label, page.to))
+        .filter(
+          (page) =>
+            (!page.signedIn || signedIn) &&
+            (page.to !== ROUTES.ABOUT || !generalSetting.hideAboutNavigation) &&
+            matchesQuery(term, page.label, page.to),
+        )
         .map((page) => ({ id: `page:${page.to}`, kind: "page" as const, label: page.label, to: page.to })),
       ...customPages
         .filter((page) => matchesQuery(term, page.label, page.slug))
@@ -129,5 +134,15 @@ export const useQuickFindJumps = (query: string): QuickJump[] => {
       );
     }
     return jumps;
-  }, [currentUser, generalSetting.customPagesJson, generalSetting.memoCategoriesJson, lookup, memoResults, stats, t, term]);
+  }, [
+    currentUser,
+    generalSetting.customPagesJson,
+    generalSetting.memoCategoriesJson,
+    generalSetting.hideAboutNavigation,
+    lookup,
+    memoResults,
+    stats,
+    t,
+    term,
+  ]);
 };

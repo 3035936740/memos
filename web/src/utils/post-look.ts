@@ -5,9 +5,11 @@ import { type ResolvedTheme, THEME_OPTIONS } from "./theme";
 export const STYLE_TAG_PREFIX = "style/";
 export const THEME_TAG_PREFIX = "theme/";
 
-/** The look an author chose for one post; either half may be missing. */
+/** The look an author chose for one post: a built-in style or a style pack, and a theme; any part may be missing. */
 export interface PostLook {
   style?: BlogStyle;
+  /** An enabled community style pack's id, used when the tag names no built-in style. */
+  stylePack?: string;
   theme?: ResolvedTheme;
 }
 
@@ -34,14 +36,19 @@ const tagValue = (tags: readonly string[], prefix: string) =>
     .find((tag) => tag.startsWith(prefix) && tag.length > prefix.length)
     ?.slice(prefix.length);
 
-/** The look a post's tags ask for. Unknown names are ignored; the first tag of each kind wins. */
-export const postLookOf = (tags: readonly string[]): PostLook => {
+/**
+ * The look a post's tags ask for. `stylePackIds` are the enabled packs a #style/ tag may also name. Unknown names are
+ * ignored; the first tag of each kind wins.
+ */
+export const postLookOf = (tags: readonly string[], stylePackIds: readonly string[] = []): PostLook => {
   const styleName = tagValue(tags, STYLE_TAG_PREFIX);
   const themeName = tagValue(tags, THEME_TAG_PREFIX);
+  const style = TAGGABLE_STYLES.find((candidate) => candidate === styleName);
   return {
-    style: TAGGABLE_STYLES.find((style) => style === styleName),
+    style,
+    stylePack: !style && styleName && stylePackIds.includes(styleName) ? styleName : undefined,
     theme: themeName ? THEME_TAG_NAMES.get(themeName) : undefined,
   };
 };
 
-export const hasPostLook = (look: PostLook | undefined) => Boolean(look?.style || look?.theme);
+export const hasPostLook = (look: PostLook | undefined) => Boolean(look?.style || look?.stylePack || look?.theme);

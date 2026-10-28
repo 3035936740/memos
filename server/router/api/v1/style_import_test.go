@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -87,18 +89,21 @@ func TestImportTimestampsReviewAndAtomicDuplicate(t *testing.T) {
 	ctx := context.Background()
 	u := createSpaceTestUser(ctx, t, s, "import-user", store.RoleUser)
 	ctx = userCtx(ctx, u.ID)
+	space, err := s.CreateSpace(ctx, &v1pb.CreateSpaceRequest{Space: &v1pb.Space{Title: "Imported articles", AccessMode: v1pb.Space_INVITE_ONLY}})
+	require.NoError(t, err)
+	request := runImportRequest{Visibility: "PUBLIC", Space: space.Name}
 	stamp := time.Date(2020, 2, 3, 4, 5, 6, 0, time.UTC)
-	_, err := s.CreateMemo(ctx, &v1pb.CreateMemoRequest{Memo: &v1pb.Memo{Content: "normal", Visibility: v1pb.Visibility_PRIVATE, CreateTime: timestamppb.New(stamp)}})
+	_, err = s.CreateMemo(ctx, &v1pb.CreateMemoRequest{Memo: &v1pb.Memo{Content: "normal", Visibility: v1pb.Visibility_PRIVATE, CreateTime: timestamppb.New(stamp)}})
 	require.Equal(t, codes.PermissionDenied, status.Code(err))
 	entry := importArticle{Post: blogimport.Post{ID: "post.md", Content: "# Test\n\nbody #tag", Created: stamp, Updated: stamp.Add(time.Hour), Draft: true}}
 	job := &store.MemoImportJob{ID: "job", Source: "markdown"}
-	memo, err := s.importBlogArticle(ctx, u, job, entry, runImportRequest{Visibility: "PUBLIC"}, nil)
+	memo, err := s.importBlogArticle(ctx, u, job, entry, request, nil)
 	require.NoError(t, err)
 	require.Equal(t, stamp.Unix(), memo.CreatedTs)
 	require.Equal(t, stamp.Add(time.Hour).Unix(), memo.UpdatedTs)
 	require.Equal(t, store.Private, memo.Visibility)
 	require.True(t, memo.Payload.Draft)
-	_, err = s.importBlogArticle(ctx, u, job, entry, runImportRequest{Visibility: "PUBLIC"}, nil)
+	_, err = s.importBlogArticle(ctx, u, job, entry, request, nil)
 	require.Error(t, err)
 	var count int
 	require.NoError(t, s.Store.GetDriver().GetDB().QueryRowContext(ctx, `SELECT COUNT(*) FROM memo WHERE creator_id=?`, u.ID).Scan(&count))
@@ -106,7 +111,7 @@ func TestImportTimestampsReviewAndAtomicDuplicate(t *testing.T) {
 	require.NoError(t, s.replaceContentModerationSetting(ctx, &store.InstanceBlockedWordsSetting{Words: []string{"forbidden-import"}}))
 	entry.ID = "other.md"
 	entry.Content = "forbidden-import"
-	_, err = s.importBlogArticle(ctx, u, job, entry, runImportRequest{Visibility: "PUBLIC"}, nil)
+	_, err = s.importBlogArticle(ctx, u, job, entry, request, nil)
 	require.Error(t, err)
 }
 
@@ -116,4 +121,76 @@ func TestImportImageRewritePreservesCodeAndLinks(t *testing.T) {
 	require.Contains(t, out, `![local](/file/image/photo.png)`)
 	require.Contains(t, out, "`photo.png`")
 	require.Contains(t, out, `[link](photo.png)`)
+}
+
+func TestSpaceImportAuthorizationAndTargetBinding(t *testing.T) {
+	s := newIntegrationService(t)
+	ctx := context.Background()
+	owner := createSpaceTestUser(ctx, t, s, "scope-owner", store.RoleUser)
+	reader := createSpaceTestUser(ctx, t, s, "scope-reader", store.RoleUser)
+	host := createSpaceTestUser(ctx, t, s, "scope-host", store.RoleAdmin)
+	ownerCtx := userCtx(ctx, owner.ID)
+	space, err := s.CreateSpace(ownerCtx, &v1pb.CreateSpaceRequest{Space: &v1pb.Space{Title: "Target", AccessMode: v1pb.Space_PUBLIC}})
+	require.NoError(t, err)
+	other, err := s.CreateSpace(ownerCtx, &v1pb.CreateSpaceRequest{Space: &v1pb.Space{Title: "Other", AccessMode: v1pb.Space_PUBLIC}})
+	require.NoError(t, err)
+	require.Error(t, s.authorizeBlogImport(userCtx(ctx, reader.ID), reader, space.Name))
+	require.Error(t, s.authorizeBlogImport(ownerCtx, owner, ""))
+	require.NoError(t, s.authorizeBlogImport(userCtx(ctx, host.ID), host, ""))
+	token, err := s.CreatePersonalAccessToken(ownerCtx, &v1pb.CreatePersonalAccessTokenRequest{Parent: BuildUserName(owner.Username)})
+	require.NoError(t, err)
+	e := echo.New()
+	RegisterBlogImportRoutes(e.Group(""), s, NewAuthorizer(s.Store, s.Secret))
+	var archive bytes.Buffer
+	writer := zip.NewWriter(&archive)
+	file, err := writer.Create("post.md")
+	require.NoError(t, err)
+	_, err = file.Write([]byte("imported into target"))
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+	var body bytes.Buffer
+	form := multipart.NewWriter(&body)
+	part, err := form.CreateFormFile("file", "posts.zip")
+	require.NoError(t, err)
+	_, err = part.Write(archive.Bytes())
+	require.NoError(t, err)
+	require.NoError(t, form.Close())
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/imports/preview?space="+space.Name, &body)
+	r.Header.Set("Content-Type", form.FormDataContentType())
+	r.Header.Set("Authorization", "Bearer "+token.Token)
+	w := httptest.NewRecorder()
+	e.ServeHTTP(w, r)
+	require.Equal(t, 200, w.Code, w.Body.String())
+	var preview importPreview
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &preview))
+	require.Equal(t, space.Name, preview.Space)
+	run := func(target string) *httptest.ResponseRecorder {
+		payload, _ := json.Marshal(runImportRequest{PreviewID: preview.ID, Space: target})
+		r := httptest.NewRequest(http.MethodPost, "/api/v1/imports/run", strings.NewReader(string(payload)))
+		r.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Authorization", "Bearer "+token.Token)
+		w := httptest.NewRecorder()
+		e.ServeHTTP(w, r)
+		return w
+	}
+	require.Equal(t, 403, run("").Code)
+	require.Equal(t, 400, run(other.Name).Code)
+	w = run(space.Name)
+	require.Equal(t, 202, w.Code, w.Body.String())
+	var job store.MemoImportJob
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &job))
+	require.Eventually(t, func() bool {
+		current, e := s.Store.GetMemoImportJob(ctx, owner.ID, job.ID)
+		return e == nil && current != nil && current.State == "completed"
+	}, 3*time.Second, 10*time.Millisecond)
+	spaceUID := strings.TrimPrefix(space.Name, "spaces/")
+	stored, err := s.Store.GetSpace(ctx, &store.FindSpace{UID: &spaceUID})
+	require.NoError(t, err)
+	// Direct internal writes get the same administrator check in the SQL transaction.
+	forged := &store.Memo{UID: "forged-member-import", CreatorID: reader.ID, SpaceID: &stored.ID, Content: "not allowed", Visibility: store.Private}
+	err = s.Store.ApplyMemoMutation(ctx, &store.MemoMutation{MemoCreate: forged, ImportRecord: &store.MemoImportRecord{Source: "forged", SourceID: "post", JobID: "job", CreatedTs: 1, UpdatedTs: 1}})
+	require.ErrorIs(t, err, store.ErrMemoPermissionDenied)
+	missing, err := s.Store.GetMemo(ctx, &store.FindMemo{UID: &forged.UID})
+	require.NoError(t, err)
+	require.Nil(t, missing)
 }

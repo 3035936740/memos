@@ -413,6 +413,12 @@
       "more-description": "Feed size, background, festival effects and the calendar's first day.",
       "accounts-title": "Accounts and sign-in",
       "accounts-description": "How people sign in, what they may change on their profile, and media metadata."
+    },
+    "import": {
+      "label": "Import"
+    },
+    "style-packs": {
+      "label": "Style packs"
     }
   },
   "music-admin": {
@@ -677,8 +683,10 @@
     "done": "All set. Your site has its new look."
   },
   "memos-plus": {
+    "hide-about": "Hide About navigation",
+    "hide-about-description": "The Memos Plus About entry is shown by default. Hide navigation while keeping /about accessible directly. Save to apply.",
     "group-title": "Memos Plus",
-    "group-description": "Appearance packs, the footer credit and the setup wizard.",
+    "group-description": "Appearance packs, footer credit, About navigation and the setup wizard.",
     "pack": "Appearance pack",
     "pack-description": "Export the site's look (visitor style, colors, default background, custom CSS) as a file, or import one someone shared. Scripts are never exported or imported.",
     "pack-export": "Export",
@@ -868,5 +876,72 @@
       "neural-link": "Neural link established · projecting {{site}}",
       "readers-2049": "8,000,000,000 readers are online with you right now (most of them AIs)"
     }
+  },
+  "style-packs": {
+    "description": "Install community styles. A new pack starts switched off; once on, every visitor can pick it and a post can name it with #style/<ID>.",
+    "install": "Install a style pack",
+    "installing": "Installing…",
+    "loading": "Loading style packs…",
+    "empty": "No style packs installed yet",
+    "empty-description": "A style pack is a ZIP file with style.json and style.css, plus images and fonts if it needs them.",
+    "disabled": "Off",
+    "enabled": "Turn on {{name}} for all visitors",
+    "reacts-like": "Reacts to themes like {{style}}",
+    "no-reactions": "No theme reactions",
+    "update": "Replace with new version",
+    "export": "Export",
+    "installed": "Installed {{name}}; turn it on for visitors to see it",
+    "updated": "Updated {{name}}",
+    "exported": "Exported {{name}}",
+    "turned-on": "{{name}} is on for all visitors",
+    "turned-off": "{{name}} is off",
+    "deleted": "Deleted {{name}}",
+    "failed": "That did not work",
+    "delete-title": "Delete {{name}}?",
+    "delete-description": "Visitors wearing it, the newcomers' default style and posts that name it all go back to the default style.",
+    "rules": "For safety, a style pack can't run scripts or load anything from other sites; the server checks each file on install and refuses ones that break these rules.",
+    "format-link": "The style pack format"
+  },
+  "blog-import": {
+    "main-site": "Main site import",
+    "target-main": "Posts will be imported into the main site without a Space.",
+    "target-space": "Posts will be imported into this Space: {{space}}.",
+    "description": "Bring posts over from your old blog: a WordPress export, or a ZIP of Markdown files from Hexo, Hugo, Jekyll and the like. You see a preview first; nothing is imported until you confirm.",
+    "admin-title": "Admin settings",
+    "limit": "Upload limit (MiB)",
+    "limit-description": "The largest export file anyone may import, 1–250 MiB; 100 by default.",
+    "limit-saved": "Upload limit saved",
+    "step-file": "Choose the export file",
+    "formats": "WordPress .xml exports, and .zip files of .md files (YAML or TOML front matter welcome). For Typecho and others, export to the WordPress format with a plugin first.",
+    "source": "Old blog's name or address",
+    "source-placeholder": "For example blog.example.com",
+    "source-hint": "Use the same name whenever you import from this blog again; posts already imported are then skipped.",
+    "choose-file": "Choose file",
+    "preview": "Preview",
+    "preview-failed": "This file could not be read",
+    "step-pick": "Choose the posts to import",
+    "summary": "{{selected}} of {{total}} posts selected.",
+    "draft": "Draft",
+    "private": "Private",
+    "images": "Images: {{local}} included, {{external}} linked",
+    "skip-reason": "Skipped: {{reason}}",
+    "visibility": "Who can see them",
+    "visibility-description": "Private by default, so you can publish post by post once they look right. Drafts and private posts always stay private.",
+    "space": "Import into a Space",
+    "space-description": "Optional. You need to be allowed to post in that Space.",
+    "no-space": "No Space",
+    "start-over": "Choose another file",
+    "run": "Import {{count}} posts",
+    "run-failed": "The import could not start",
+    "step-running": "Importing",
+    "progress": "{{done}} of {{total}} posts processed",
+    "cancelling": "Stopping…",
+    "step-done": "Import finished",
+    "state-completed": "The import is done.",
+    "state-cancelled": "The import was stopped; posts already imported stay.",
+    "state-failed": "The import stopped on an error; posts already imported stay.",
+    "state-interrupted": "The import was interrupted; posts already imported stay, and you can import the rest again.",
+    "counts": "{{imported}} imported, {{skipped}} skipped, {{failed}} failed.",
+    "again": "Import more"
   }
 }

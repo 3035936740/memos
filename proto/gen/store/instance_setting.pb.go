@@ -624,8 +624,10 @@ type InstanceGeneralSetting struct {
 	ShowPoweredBy *bool `protobuf:"varint,25,opt,name=show_powered_by,json=showPoweredBy,proto3,oneof" json:"show_powered_by,omitempty"`
 	// Disable automatic holiday background effects for all visitors. Default is false.
 	DisableFestivalEffects bool `protobuf:"varint,26,opt,name=disable_festival_effects,json=disableFestivalEffects,proto3" json:"disable_festival_effects,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	// Hide the built-in About navigation entry. False (including older settings) shows it.
+	HideAboutNavigation bool `protobuf:"varint,27,opt,name=hide_about_navigation,json=hideAboutNavigation,proto3" json:"hide_about_navigation,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -829,6 +831,13 @@ func (x *InstanceGeneralSetting) GetShowPoweredBy() bool {
 func (x *InstanceGeneralSetting) GetDisableFestivalEffects() bool {
 	if x != nil {
 		return x.DisableFestivalEffects
+	}
+	return false
+}
+
+func (x *InstanceGeneralSetting) GetHideAboutNavigation() bool {
+	if x != nil {
+		return x.HideAboutNavigation
 	}
 	return false
 }
@@ -1925,7 +1934,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xa7\v\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xdb\v\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -1952,7 +1961,8 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x13memo_revision_limit\x18\x17 \x01(\x05H\x01R\x11memoRevisionLimit\x88\x01\x01\x12'\n" +
 	"\x0fsetup_completed\x18\x18 \x01(\bR\x0esetupCompleted\x12+\n" +
 	"\x0fshow_powered_by\x18\x19 \x01(\bH\x02R\rshowPoweredBy\x88\x01\x01\x128\n" +
-	"\x18disable_festival_effects\x18\x1a \x01(\bR\x16disableFestivalEffectsB\x17\n" +
+	"\x18disable_festival_effects\x18\x1a \x01(\bR\x16disableFestivalEffects\x122\n" +
+	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigationB\x17\n" +
 	"\x15_trash_retention_daysB\x16\n" +
 	"\x14_memo_revision_limitB\x12\n" +
 	"\x10_show_powered_by\"j\n" +

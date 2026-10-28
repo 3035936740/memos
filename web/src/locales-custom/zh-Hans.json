@@ -411,6 +411,12 @@
       "more-description": "每页数量、背景图片、节日特效和日历的一周起始日。",
       "accounts-title": "账号与登录",
       "accounts-description": "登录方式、用户能否修改资料，以及是否保存照片的拍摄信息。"
+    },
+    "import": {
+      "label": "导入"
+    },
+    "style-packs": {
+      "label": "风格包"
     }
   },
   "music-admin": {
@@ -675,8 +681,10 @@
     "done": "设置好了，站点已经换上新外观。"
   },
   "memos-plus": {
+    "hide-about": "隐藏「关于」导航入口",
+    "hide-about-description": "默认显示侧边栏的 Memos Plus 关于入口。开启后隐藏导航，仍可通过 /about 直接访问。保存后生效。",
     "group-title": "Memos Plus",
-    "group-description": "外观包、页脚署名和安装向导。",
+    "group-description": "外观包、页脚署名、关于导航和安装向导。",
     "pack": "外观包",
     "pack-description": "把站点外观（新访客风格、配色、默认背景、自定义样式）导出成文件，或导入别人分享的外观包。脚本不会被导出或导入。",
     "pack-export": "导出",
@@ -866,5 +874,72 @@
       "neural-link": "神经链接已建立 · 正在投射 {{site}}",
       "readers-2049": "此刻有 8,000,000,000 位读者与你同步在线（大部分是 AI）"
     }
+  },
+  "style-packs": {
+    "description": "安装别人做好的社区风格。新装的风格包默认关闭；打开后，所有访客都能在风格选择里看到它，文章也能用 #style/<ID> 指定它。",
+    "install": "安装风格包",
+    "installing": "正在安装…",
+    "loading": "正在读取风格包…",
+    "empty": "还没有安装风格包",
+    "empty-description": "风格包是一个 ZIP 文件，里面有 style.json 和 style.css，可以附带图片和字体。",
+    "disabled": "已关闭",
+    "enabled": "为所有访客打开「{{name}}」",
+    "reacts-like": "和「{{style}}」一样会跟配色起反应",
+    "no-reactions": "不和配色起反应",
+    "update": "换新版本",
+    "export": "导出",
+    "installed": "已安装「{{name}}」，打开后访客才能看到",
+    "updated": "已更新「{{name}}」",
+    "exported": "已导出「{{name}}」",
+    "turned-on": "已为所有访客打开「{{name}}」",
+    "turned-off": "已关闭「{{name}}」",
+    "deleted": "已删除「{{name}}」",
+    "failed": "操作失败",
+    "delete-title": "删除「{{name}}」？",
+    "delete-description": "正在用这个风格的访客、新访客默认风格和指定了它的文章，都会改回默认风格。",
+    "rules": "为了安全，风格包不能带脚本，也不能从外部网站加载任何东西；安装时服务器会检查并拒绝不合规的文件。",
+    "format-link": "风格包格式说明"
+  },
+  "blog-import": {
+    "main-site": "主站导入",
+    "target-main": "文章将导入主站，不归入任何空间。",
+    "target-space": "文章将导入当前空间：{{space}}。",
+    "description": "把旧博客的文章搬过来：WordPress 的导出文件，或者 Hexo、Hugo、Jekyll 这类 Markdown 文件夹打包成的 ZIP。先预览，确认后才导入。",
+    "admin-title": "管理员设置",
+    "limit": "上传大小上限 (MiB)",
+    "limit-description": "所有人导入时，单个导出文件的最大大小，1–250 MiB，默认 100。",
+    "limit-saved": "已保存上传上限",
+    "step-file": "选择导出文件",
+    "formats": "支持 WordPress 导出的 .xml 文件，以及装着 .md 文件的 .zip（开头可以带 YAML 或 TOML 的 front matter）。Typecho 等程序请先用插件导出成 WordPress 格式。",
+    "source": "旧博客的名字或地址",
+    "source-placeholder": "比如 blog.example.com",
+    "source-hint": "以后再从同一个旧博客导入时请填一样的名字，已经导入过的文章会自动跳过。",
+    "choose-file": "选择文件",
+    "preview": "预览",
+    "preview-failed": "无法读取这个文件",
+    "step-pick": "选择要导入的文章",
+    "summary": "共 {{total}} 篇，已选 {{selected}} 篇。",
+    "draft": "草稿",
+    "private": "私有",
+    "images": "图片：本地 {{local}} 张，外链 {{external}} 张",
+    "skip-reason": "跳过：{{reason}}",
+    "visibility": "导入后谁能看",
+    "visibility-description": "默认“私有”，确认没问题后再逐篇公开。草稿和原本私有的文章总是导入为私有。",
+    "space": "导入到空间",
+    "space-description": "可选。需要你在这个空间有发文权限。",
+    "no-space": "不放进空间",
+    "start-over": "重新选择",
+    "run": "导入 {{count}} 篇",
+    "run-failed": "无法开始导入",
+    "step-running": "正在导入",
+    "progress": "已处理 {{done}} / {{total}} 篇",
+    "cancelling": "正在停止…",
+    "step-done": "导入结束",
+    "state-completed": "导入完成。",
+    "state-cancelled": "已停止导入，已经导入的文章会保留。",
+    "state-failed": "导入出错停止了，已经导入的文章会保留。",
+    "state-interrupted": "导入被中断了，已经导入的文章会保留，可以重新导入剩下的。",
+    "counts": "导入 {{imported}} 篇，跳过 {{skipped}} 篇，失败 {{failed}} 篇。",
+    "again": "再导入一批"
   }
 }

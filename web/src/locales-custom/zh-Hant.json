@@ -411,6 +411,12 @@
       "more-description": "每頁數量、背景圖片、節日特效和日曆的一週起始日。",
       "accounts-title": "帳號與登入",
       "accounts-description": "登入方式、使用者能否修改資料，以及是否保存照片的拍攝資訊。"
+    },
+    "import": {
+      "label": "匯入"
+    },
+    "style-packs": {
+      "label": "風格包"
     }
   },
   "music-admin": {
@@ -675,8 +681,10 @@
     "done": "設定好了，站點已經換上新外觀。"
   },
   "memos-plus": {
+    "hide-about": "隱藏「關於」導覽入口",
+    "hide-about-description": "預設顯示側邊欄的 Memos Plus 關於入口。開啟後隱藏導覽，仍可透過 /about 直接存取。儲存後生效。",
     "group-title": "Memos Plus",
-    "group-description": "外觀包、頁尾署名和安裝精靈。",
+    "group-description": "外觀包、頁尾署名、關於導覽和安裝精靈。",
     "pack": "外觀包",
     "pack-description": "把站點外觀（新訪客風格、配色、預設背景、自訂樣式）匯出成檔案，或匯入別人分享的外觀包。腳本不會被匯出或匯入。",
     "pack-export": "匯出",
@@ -866,5 +874,72 @@
       "neural-link": "神經連結已建立 · 正在投射 {{site}}",
       "readers-2049": "此刻有 8,000,000,000 位讀者與你同步在線（大部分是 AI）"
     }
+  },
+  "style-packs": {
+    "description": "安裝別人做好的社群風格。新裝的風格包預設關閉；開啟後，所有訪客都能在風格選擇裡看到它，文章也能用 #style/<ID> 指定它。",
+    "install": "安裝風格包",
+    "installing": "正在安裝…",
+    "loading": "正在讀取風格包…",
+    "empty": "還沒有安裝風格包",
+    "empty-description": "風格包是一個 ZIP 檔案，裡面有 style.json 和 style.css，可以附帶圖片和字型。",
+    "disabled": "已關閉",
+    "enabled": "為所有訪客開啟「{{name}}」",
+    "reacts-like": "和「{{style}}」一樣會跟配色起反應",
+    "no-reactions": "不和配色起反應",
+    "update": "換新版本",
+    "export": "匯出",
+    "installed": "已安裝「{{name}}」，開啟後訪客才能看到",
+    "updated": "已更新「{{name}}」",
+    "exported": "已匯出「{{name}}」",
+    "turned-on": "已為所有訪客開啟「{{name}}」",
+    "turned-off": "已關閉「{{name}}」",
+    "deleted": "已刪除「{{name}}」",
+    "failed": "操作失敗",
+    "delete-title": "刪除「{{name}}」？",
+    "delete-description": "正在用這個風格的訪客、新訪客預設風格和指定了它的文章，都會改回預設風格。",
+    "rules": "為了安全，風格包不能帶腳本，也不能從外部網站載入任何東西；安裝時伺服器會檢查並拒絕不合規的檔案。",
+    "format-link": "風格包格式說明"
+  },
+  "blog-import": {
+    "main-site": "主站匯入",
+    "target-main": "文章將匯入主站，不歸入任何空間。",
+    "target-space": "文章將匯入目前空間：{{space}}。",
+    "description": "把舊部落格的文章搬過來：WordPress 的匯出檔案，或者 Hexo、Hugo、Jekyll 這類 Markdown 資料夾打包成的 ZIP。先預覽，確認後才匯入。",
+    "admin-title": "管理員設定",
+    "limit": "上傳大小上限 (MiB)",
+    "limit-description": "所有人匯入時，單個匯出檔案的最大大小，1–250 MiB，預設 100。",
+    "limit-saved": "已儲存上傳上限",
+    "step-file": "選擇匯出檔案",
+    "formats": "支援 WordPress 匯出的 .xml 檔案，以及裝著 .md 檔案的 .zip（開頭可以帶 YAML 或 TOML 的 front matter）。Typecho 等程式請先用外掛匯出成 WordPress 格式。",
+    "source": "舊部落格的名字或網址",
+    "source-placeholder": "比如 blog.example.com",
+    "source-hint": "以後再從同一個舊部落格匯入時請填一樣的名字，已經匯入過的文章會自動跳過。",
+    "choose-file": "選擇檔案",
+    "preview": "預覽",
+    "preview-failed": "無法讀取這個檔案",
+    "step-pick": "選擇要匯入的文章",
+    "summary": "共 {{total}} 篇，已選 {{selected}} 篇。",
+    "draft": "草稿",
+    "private": "私人",
+    "images": "圖片：本機 {{local}} 張，外連 {{external}} 張",
+    "skip-reason": "略過：{{reason}}",
+    "visibility": "匯入後誰能看",
+    "visibility-description": "預設「私人」，確認沒問題後再逐篇公開。草稿和原本私人的文章總是匯入為私人。",
+    "space": "匯入到空間",
+    "space-description": "可選。需要你在這個空間有發文權限。",
+    "no-space": "不放進空間",
+    "start-over": "重新選擇",
+    "run": "匯入 {{count}} 篇",
+    "run-failed": "無法開始匯入",
+    "step-running": "正在匯入",
+    "progress": "已處理 {{done}} / {{total}} 篇",
+    "cancelling": "正在停止…",
+    "step-done": "匯入結束",
+    "state-completed": "匯入完成。",
+    "state-cancelled": "已停止匯入，已經匯入的文章會保留。",
+    "state-failed": "匯入出錯停止了，已經匯入的文章會保留。",
+    "state-interrupted": "匯入被中斷了，已經匯入的文章會保留，可以重新匯入剩下的。",
+    "counts": "匯入 {{imported}} 篇，略過 {{skipped}} 篇，失敗 {{failed}} 篇。",
+    "again": "再匯入一批"
   }
 }

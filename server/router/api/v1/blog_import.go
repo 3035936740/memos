@@ -24,6 +24,8 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/text"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/usememos/memos/internal/blogimport"
 	"github.com/usememos/memos/internal/markdown/renderer"
@@ -42,9 +44,31 @@ type importPreview struct {
 	ID        string          `json:"id"`
 	Source    string          `json:"source"`
 	Format    string          `json:"format"`
+	Space     string          `json:"space,omitempty"`
 	ExpiresAt time.Time       `json:"expiresAt"`
 	Posts     []importArticle `json:"posts"`
 }
+
+// authorizeBlogImport follows the Space administration policy rather than the
+// broader permission to publish an ordinary memo in an open Space.
+func (s *APIV1Service) authorizeBlogImport(ctx context.Context, user *store.User, spaceName string) error {
+	if spaceName == "" {
+		if !isSuperUser(user) {
+			return status.Error(codes.PermissionDenied, "only instance administrators can import into the main site")
+		}
+		return nil
+	}
+	_, member, err := s.resolveMemberSpace(ctx, spaceName, user)
+	if err != nil {
+		return err
+	}
+	if err = requireSpaceAdministrator(member); err != nil {
+		return err
+	}
+	_, err = s.resolveWritableSpaceByName(ctx, spaceName, user.ID)
+	return err
+}
+
 type importArticle struct {
 	blogimport.Post
 	Category       string `json:"category"`
@@ -186,6 +210,10 @@ func RegisterBlogImportRoutes(router *echo.Group, s *APIV1Service, authorizer *A
 			return err
 		}
 		ctx := c.Request().Context()
+		targetSpace := strings.TrimSpace(c.QueryParam("space"))
+		if err = s.authorizeBlogImport(ctx, u, targetSpace); err != nil {
+			return moderationError(c, 403, err)
+		}
 		limit, err := s.blogImportLimit(ctx)
 		if err != nil {
 			return err
@@ -300,7 +328,7 @@ func RegisterBlogImportRoutes(router *echo.Group, s *APIV1Service, authorizer *A
 		if err != nil {
 			return err
 		}
-		preview := importPreview{ID: id, Source: source, Format: format, ExpiresAt: time.Now().Add(30 * time.Minute), Posts: []importArticle{}}
+		preview := importPreview{ID: id, Source: source, Format: format, Space: targetSpace, ExpiresAt: time.Now().Add(30 * time.Minute), Posts: []importArticle{}}
 		for _, p := range posts {
 			content, cat := p.Compose(categories)
 			p.Content = content
@@ -360,6 +388,9 @@ func RegisterBlogImportRoutes(router *echo.Group, s *APIV1Service, authorizer *A
 			return moderationError(c, 400, errors.New("invalid visibility"))
 		}
 		request.Visibility = visibility
+		if err = s.authorizeBlogImport(c.Request().Context(), u, request.Space); err != nil {
+			return moderationError(c, 403, err)
+		}
 		if request.Space != "" {
 			if _, err = s.resolveWritableSpaceByName(c.Request().Context(), request.Space, u.ID); err != nil {
 				return moderationError(c, 403, err)
@@ -378,6 +409,9 @@ func RegisterBlogImportRoutes(router *echo.Group, s *APIV1Service, authorizer *A
 		var preview importPreview
 		if err = json.Unmarshal(b, &preview); err != nil {
 			return err
+		}
+		if request.Space != preview.Space {
+			return moderationError(c, 400, errors.New("import destination must match the preview"))
 		}
 		if time.Now().After(preview.ExpiresAt) {
 			return moderationError(c, 410, errors.New("preview expired"))
@@ -576,6 +610,9 @@ func (s *APIV1Service) runBlogImport(ctx context.Context, user *store.User, job 
 }
 
 func (s *APIV1Service) importBlogArticle(ctx context.Context, user *store.User, job *store.MemoImportJob, entry importArticle, request runImportRequest, files map[string]*zip.File) (*store.Memo, error) {
+	if err := s.authorizeBlogImport(ctx, user, request.Space); err != nil {
+		return nil, err
+	}
 	content := entry.Content
 	replacements := map[string]string{}
 	attachments := []*v1pb.Attachment{}

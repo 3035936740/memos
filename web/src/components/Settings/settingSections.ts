@@ -12,6 +12,7 @@ import {
   type LucideIcon,
   MailIcon,
   MessageCircleIcon,
+  PaletteIcon,
   Settings2Icon,
   ShieldCheckIcon,
   SirenIcon,
@@ -37,6 +38,7 @@ import SecuritySection from "@/components/Settings/SecuritySection";
 import SpacesSection from "@/components/Settings/SpacesSection";
 import SSOSection from "@/components/Settings/SSOSection";
 import StorageSection from "@/components/Settings/StorageSection";
+import StylePacksSection from "@/components/Settings/StylePacksSection";
 import TagsSection from "@/components/Settings/TagsSection";
 import WebhookSection from "@/components/Settings/WebhookSection";
 import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
@@ -49,6 +51,7 @@ export type SettingSectionKey =
   | "webhook"
   | "member"
   | "system"
+  | "style-packs"
   | "emoji"
   | "memo"
   | "storage"
@@ -122,6 +125,13 @@ export const SETTINGS_SECTIONS: SettingSectionDefinition[] = [
     labelKey: "setting.system.label",
     icon: Settings2Icon,
     component: InstanceSection,
+  },
+  {
+    key: "style-packs",
+    scope: "admin",
+    labelKey: "setting.style-packs.label",
+    icon: PaletteIcon,
+    component: StylePacksSection,
   },
   {
     key: "emoji",

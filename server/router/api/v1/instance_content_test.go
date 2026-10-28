@@ -1,13 +1,43 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
+	"github.com/usememos/memos/store"
 )
+
+func TestAboutNavigationSettingPersistsAndRequiresAdmin(t *testing.T) {
+	s := newIntegrationService(t)
+	ctx := context.Background()
+	admin := createSpaceTestUser(ctx, t, s, "about-admin", store.RoleAdmin)
+	user := createSpaceTestUser(ctx, t, s, "about-user", store.RoleUser)
+	initial, err := s.Store.GetInstanceGeneralSetting(ctx)
+	require.NoError(t, err)
+	require.False(t, initial.HideAboutNavigation)
+	setting := func(hidden bool) *v1pb.InstanceSetting {
+		return &v1pb.InstanceSetting{Name: "instance/settings/GENERAL", Value: &v1pb.InstanceSetting_GeneralSetting_{GeneralSetting: &v1pb.InstanceSetting_GeneralSetting{HideAboutNavigation: hidden}}}
+	}
+	_, err = s.UpdateInstanceSetting(userCtx(ctx, user.ID), &v1pb.UpdateInstanceSettingRequest{Setting: setting(true)})
+	require.Equal(t, codes.PermissionDenied, status.Code(err))
+	for _, hidden := range []bool{true, false} {
+		updated, e := s.UpdateInstanceSetting(userCtx(ctx, admin.ID), &v1pb.UpdateInstanceSettingRequest{Setting: setting(hidden)})
+		require.NoError(t, e)
+		require.Equal(t, hidden, updated.GetGeneralSetting().HideAboutNavigation)
+		stored, e := s.Store.GetInstanceGeneralSetting(ctx)
+		require.NoError(t, e)
+		require.Equal(t, hidden, stored.HideAboutNavigation)
+		public, e := s.GetInstanceSetting(ctx, &v1pb.GetInstanceSettingRequest{Name: "instance/settings/GENERAL"})
+		require.NoError(t, e)
+		require.Equal(t, hidden, public.GetGeneralSetting().HideAboutNavigation)
+	}
+}
 
 func TestFilterInstanceContentJSON(t *testing.T) {
 	input := `[{"id":"public","access":"public"},{"id":"default"},{"id":"member","access":"authenticated"},{"id":"admin","access":"admin","markdown":"secret"}]`

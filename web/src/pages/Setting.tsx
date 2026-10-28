@@ -28,7 +28,8 @@ const Setting = () => {
   const visibleSectionKeys = useMemo(() => new Set(sectionGroups.all.map((section) => section.key)), [sectionGroups.all]);
 
   useEffect(() => {
-    const hash = location.hash.slice(1);
+    const rawHash = location.hash.slice(1);
+    const hash = rawHash === "import" ? "spaces" : rawHash;
     const nextSection = isSettingSectionKey(hash) && visibleSectionKeys.has(hash) ? hash : DEFAULT_SETTING_SECTION;
     setSelectedSection(nextSection);
   }, [location.hash, visibleSectionKeys]);

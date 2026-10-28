@@ -571,15 +571,6 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
           active: routeKind === "explore" || routeKind === "profile" || routeKind === "memo",
           alwaysExpanded: true,
         },
-        /* 官方 Memos About 页面及路由保留，仅隐藏游客侧栏入口；需要恢复时取消此段注释。
-        {
-          id: "about",
-          label: t("common.about"),
-          path: ROUTES.ABOUT,
-          icon: InfoIcon,
-          active: Boolean(matchPath(ROUTES.ABOUT, location.pathname)),
-        },
-        */
       ];
   const customIconMap: Record<string, LucideIcon> = {
     book: BookOpenIcon,
@@ -591,6 +582,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
   };
   const customItems: GlobalNavItem[] = parseInstanceNavigation(generalSetting?.navigationJson ?? "")
     .filter((item) => item.id && item.label && item.path && canAccessInstanceContent(item.access, currentUser))
+    .filter((item) => !generalSetting?.hideAboutNavigation || item.path !== ROUTES.ABOUT)
     .map((item) => ({
       id: `custom-${item.id}`,
       label: item.label,
@@ -599,6 +591,15 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
       iconUrl: item.iconUrl,
       active: navigationPath === item.path || location.pathname === item.path,
     }));
+  if (!generalSetting?.hideAboutNavigation && !customItems.some((item) => item.path === ROUTES.ABOUT)) {
+    builtinItems.push({
+      id: "about",
+      label: t("common.about"),
+      path: ROUTES.ABOUT,
+      icon: InfoIcon,
+      active: location.pathname === ROUTES.ABOUT,
+    });
+  }
   const categories = parseInstanceCategories(generalSetting?.memoCategoriesJson ?? "").filter(
     (category) => category.slug && category.title && canAccessInstanceContent(category.access, currentUser),
   );
