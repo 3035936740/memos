@@ -21,6 +21,12 @@ env:
   ARTIFACT_PREFIX: memos-plus
 
 jobs:
+  backend-checks:
+    uses: ./.github/workflows/backend-tests.yml
+
+  frontend-checks:
+    uses: ./.github/workflows/frontend-tests.yml
+
   upgrade-smoke:
     name: Verify fresh install and stable upgrade
     uses: ./.github/workflows/upgrade-smoke.yml
@@ -67,7 +73,7 @@ jobs:
 
   build-frontend:
     name: Build Frontend
-    needs: [prepare, upgrade-smoke]
+    needs: [prepare, upgrade-smoke, backend-checks, frontend-checks]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -165,7 +171,7 @@ jobs:
 
           go build \
             -trimpath \
-            -ldflags="-s -w -X github.com/usememos/memos/internal/version.Version=0.34.1 -X github.com/usememos/memos/internal/version.PlusVersion=${{ needs.prepare.outputs.version }} -X github.com/usememos/memos/internal/version.Commit=${{ github.sha }} -extldflags '-static'" \
+            -ldflags="-s -w -X github.com/usememos/memos/internal/version.Version=$(cat internal/version/upstream-version.txt) -X github.com/usememos/memos/internal/version.PlusVersion=${{ needs.prepare.outputs.version }} -X github.com/usememos/memos/internal/version.Commit=${{ github.sha }} -extldflags '-static'" \
             -tags netgo,osusergo \
             -o "build/${output_name}" \
             ./cmd/memos
@@ -226,7 +232,7 @@ jobs:
 
   release:
     name: Publish GitHub Release
-    needs: [prepare, build-binaries, checksums]
+    needs: [prepare, build-binaries, checksums, verify-public-image]
     if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
@@ -359,3 +365,10 @@ jobs:
               -t "${image}:latest" \
               $(printf "${image}@sha256:%s " *)
           fi
+
+  verify-public-image:
+    needs: [prepare, merge-images]
+    if: github.event_name != 'workflow_dispatch'
+    uses: ./.github/workflows/verify-public-image.yml
+    with:
+      image: ghcr.io/${{ github.repository_owner }}/memos-plus:${{ needs.prepare.outputs.version }}

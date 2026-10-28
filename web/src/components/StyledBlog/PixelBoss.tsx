@@ -2,6 +2,7 @@ import { CoinsIcon } from "lucide-react";
 import { type MouseEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { bumpCounter } from "@/utils/blog-progress";
+import { isMotionReduced } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
 import { burst } from "./ReactionCanvas";
 
@@ -29,7 +30,7 @@ const PixelBoss = () => {
 
   useEffect(() => {
     // It only makes sense moving; visitors who asked for less motion are spared it.
-    if (alreadyAppeared() || Math.random() > SPAWN_CHANCE || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (alreadyAppeared() || Math.random() > SPAWN_CHANCE || isMotionReduced()) return;
     const timer = window.setTimeout(() => {
       try {
         sessionStorage.setItem(SESSION_KEY, "1");

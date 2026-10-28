@@ -169,6 +169,10 @@
       "delete-title": "刪除選取的 {{count}} 則？",
       "delete-description": "刪除後無法復原，附件也會一起刪除。",
       "privacy-description": "選取的備忘錄將對所有人公開，裡面好像有這些資訊："
+    },
+    "post-look": {
+      "text": "作者為這篇文章選了外觀：{{look}}。",
+      "decline": "用我自己的外觀"
     }
   },
   "editor": {
@@ -386,11 +390,27 @@
       "bookmarklet": "書籤小工具",
       "bookmarklet-description": "把這個按鈕拖到瀏覽器的書籤列。之後在任何網頁選取文字再點它，會在新分頁開啟 Memos，把選取的文字和出處放進草稿。",
       "bookmarklet-name": "收藏到 Memos",
-      "bookmarklet-drag": "拖到書籤列"
+      "bookmarklet-drag": "拖到書籤列",
+      "effects": "動態效果",
+      "effects-description": "省電模式保留每種風格的樣子，只停掉粒子、雨和會動的背景。選「自動」時，較慢的裝置會自動切換。只保存在這個瀏覽器裡。",
+      "effects-auto": "自動",
+      "effects-full": "完整",
+      "effects-lite": "省電"
     },
     "spaces": {
       "current-space": "目前空間",
       "manage": "管理"
+    },
+    "system": {
+      "essentials-description": "站點叫什麼、誰能看、誰能註冊。",
+      "first-visit-title": "新訪客看到的樣子",
+      "first-visit-description": "第一次來的人看到的語言、配色和風格。訪客之後可以自己改。",
+      "advanced": "進階設定",
+      "advanced-description": "每頁數量、背景、節日特效、登入規則、自訂程式碼、導覽和分類、音樂、回收桶與歷史版本、外觀包。",
+      "more-title": "更多站點選項",
+      "more-description": "每頁數量、背景圖片、節日特效和日曆的一週起始日。",
+      "accounts-title": "帳號與登入",
+      "accounts-description": "登入方式、使用者能否修改資料，以及是否保存照片的拍攝資訊。"
     }
   },
   "music-admin": {
@@ -723,5 +743,128 @@
     "downloading": "正在导出…",
     "running": "已有备份正在导出，请稍后再试。",
     "failed": "备份下载失败"
+  },
+  "about": {
+    "plus-version": "Memos Plus 版本",
+    "channel-stable": "正式版",
+    "channel-preview": "預覽版",
+    "channel-dev": "開發版",
+    "based-on": "基於",
+    "release-notes": "更新說明",
+    "dev-build-note": "這是自行從原始碼建置的版本，沒有對應的發布頁面。",
+    "version-unknown": "伺服器沒有提供版本資訊。",
+    "demo-site-note": "體驗所有風格和空間",
+    "plus-description": "Memos Plus 在原版 Memos 的基礎上擴充了部落格檢視與多種風格、空間、投票、音樂播放，以及備份、回收桶和歷史版本等功能。感謝原版 Memos 的作者與所有貢獻者。"
+  },
+  "effects": {
+    "auto-lite": "動畫有點卡，已切換到省電模式。可以在 設定 → 偏好設定 裡改回來。"
+  },
+  "oddities": {
+    "title": "奇怪的頁面",
+    "void": {
+      "name": "樹洞碎紙機",
+      "lead": "寫下想說、但不想留下的話。按 Enter，它就沒了。",
+      "label": "要丟掉的話",
+      "placeholder": "比如：今天其實有點累。",
+      "privacy": "不儲存，不上傳，不留草稿。",
+      "let-go": "丟掉",
+      "count": "這個瀏覽器已經丟掉了 {{count}} 句話。",
+      "empty": "這裡還什麼都沒丟過。",
+      "milestone-1": "第一句總是最難的。",
+      "milestone-10": "十句了。輕鬆一點了嗎？",
+      "milestone-50": "五十句。樹洞說它不累，反正它什麼也不裝。",
+      "milestone-100": "一百句。哪天想留下點什麼，Memos 就在隔壁。",
+      "milestone-500": "五百句。這個樹洞已經是你的老朋友了。",
+      "milestone-1000": "一千句。樹洞給你頒了一枚看不見的獎章。"
+    },
+    "teapot": {
+      "name": "418 茶壺",
+      "title": "我是一把茶壺",
+      "lead": "這台伺服器是一把茶壺。根據 RFC 2324，它有權拒絕煮咖啡。",
+      "brew": "煮一杯咖啡",
+      "again": "再來一杯？",
+      "refused": "已被拒絕 {{count}} 次",
+      "pour": "好吧……給你倒杯茶。熱的，小心燙。",
+      "refusal-1": "我是茶壺，不煮咖啡。",
+      "refusal-2": "真的，我是茶壺。你看我的壺嘴。",
+      "refusal-3": "根據 RFC 2324 第 2.3.2 節，我有權拒絕。",
+      "refusal-4": "我肚子裡只有茶葉，還有一點點水垢。",
+      "refusal-5": "咖啡機在隔壁，它今天請假了。",
+      "refusal-6": "我把你的請求轉給咖啡機了。它說不認識你。",
+      "refusal-7": "你知道嗎，茶裡的咖啡因其實也不少。",
+      "refusal-8": "我冷靜地重新考慮了一下……不行。",
+      "refusal-9": "我打電話問了我的律師，一個保溫杯。他也說不行。",
+      "refusal-10": "你再按一次，我就要把蓋子蓋上了。",
+      "refusal-11": "（蓋子蓋上了。）",
+      "refusal-12": "好吧，蓋子自己彈開了。還是不行。",
+      "refusal-13": "我小時候也想當咖啡機，後來發現自己更適合當茶壺。",
+      "refusal-14": "你按得這麼認真，我有點感動。但還是不行。",
+      "refusal-15": "正在載入咖啡……載入失敗：找不到咖啡豆。",
+      "refusal-16": "我數到三。一，二……算了，我不會數數，我是茶壺。",
+      "refusal-17": "最後說一次：不……等等，你是不是很累？"
+    },
+    "museum": {
+      "name": "風格博物館",
+      "title": "風格博物館",
+      "lead": "Memos Plus 的每一種風格，按年代陳列。可以觸摸展品：點一下就能換上。",
+      "room": "第 {{number}} 展廳",
+      "materials": "材料：",
+      "here": "你正在這間展廳裡",
+      "enter": "換上這個風格",
+      "locked-title": "此展廳暫不開放",
+      "locked-note": "門縫裡透出金色的光。據說集齊所有傳說反應的人，能推開這扇門。",
+      "terminal-era": "1970 年代至今",
+      "terminal-materials": "等寬字型、綠色螢光、一個閃爍的游標",
+      "terminal-note": "最早的部落格大概就長這樣，只是那時候還不叫部落格。",
+      "pixel-era": "1985 – 1995",
+      "pixel-materials": "8 位元色盤、方塊、硬朗的投影",
+      "pixel-note": "每一個像素都是手工擺上去的，至少看起來是。",
+      "y2k-era": "1998 – 2003",
+      "y2k-materials": "銀色金屬、斜面按鈕、漸層標題列",
+      "y2k-note": "千禧蟲沒有毀掉世界，但留下了這種按鈕。",
+      "aero-era": "2006 – 2012",
+      "aero-materials": "玻璃、氣泡、亮綠色的草地和永遠晴朗的天空",
+      "aero-note": "那個相信科技會讓世界更乾淨的年代。",
+      "vaporwave-era": "2011 – 2013",
+      "vaporwave-materials": "粉紫漸層、落日、網格地平線",
+      "vaporwave-note": "對一個從未存在過的過去的懷念。",
+      "neumorphism-era": "2019 – 2020",
+      "neumorphism-materials": "同色的凸起與凹陷、柔和的雙重陰影",
+      "neumorphism-note": "設計師們短暫地愛上了它，然後發現按鈕看不清。",
+      "glass-era": "2020 年至今",
+      "glass-materials": "毛玻璃、彩色光斑、細細的白邊",
+      "glass-note": "透過它能看見後面的東西，這正是它的意義。",
+      "handdrawn-era": "不分年代",
+      "handdrawn-materials": "鉛筆、橡皮擦痕、歪歪扭扭的線",
+      "handdrawn-note": "本館唯一允許塗鴉的展廳。",
+      "default-era": "現在",
+      "default-materials": "乾淨的卡片、恰到好處的留白",
+      "default-note": "所有風格脫下外衣之後的樣子。",
+      "golden-era": "傳說",
+      "golden-materials": "金箔、光暈、一點點自負",
+      "golden-note": "恭喜你推開了這扇門。"
+    },
+    "time": {
+      "name": "年代穿越",
+      "title": "年代穿越",
+      "lead": "把這個站塞進別的年代的瀏覽器裡看看。",
+      "year": "年份",
+      "era-style": "這個年代對應的風格：{{style}}",
+      "stay": "留在這個年代",
+      "staying": "你已經在這個年代了",
+      "dos-memory": "640K 記憶體應該對任何人都夠用了。",
+      "dos-files": "{{count}} 個檔案",
+      "welcome": "★☆★ 歡迎光臨 {{site}}！本站已被各大搜尋引擎收錄！★☆★",
+      "homepage": "{{site}} 的個人首頁",
+      "construction": "本站施工中",
+      "visitor-before": "您是本站第 ",
+      "visitor-after": " 位訪客",
+      "best-viewed": "建議使用 800×600 解析度、Netscape 4.0 以上版本瀏覽",
+      "read-more": "閱讀全文 »",
+      "subscribe": "訂閱 RSS",
+      "share-2009": "分享到：Facebook · 噗浪 · 無名小站",
+      "neural-link": "神經連結已建立 · 正在投射 {{site}}",
+      "readers-2049": "此刻有 8,000,000,000 位讀者與你同步在線（大部分是 AI）"
+    }
   }
 }

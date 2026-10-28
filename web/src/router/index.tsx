@@ -34,6 +34,11 @@ const CustomMarkdownPage = lazyWithReload(() => import("@/pages/CustomMarkdownPa
 const MemoCategory = lazyWithReload(() => import("@/pages/MemoCategory"));
 const ReadLater = lazyWithReload(() => import("@/pages/ReadLater"));
 const Space = lazyWithReload(() => import("@/pages/Space"));
+// The odd pages beside the app, linked only from the bottom of /about.
+const Void = lazyWithReload(() => import("@/pages/oddities/Void"));
+const Teapot = lazyWithReload(() => import("@/pages/oddities/Teapot"));
+const Museum = lazyWithReload(() => import("@/pages/oddities/Museum"));
+const TimeMachine = lazyWithReload(() => import("@/pages/oddities/TimeMachine"));
 
 // Backward compatibility alias.
 export const Routes = ROUTES;
@@ -87,6 +92,10 @@ export const routeConfig: RouteObject[] = [
               { path: "pages/:slug", element: <CustomMarkdownPage /> },
               { path: "categories/:slug", element: <MemoCategory /> },
               { path: "u/:username", element: <UserProfile /> },
+              { path: "void", element: <Void /> },
+              { path: "418", element: <Teapot /> },
+              { path: "museum", element: <Museum /> },
+              { path: "time-machine", element: <TimeMachine /> },
               {
                 element: <RequireAuthRoute />,
                 children: [

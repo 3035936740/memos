@@ -276,7 +276,7 @@ const PagedMemoList = (props: Props) => {
                     <MemoBatchBar className="mb-2" />
                     <MemoFilters className="mb-2" />
                     {initialLoader}
-                    <div className="flex flex-col gap-[1.125rem]">
+                    <div data-memo-batch-list={props.selectable ? "" : undefined} className="flex flex-col gap-[1.125rem]">
                       {displayMemoList.map((memo, index) => (
                         <SelectableMemo key={getMemoKey(memo)} memo={memo}>
                           <StyledBlogCard

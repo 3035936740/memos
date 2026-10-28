@@ -9,7 +9,10 @@ import {
 import TagsSection from "@/components/AppSidebar/TagsSection";
 import { MemoFilterProvider } from "@/contexts/MemoFilterContext";
 
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
+  useTranslate: () => (key: string) => key,
+}));
 
 describe("TagsSection", () => {
   beforeEach(() => {

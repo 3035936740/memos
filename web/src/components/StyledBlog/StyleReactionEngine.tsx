@@ -1,4 +1,4 @@
-import { MoonIcon, RotateCcwIcon, TrophyIcon } from "lucide-react";
+import { BatteryLowIcon, MoonIcon, RotateCcwIcon, TrophyIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useInstance } from "@/contexts/InstanceContext";
@@ -17,6 +17,7 @@ import {
   useBlogProgress,
 } from "@/utils/blog-progress";
 import { blogStyleLabelKey, isBlogStyle } from "@/utils/blog-style";
+import { isMotionReduced, watchFrameRate } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
 import {
   computeFusion,
@@ -141,13 +142,20 @@ const StyleReactionEngine = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  // If this device cannot keep the effects smooth, low-power mode takes over for the session, and says so once.
+  useEffect(() => {
+    const notify = () => toast(t("effects.auto-lite"), { icon: <BatteryLowIcon aria-hidden className="size-5 text-primary" /> });
+    return watchFrameRate(notify);
+    // Once per visit.
+  }, []);
+
   // Arrival: count the day, greet night owls, and very rarely glitch.
   useEffect(() => {
     recordVisitDay();
     if (getDaypart(new Date()) === "midnight" && firstTimeThisSession(MIDNIGHT_KEY)) {
       toast(t("fusion.midnight"), { icon: <MoonIcon aria-hidden className="size-5 text-primary" /> });
     }
-    if (Math.random() < GLITCH_CHANCE && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (Math.random() < GLITCH_CHANCE && !isMotionReduced()) {
       setGlitching(true);
       bumpCounter("glitches");
       discover("glitch");

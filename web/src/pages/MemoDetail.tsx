@@ -9,6 +9,7 @@ import { MentionResolutionProvider } from "@/components/MemoContent/MentionResol
 import MemoSeries from "@/components/MemoSeries";
 import MemoView from "@/components/MemoView";
 import { createMemoNavigationState, type MemoOriginScope, resolveMemoDetailOrigin } from "@/components/MemoView/navigation";
+import PostLookNotice from "@/components/PostLookNotice";
 import ResumeReading from "@/components/ResumeReading";
 import ReadingProgress from "@/components/StyledBlog/ReadingProgress";
 import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
@@ -311,6 +312,7 @@ const MemoDetail = () => {
                 </div>
               )}
               {!displayMemo.parent && <MemoAgeNotice memo={displayMemo} />}
+              {!displayMemo.parent && <PostLookNotice memoName={displayMemo.name} tags={displayMemo.tags} />}
               <div ref={readingArticleRef}>
                 <MemoView
                   key={displayMemo.name}

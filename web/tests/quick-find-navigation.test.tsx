@@ -38,6 +38,11 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 
 vi.mock("@/hooks/useSpaceQueries", () => ({
   useSpaces: () => ({ data: state.spaces, isSuccess: true, isPending: false, isError: false }),
+  usePagedSpaces: () => ({ data: undefined }),
+  useBatchSpaces: (_viewer: unknown, names: string[]) => ({
+    data: { spaces: state.spaces.filter((space) => names.includes(space.name)) },
+    isSuccess: true,
+  }),
 }));
 
 vi.mock("@/hooks/useUserQueries", () => ({
@@ -137,8 +142,8 @@ describe("Quick Find navigation", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open Quick Find" }));
     const input = await screen.findByRole("textbox");
-    expect(input).toHaveAttribute("placeholder", "common.search Product · common.memos");
-    expect(input).toHaveAttribute("aria-label", "common.search Product · common.memos");
+    expect(input).toHaveAttribute("placeholder", "common.search Product · common.explore");
+    expect(input).toHaveAttribute("aria-label", "common.search Product · common.explore");
   });
 
   it("shows a UID for matching titles and compacts its UUID only in the placeholder", async () => {
@@ -168,8 +173,8 @@ describe("Quick Find navigation", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Open Quick Find" }));
     const input = await screen.findByRole("textbox");
-    expect(input).toHaveAttribute("placeholder", "common.search Product (123e4567…) · common.memos");
-    expect(input).toHaveAttribute("aria-label", `common.search Product (${uuid}) · common.memos`);
+    expect(input).toHaveAttribute("placeholder", "common.search Product (123e4567…) · common.explore");
+    expect(input).toHaveAttribute("aria-label", `common.search Product (${uuid}) · common.explore`);
   });
 
   it("preserves an anonymous global page in history", async () => {

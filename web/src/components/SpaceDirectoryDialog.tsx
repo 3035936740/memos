@@ -20,6 +20,14 @@ const SEARCH_DELAY_MS = 300;
 
 type DirectoryTab = "all" | "joined";
 
+/** Directory orders, as the server's order_by values. */
+const SORT_ORDERS = [
+  { value: "create_time desc", labelKey: "space.directory.sort-newest" },
+  { value: "member_count desc", labelKey: "space.directory.sort-members" },
+  { value: "last_activity_time desc", labelKey: "space.directory.sort-active" },
+  { value: "title", labelKey: "space.directory.sort-title" },
+] as const;
+
 const ACCESS_LABELS = {
   [Space_AccessMode.PUBLIC]: "space.access-mode-public",
   [Space_AccessMode.AUTHENTICATED]: "space.access-mode-authenticated",
@@ -85,7 +93,8 @@ const SpaceDirectoryDialog = ({ open, onOpenChange }: Props) => {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageTokens, setPageTokens] = useState<string[]>([""]);
-  const [order, setOrder] = useState("create_time desc");
+  const [order, setOrder] = useState<string>(SORT_ORDERS[0].value);
+  const sortOptions = SORT_ORDERS.map((option) => ({ value: option.value, label: t(option.labelKey) }));
   const sample = useSampleSpaces(currentUser?.name, RANDOM_COUNT, open);
   const suggested = sample.data?.spaces ?? [];
 
@@ -176,15 +185,16 @@ const SpaceDirectoryDialog = ({ open, onOpenChange }: Props) => {
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{t("space.directory.total", { count: directory.data?.totalSize ?? 0 })}</span>
-          <Select value={order} onValueChange={(value) => value && setOrder(value)}>
+          <Select value={order} items={sortOptions} onValueChange={(value) => value && setOrder(value)}>
             <SelectTrigger aria-label={t("space.directory.sort")} className="w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="create_time desc">{t("space.directory.sort-newest")}</SelectItem>
-              <SelectItem value="member_count desc">{t("space.directory.sort-members")}</SelectItem>
-              <SelectItem value="last_activity_time desc">{t("space.directory.sort-active")}</SelectItem>
-              <SelectItem value="title">{t("space.directory.sort-title")}</SelectItem>
+              {sortOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

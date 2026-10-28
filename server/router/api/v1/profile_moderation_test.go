@@ -31,6 +31,8 @@ func TestUserProfileBlockedWords(t *testing.T) {
 				u.DisplayName = "for\u200bbidden"
 			case "description":
 				u.Description = "forbidden biography"
+			default:
+				t.Fatalf("unknown profile field %s", field)
 			}
 			_, err := s.CreateUser(ctx, &v1pb.CreateUserRequest{User: u, ValidateOnly: validateOnly})
 			require.Equal(t, codes.InvalidArgument, status.Code(err), "%s validate-only=%v", field, validateOnly)
@@ -60,6 +62,8 @@ func TestUserProfileBlockedWords(t *testing.T) {
 				u.DisplayName = "forbidden nickname"
 			case "description":
 				u.Description = "forbidden bio"
+			default:
+				t.Fatalf("unknown profile field %s", field)
 			}
 			_, err := s.CreateUser(caller, &v1pb.CreateUserRequest{User: u})
 			require.Equal(t, codes.InvalidArgument, status.Code(err), field)
@@ -124,6 +128,8 @@ func TestSpaceProfileBlockedWords(t *testing.T) {
 			space.Description = "forbidden description"
 		case "url_slug":
 			space.UrlSlug = "Forbidden"
+		default:
+			t.Fatalf("unknown space field %s", field)
 		}
 		_, err := s.CreateSpace(ownerCtx, &v1pb.CreateSpaceRequest{Space: space})
 		require.Equal(t, codes.InvalidArgument, status.Code(err), field)

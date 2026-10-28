@@ -4,6 +4,9 @@
 @import "./themes/atmospheric-shells.css";
 @import "./themes/blog-styles.css";
 @import "./themes/settings-surfaces.css";
+@import "./themes/share-image.css";
+@import "./themes/lite-effects.css";
+@import "./themes/oddities.css";
 
 /* Markdown images are block elements, so text-align alone cannot move them.
    Keep image alignment scoped to the validated memo alignment container. */

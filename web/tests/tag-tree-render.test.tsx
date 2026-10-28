@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TagTree from "@/components/TagTree";
 
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
+  useTranslate: () => (key: string) => key,
+}));
 
 const storedExpansion = (scope = "home") => JSON.parse(localStorage.getItem(`tag-tree-expanded:${scope}`) ?? "null");
 

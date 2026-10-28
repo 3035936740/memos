@@ -34,6 +34,21 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// InstanceServiceListStylePacksProcedure is the fully-qualified name of the InstanceService's
+	// ListStylePacks RPC.
+	InstanceServiceListStylePacksProcedure = "/memos.api.v1.InstanceService/ListStylePacks"
+	// InstanceServiceInstallStylePackProcedure is the fully-qualified name of the InstanceService's
+	// InstallStylePack RPC.
+	InstanceServiceInstallStylePackProcedure = "/memos.api.v1.InstanceService/InstallStylePack"
+	// InstanceServiceUpdateStylePackProcedure is the fully-qualified name of the InstanceService's
+	// UpdateStylePack RPC.
+	InstanceServiceUpdateStylePackProcedure = "/memos.api.v1.InstanceService/UpdateStylePack"
+	// InstanceServiceDeleteStylePackProcedure is the fully-qualified name of the InstanceService's
+	// DeleteStylePack RPC.
+	InstanceServiceDeleteStylePackProcedure = "/memos.api.v1.InstanceService/DeleteStylePack"
+	// InstanceServiceExportStylePackProcedure is the fully-qualified name of the InstanceService's
+	// ExportStylePack RPC.
+	InstanceServiceExportStylePackProcedure = "/memos.api.v1.InstanceService/ExportStylePack"
 	// InstanceServiceGetInstanceProfileProcedure is the fully-qualified name of the InstanceService's
 	// GetInstanceProfile RPC.
 	InstanceServiceGetInstanceProfileProcedure = "/memos.api.v1.InstanceService/GetInstanceProfile"
@@ -56,6 +71,16 @@ const (
 
 // InstanceServiceClient is a client for the memos.api.v1.InstanceService service.
 type InstanceServiceClient interface {
+	// Lists enabled community styles. Disabled metadata is administrator-only.
+	ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error)
+	// Installs a validated style ZIP, initially disabled.
+	InstallStylePack(context.Context, *connect.Request[v1.InstallStylePackRequest]) (*connect.Response[v1.StylePack], error)
+	// Replaces an installed version or changes its enabled state.
+	UpdateStylePack(context.Context, *connect.Request[v1.UpdateStylePackRequest]) (*connect.Response[v1.StylePack], error)
+	// Removes a style and resets references in the instance default.
+	DeleteStylePack(context.Context, *connect.Request[v1.DeleteStylePackRequest]) (*connect.Response[emptypb.Empty], error)
+	// Exports the original ZIP for administrator inspection.
+	ExportStylePack(context.Context, *connect.Request[v1.ExportStylePackRequest]) (*connect.Response[v1.ExportStylePackResponse], error)
 	// Gets the instance profile.
 	GetInstanceProfile(context.Context, *connect.Request[v1.GetInstanceProfileRequest]) (*connect.Response[v1.InstanceProfile], error)
 	// Gets an instance setting.
@@ -81,6 +106,36 @@ func NewInstanceServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 	baseURL = strings.TrimRight(baseURL, "/")
 	instanceServiceMethods := v1.File_api_v1_instance_service_proto.Services().ByName("InstanceService").Methods()
 	return &instanceServiceClient{
+		listStylePacks: connect.NewClient[v1.ListStylePacksRequest, v1.ListStylePacksResponse](
+			httpClient,
+			baseURL+InstanceServiceListStylePacksProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("ListStylePacks")),
+			connect.WithClientOptions(opts...),
+		),
+		installStylePack: connect.NewClient[v1.InstallStylePackRequest, v1.StylePack](
+			httpClient,
+			baseURL+InstanceServiceInstallStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("InstallStylePack")),
+			connect.WithClientOptions(opts...),
+		),
+		updateStylePack: connect.NewClient[v1.UpdateStylePackRequest, v1.StylePack](
+			httpClient,
+			baseURL+InstanceServiceUpdateStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("UpdateStylePack")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteStylePack: connect.NewClient[v1.DeleteStylePackRequest, emptypb.Empty](
+			httpClient,
+			baseURL+InstanceServiceDeleteStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("DeleteStylePack")),
+			connect.WithClientOptions(opts...),
+		),
+		exportStylePack: connect.NewClient[v1.ExportStylePackRequest, v1.ExportStylePackResponse](
+			httpClient,
+			baseURL+InstanceServiceExportStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("ExportStylePack")),
+			connect.WithClientOptions(opts...),
+		),
 		getInstanceProfile: connect.NewClient[v1.GetInstanceProfileRequest, v1.InstanceProfile](
 			httpClient,
 			baseURL+InstanceServiceGetInstanceProfileProcedure,
@@ -122,12 +177,42 @@ func NewInstanceServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 
 // instanceServiceClient implements InstanceServiceClient.
 type instanceServiceClient struct {
+	listStylePacks           *connect.Client[v1.ListStylePacksRequest, v1.ListStylePacksResponse]
+	installStylePack         *connect.Client[v1.InstallStylePackRequest, v1.StylePack]
+	updateStylePack          *connect.Client[v1.UpdateStylePackRequest, v1.StylePack]
+	deleteStylePack          *connect.Client[v1.DeleteStylePackRequest, emptypb.Empty]
+	exportStylePack          *connect.Client[v1.ExportStylePackRequest, v1.ExportStylePackResponse]
 	getInstanceProfile       *connect.Client[v1.GetInstanceProfileRequest, v1.InstanceProfile]
 	getInstanceSetting       *connect.Client[v1.GetInstanceSettingRequest, v1.InstanceSetting]
 	batchGetInstanceSettings *connect.Client[v1.BatchGetInstanceSettingsRequest, v1.BatchGetInstanceSettingsResponse]
 	updateInstanceSetting    *connect.Client[v1.UpdateInstanceSettingRequest, v1.InstanceSetting]
 	testInstanceEmailSetting *connect.Client[v1.TestInstanceEmailSettingRequest, emptypb.Empty]
 	getInstanceStats         *connect.Client[v1.GetInstanceStatsRequest, v1.InstanceStats]
+}
+
+// ListStylePacks calls memos.api.v1.InstanceService.ListStylePacks.
+func (c *instanceServiceClient) ListStylePacks(ctx context.Context, req *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error) {
+	return c.listStylePacks.CallUnary(ctx, req)
+}
+
+// InstallStylePack calls memos.api.v1.InstanceService.InstallStylePack.
+func (c *instanceServiceClient) InstallStylePack(ctx context.Context, req *connect.Request[v1.InstallStylePackRequest]) (*connect.Response[v1.StylePack], error) {
+	return c.installStylePack.CallUnary(ctx, req)
+}
+
+// UpdateStylePack calls memos.api.v1.InstanceService.UpdateStylePack.
+func (c *instanceServiceClient) UpdateStylePack(ctx context.Context, req *connect.Request[v1.UpdateStylePackRequest]) (*connect.Response[v1.StylePack], error) {
+	return c.updateStylePack.CallUnary(ctx, req)
+}
+
+// DeleteStylePack calls memos.api.v1.InstanceService.DeleteStylePack.
+func (c *instanceServiceClient) DeleteStylePack(ctx context.Context, req *connect.Request[v1.DeleteStylePackRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.deleteStylePack.CallUnary(ctx, req)
+}
+
+// ExportStylePack calls memos.api.v1.InstanceService.ExportStylePack.
+func (c *instanceServiceClient) ExportStylePack(ctx context.Context, req *connect.Request[v1.ExportStylePackRequest]) (*connect.Response[v1.ExportStylePackResponse], error) {
+	return c.exportStylePack.CallUnary(ctx, req)
 }
 
 // GetInstanceProfile calls memos.api.v1.InstanceService.GetInstanceProfile.
@@ -162,6 +247,16 @@ func (c *instanceServiceClient) GetInstanceStats(ctx context.Context, req *conne
 
 // InstanceServiceHandler is an implementation of the memos.api.v1.InstanceService service.
 type InstanceServiceHandler interface {
+	// Lists enabled community styles. Disabled metadata is administrator-only.
+	ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error)
+	// Installs a validated style ZIP, initially disabled.
+	InstallStylePack(context.Context, *connect.Request[v1.InstallStylePackRequest]) (*connect.Response[v1.StylePack], error)
+	// Replaces an installed version or changes its enabled state.
+	UpdateStylePack(context.Context, *connect.Request[v1.UpdateStylePackRequest]) (*connect.Response[v1.StylePack], error)
+	// Removes a style and resets references in the instance default.
+	DeleteStylePack(context.Context, *connect.Request[v1.DeleteStylePackRequest]) (*connect.Response[emptypb.Empty], error)
+	// Exports the original ZIP for administrator inspection.
+	ExportStylePack(context.Context, *connect.Request[v1.ExportStylePackRequest]) (*connect.Response[v1.ExportStylePackResponse], error)
 	// Gets the instance profile.
 	GetInstanceProfile(context.Context, *connect.Request[v1.GetInstanceProfileRequest]) (*connect.Response[v1.InstanceProfile], error)
 	// Gets an instance setting.
@@ -183,6 +278,36 @@ type InstanceServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	instanceServiceMethods := v1.File_api_v1_instance_service_proto.Services().ByName("InstanceService").Methods()
+	instanceServiceListStylePacksHandler := connect.NewUnaryHandler(
+		InstanceServiceListStylePacksProcedure,
+		svc.ListStylePacks,
+		connect.WithSchema(instanceServiceMethods.ByName("ListStylePacks")),
+		connect.WithHandlerOptions(opts...),
+	)
+	instanceServiceInstallStylePackHandler := connect.NewUnaryHandler(
+		InstanceServiceInstallStylePackProcedure,
+		svc.InstallStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("InstallStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
+	instanceServiceUpdateStylePackHandler := connect.NewUnaryHandler(
+		InstanceServiceUpdateStylePackProcedure,
+		svc.UpdateStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("UpdateStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
+	instanceServiceDeleteStylePackHandler := connect.NewUnaryHandler(
+		InstanceServiceDeleteStylePackProcedure,
+		svc.DeleteStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("DeleteStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
+	instanceServiceExportStylePackHandler := connect.NewUnaryHandler(
+		InstanceServiceExportStylePackProcedure,
+		svc.ExportStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("ExportStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
 	instanceServiceGetInstanceProfileHandler := connect.NewUnaryHandler(
 		InstanceServiceGetInstanceProfileProcedure,
 		svc.GetInstanceProfile,
@@ -221,6 +346,16 @@ func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.Handl
 	)
 	return "/memos.api.v1.InstanceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case InstanceServiceListStylePacksProcedure:
+			instanceServiceListStylePacksHandler.ServeHTTP(w, r)
+		case InstanceServiceInstallStylePackProcedure:
+			instanceServiceInstallStylePackHandler.ServeHTTP(w, r)
+		case InstanceServiceUpdateStylePackProcedure:
+			instanceServiceUpdateStylePackHandler.ServeHTTP(w, r)
+		case InstanceServiceDeleteStylePackProcedure:
+			instanceServiceDeleteStylePackHandler.ServeHTTP(w, r)
+		case InstanceServiceExportStylePackProcedure:
+			instanceServiceExportStylePackHandler.ServeHTTP(w, r)
 		case InstanceServiceGetInstanceProfileProcedure:
 			instanceServiceGetInstanceProfileHandler.ServeHTTP(w, r)
 		case InstanceServiceGetInstanceSettingProcedure:
@@ -241,6 +376,26 @@ func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.Handl
 
 // UnimplementedInstanceServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedInstanceServiceHandler struct{}
+
+func (UnimplementedInstanceServiceHandler) ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.ListStylePacks is not implemented"))
+}
+
+func (UnimplementedInstanceServiceHandler) InstallStylePack(context.Context, *connect.Request[v1.InstallStylePackRequest]) (*connect.Response[v1.StylePack], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.InstallStylePack is not implemented"))
+}
+
+func (UnimplementedInstanceServiceHandler) UpdateStylePack(context.Context, *connect.Request[v1.UpdateStylePackRequest]) (*connect.Response[v1.StylePack], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.UpdateStylePack is not implemented"))
+}
+
+func (UnimplementedInstanceServiceHandler) DeleteStylePack(context.Context, *connect.Request[v1.DeleteStylePackRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.DeleteStylePack is not implemented"))
+}
+
+func (UnimplementedInstanceServiceHandler) ExportStylePack(context.Context, *connect.Request[v1.ExportStylePackRequest]) (*connect.Response[v1.ExportStylePackResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.ExportStylePack is not implemented"))
+}
 
 func (UnimplementedInstanceServiceHandler) GetInstanceProfile(context.Context, *connect.Request[v1.GetInstanceProfileRequest]) (*connect.Response[v1.InstanceProfile], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.GetInstanceProfile is not implemented"))

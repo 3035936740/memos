@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildAppearancePack,
-  externalHostsOf,
-  isPoweredByHidden,
-  parseAppearancePack,
-  setPoweredByHidden,
-} from "@/utils/appearance-pack";
+import { buildAppearancePack, externalHostsOf, isPoweredByHidden, parseAppearancePack, setPoweredByHidden } from "@/utils/appearance-pack";
 
 const appearance = {
   firstVisitDefaultStyle: "pixel",

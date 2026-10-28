@@ -13,6 +13,7 @@ const BackupExport = () => {
   const t = useTranslate();
   const { profile } = useInstance();
   const [attachments, setAttachments] = useState("local");
+  const attachmentOptions = (["local", "all", "none"] as const).map((value) => ({ value, label: t(`backup.${value}`) }));
   const [database, setDatabase] = useState(false);
   const [busy, setBusy] = useState(false);
   const active = useRef<AbortController | undefined>(undefined);
@@ -68,14 +69,16 @@ const BackupExport = () => {
     <SettingGroup title={t("backup.title")} description={t("backup.description")} showSeparator>
       <SettingList>
         <SettingListItem label={t("backup.attachments")}>
-          <Select value={attachments} disabled={busy} onValueChange={(value) => value && setAttachments(value)}>
+          <Select value={attachments} items={attachmentOptions} disabled={busy} onValueChange={(value) => value && setAttachments(value)}>
             <SelectTrigger aria-label={t("backup.attachments")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="local">{t("backup.local")}</SelectItem>
-              <SelectItem value="all">{t("backup.all")}</SelectItem>
-              <SelectItem value="none">{t("backup.none")}</SelectItem>
+              {attachmentOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </SettingListItem>

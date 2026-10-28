@@ -1,0 +1,887 @@
+/* The odd pages beside the app (pages/oddities): /void, /418, /museum and /time-machine. Everything that moves here
+   stands still under "reduce motion" and in low-power mode (the end of this file); /void then skips the show
+   entirely and the thought is simply gone. */
+
+/* ---------------------------------------------------------------------------
+   /void: each style destroys a thought its own way. Letters carry --dx, --dy, --rot (-1 to 1) and --d (a delay).
+   --------------------------------------------------------------------------- */
+
+[data-void-thought] {
+  position: absolute;
+  inset: 0 0 auto;
+  padding: 0.5rem 0;
+  text-align: center;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: var(--foreground);
+  pointer-events: none;
+  animation: void-life var(--void-life, 1.6s) linear forwards;
+}
+
+[data-void-thought] [data-ch] {
+  display: inline-block;
+  white-space: pre;
+  animation: var(--void-letter, void-dissolve) 1.1s cubic-bezier(0.55, 0, 0.75, 0) var(--d, 0ms) forwards;
+}
+
+@keyframes void-life {
+  0%,
+  92% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes void-dissolve {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translate(calc(var(--dx) * 24px), calc(var(--dy) * -60px - 16px));
+  }
+}
+
+[data-void-fx="shatter"] {
+  --void-letter: void-shatter;
+}
+
+@keyframes void-shatter {
+  15% {
+    transform: translate(calc(var(--dx) * 4px), 0) rotate(calc(var(--rot) * 12deg));
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * 180px), calc(var(--dy) * 140px + 90px)) rotate(calc(var(--rot) * 540deg));
+  }
+}
+
+[data-void-fx="press"] {
+  --void-letter: void-press;
+}
+
+@keyframes void-press {
+  to {
+    opacity: 0;
+    color: var(--background);
+    text-shadow:
+      1px 1px 1px rgb(0 0 0 / 18%),
+      -1px -1px 1px rgb(255 255 255 / 60%);
+    transform: scale(0.6);
+  }
+}
+
+[data-void-fx="bubbles"] [data-ch] {
+  animation-duration: 1.7s;
+  animation-timing-function: ease-in;
+}
+
+[data-void-fx="bubbles"] {
+  --void-letter: void-bubbles;
+}
+
+@keyframes void-bubbles {
+  20% {
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 80%);
+    transform: scale(1.25);
+  }
+  to {
+    opacity: 0;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 80%);
+    transform: translate(calc(var(--dx) * 40px), calc(var(--dy) * -90px - 120px)) scale(1.6);
+  }
+}
+
+[data-void-fx="melt"] [data-ch] {
+  animation-duration: 1.6s;
+  transform-origin: top;
+}
+
+[data-void-fx="melt"] {
+  --void-letter: void-melt;
+}
+
+@keyframes void-melt {
+  40% {
+    color: var(--sb-vw-pink, #f7b0d8);
+  }
+  to {
+    opacity: 0;
+    color: var(--sb-vw-lavender, #b9a2f5);
+    filter: blur(3px);
+    transform: translateY(calc(var(--dy) * 70px + 30px)) scaleY(2.8);
+  }
+}
+
+[data-void-fx="blocks"] [data-ch] {
+  animation-timing-function: steps(6);
+}
+
+[data-void-fx="blocks"] {
+  --void-letter: void-blocks;
+}
+
+@keyframes void-blocks {
+  25% {
+    color: transparent;
+    background: var(--foreground);
+  }
+  to {
+    opacity: 0;
+    color: transparent;
+    background: var(--foreground);
+    transform: translateY(240px);
+  }
+}
+
+[data-void-fx="erase"] [data-ch] {
+  animation: none;
+}
+
+[data-void-fx="erase"] [data-void-text] {
+  display: inline-block;
+  animation: void-erase 1.3s ease-in forwards;
+}
+
+@keyframes void-erase {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 100%);
+    filter: blur(1px);
+  }
+}
+
+[data-void-fx="gild"] {
+  --void-letter: void-gild;
+}
+
+@keyframes void-gild {
+  30% {
+    color: #f2c14e;
+    text-shadow: 0 0 10px rgb(242 193 78 / 80%);
+  }
+  to {
+    opacity: 0;
+    color: #f2c14e;
+    text-shadow: 0 0 18px rgb(242 193 78 / 90%);
+    transform: translateY(calc(var(--dy) * -40px - 24px)) scale(1.3);
+  }
+}
+
+[data-void-shell] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #0d1117;
+  color: #7ee787;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  text-align: left;
+}
+
+[data-void-shell] [data-void-line] {
+  opacity: 0;
+  animation: void-type 0.01s linear var(--d, 0ms) forwards;
+}
+
+@keyframes void-type {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   /418: steam rises; a refusal wobbles the pot; giving in tips it to pour.
+   --------------------------------------------------------------------------- */
+
+[data-teapot] [data-teapot-steam] path {
+  animation: teapot-steam 2.4s ease-in-out infinite;
+}
+
+[data-teapot] [data-teapot-steam] path:nth-child(2) {
+  animation-delay: -0.8s;
+}
+
+[data-teapot] [data-teapot-steam] path:nth-child(3) {
+  animation-delay: -1.6s;
+}
+
+@keyframes teapot-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+[data-teapot] [data-teapot-body] {
+  transform-box: view-box;
+  transform-origin: 36px 55px;
+  animation: teapot-wobble 0.5s ease-in-out;
+}
+
+@keyframes teapot-wobble {
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+[data-teapot] [data-teapot-cup] {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+[data-teapot][data-pouring] [data-teapot-cup] {
+  opacity: 1;
+}
+
+[data-teapot][data-pouring] [data-teapot-body] {
+  transform-origin: 8.5px 31px;
+  animation: teapot-tip 3.8s ease-in-out forwards;
+}
+
+@keyframes teapot-tip {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  18%,
+  78% {
+    transform: rotate(-38deg);
+  }
+}
+
+[data-teapot] > [data-teapot-steam] {
+  transition: opacity 200ms ease;
+}
+
+[data-teapot][data-pouring] > [data-teapot-steam] {
+  opacity: 0;
+}
+
+[data-teapot] [data-teapot-stream] {
+  opacity: 0;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+
+[data-teapot][data-pouring] [data-teapot-stream] {
+  animation: teapot-stream 2.2s linear 0.7s forwards;
+}
+
+@keyframes teapot-stream {
+  0% {
+    opacity: 1;
+    stroke-dashoffset: 1;
+  }
+  12%,
+  82% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -1;
+  }
+}
+
+[data-teapot] [data-teapot-tea] {
+  transform: translateY(25px);
+}
+
+[data-teapot][data-pouring] [data-teapot-tea] {
+  animation: teapot-fill 1.65s linear 1.05s forwards;
+}
+
+@keyframes teapot-fill {
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   /museum: a miniature card per style, in museum-only CSS, since only one style can dress the page at a time.
+   --------------------------------------------------------------------------- */
+
+[data-museum-mini] {
+  display: grid;
+  place-items: center;
+  background: var(--muted);
+}
+
+[data-museum-mini] [data-mini-card] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 62%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+[data-museum-mini] [data-mini-title],
+[data-museum-mini] [data-mini-line] {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: color-mix(in oklch, var(--foreground) 22%, transparent);
+}
+
+[data-museum-mini] [data-mini-title] {
+  width: 70%;
+  height: 9px;
+  background: color-mix(in oklch, var(--foreground) 55%, transparent);
+}
+
+[data-museum-mini] [data-mini-line]:last-child {
+  width: 55%;
+}
+
+[data-museum-mini="terminal"] {
+  background: #0d1117;
+}
+
+[data-museum-mini="terminal"] [data-mini-card] {
+  border: 1px solid #2b3542;
+  border-radius: 0;
+  background: #0d1117;
+  box-shadow: none;
+}
+
+[data-museum-mini="terminal"] :is([data-mini-title], [data-mini-line]) {
+  border-radius: 0;
+  background: #7ee787;
+}
+
+[data-museum-mini="terminal"] [data-mini-line] {
+  opacity: 0.55;
+}
+
+[data-museum-mini="pixel"] {
+  background:
+    linear-gradient(#5aa02c, #5aa02c) bottom / 100% 14% no-repeat,
+    #5c94fc;
+}
+
+[data-museum-mini="pixel"] [data-mini-card] {
+  border: 3px solid #1b1b1b;
+  border-radius: 0;
+  background: #fcfcfc;
+  box-shadow: 4px 4px 0 #1b1b1b;
+}
+
+[data-museum-mini="pixel"] :is([data-mini-title], [data-mini-line]) {
+  border-radius: 0;
+  background: #1b1b1b;
+}
+
+[data-museum-mini="y2k"] {
+  background: linear-gradient(180deg, #ffffff 0%, #eceff9 48%, #d6dcf0 52%, #f4f6fd 100%);
+}
+
+[data-museum-mini="y2k"] [data-mini-card] {
+  padding-top: 18px;
+  border: 2px solid;
+  border-color: #ffffff #7b86a8 #7b86a8 #ffffff;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, #0a246a, #a6caf0) top / 100% 12px no-repeat,
+    #ece9d8;
+  box-shadow: none;
+}
+
+[data-museum-mini="aero"] {
+  background:
+    radial-gradient(60% 40% at 50% 115%, #77d84f 0%, #44ad2c 60%, transparent 61%), linear-gradient(180deg, #3cc0ff 0%, #b8f0ff 70%);
+}
+
+[data-museum-mini="aero"] [data-mini-card] {
+  border: 1px solid rgb(255 255 255 / 92%);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 80%) 0%, rgb(255 255 255 / 45%) 100%);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 6px 16px rgb(8 73 127 / 25%);
+}
+
+[data-museum-mini="vaporwave"] {
+  background:
+    radial-gradient(circle at 50% 70%, #ffd36b 0 16%, transparent 17%),
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 35%) 0 1px, transparent 1px 16px) bottom / 100% 30% no-repeat,
+    linear-gradient(180deg, #b9a2f5 0%, #f7b0d8 100%);
+}
+
+[data-museum-mini="vaporwave"] [data-mini-card] {
+  border: 2px solid #4a4268;
+  border-radius: 0;
+  background: #ececf0;
+  box-shadow: 4px 4px 0 #ff71ce;
+}
+
+[data-museum-mini="neumorphism"] {
+  background: #e3e8ef;
+}
+
+[data-museum-mini="neumorphism"] [data-mini-card] {
+  border-radius: 14px;
+  background: #e3e8ef;
+  box-shadow:
+    6px 6px 12px #bec5d0,
+    -6px -6px 12px #ffffff;
+}
+
+[data-museum-mini="glass"] {
+  background:
+    radial-gradient(45% 55% at 20% 25%, #8b5cf6 0%, transparent 70%), radial-gradient(45% 55% at 85% 70%, #22d3ee 0%, transparent 70%),
+    #f1f5f9;
+}
+
+[data-museum-mini="glass"] [data-mini-card] {
+  border: 1px solid rgb(255 255 255 / 60%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 30%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+[data-museum-mini="handdrawn"] {
+  background: #fbf7ee;
+}
+
+[data-museum-mini="handdrawn"] [data-mini-card] {
+  border: 2px solid #3a3a3a;
+  border-radius: 3px 9px 5px 8px / 9px 4px 8px 5px;
+  background: #fffdf8;
+  box-shadow: none;
+  transform: rotate(-1.5deg);
+}
+
+[data-museum-mini="handdrawn"] :is([data-mini-title], [data-mini-line]) {
+  height: 3px;
+  background: #3a3a3a;
+  transform: rotate(0.6deg);
+}
+
+[data-museum-mini="golden"] {
+  background: radial-gradient(70% 60% at 50% 30%, rgb(242 193 78 / 45%) 0%, transparent 72%), #1a140a;
+}
+
+[data-museum-mini="golden"] [data-mini-card] {
+  border: 1px solid #e2cf9f;
+  background: #241b0c;
+  box-shadow: 0 0 18px rgb(242 193 78 / 35%);
+}
+
+[data-museum-mini="golden"] :is([data-mini-title], [data-mini-line]) {
+  background: linear-gradient(90deg, #a87a1f, #f2c14e, #a87a1f);
+}
+
+/* The shut door of the last room: only light gets out. */
+[data-museum-mini="locked"] {
+  background: #1a1612;
+}
+
+[data-museum-mini="locked"] [data-mini-door] {
+  position: relative;
+  width: 34%;
+  height: 78%;
+  margin-top: 22%;
+  border-radius: 6px 6px 0 0;
+  background: #3b2d22;
+  box-shadow: inset 0 0 0 3px #2a2018;
+}
+
+[data-museum-mini="locked"] [data-mini-door]::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -2px;
+  height: 6px;
+  background: radial-gradient(50% 100% at 50% 100%, rgb(242 193 78 / 90%) 0%, transparent 100%);
+  filter: blur(2px);
+  animation: museum-door-light 3s ease-in-out infinite alternate;
+}
+
+@keyframes museum-door-light {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   /time-machine: the browsers of four years.
+   --------------------------------------------------------------------------- */
+
+[data-era] a {
+  color: inherit;
+}
+
+[data-era="1985"] {
+  padding: 1.25rem 1.5rem;
+  background: #050805;
+  color: #33ff66;
+  text-shadow: 0 0 6px rgb(51 255 102 / 55%);
+}
+
+[data-era="1985"] a:hover {
+  background: #33ff66;
+  color: #050805;
+  text-shadow: none;
+}
+
+[data-era-cursor] {
+  animation: era-blink 1s steps(1) infinite;
+}
+
+@keyframes era-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+[data-era="1999"] {
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  background: #c0c0c0;
+  color: #000000;
+  font-family: "Times New Roman", "SimSun", serif;
+  font-size: 15px;
+}
+
+[data-era="1999"] [data-era-titlebar] {
+  padding: 3px 6px;
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #ffffff;
+  font-family: Tahoma, "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+[data-era="1999"] [data-era-toolbar] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #808080;
+}
+
+[data-era="1999"] [data-era-button] {
+  padding: 2px 8px;
+  border: 2px solid;
+  border-color: #ffffff #808080 #808080 #ffffff;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+[data-era="1999"] [data-era-address] {
+  padding: 3px 6px;
+  border-bottom: 1px solid #808080;
+  font-family: Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+[data-era="1999"] [data-era-page] {
+  margin: 6px;
+  padding: 12px 16px;
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  background: #000033;
+  color: #ffff66;
+}
+
+[data-era="1999"] [data-era-page] a {
+  color: #66ccff;
+  text-decoration: underline;
+}
+
+[data-era="1999"] [data-era-page] ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  list-style: square;
+}
+
+[data-era="1999"] [data-era-marquee] {
+  overflow: hidden;
+  white-space: nowrap;
+  color: #ff66cc;
+}
+
+[data-era="1999"] [data-era-marquee] span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: era-marquee 12s linear infinite;
+}
+
+@keyframes era-marquee {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+[data-era="1999"] [data-era-heading] {
+  margin: 0.5rem 0;
+  color: #ffffff;
+  font-family: "Comic Sans MS", "Comic Sans", "KaiTi", cursive;
+  font-size: 1.6rem;
+  text-align: center;
+  text-shadow: 2px 2px 0 #ff00ff;
+}
+
+[data-era="1999"] [data-era-construction] {
+  margin: 0 auto 0.5rem;
+  padding: 2px 8px;
+  width: fit-content;
+  background: repeating-linear-gradient(45deg, #ffcc00 0 10px, #000000 10px 20px);
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 1px 1px 0 #000000;
+}
+
+[data-era="1999"] hr {
+  border: 0;
+  border-top: 2px groove #c0c0c0;
+}
+
+[data-era="1999"] [data-era-new] {
+  color: #ff3333;
+  font-size: 11px;
+  font-weight: 700;
+  animation: era-blink 0.8s steps(1) infinite;
+}
+
+[data-era="1999"] [data-era-counter] {
+  display: inline-flex;
+  gap: 1px;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+[data-era="1999"] [data-era-counter] span {
+  padding: 0 3px;
+  background: #000000;
+  color: #ff3333;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
+
+[data-era="1999"] [data-era-footnote] {
+  margin-top: 0.5rem;
+  color: #c0c0c0;
+  font-size: 11px;
+  text-align: center;
+}
+
+[data-era="2009"] {
+  border: 1px solid rgb(0 0 0 / 45%);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgb(185 214 238 / 95%), rgb(120 160 200 / 95%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 70%),
+    0 10px 30px rgb(0 0 0 / 30%);
+  color: #1e2a36;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+[data-era="2009"] [data-era-titlebar] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  color: #000000;
+  font-size: 12px;
+  text-shadow: 0 0 8px #ffffff;
+}
+
+[data-era="2009"] [data-era-window-buttons] {
+  display: flex;
+  gap: 2px;
+}
+
+[data-era="2009"] [data-era-window-buttons] span {
+  width: 24px;
+  height: 16px;
+  border: 1px solid rgb(0 0 0 / 40%);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(255 255 255 / 15%) 50%, rgb(0 0 0 / 10%) 51%);
+}
+
+[data-era="2009"] [data-era-window-buttons] span:last-child {
+  width: 40px;
+  background: linear-gradient(180deg, #e8a493, #c7432a 50%, #a8250c 51%, #d3654a);
+}
+
+[data-era="2009"] [data-era-address] {
+  margin: 0 8px 6px;
+  padding: 3px 8px;
+  border: 1px solid #8e9fb3;
+  border-radius: 3px;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+[data-era="2009"] [data-era-page] {
+  margin: 0 8px 8px;
+  padding: 14px 16px;
+  border: 1px solid #8e9fb3;
+  background: #ffffff;
+}
+
+[data-era="2009"] [data-era-heading] {
+  margin: 0 0 12px;
+  color: #3b5998;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+[data-era="2009"] [data-era-beta] {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #ff9c3a, #e96d00);
+  color: #ffffff;
+  font-size: 11px;
+  vertical-align: super;
+}
+
+[data-era="2009"] [data-era-post] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted #b8c4d2;
+}
+
+[data-era="2009"] [data-era-post] a {
+  color: #0066cc;
+  font-weight: 600;
+}
+
+[data-era="2009"] [data-era-more] {
+  color: #6d84b4;
+  font-size: 12px;
+}
+
+[data-era="2009"] [data-era-rss] {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #ffb35c, #f26f21);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+[data-era="2009"] [data-era-tags] {
+  margin: 0;
+  color: #3b5998;
+  line-height: 1.6;
+}
+
+[data-era="2009"] [data-era-share] {
+  color: #6d84b4;
+  font-size: 11px;
+}
+
+[data-era="2049"] {
+  position: relative;
+  padding: 1.5rem;
+  background:
+    repeating-linear-gradient(180deg, rgb(120 255 255 / 6%) 0 1px, transparent 1px 4px),
+    radial-gradient(80% 60% at 50% 0%, rgb(0 180 255 / 30%) 0%, transparent 70%), #02060d;
+  color: #9ff7ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+[data-era="2049"] [data-era-status] {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+[data-era="2049"] [data-era-holo] {
+  display: block;
+  min-height: 6rem;
+  padding: 0.9rem;
+  border: 1px solid rgb(120 255 255 / 45%);
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgb(120 255 255 / 14%), rgb(120 120 255 / 6%));
+  box-shadow:
+    0 0 18px rgb(0 220 255 / 25%),
+    inset 0 0 12px rgb(120 255 255 / 12%);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  animation: era-hover 4s ease-in-out infinite;
+}
+
+[data-era="2049"] [data-era-holo]:hover {
+  border-color: rgb(160 255 255 / 85%);
+}
+
+@keyframes era-hover {
+  50% {
+    transform: translateY(-6px) rotateX(6deg);
+  }
+}
+
+[data-era="2049"] [data-era-footnote] {
+  margin: 1rem 0 0;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* ---------------------------------------------------------------------------
+   Standing still: "reduce motion" and low-power mode.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :is([data-oddity], [data-void-thought], [data-teapot]) *,
+  :is([data-oddity], [data-void-thought], [data-teapot]) *::after {
+    animation: none !important;
+  }
+}
+
+html[data-effects="lite"] :is([data-oddity], [data-void-thought], [data-teapot]) *,
+html[data-effects="lite"] :is([data-oddity], [data-void-thought], [data-teapot]) *::after {
+  animation: none !important;
+}
+
+/* Without the pour animation, the cup simply shows full. */
+@media (prefers-reduced-motion: reduce) {
+  [data-teapot][data-pouring] [data-teapot-stream] {
+    display: none;
+  }
+
+  [data-teapot][data-pouring] [data-teapot-tea] {
+    transform: none;
+  }
+}
+
+html[data-effects="lite"] [data-teapot][data-pouring] [data-teapot-stream] {
+  display: none;
+}
+
+html[data-effects="lite"] [data-teapot][data-pouring] [data-teapot-tea] {
+  transform: none;
+}

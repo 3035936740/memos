@@ -9,6 +9,8 @@ name: Upgrade Smoke
 # the `server` group of backend-tests.yml and runs on every pull request.
 
 on:
+  push:
+    branches: [main]
   workflow_call:
   workflow_dispatch:
   pull_request:
@@ -70,6 +72,10 @@ jobs:
           DRIVER: ${{ matrix.driver }}
 
   release-smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        driver: [sqlite, mysql, postgres]
     name: Fresh install and upgrade through the release image
     runs-on: ubuntu-latest
     steps:
@@ -98,6 +104,8 @@ jobs:
 
       - name: Run release smoke test
         run: ./scripts/release_smoke_test.sh
+        env:
+          MEMOS_SMOKE_DRIVER: ${{ matrix.driver }}
 
   entrypoint:
     name: Entrypoint secret handling

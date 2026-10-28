@@ -29,6 +29,8 @@ func TestCreateUserPersistsDescription(t *testing.T) {
 				require.True(t, created)
 			case "identity":
 				user, err = ts.CreateUserWithIdentity(ctx, input, &store.UserIdentity{Provider: "bio-idp", ExternUID: "bio-subject"})
+			default:
+				t.Fatalf("unknown test mode %s", mode)
 			}
 			require.NoError(t, err)
 			require.Equal(t, "A saved biography", user.Description)

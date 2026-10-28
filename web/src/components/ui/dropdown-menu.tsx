@@ -22,10 +22,11 @@ DropdownMenuTrigger.displayName = "DropdownMenuTrigger";
 type DropdownMenuContentProps = DropdownMenuPrimitive.Popup.Props &
   Pick<DropdownMenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset"> & {
     size?: DropdownMenuSize;
+    viewportClassName?: string;
   };
 
 const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContentProps>(
-  ({ className, children, align, alignOffset, side, sideOffset = 4, size = "default", ...props }, ref) => {
+  ({ className, viewportClassName, children, align, alignOffset, side, sideOffset = 4, size = "default", ...props }, ref) => {
     return (
       <DropdownMenuSizeContext.Provider value={size}>
         <DropdownMenuPrimitive.Portal>
@@ -50,7 +51,10 @@ const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContent
             >
               <div
                 data-slot="dropdown-menu-viewport"
-                className="relative z-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [display:inherit] [flex-direction:inherit] [gap:inherit]"
+                className={cn(
+                  "relative z-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [display:inherit] [flex-direction:inherit] [gap:inherit]",
+                  viewportClassName,
+                )}
               >
                 {children}
               </div>

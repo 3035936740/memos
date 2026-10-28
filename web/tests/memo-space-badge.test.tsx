@@ -20,7 +20,10 @@ vi.mock("@/contexts/SpaceContext", () => ({
   },
 }));
 
+vi.mock("@/contexts/MemoSpacesContext", () => ({ useMemoSpace: (name: string) => state.spaces.find((space) => space.name === name) }));
+
 vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
   useTranslate: () => (key: string) => (key === "space.current" ? "Space" : key),
 }));
 

@@ -116,6 +116,7 @@ export const SelectableMemo = ({ memo, children }: { memo: Memo; children: React
     <div data-memo-selectable="" data-selected={picked || undefined} className="relative">
       {children}
       <button
+        data-memo-selection-overlay=""
         type="button"
         aria-pressed={picked}
         aria-label={t("memo.batch.pick", { title })}
@@ -126,6 +127,7 @@ export const SelectableMemo = ({ memo, children }: { memo: Memo; children: React
         )}
       >
         <span
+          data-memo-selection-indicator=""
           aria-hidden
           className={cn(
             "absolute end-3 top-3 flex size-5 items-center justify-center rounded-md border-2",
@@ -178,8 +180,8 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
   if (!active) {
     if (pickable.length === 0) return null;
     return (
-      <div className={cn("flex justify-end", className)}>
-        <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setActive(true)}>
+      <div data-memo-batch-entry="" className={cn("flex justify-start", className)}>
+        <Button variant="outline" size="sm" className="text-muted-foreground" onClick={() => setActive(true)}>
           <ListChecksIcon className="size-4" />
           {t("memo.batch.start")}
         </Button>
@@ -231,6 +233,7 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
   return (
     <div
       data-memo-batch-bar=""
+      data-settings-surface=""
       className={cn(
         "sticky top-16 z-20 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border bg-card/95 px-3 py-2 shadow-sm",
         className,

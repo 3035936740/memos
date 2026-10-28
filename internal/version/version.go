@@ -1,6 +1,7 @@
 package version
 
 import (
+	_ "embed"
 	"fmt"
 	"strings"
 
@@ -13,11 +14,17 @@ var Version = "dev"
 // PlusVersion is the independently versioned Memos Plus release.
 var PlusVersion = "1.0.0-dev"
 
+//go:embed upstream-version.txt
+var upstreamVersionFile string
+
+// UpstreamVersion is the schema compatibility version shared with release tooling.
+func UpstreamVersion() string { return strings.TrimSpace(upstreamVersionFile) }
+
 // GetDisplayVersion describes the fork release without changing upstream schema semantics.
 func GetDisplayVersion() string {
 	base := Version
 	if base == "dev" {
-		base = "0.34.x-dev"
+		base = UpstreamVersion() + "-dev"
 	}
 	return fmt.Sprintf("%s (based on Memos %s)", PlusVersion, base)
 }

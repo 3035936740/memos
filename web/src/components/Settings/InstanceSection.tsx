@@ -1,5 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
+import { ChevronRightIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import LocalePicker from "@/components/LocalePicker";
@@ -12,6 +13,7 @@ import { useInstance } from "@/contexts/InstanceContext";
 import useDialog from "@/hooks/useDialog";
 import { DEFAULT_MEMO_FEED_PAGE_SIZE, MAX_MEMO_FEED_PAGE_SIZE, MIN_MEMO_FEED_PAGE_SIZE } from "@/lib/constants";
 import { keepInstanceSiteConfig, parseInstanceSiteConfig, resolveMusicConfig } from "@/lib/instance-content";
+import { cn } from "@/lib/utils";
 import { IdentityProvider } from "@/types/proto/api/v1/idp_service_pb";
 import {
   InstanceAccessMode,
@@ -35,6 +37,21 @@ import { SettingCodeEditor, SettingList, SettingListItem } from "./SettingList";
 import SettingSection from "./SettingSection";
 import useInstanceSettingUpdater, { buildInstanceSettingName } from "./useInstanceSettingUpdater";
 
+/** Whether this browser keeps the advanced system settings open; a per-viewer convenience. */
+const ADVANCED_OPEN_KEY = "memos-plus-settings-advanced";
+
+const readAdvancedOpen = () => {
+  try {
+    return localStorage.getItem(ADVANCED_OPEN_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * System settings. What a new site owner needs first (name, who can read and sign up, how newcomers see the site)
+ * stays in view; everything else waits behind "Advanced", collapsed until opened.
+ */
 const InstanceSection = () => {
   const t = useTranslate();
   const customizeDialog = useDialog();
@@ -47,6 +64,16 @@ const InstanceSection = () => {
   const [instanceAccessSetting, setInstanceAccessSetting] = useState<InstanceSetting_AccessSetting>(originalAccessSetting);
   const [instanceGeneralSetting, setInstanceGeneralSetting] = useState<InstanceSetting_GeneralSetting>(normalizedOriginalGeneralSetting);
   const [identityProviderList, setIdentityProviderList] = useState<IdentityProvider[]>([]);
+  const [advancedOpen, setAdvancedOpen] = useState(readAdvancedOpen);
+
+  const toggleAdvanced = (open: boolean) => {
+    setAdvancedOpen(open);
+    try {
+      localStorage.setItem(ADVANCED_OPEN_KEY, open ? "1" : "0");
+    } catch {
+      // Not remembered; it opens collapsed next time.
+    }
+  };
 
   useEffect(() => {
     setInstanceAccessSetting(originalAccessSetting);
@@ -148,96 +175,14 @@ const InstanceSection = () => {
 
   return (
     <SettingSection title={t("setting.system.label")}>
-      <SettingGroup title={t("common.basic")} description={t("setting.system.basic-description")}>
+      <SettingGroup title={t("common.basic")} description={t("setting.system.essentials-description")}>
         <SettingList>
           <SettingListItem label={t("setting.system.server-name")} description={instanceGeneralSetting.customProfile?.title || "Memos"}>
             <Button variant="outline" onClick={customizeDialog.open}>
               {t("common.edit")}
             </Button>
           </SettingListItem>
-          <SettingListItem
-            label={t("setting.system.memo-page-size")}
-            description={t("setting.system.memo-page-size-description", {
-              min: MIN_MEMO_FEED_PAGE_SIZE,
-              max: MAX_MEMO_FEED_PAGE_SIZE,
-              default: DEFAULT_MEMO_FEED_PAGE_SIZE,
-            })}
-          >
-            <Input
-              type="number"
-              min={MIN_MEMO_FEED_PAGE_SIZE}
-              max={MAX_MEMO_FEED_PAGE_SIZE}
-              className="w-24"
-              value={instanceGeneralSetting.memoPageSize || ""}
-              placeholder={DEFAULT_MEMO_FEED_PAGE_SIZE.toString()}
-              onChange={(event) => {
-                const rawValue = event.target.valueAsNumber;
-                const memoPageSize = Number.isFinite(rawValue)
-                  ? Math.min(MAX_MEMO_FEED_PAGE_SIZE, Math.max(MIN_MEMO_FEED_PAGE_SIZE, Math.trunc(rawValue)))
-                  : 0;
-                updatePartialSetting({ memoPageSize });
-              }}
-            />
-          </SettingListItem>
-          <SettingListItem
-            label={t("setting.system.default-background-image")}
-            description={t("setting.system.default-background-image-description")}
-          >
-            <Input
-              type="url"
-              className="w-80 max-w-full"
-              value={instanceGeneralSetting.defaultBackgroundImageUrl}
-              placeholder="https://example.com/background.webp"
-              onChange={(event) => updatePartialSetting({ defaultBackgroundImageUrl: event.target.value.trim() })}
-            />
-          </SettingListItem>
-          <SettingListItem label={t("setting.system.festival-effects")} description={t("setting.system.festival-effects-description")}>
-            <Switch
-              checked={!instanceGeneralSetting.disableFestivalEffects}
-              onCheckedChange={(checked) => updatePartialSetting({ disableFestivalEffects: !checked })}
-            />
-          </SettingListItem>
-        </SettingList>
-      </SettingGroup>
 
-      <SettingGroup title={t("setting.system.custom-code-title")} description={t("setting.system.custom-code-description")} showSeparator>
-        <SettingCodeEditor
-          label={t("setting.system.additional-style")}
-          description={t("setting.system.additional-style-description")}
-          placeholder={t("setting.system.additional-style-placeholder")}
-          value={instanceGeneralSetting.additionalStyle}
-          onChange={(additionalStyle) => updatePartialSetting({ additionalStyle })}
-        />
-
-        <SettingCodeEditor
-          label={t("setting.system.additional-script")}
-          description={t("setting.system.additional-script-description")}
-          placeholder={t("setting.system.additional-script-placeholder")}
-          value={instanceGeneralSetting.additionalScript}
-          onChange={(additionalScript) => updatePartialSetting({ additionalScript })}
-        />
-      </SettingGroup>
-
-      <SettingGroup title={t("setting.content.title")} description={t("setting.content.description")} showSeparator>
-        <InstanceContentEditor
-          navigationJson={instanceGeneralSetting.navigationJson}
-          pagesJson={instanceGeneralSetting.customPagesJson}
-          onNavigationChange={(navigationJson) => updatePartialSetting({ navigationJson })}
-          onPagesChange={(customPagesJson) =>
-            updatePartialSetting({ customPagesJson: keepInstanceSiteConfig(customPagesJson, instanceGeneralSetting.customPagesJson) })
-          }
-        />
-      </SettingGroup>
-
-      <SettingGroup title={t("setting.category.title")} description={t("setting.category.description")} showSeparator>
-        <InstanceCategoryEditor
-          value={instanceGeneralSetting.memoCategoriesJson}
-          onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}
-        />
-      </SettingGroup>
-
-      <SettingGroup title={t("setting.instance.access-title")} description={t("setting.instance.access-description")} showSeparator>
-        <SettingList>
           <SettingListItem
             label={t("setting.instance.allow-public-access")}
             description={t("setting.instance.allow-public-access-description")}
@@ -249,6 +194,42 @@ const InstanceSection = () => {
             />
           </SettingListItem>
 
+          <SettingListItem
+            label={t("setting.instance.disallow-user-registration")}
+            description={t("setting.instance.disallow-user-registration-description")}
+          >
+            <Switch
+              disabled={profile.demo}
+              checked={instanceGeneralSetting.disallowUserRegistration}
+              onCheckedChange={(checked) => updatePartialSetting({ disallowUserRegistration: checked })}
+            />
+          </SettingListItem>
+
+          <SettingListItem
+            label={t("setting.instance.default-member-memo-visibility")}
+            description={t("setting.instance.default-member-memo-visibility-description")}
+          >
+            <Select
+              value={defaultMemberMemoVisibility}
+              onValueChange={(defaultMemberMemoVisibility) => updatePartialSetting({ defaultMemberMemoVisibility })}
+            >
+              <SelectTrigger className="w-52">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(["PUBLIC", "PROTECTED", "PRIVATE"] as const).map((visibility) => (
+                  <SelectItem key={visibility} value={visibility}>
+                    {t(`memo.visibility.${visibility.toLowerCase() as "public" | "protected" | "private"}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </SettingListItem>
+        </SettingList>
+      </SettingGroup>
+
+      <SettingGroup title={t("setting.system.first-visit-title")} description={t("setting.system.first-visit-description")} showSeparator>
+        <SettingList>
           <SettingListItem
             label={t("setting.instance.first-visit-default-language")}
             description={t("setting.instance.first-visit-default-language-description")}
@@ -300,130 +281,216 @@ const InstanceSection = () => {
               </SelectContent>
             </Select>
           </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.default-member-memo-visibility")}
-            description={t("setting.instance.default-member-memo-visibility-description")}
-          >
-            <Select
-              value={defaultMemberMemoVisibility}
-              onValueChange={(defaultMemberMemoVisibility) => updatePartialSetting({ defaultMemberMemoVisibility })}
-            >
-              <SelectTrigger className="w-52">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(["PUBLIC", "PROTECTED", "PRIVATE"] as const).map((visibility) => (
-                  <SelectItem key={visibility} value={visibility}>
-                    {t(`memo.visibility.${visibility.toLowerCase() as "public" | "protected" | "private"}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.default-member-save-media-metadata")}
-            description={t("setting.instance.default-member-save-media-metadata-description")}
-          >
-            <Switch
-              checked={instanceGeneralSetting.defaultMemberSaveMediaMetadata}
-              onCheckedChange={(defaultMemberSaveMediaMetadata) => updatePartialSetting({ defaultMemberSaveMediaMetadata })}
-            />
-          </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.disallow-user-registration")}
-            description={t("setting.instance.disallow-user-registration-description")}
-          >
-            <Switch
-              disabled={profile.demo}
-              checked={instanceGeneralSetting.disallowUserRegistration}
-              onCheckedChange={(checked) => updatePartialSetting({ disallowUserRegistration: checked })}
-            />
-          </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.disallow-password-auth")}
-            description={t("setting.instance.disallow-password-auth-description")}
-          >
-            <Switch
-              disabled={profile.demo || (identityProviderList.length === 0 && !instanceGeneralSetting.disallowPasswordAuth)}
-              checked={instanceGeneralSetting.disallowPasswordAuth}
-              onCheckedChange={(checked) => updatePartialSetting({ disallowPasswordAuth: checked })}
-            />
-          </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.disallow-change-username")}
-            description={t("setting.instance.disallow-change-username-description")}
-          >
-            <Switch
-              checked={instanceGeneralSetting.disallowChangeUsername}
-              onCheckedChange={(checked) => updatePartialSetting({ disallowChangeUsername: checked })}
-            />
-          </SettingListItem>
-
-          <SettingListItem
-            label={t("setting.instance.disallow-change-nickname")}
-            description={t("setting.instance.disallow-change-nickname-description")}
-          >
-            <Switch
-              checked={instanceGeneralSetting.disallowChangeNickname}
-              onCheckedChange={(checked) => updatePartialSetting({ disallowChangeNickname: checked })}
-            />
-          </SettingListItem>
-
-          <SettingListItem label={t("setting.instance.week-start-day")} description={t("setting.instance.week-start-day-description")}>
-            <Select
-              value={instanceGeneralSetting.weekStartDayOffset.toString()}
-              items={weekStartDayOptions}
-              onValueChange={(value) => {
-                updatePartialSetting({ weekStartDayOffset: parseInt(value) || 0 });
-              }}
-            >
-              <SelectTrigger className="min-w-fit">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {weekStartDayOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </SettingListItem>
         </SettingList>
       </SettingGroup>
 
-      <SettingGroup title={t("music-admin.title-group")} description={t("music-admin.description")} showSeparator>
-        <InstanceMusicEditor value={musicConfig} onChange={(music) => updatePartialSetting({ musicConfigJson: JSON.stringify(music) })} />
-      </SettingGroup>
+      <button
+        data-settings-surface=""
+        type="button"
+        aria-expanded={advancedOpen}
+        aria-controls="instance-advanced-settings"
+        onClick={() => toggleAdvanced(!advancedOpen)}
+        className="flex w-full items-start gap-3 rounded-lg border border-dashed border-border px-4 py-3 text-left transition-colors hover:bg-accent/50"
+      >
+        <ChevronRightIcon
+          className={cn("mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform", advancedOpen && "rotate-90")}
+        />
+        <span className="min-w-0">
+          <span className="block text-sm font-medium">{t("setting.system.advanced")}</span>
+          <span className="block text-xs leading-5 text-muted-foreground">{t("setting.system.advanced-description")}</span>
+        </span>
+      </button>
 
-      <SettingGroup title={t("history.storage-settings")} showSeparator>
-        <SettingList>
-          <SettingListItem label={t("trash.retention")} description={t("trash.retention-description")}>
-            <Input
-              type="number"
-              min={0}
-              max={3650}
-              value={instanceGeneralSetting.trashRetentionDays ?? 30}
-              onChange={(e) => updatePartialSetting({ trashRetentionDays: Math.max(0, Math.min(3650, Number(e.target.value) || 0)) })}
+      {advancedOpen && (
+        <div id="instance-advanced-settings" className="flex min-w-0 flex-col gap-5">
+          <SettingGroup title={t("setting.system.more-title")} description={t("setting.system.more-description")} showSeparator>
+            <SettingList>
+              <SettingListItem
+                label={t("setting.system.memo-page-size")}
+                description={t("setting.system.memo-page-size-description", {
+                  min: MIN_MEMO_FEED_PAGE_SIZE,
+                  max: MAX_MEMO_FEED_PAGE_SIZE,
+                  default: DEFAULT_MEMO_FEED_PAGE_SIZE,
+                })}
+              >
+                <Input
+                  type="number"
+                  min={MIN_MEMO_FEED_PAGE_SIZE}
+                  max={MAX_MEMO_FEED_PAGE_SIZE}
+                  className="w-24"
+                  value={instanceGeneralSetting.memoPageSize || ""}
+                  placeholder={DEFAULT_MEMO_FEED_PAGE_SIZE.toString()}
+                  onChange={(event) => {
+                    const rawValue = event.target.valueAsNumber;
+                    const memoPageSize = Number.isFinite(rawValue)
+                      ? Math.min(MAX_MEMO_FEED_PAGE_SIZE, Math.max(MIN_MEMO_FEED_PAGE_SIZE, Math.trunc(rawValue)))
+                      : 0;
+                    updatePartialSetting({ memoPageSize });
+                  }}
+                />
+              </SettingListItem>
+
+              <SettingListItem
+                label={t("setting.system.default-background-image")}
+                description={t("setting.system.default-background-image-description")}
+              >
+                <Input
+                  type="url"
+                  className="w-80 max-w-full"
+                  value={instanceGeneralSetting.defaultBackgroundImageUrl}
+                  placeholder="https://example.com/background.webp"
+                  onChange={(event) => updatePartialSetting({ defaultBackgroundImageUrl: event.target.value.trim() })}
+                />
+              </SettingListItem>
+
+              <SettingListItem label={t("setting.system.festival-effects")} description={t("setting.system.festival-effects-description")}>
+                <Switch
+                  checked={!instanceGeneralSetting.disableFestivalEffects}
+                  onCheckedChange={(checked) => updatePartialSetting({ disableFestivalEffects: !checked })}
+                />
+              </SettingListItem>
+
+              <SettingListItem label={t("setting.instance.week-start-day")} description={t("setting.instance.week-start-day-description")}>
+                <Select
+                  value={instanceGeneralSetting.weekStartDayOffset.toString()}
+                  items={weekStartDayOptions}
+                  onValueChange={(value) => {
+                    updatePartialSetting({ weekStartDayOffset: parseInt(value) || 0 });
+                  }}
+                >
+                  <SelectTrigger className="min-w-fit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {weekStartDayOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SettingListItem>
+            </SettingList>
+          </SettingGroup>
+
+          <SettingGroup title={t("setting.system.accounts-title")} description={t("setting.system.accounts-description")} showSeparator>
+            <SettingList>
+              <SettingListItem
+                label={t("setting.instance.disallow-password-auth")}
+                description={t("setting.instance.disallow-password-auth-description")}
+              >
+                <Switch
+                  disabled={profile.demo || (identityProviderList.length === 0 && !instanceGeneralSetting.disallowPasswordAuth)}
+                  checked={instanceGeneralSetting.disallowPasswordAuth}
+                  onCheckedChange={(checked) => updatePartialSetting({ disallowPasswordAuth: checked })}
+                />
+              </SettingListItem>
+
+              <SettingListItem
+                label={t("setting.instance.disallow-change-username")}
+                description={t("setting.instance.disallow-change-username-description")}
+              >
+                <Switch
+                  checked={instanceGeneralSetting.disallowChangeUsername}
+                  onCheckedChange={(checked) => updatePartialSetting({ disallowChangeUsername: checked })}
+                />
+              </SettingListItem>
+
+              <SettingListItem
+                label={t("setting.instance.disallow-change-nickname")}
+                description={t("setting.instance.disallow-change-nickname-description")}
+              >
+                <Switch
+                  checked={instanceGeneralSetting.disallowChangeNickname}
+                  onCheckedChange={(checked) => updatePartialSetting({ disallowChangeNickname: checked })}
+                />
+              </SettingListItem>
+
+              <SettingListItem
+                label={t("setting.instance.default-member-save-media-metadata")}
+                description={t("setting.instance.default-member-save-media-metadata-description")}
+              >
+                <Switch
+                  checked={instanceGeneralSetting.defaultMemberSaveMediaMetadata}
+                  onCheckedChange={(defaultMemberSaveMediaMetadata) => updatePartialSetting({ defaultMemberSaveMediaMetadata })}
+                />
+              </SettingListItem>
+            </SettingList>
+          </SettingGroup>
+
+          <SettingGroup
+            title={t("setting.system.custom-code-title")}
+            description={t("setting.system.custom-code-description")}
+            showSeparator
+          >
+            <SettingCodeEditor
+              label={t("setting.system.additional-style")}
+              description={t("setting.system.additional-style-description")}
+              placeholder={t("setting.system.additional-style-placeholder")}
+              value={instanceGeneralSetting.additionalStyle}
+              onChange={(additionalStyle) => updatePartialSetting({ additionalStyle })}
             />
-          </SettingListItem>
-          <SettingListItem label={t("history.limit")} description={t("history.limit-description")}>
-            <Input
-              type="number"
-              min={0}
-              max={200}
-              value={instanceGeneralSetting.memoRevisionLimit ?? 20}
-              onChange={(e) => updatePartialSetting({ memoRevisionLimit: Math.max(0, Math.min(200, Number(e.target.value) || 0)) })}
+
+            <SettingCodeEditor
+              label={t("setting.system.additional-script")}
+              description={t("setting.system.additional-script-description")}
+              placeholder={t("setting.system.additional-script-placeholder")}
+              value={instanceGeneralSetting.additionalScript}
+              onChange={(additionalScript) => updatePartialSetting({ additionalScript })}
             />
-          </SettingListItem>
-        </SettingList>
-      </SettingGroup>
-      <AppearancePackGroup setting={instanceGeneralSetting} onChange={updatePartialSetting} />
+          </SettingGroup>
+
+          <SettingGroup title={t("setting.content.title")} description={t("setting.content.description")} showSeparator>
+            <InstanceContentEditor
+              navigationJson={instanceGeneralSetting.navigationJson}
+              pagesJson={instanceGeneralSetting.customPagesJson}
+              onNavigationChange={(navigationJson) => updatePartialSetting({ navigationJson })}
+              onPagesChange={(customPagesJson) =>
+                updatePartialSetting({ customPagesJson: keepInstanceSiteConfig(customPagesJson, instanceGeneralSetting.customPagesJson) })
+              }
+            />
+          </SettingGroup>
+
+          <SettingGroup title={t("setting.category.title")} description={t("setting.category.description")} showSeparator>
+            <InstanceCategoryEditor
+              value={instanceGeneralSetting.memoCategoriesJson}
+              onChange={(memoCategoriesJson) => updatePartialSetting({ memoCategoriesJson })}
+            />
+          </SettingGroup>
+
+          <SettingGroup title={t("music-admin.title-group")} description={t("music-admin.description")} showSeparator>
+            <InstanceMusicEditor
+              value={musicConfig}
+              onChange={(music) => updatePartialSetting({ musicConfigJson: JSON.stringify(music) })}
+            />
+          </SettingGroup>
+
+          <SettingGroup title={t("history.storage-settings")} showSeparator>
+            <SettingList>
+              <SettingListItem label={t("trash.retention")} description={t("trash.retention-description")}>
+                <Input
+                  type="number"
+                  min={0}
+                  max={3650}
+                  value={instanceGeneralSetting.trashRetentionDays ?? 30}
+                  onChange={(e) => updatePartialSetting({ trashRetentionDays: Math.max(0, Math.min(3650, Number(e.target.value) || 0)) })}
+                />
+              </SettingListItem>
+              <SettingListItem label={t("history.limit")} description={t("history.limit-description")}>
+                <Input
+                  type="number"
+                  min={0}
+                  max={200}
+                  value={instanceGeneralSetting.memoRevisionLimit ?? 20}
+                  onChange={(e) => updatePartialSetting({ memoRevisionLimit: Math.max(0, Math.min(200, Number(e.target.value) || 0)) })}
+                />
+              </SettingListItem>
+            </SettingList>
+          </SettingGroup>
+
+          <AppearancePackGroup setting={instanceGeneralSetting} onChange={updatePartialSetting} />
+        </div>
+      )}
 
       <div className="w-full flex justify-end">
         <Button disabled={!hasUnsavedChanges} onClick={handleSaveSettings}>

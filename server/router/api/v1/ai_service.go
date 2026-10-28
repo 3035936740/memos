@@ -254,7 +254,6 @@ type aiImage struct {
 }
 
 func callAIModel(ctx context.Context, provider ai.ProviderConfig, model, systemText, userText string, images []aiImage) (string, error) {
-
 	switch provider.Type {
 	case ai.ProviderOpenAI, ai.ProviderDeepSeek, ai.ProviderOpenAICompatible, ai.ProviderOllama, ai.ProviderAzureOpenAI:
 		endpoint := strings.TrimRight(provider.Endpoint, "/") + "/chat/completions"

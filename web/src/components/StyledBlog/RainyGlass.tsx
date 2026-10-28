@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { reducedMotionQuery } from "@/utils/effects";
 import dropAlphaUrl from "@/vendor/rain-effect/drop-alpha.png";
 import dropColorUrl from "@/vendor/rain-effect/drop-color.png";
 import Raindrops from "@/vendor/rain-effect/raindrops";
@@ -36,7 +37,7 @@ const RainyGlass = () => {
     let viewportHeight = window.innerHeight;
     let simulation: Raindrops | undefined;
     let renderer: ReturnType<typeof createRainRenderer>;
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = reducedMotionQuery();
     canvas.dataset.rainReady = "false";
     const reveal = () => {
       if (backgroundReady && waterReady && !disposed) canvas.dataset.rainReady = "true";

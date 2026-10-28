@@ -1,5 +1,7 @@
-import { createContext, type ReactNode, useContext, useLayoutEffect, useRef, useState } from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type BlogStyle, DEFAULT_BLOG_STYLE, isBlogStyle } from "@/utils/blog-style";
+import type { PostLook } from "@/utils/post-look";
+import { setThemeOverride, THEME_CHOSEN_EVENT } from "@/utils/theme";
 
 export type MemoTimeBasis = "create_time" | "update_time";
 export type MemoFeedLayout = "memo" | "blog-classic" | "blog2";
@@ -26,7 +28,12 @@ interface ViewContextValue {
   linkPreview: boolean;
   maxColumns: MemoMaxColumns;
   feedLayout: MemoFeedLayout;
+  /** The style showing now: the post's own while one is open with a look of its own, otherwise the visitor's. */
   blogStyle: BlogStyle;
+  /** The look the open post's author chose, while it is showing. */
+  postLook?: PostLook;
+  /** Shows a post's look without saving it; undefined goes back to the visitor's own. */
+  setPostLook: (look: PostLook | undefined) => void;
   setOrderByTimeAsc: (value: boolean) => void;
   setTimeBasis: (field: MemoTimeBasis) => void;
   setCompactMode: (value: boolean) => void;
@@ -102,6 +109,9 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   };
 
   const [viewState, setViewState] = useState(getInitialState);
+  const [postLook, setPostLookState] = useState<PostLook>();
+  // A post's style only dresses Blog 2, like the visitor's own; its theme applies in every layout.
+  const blogStyle = viewState.feedLayout === "blog2" && postLook?.style ? postLook.style : viewState.blogStyle;
   // Whether this browser had saved view settings when the app started; first-visit defaults only apply when not.
   const hadSavedViewRef = useRef(hasSavedView());
   const timeBasis = viewState.timeBasis ?? "create_time";
@@ -109,9 +119,21 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   // The style also dresses the app frame (rail, top bar, page background), which sits outside the
   // feed, so it is mirrored onto <html>. It only applies to Blog 2; other layouts, Blog 1 included, keep the default.
   useLayoutEffect(() => {
-    if (viewState.feedLayout === "blog2") document.documentElement.dataset.style = viewState.blogStyle;
+    if (viewState.feedLayout === "blog2") document.documentElement.dataset.style = blogStyle;
     else delete document.documentElement.dataset.style;
-  }, [viewState.blogStyle, viewState.feedLayout]);
+  }, [blogStyle, viewState.feedLayout]);
+
+  const setPostLook = useCallback((look: PostLook | undefined) => {
+    setPostLookState(look);
+    setThemeOverride(look?.theme);
+  }, []);
+
+  // Picking a theme in a menu takes the look back from the post, as picking a style does.
+  useEffect(() => {
+    const handleChosen = () => setPostLook(undefined);
+    window.addEventListener(THEME_CHOSEN_EVENT, handleChosen);
+    return () => window.removeEventListener(THEME_CHOSEN_EVENT, handleChosen);
+  }, [setPostLook]);
 
   const persistToStorage = (newState: ViewState) => {
     try {
@@ -138,8 +160,13 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   const setMaxColumns = (value: MemoMaxColumns) => updateState({ maxColumns: value });
   const setFeedLayout = (value: MemoFeedLayout) =>
     updateState(value === "blog2" ? { feedLayout: value } : { feedLayout: value, blogStyle: DEFAULT_BLOG_STYLE });
-  const setBlogStyle = (value: BlogStyle) => updateState({ blogStyle: value });
+  // Picking a style is taking the look back from the post.
+  const setBlogStyle = (value: BlogStyle) => {
+    setPostLook(undefined);
+    updateState({ blogStyle: value });
+  };
   const resetToDefaults = () => {
+    setPostLook(undefined);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
     } catch {
@@ -163,7 +190,9 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         linkPreview: viewState.linkPreview,
         maxColumns: viewState.maxColumns,
         feedLayout: viewState.feedLayout,
-        blogStyle: viewState.blogStyle,
+        blogStyle,
+        postLook,
+        setPostLook,
         setOrderByTimeAsc,
         setTimeBasis,
         setCompactMode,

@@ -39,7 +39,10 @@ if not exist "server\router\frontend\dist\assets" (
 echo [3/3] Building memos.exe...
 if not exist bin mkdir bin
 set CGO_ENABLED=0
-go build -trimpath -ldflags "-s -w" -o bin\memos.exe .\cmd\memos || goto :fail
+REM The About page links this commit; the version itself stays a development build.
+set COMMIT=unknown
+for /f %%i in ('git rev-parse HEAD 2^>nul') do set COMMIT=%%i
+go build -trimpath -ldflags "-s -w -X github.com/usememos/memos/internal/version.Commit=%COMMIT%" -o bin\memos.exe .\cmd\memos || goto :fail
 
 echo.
 echo Done: %~dp0bin\memos.exe

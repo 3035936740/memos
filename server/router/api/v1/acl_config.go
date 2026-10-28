@@ -22,6 +22,7 @@ var PublicMethods = map[string]struct{}{
 
 	// Instance Service - needed before login to show instance info
 	"/memos.api.v1.InstanceService/GetInstanceProfile":       {},
+	"/memos.api.v1.InstanceService/ListStylePacks":           {},
 	"/memos.api.v1.InstanceService/GetInstanceSetting":       {},
 	"/memos.api.v1.InstanceService/BatchGetInstanceSettings": {},
 
@@ -80,6 +81,7 @@ var AuthBootstrapMethods = map[string]struct{}{
 
 	// Instance Service - needed to render the sign-in page (branding, auth options).
 	"/memos.api.v1.InstanceService/GetInstanceProfile":       {},
+	"/memos.api.v1.InstanceService/ListStylePacks":           {},
 	"/memos.api.v1.InstanceService/GetInstanceSetting":       {},
 	"/memos.api.v1.InstanceService/BatchGetInstanceSettings": {},
 

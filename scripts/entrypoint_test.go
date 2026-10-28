@@ -14,6 +14,9 @@ import (
 )
 
 func TestEntrypointDoesNotLoopWhenTargetUIDIsRoot(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("privilege-drop test requires POSIX executable files; covered on Linux CI")
+	}
 	mockBin := t.TempDir()
 	writeExecutable(t, filepath.Join(mockBin, "id"), "#!/bin/sh\nprintf '0\\n'\n")
 	writeExecutable(t, filepath.Join(mockBin, "chown"), "#!/bin/sh\nexit 0\n")

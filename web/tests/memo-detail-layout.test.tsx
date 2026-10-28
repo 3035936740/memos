@@ -88,3 +88,5 @@ describe("MemoDetail layout", () => {
     historyLengthSpy.mockRestore();
   });
 });
+
+vi.mock("@/contexts/MemoSpacesContext", () => ({ MemoSpacesProvider: ({ children }: { children: React.ReactNode }) => children }));

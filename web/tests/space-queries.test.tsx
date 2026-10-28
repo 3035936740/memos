@@ -86,8 +86,8 @@ describe("Space queries", () => {
     const { result } = renderHook(() => useSpaces(VIEWER), { wrapper: createWrapper(queryClient) });
 
     await waitFor(() => expect(result.current.data?.map((space) => space.name)).toEqual(["spaces/one", "spaces/two"]));
-    expect(clients.listSpaces).toHaveBeenNthCalledWith(1, { pageSize: 1000, pageToken: "" });
-    expect(clients.listSpaces).toHaveBeenNthCalledWith(2, { pageSize: 1000, pageToken: "next" });
+    expect(clients.listSpaces).toHaveBeenNthCalledWith(1, { pageSize: 100, pageToken: "", scope: 2 });
+    expect(clients.listSpaces).toHaveBeenNthCalledWith(2, { pageSize: 100, pageToken: "next", scope: 2 });
   });
 
   it("drains member and invitation pages with viewer-scoped cache keys", async () => {

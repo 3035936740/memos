@@ -20,6 +20,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	InstanceService_ListStylePacks_FullMethodName           = "/memos.api.v1.InstanceService/ListStylePacks"
+	InstanceService_InstallStylePack_FullMethodName         = "/memos.api.v1.InstanceService/InstallStylePack"
+	InstanceService_UpdateStylePack_FullMethodName          = "/memos.api.v1.InstanceService/UpdateStylePack"
+	InstanceService_DeleteStylePack_FullMethodName          = "/memos.api.v1.InstanceService/DeleteStylePack"
+	InstanceService_ExportStylePack_FullMethodName          = "/memos.api.v1.InstanceService/ExportStylePack"
 	InstanceService_GetInstanceProfile_FullMethodName       = "/memos.api.v1.InstanceService/GetInstanceProfile"
 	InstanceService_GetInstanceSetting_FullMethodName       = "/memos.api.v1.InstanceService/GetInstanceSetting"
 	InstanceService_BatchGetInstanceSettings_FullMethodName = "/memos.api.v1.InstanceService/BatchGetInstanceSettings"
@@ -32,6 +37,16 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InstanceServiceClient interface {
+	// Lists enabled community styles. Disabled metadata is administrator-only.
+	ListStylePacks(ctx context.Context, in *ListStylePacksRequest, opts ...grpc.CallOption) (*ListStylePacksResponse, error)
+	// Installs a validated style ZIP, initially disabled.
+	InstallStylePack(ctx context.Context, in *InstallStylePackRequest, opts ...grpc.CallOption) (*StylePack, error)
+	// Replaces an installed version or changes its enabled state.
+	UpdateStylePack(ctx context.Context, in *UpdateStylePackRequest, opts ...grpc.CallOption) (*StylePack, error)
+	// Removes a style and resets references in the instance default.
+	DeleteStylePack(ctx context.Context, in *DeleteStylePackRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Exports the original ZIP for administrator inspection.
+	ExportStylePack(ctx context.Context, in *ExportStylePackRequest, opts ...grpc.CallOption) (*ExportStylePackResponse, error)
 	// Gets the instance profile.
 	GetInstanceProfile(ctx context.Context, in *GetInstanceProfileRequest, opts ...grpc.CallOption) (*InstanceProfile, error)
 	// Gets an instance setting.
@@ -52,6 +67,56 @@ type instanceServiceClient struct {
 
 func NewInstanceServiceClient(cc grpc.ClientConnInterface) InstanceServiceClient {
 	return &instanceServiceClient{cc}
+}
+
+func (c *instanceServiceClient) ListStylePacks(ctx context.Context, in *ListStylePacksRequest, opts ...grpc.CallOption) (*ListStylePacksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListStylePacksResponse)
+	err := c.cc.Invoke(ctx, InstanceService_ListStylePacks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *instanceServiceClient) InstallStylePack(ctx context.Context, in *InstallStylePackRequest, opts ...grpc.CallOption) (*StylePack, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StylePack)
+	err := c.cc.Invoke(ctx, InstanceService_InstallStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *instanceServiceClient) UpdateStylePack(ctx context.Context, in *UpdateStylePackRequest, opts ...grpc.CallOption) (*StylePack, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StylePack)
+	err := c.cc.Invoke(ctx, InstanceService_UpdateStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *instanceServiceClient) DeleteStylePack(ctx context.Context, in *DeleteStylePackRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, InstanceService_DeleteStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *instanceServiceClient) ExportStylePack(ctx context.Context, in *ExportStylePackRequest, opts ...grpc.CallOption) (*ExportStylePackResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExportStylePackResponse)
+	err := c.cc.Invoke(ctx, InstanceService_ExportStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *instanceServiceClient) GetInstanceProfile(ctx context.Context, in *GetInstanceProfileRequest, opts ...grpc.CallOption) (*InstanceProfile, error) {
@@ -118,6 +183,16 @@ func (c *instanceServiceClient) GetInstanceStats(ctx context.Context, in *GetIns
 // All implementations must embed UnimplementedInstanceServiceServer
 // for forward compatibility.
 type InstanceServiceServer interface {
+	// Lists enabled community styles. Disabled metadata is administrator-only.
+	ListStylePacks(context.Context, *ListStylePacksRequest) (*ListStylePacksResponse, error)
+	// Installs a validated style ZIP, initially disabled.
+	InstallStylePack(context.Context, *InstallStylePackRequest) (*StylePack, error)
+	// Replaces an installed version or changes its enabled state.
+	UpdateStylePack(context.Context, *UpdateStylePackRequest) (*StylePack, error)
+	// Removes a style and resets references in the instance default.
+	DeleteStylePack(context.Context, *DeleteStylePackRequest) (*emptypb.Empty, error)
+	// Exports the original ZIP for administrator inspection.
+	ExportStylePack(context.Context, *ExportStylePackRequest) (*ExportStylePackResponse, error)
 	// Gets the instance profile.
 	GetInstanceProfile(context.Context, *GetInstanceProfileRequest) (*InstanceProfile, error)
 	// Gets an instance setting.
@@ -140,6 +215,21 @@ type InstanceServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedInstanceServiceServer struct{}
 
+func (UnimplementedInstanceServiceServer) ListStylePacks(context.Context, *ListStylePacksRequest) (*ListStylePacksResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListStylePacks not implemented")
+}
+func (UnimplementedInstanceServiceServer) InstallStylePack(context.Context, *InstallStylePackRequest) (*StylePack, error) {
+	return nil, status.Error(codes.Unimplemented, "method InstallStylePack not implemented")
+}
+func (UnimplementedInstanceServiceServer) UpdateStylePack(context.Context, *UpdateStylePackRequest) (*StylePack, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateStylePack not implemented")
+}
+func (UnimplementedInstanceServiceServer) DeleteStylePack(context.Context, *DeleteStylePackRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteStylePack not implemented")
+}
+func (UnimplementedInstanceServiceServer) ExportStylePack(context.Context, *ExportStylePackRequest) (*ExportStylePackResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExportStylePack not implemented")
+}
 func (UnimplementedInstanceServiceServer) GetInstanceProfile(context.Context, *GetInstanceProfileRequest) (*InstanceProfile, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetInstanceProfile not implemented")
 }
@@ -177,6 +267,96 @@ func RegisterInstanceServiceServer(s grpc.ServiceRegistrar, srv InstanceServiceS
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&InstanceService_ServiceDesc, srv)
+}
+
+func _InstanceService_ListStylePacks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListStylePacksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).ListStylePacks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_ListStylePacks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).ListStylePacks(ctx, req.(*ListStylePacksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InstanceService_InstallStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InstallStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).InstallStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_InstallStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).InstallStylePack(ctx, req.(*InstallStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InstanceService_UpdateStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).UpdateStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_UpdateStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).UpdateStylePack(ctx, req.(*UpdateStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InstanceService_DeleteStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).DeleteStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_DeleteStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).DeleteStylePack(ctx, req.(*DeleteStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InstanceService_ExportStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).ExportStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_ExportStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).ExportStylePack(ctx, req.(*ExportStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _InstanceService_GetInstanceProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -294,6 +474,26 @@ var InstanceService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "memos.api.v1.InstanceService",
 	HandlerType: (*InstanceServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListStylePacks",
+			Handler:    _InstanceService_ListStylePacks_Handler,
+		},
+		{
+			MethodName: "InstallStylePack",
+			Handler:    _InstanceService_InstallStylePack_Handler,
+		},
+		{
+			MethodName: "UpdateStylePack",
+			Handler:    _InstanceService_UpdateStylePack_Handler,
+		},
+		{
+			MethodName: "DeleteStylePack",
+			Handler:    _InstanceService_DeleteStylePack_Handler,
+		},
+		{
+			MethodName: "ExportStylePack",
+			Handler:    _InstanceService_ExportStylePack_Handler,
+		},
 		{
 			MethodName: "GetInstanceProfile",
 			Handler:    _InstanceService_GetInstanceProfile_Handler,

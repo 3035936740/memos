@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { decorativeCanvasScale } from "@/utils/animation-budget";
+import { reducedMotionQuery } from "@/utils/effects";
 import type { ParticleKind } from "@/utils/style-reactions";
 import candySvg from "@/vendor/twemoji/candy.svg?raw";
 
@@ -736,7 +737,7 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = reducedMotionQuery();
     let still = motion.matches;
 
     let width = 0;

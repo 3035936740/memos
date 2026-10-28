@@ -146,6 +146,9 @@ func (d *DB) ApplyMemoMutation(ctx context.Context, mutation *store.MemoMutation
 			return err
 		}
 	}
+	if err := store.RecordMemoImport(ctx, conn, "sqlite", mutation); err != nil {
+		return err
+	}
 	if _, err := conn.ExecContext(ctx, "COMMIT"); err != nil {
 		return errors.Wrap(err, "failed to commit memo transaction")
 	}

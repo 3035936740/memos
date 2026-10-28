@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useView } from "@/contexts/ViewContext";
 import { computeTransformations, updateProgress, useBlogProgress } from "@/utils/blog-progress";
+import { isMotionReduced } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
 import TerminalConsole from "./TerminalConsole";
 
@@ -18,7 +19,7 @@ const MAX_SPARKLES = 24;
 const isTypingTarget = (target: EventTarget | null) =>
   target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
-const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const prefersReducedMotion = isMotionReduced;
 
 /** The sparkle colour: rainbow in the Y2K × cosmic legend, gold for regulars, Y2K candy otherwise. */
 const sparkleColor = (gold: boolean) => {

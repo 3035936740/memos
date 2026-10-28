@@ -207,7 +207,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
         className="flex max-h-[70vh] w-full max-w-2xl flex-col border border-border bg-card text-[13px] text-foreground shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
-          <span>{prompt.slice(0, -2)}  tty1</span>
+          <span>{prompt.slice(0, -2)} tty1</span>
           <button type="button" aria-label="Close" onClick={onClose} className="transition-colors hover:text-foreground">
             [x]
           </button>

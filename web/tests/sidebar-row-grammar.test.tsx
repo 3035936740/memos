@@ -5,7 +5,10 @@ import SidebarRow, { SIDEBAR_ROW_BOX_CLASSES } from "@/components/AppSidebar/Sid
 import SidebarSection, { SIDEBAR_SECTION_CONTENT_CLASSES } from "@/components/AppSidebar/SidebarSection";
 import TagTree from "@/components/TagTree";
 
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
+  useTranslate: () => (key: string) => key,
+}));
 
 /**
  * Tag rows drifted off the rail's row grammar once already (they were 26px/12px against

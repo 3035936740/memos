@@ -165,6 +165,17 @@ func (s *Store) ClearInstanceBlockedWordsSetting(ctx context.Context) error {
 }
 
 func (s *Store) UpsertInstanceSetting(ctx context.Context, upsert *storepb.InstanceSetting) (*storepb.InstanceSetting, error) {
+	if upsert.Key == storepb.InstanceSettingKey_GENERAL {
+		s.stylePackMu.Lock()
+		defer s.stylePackMu.Unlock()
+		valid, err := s.IsStyleEnabled(ctx, upsert.GetGeneralSetting().GetFirstVisitDefaultStyle())
+		if err != nil {
+			return nil, errors.Wrap(err, "validate default style")
+		}
+		if !valid {
+			return nil, errors.New("default style must be builtin or an enabled style pack")
+		}
+	}
 	instanceSettingRaw := &InstanceSetting{
 		Name: upsert.Key.String(),
 	}
@@ -359,6 +370,14 @@ func (s *Store) GetInstanceGeneralSetting(ctx context.Context) (*storepb.Instanc
 	instanceGeneralSetting := &storepb.InstanceGeneralSetting{}
 	if instanceSetting != nil {
 		instanceGeneralSetting = instanceSetting.GetGeneralSetting()
+	}
+	validStyle, err := s.IsStyleEnabled(ctx, instanceGeneralSetting.GetFirstVisitDefaultStyle())
+	if err != nil {
+		return nil, errors.Wrap(err, "validate default style")
+	}
+	if !validStyle {
+		instanceGeneralSetting = proto.CloneOf(instanceGeneralSetting)
+		instanceGeneralSetting.FirstVisitDefaultStyle = "default"
 	}
 	s.cacheInstanceSetting(ctx, &storepb.InstanceSetting{
 		Key:   storepb.InstanceSettingKey_GENERAL,

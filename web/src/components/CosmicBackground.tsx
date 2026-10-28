@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { decorativeCanvasScale } from "@/utils/animation-budget";
+import { reducedMotionQuery } from "@/utils/effects";
 
 type RGB = readonly [number, number, number];
 type ParticleKind = "star" | "firefly" | "bubble" | "rain" | "dash" | "petal" | "dust" | "confetti";
@@ -350,7 +351,7 @@ const CosmicBackground = () => {
     const context = canvas?.getContext("2d", { alpha: true });
     if (!canvas || !context) return;
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reducedMotion = reducedMotionQuery();
     let particles: Particle[] = [];
     let animationFrame = 0;
     let resizeTimer = 0;

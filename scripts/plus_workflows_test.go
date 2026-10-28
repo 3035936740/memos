@@ -12,6 +12,7 @@ import (
 func TestPlusWorkflowAndComposeSyntax(t *testing.T) {
 	for _, path := range []string{
 		".github/workflows/build-canary-image.yml", ".github/workflows/release.yml",
+		".github/workflows/verify-public-image.yml", ".github/workflows/backend-tests.yml", ".github/workflows/frontend-tests.yml",
 		".github/workflows/upgrade-smoke.yml", ".github/workflows/release-please.yml",
 		".github/workflows/demo-deploy.yml", "deploy/docker-compose.yml", "deploy/docker-compose.demo.yml",
 	} {

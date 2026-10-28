@@ -4,7 +4,7 @@
 
 **好看、能玩、可以高度自定义的自建博客与碎碎念。** 基于 [Memos](https://github.com/usememos/memos)，保留它快速记录、Markdown、数据归你所有的全部优点，再加上一整套博客外观和小圈子功能。
 
-**[快速开始](#快速开始)** · [功能说明](blog2-styles.md) · [部署示例](deploy/docker-compose.yml) · [English](#english)
+**[在线演示](https://memos.bing.tomato-universe.tech/)** · [快速开始](#快速开始) · [给文章指定外观](#给文章指定外观) · [从原版迁移](#从原版-memos-迁移) · [部署示例](deploy/docker-compose.yml) · [English](#english)
 
 [![MIT license](https://img.shields.io/github/license/3035936740/memos?style=flat-square)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/3035936740/memos?style=flat-square&logo=github&label=Stars)](https://github.com/3035936740/memos)
@@ -24,12 +24,69 @@
 - **博客 2 布局和十种风格**：玻璃拟态、新拟物、Frutiger Aero、Y2K、蒸汽波、像素复古、手绘涂鸦、开发者，加上解锁后才出现的金色传说。风格连侧栏、工具栏、编辑器、设置和弹窗一起换。
 - **风格 × 配色会起反应**：二十多套配色各带属性（花、海、雨、夜、宇宙……），和风格碰在一起会出现不同的粒子和场景，还有 10 个传说组合、图鉴和成就。
 - **为读者着想的阅读体验**：阅读进度、预计阅读时间、系列文章目录、旧文提醒、继续阅读、像 Twitter 一样挂住的右边栏。
+- **每篇文章可以有自己的外观**：用 `#style/...` 和 `#theme/...` 标签给单篇文章指定风格和配色，比如让一篇深夜随笔用蒸汽波配霓虹雨，见[给文章指定外观](#给文章指定外观)。
 - **背景音乐**：顶栏播放器，每种风格都有自己的音乐可视化。
-- **空间（小圈子）**：每个空间是一个独立的小站，可以设为公开、登录可见或仅邀请；空间多了有搜索和目录。
-- **写作更安心**：公开发布前的隐私检查（手机号、身份证号、密钥……），批量整理，Ctrl/⌘ + K 快速查找和跳转。
-- **开箱即好看**：第一次登录有安装向导，一分钟选好站点用途和外观；外观可以导出成外观包，和别人分享。
+- **分享图跟着风格走**：文章的分享图会用当前的风格和配色，底部带上站名和网址，适合发朋友圈、微博和小红书。
+- **空间（小圈子）**：每个空间是一个独立的小站，有自己的地址 `/space/<别名>`，可以设为公开、登录可见或仅邀请；空间再多也能搜索、排序和随机逛。
+- **写作更安心**：公开发布前的隐私检查（手机号、身份证号、密钥……）、删除后进回收站、每篇文章的私有历史版本、批量整理，以及 Ctrl/⌘ + K 快速查找和跳转。
+- **管理更省心**：第一次登录有安装向导；外观可以导出成外观包和别人分享；全站一键备份成 ZIP；可选的 AI 文本和图片审核（默认关闭）。
 
-完整的功能和触发方式见 [blog2-styles.md](blog2-styles.md)。
+## 给文章指定外观
+
+在文章里加上下面的标签，读者打开这篇文章时，整页会换成你选的风格和配色；离开这篇文章就恢复读者自己的设置，他们保存的选择不会被改动。
+
+```markdown
+#style/vaporwave #theme/neon-rain
+```
+
+- 两个标签可以只写一个，比如只写 `#theme/...` 就只换配色。
+- 风格只在读者使用「博客 2」布局时生效；配色在任何布局都生效。
+- 文章顶部会提示「作者为这篇文章选了外观」，读者可以点「用我自己的外观」，或者自己换一个风格、配色，都会立刻改回读者的选择。
+- 标签不区分大小写，写错的名字会被忽略；同一种标签写了好几个时，以第一个为准。
+- 金色传说要读者自己解锁，不能用标签指定。
+- 这两个标签和普通标签一样会显示在文章里，也能用来筛选，比如找出所有蒸汽波风格的文章。
+
+**风格**
+
+| 标签 | 风格 |
+| --- | --- |
+| `#style/default` | 默认 |
+| `#style/glass` | 玻璃拟态 |
+| `#style/neumorphism` | 新拟物 |
+| `#style/aero` | Frutiger Aero |
+| `#style/y2k` | Y2K Web |
+| `#style/vaporwave` | 蒸汽波 |
+| `#style/pixel` | 像素复古 |
+| `#style/handdrawn` | 手绘涂鸦 |
+| `#style/terminal` | 开发者 |
+
+**配色**（深色配色也可以写完整的名字，比如 `#theme/neon-rain-dark`）
+
+| 标签 | 配色 | 备注 |
+| --- | --- | --- |
+| `#theme/light` | 亮色 |  |
+| `#theme/dark` | 暗色 | 深色 |
+| `#theme/paper` | 纸质 |  |
+| `#theme/dawn` | 黎明 |  |
+| `#theme/ocean-breeze` | 海风 |  |
+| `#theme/matcha` | 抹茶 |  |
+| `#theme/lavender` | 薰衣草 |  |
+| `#theme/sakura-day` | 樱花之日 |  |
+| `#theme/desert-sand` | 沙漠之沙 |  |
+| `#theme/porcelain` | 瓷器 |  |
+| `#theme/retro-newspaper` | 复古报纸 |  |
+| `#theme/candy-pop` | 糖果流行 |  |
+| `#theme/editorial` | 编辑部 |  |
+| `#theme/editorial-dark` | 编辑部·夜 | 深色 |
+| `#theme/cosmic` | 宇宙 | 深色 |
+| `#theme/twilight` | 暮光 | 深色 |
+| `#theme/aurora` | 极光 | 深色 |
+| `#theme/abyss` | 深渊 | 深色 |
+| `#theme/neon-rain` | 霓虹雨 | 深色 |
+| `#theme/moonlit-forest` | 月光森林 | 深色 |
+| `#theme/retro-terminal` | 复古终端 | 深色 |
+| `#theme/ink-night` | 墨夜 | 深色 |
+| `#theme/sakura-night` | 樱花之夜 | 深色 |
 
 ## 快速开始
 
@@ -46,7 +103,7 @@ docker run -d \
 
 打开 `http://服务器地址:5230`，第一个注册的账号就是管理员，登录后会出现安装向导。
 
-> 镜像由本仓库的 GitHub Actions 发布。如果镜像还没有发布，请先用下面「自己构建」的方式。
+> 镜像和可执行文件由本仓库的 GitHub Actions 发布。是否已经可用，以 [Actions](https://github.com/3035936740/memos/actions) 和 [Releases](https://github.com/3035936740/memos/releases) 页面为准；还没有的话，请先用下面「自己构建」的方式。
 
 也可以用 [deploy/docker-compose.yml](deploy/docker-compose.yml)：
 
@@ -58,6 +115,14 @@ docker compose up -d
 
 **1Panel、宝塔等面板**：在面板的「容器编排」（或 Docker Compose）里新建一个编排，把上面 `docker-compose.yml` 的内容粘进去即可。
 
+### 可执行文件
+
+在 [Releases](https://github.com/3035936740/memos/releases) 下载对应系统的 `memos-plus_<版本>_<系统>_<架构>` 压缩包，解压后运行：
+
+```bash
+./memos --port 5230 --data /var/opt/memos
+```
+
 ### 自己构建
 
 不想用镜像，或者想先改代码：在 Windows 上运行仓库根目录的 `build-windows.bat`（本机运行）或 `build-linux-amd64.bat`（构建 Linux 服务器用的可执行文件），需要 Node.js 24、pnpm 和 Go 1.26。构建好后：
@@ -68,26 +133,45 @@ docker compose up -d
 
 **小服务器**：优先选择 SQLite，并把新访客风格设为「默认」以减少浏览器特效开销。1 核 1 GB 的 Linux 容器部署还需要实机验收，当前不把它作为已验证的最低配置承诺。
 
+## 从 WordPress / Hexo 搬家与社区风格包
+
+后端现已提供 WordPress WXR、带 YAML/TOML front matter 的 Markdown ZIP 导入，以及独立 CSS 风格包的安装、启停和导出接口。导入先预览、默认私有，保留文章时间、草稿、标签和分类；重复导入会跳过。外部图片链接保留，不由服务器抓取。
+
+这两项的新界面尚待接入，接口、格式、安全限制和发布验证步骤见 [前端接入约定](docs/style-packs-and-import-api.md)。风格包更新使用版本化资源，停用/删除时回退站点默认风格。
+
+## 备份和数据安全
+
+- **全站备份**：管理员在「设置 → 存储」下载全站 ZIP，里面是可以直接阅读的 Markdown 原文和附件。SQLite 数据库快照默认不包含；勾选后快照里有密码哈希和密钥，请妥善保管。MySQL / PostgreSQL 请另外用数据库自带的工具备份。
+- **回收站**：删除的文章先进回收站（用户菜单 → 回收站），默认保留 30 天，可以恢复或彻底删除。
+- **历史版本**：修改正文或标题时会保存旧版本（同一个人十分钟内的连续修改算一个），默认每篇保留 20 个，在文章菜单 → 历史版本里比较和恢复。历史只有文章的管理者能看，普通读者看不到。
+- 保留天数和版本数都可以在「设置 → 系统」里调整。
+
 ## 从原版 Memos 迁移
 
 Memos Plus 使用和原版相同的数据目录和数据库，启动时会自动升级数据库结构。
 
 1. **先备份**：停掉原版，把数据目录（Docker 里是挂载到 `/var/opt/memos` 的那个文件夹）整个复制一份。
-2. 用 Memos Plus 的镜像或可执行文件，指向同一个数据目录启动。
+2. 用 Memos Plus 的镜像或可执行文件，指向同一个数据目录启动。使用 SQLite 时，升级前还会自动生成一份数据库快照，保留最近三份。
 3. 登录后检查文章、附件和用户都在。
 
 **注意**：升级后的数据库多了 Memos Plus 自己的字段和表，不能直接再拿回原版使用。想退回原版，请用第 1 步备份的数据目录。
 
+Memos Plus 有自己的 `1.x` 版本号和独立的迁移记录，同时保留原版的数据库版本，方便以后继续合并原版更新。「关于」页面会同时显示两个版本。
+
+## 搭一个演示站
+
+[在线演示](https://memos.bing.tomato-universe.tech/) 是一个普通站点。想自己搭一个可以随便玩的演示站，用 [deploy/docker-compose.demo.yml](deploy/docker-compose.demo.yml)：它设置了 `MEMOS_DEMO=true`，启动时和之后每 24 小时把数据重置成示例内容。**必须使用单独的数据卷，不要指向正式站的数据。** 详细说明见 [deploy/demo.md](deploy/demo.md)。
+
+普通部署不会开启重置。
+
 ## 开发
 
 ```bash
-go run ./cmd/memos --port 8081   # 后端
+go run ./cmd/memos --port 8081       # 后端
 cd web && pnpm install && pnpm dev   # 前端，http://localhost:3001
 cd web && pnpm lint && pnpm test     # 前端检查
 go test ./...                        # 后端测试
 ```
-
-更多约定见 [AGENTS.md](AGENTS.md)。
 
 ## 致谢与许可
 
@@ -104,12 +188,14 @@ Memos Plus 基于 [usememos/memos](https://github.com/usememos/memos) 开发，�
 - A Blog 2 layout with ten styles (glass, neumorphism, Frutiger Aero, Y2K, vaporwave, pixel, hand-drawn, developer and a secret golden one) that restyle the whole app.
 - Styles react to color themes with particles, scenes, legendary combinations, a codex and achievements.
 - Reader comforts: reading progress, series, old-post notes, resume reading and a sticky sidebar.
+- Give a single post its own look with `#style/<name>` and `#theme/<name>` tags, for example `#style/vaporwave #theme/neon-rain`. Readers can switch back to their own look at any time. Names are listed in the tables above.
 - Background music with a visualizer per style.
-- Spaces for small communities: public, signed-in only or invite-only, with search when there are many.
-- Privacy check before publishing, batch tidying, and Ctrl/⌘ + K quick find.
-- A setup wizard on first sign-in, and appearance packs you can export and share.
+- Share images that wear the current style and theme, with the site name and address at the bottom.
+- Spaces for small communities, each at its own `/space/<slug>` address: public, signed-in only or invite-only, with search and sorting when there are many.
+- Safer writing: a privacy check before publishing, a trash with a 30-day grace period, private revision history, batch tidying and Ctrl/⌘ + K quick find.
+- Easier running: a setup wizard on first sign-in, shareable appearance packs, one-click site backup as a ZIP, and optional AI text and image moderation (off by default).
 
-Quick start:
+Try the [live demo](https://memos.bing.tomato-universe.tech/), or start your own:
 
 ```bash
 docker run -d --name memos-plus --restart unless-stopped \
@@ -117,14 +203,8 @@ docker run -d --name memos-plus --restart unless-stopped \
   ghcr.io/3035936740/memos-plus:latest
 ```
 
-Moving from Memos: back up your data directory first, then start Memos Plus on the same directory. The upgraded database cannot be opened by the original Memos again; keep the backup if you may go back.
+Images and binaries are published by this repository's GitHub Actions; check [Releases](https://github.com/3035936740/memos/releases) for what is available.
+
+Moving from Memos: back up your data directory first, then start Memos Plus on the same directory. The upgraded database cannot be opened by the original Memos again; keep the backup if you may go back. With SQLite, Memos Plus also snapshots the database before each upgrade and keeps the last three.
 
 Licensed under [MIT](LICENSE), like Memos.
-
-### 演示、备份与升级
-
-[Memos Plus 演示站](https://memos.bing.tomato-universe.tech/)。现有站点不会因为升级而自动开启 demo 模式；隔离演示环境的部署说明见 [deploy/demo.md](deploy/demo.md)。
-
-管理员可在「设置 → 存储」下载全站 Markdown 和附件 ZIP。SQLite 数据库快照默认不包含，勾选后含密码哈希和密钥，请妥善保管。删除默认进入回收站，保留 30 天；历史版本只对文章管理者开放。
-
-Memos Plus 使用独立的 `1.x` 发布版本和迁移台账，保留原版数据库版本的语义。SQLite 升级前自动生成快照，保留最近三份。发版流程已配置为发布本分支 GHCR 镜像与二进制；实际镜像和 Release 是否可用，以仓库 Actions 执行结果为准。

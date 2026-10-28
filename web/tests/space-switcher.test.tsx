@@ -54,6 +54,7 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 }));
 
 vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
   useTranslate: () => (key: string) => key,
 }));
 

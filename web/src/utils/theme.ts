@@ -313,6 +313,18 @@ const updateColorScheme = (theme: ResolvedTheme): void => {
 // Main Theme Loading
 // ============================================================================
 
+/** The theme last asked for through loadTheme: what shows again once an override is lifted. */
+let requestedTheme: Theme | undefined;
+/** A theme shown in place of the requested one without saving it, such as the look an author chose for a post. */
+let themeOverride: ResolvedTheme | undefined;
+
+const applyResolvedTheme = (theme: ResolvedTheme): void => {
+  injectThemeStyle(theme);
+  setThemeAttribute(theme);
+  updateThemeColorMeta(theme);
+  updateColorScheme(theme);
+};
+
 /**
  * Loads and applies a theme.
  * This function:
@@ -325,15 +337,30 @@ const updateColorScheme = (theme: ResolvedTheme): void => {
  */
 export const loadTheme = (themeName: string, options: { persist?: boolean } = {}): void => {
   const validTheme = validateTheme(themeName);
-  const resolvedTheme = resolveTheme(validTheme);
-
-  injectThemeStyle(resolvedTheme);
-  setThemeAttribute(resolvedTheme);
-  updateThemeColorMeta(resolvedTheme);
-  updateColorScheme(resolvedTheme);
+  requestedTheme = validTheme;
+  applyResolvedTheme(themeOverride ?? resolveTheme(validTheme));
   if (options.persist !== false) {
     setStoredTheme(validTheme); // Store original theme preference (not resolved)
   }
+};
+
+/**
+ * Shows `theme` instead of the visitor's own until it is cleared with undefined. The visitor's choice keeps
+ * being saved and applied underneath, so clearing the override shows whatever they last picked.
+ */
+export const setThemeOverride = (theme: ResolvedTheme | undefined): void => {
+  if (theme === themeOverride) return;
+  themeOverride = theme;
+  applyResolvedTheme(theme ?? resolveTheme(requestedTheme ?? getInitialTheme()));
+};
+
+/** Fired when the visitor picks a theme themselves; ViewContext then ends any post look so the pick shows. */
+export const THEME_CHOSEN_EVENT = "memos:theme-chosen";
+
+/** loadTheme for the visitor's own pick in a theme menu, as opposed to restoring a saved preference. */
+export const chooseTheme = (themeName: string): void => {
+  loadTheme(themeName);
+  window.dispatchEvent(new Event(THEME_CHOSEN_EVENT));
 };
 
 /**

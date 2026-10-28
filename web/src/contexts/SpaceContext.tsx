@@ -100,7 +100,10 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
     }
   }, [selectedSpacePath, location.pathname, location.search, location.hash, location.state]);
   const duplicateSpaceTitles = useMemo(
-    () => getDuplicateSpaceTitles(selectedSpace && !spaceByName.has(selectedSpace.name) ? [...spaces, selectedSpace] : spaces),
+    () =>
+      getDuplicateSpaceTitles(
+        selectedSpace && !spaceByName.has(selectedSpace.name) ? [...spaceByName.values(), selectedSpace] : [...spaceByName.values()],
+      ),
     [selectedSpace, spaceByName, spaces],
   );
   const collectionScope = useMemo<CollectionScope>(

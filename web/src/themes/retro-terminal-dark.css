@@ -39,8 +39,7 @@ html[data-theme="retro-terminal-dark"] body {
   background-color: #071009;
   background-image:
     repeating-linear-gradient(0deg, rgb(100 255 130 / 2.5%) 0, rgb(100 255 130 / 2.5%) 1px, transparent 1px, transparent 4px),
-    radial-gradient(ellipse at 50% 35%, rgb(40 132 64 / 13%) 0%, transparent 62%),
-    linear-gradient(180deg, #050a06 0%, #08120a 100%);
+    radial-gradient(ellipse at 50% 35%, rgb(40 132 64 / 13%) 0%, transparent 62%), linear-gradient(180deg, #050a06 0%, #08120a 100%);
   background-attachment: fixed;
 }
 

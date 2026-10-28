@@ -279,3 +279,7 @@ describe("<PagedMemoList>", () => {
     });
   });
 });
+
+vi.mock("@/contexts/MemoSpacesContext", () => ({ MemoSpacesProvider: ({ children }: { children: React.ReactNode }) => children }));
+
+vi.mock("@/contexts/SpaceContext", () => ({ useSpaceContext: () => ({ memoFilter: undefined, collectionScope: { kind: "all" } }) }));

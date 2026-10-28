@@ -3,6 +3,7 @@ import { useMusicEffects } from "@/contexts/MusicPlayerContext";
 import { useView } from "@/contexts/ViewContext";
 import { cn } from "@/lib/utils";
 import { type BlogStyle, isStyledBlog } from "@/utils/blog-style";
+import { isMotionReduced } from "@/utils/effects";
 
 type VisualizerKind = "bars" | "pixel" | "spectrum" | "cassette" | "notes";
 type VisualizerVariant = "compact" | "large";
@@ -102,7 +103,7 @@ const MusicVisualizerRenderer = ({ kind, variant, className }: Props & { kind: V
   const { playing, muted, volume, getSpectrum, getPlaybackProgress } = useMusicEffects();
   const count = BAND_COUNT[kind][variant];
   const steps = (kind === "spectrum" ? SPECTRUM_STEPS : PIXEL_STEPS)[variant];
-  const [still] = useState(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
+  const [still] = useState(isMotionReduced);
   const audible = playing && !muted && volume > 0;
   const active = audible && !still;
   const nodesRef = useRef<Array<HTMLElement | SVGGElement | null>>([]);

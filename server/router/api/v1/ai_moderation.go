@@ -213,7 +213,11 @@ func (s *APIV1Service) reviewAIContent(ctx context.Context, texts []string, imag
 			if value.Err != nil {
 				return status.Error(codes.Unavailable, "AI review failed; contact the administrator to check API key balance, quota, and service status")
 			}
-			allowed, _ = value.Val.(bool)
+			var ok bool
+			allowed, ok = value.Val.(bool)
+			if !ok {
+				return status.Error(codes.Unavailable, "invalid AI review result")
+			}
 		}
 	}
 	if !allowed {

@@ -171,6 +171,10 @@
       "delete-title": "Delete {{count}} memos?",
       "delete-description": "This cannot be undone. Their attachments are deleted too.",
       "privacy-description": "Anyone will be able to see the selected memos. They seem to contain:"
+    },
+    "post-look": {
+      "text": "The author picked a look for this post: {{look}}.",
+      "decline": "Use my own look"
     }
   },
   "editor": {
@@ -388,11 +392,27 @@
       "bookmarklet": "Bookmarklet",
       "bookmarklet-description": "Drag this button to your bookmarks bar. Then select text on any page and click it: Memos opens in a new tab with the text and its source in the draft.",
       "bookmarklet-name": "Save to Memos",
-      "bookmarklet-drag": "Drag to the bookmarks bar"
+      "bookmarklet-drag": "Drag to the bookmarks bar",
+      "effects": "Motion effects",
+      "effects-description": "Low power keeps every style's look but stops particles, rain and animated backgrounds. Auto turns it on for slower devices. Saved in this browser.",
+      "effects-auto": "Auto",
+      "effects-full": "Full",
+      "effects-lite": "Low power"
     },
     "spaces": {
       "current-space": "Current space",
       "manage": "Manage"
+    },
+    "system": {
+      "essentials-description": "The site's name, who can read it and who can sign up.",
+      "first-visit-title": "What newcomers see",
+      "first-visit-description": "The language, theme and style a first-time visitor gets. Visitors can change them for themselves.",
+      "advanced": "Advanced",
+      "advanced-description": "Posts per page, background, festival effects, sign-in rules, custom code, navigation and categories, music, trash and history, appearance packs.",
+      "more-title": "More site options",
+      "more-description": "Feed size, background, festival effects and the calendar's first day.",
+      "accounts-title": "Accounts and sign-in",
+      "accounts-description": "How people sign in, what they may change on their profile, and media metadata."
     }
   },
   "music-admin": {
@@ -725,5 +745,128 @@
     "downloading": "Exporting...",
     "running": "Another backup is already in progress.",
     "failed": "Backup download failed"
+  },
+  "about": {
+    "plus-version": "Memos Plus version",
+    "channel-stable": "Stable",
+    "channel-preview": "Preview",
+    "channel-dev": "Development build",
+    "based-on": "Based on",
+    "release-notes": "Release notes",
+    "dev-build-note": "Built from source, so there is no release page for this version.",
+    "version-unknown": "The server did not report a version.",
+    "demo-site-note": "Try every style and Space",
+    "plus-description": "Memos Plus builds on the original Memos with blog layouts and styles, Spaces, polls, music playback, and backup, trash and revision history. Thanks to the original Memos authors and contributors."
+  },
+  "effects": {
+    "auto-lite": "Animations were stuttering, so this device switched to low power. You can change it in Settings → Preferences."
+  },
+  "oddities": {
+    "title": "Odd pages",
+    "void": {
+      "name": "The void",
+      "lead": "Write down what you want to say but not keep. Press Enter and it is gone.",
+      "label": "Something to let go",
+      "placeholder": "Like: honestly, today was a bit much.",
+      "privacy": "Nothing is saved, sent or drafted.",
+      "let-go": "Let go",
+      "count": "This browser has let go of {{count}} thoughts.",
+      "empty": "Nothing has been let go here yet.",
+      "milestone-1": "The first one is always the hardest.",
+      "milestone-10": "Ten. Feeling any lighter?",
+      "milestone-50": "Fifty. The void says it is not tired; it never keeps anything anyway.",
+      "milestone-100": "A hundred. If you ever want to keep one, Memos is next door.",
+      "milestone-500": "Five hundred. The void counts you as an old friend now.",
+      "milestone-1000": "A thousand. The void awards you an invisible medal."
+    },
+    "teapot": {
+      "name": "418 teapot",
+      "title": "I'm a teapot",
+      "lead": "This server is a teapot. Under RFC 2324 it may refuse to brew coffee.",
+      "brew": "Brew a coffee",
+      "again": "Another cup?",
+      "refused": "Refused {{count}} times",
+      "pour": "Fine… have a cup of tea. It's hot, careful.",
+      "refusal-1": "I'm a teapot. I don't do coffee.",
+      "refusal-2": "Really, I'm a teapot. Look at my spout.",
+      "refusal-3": "Under RFC 2324, section 2.3.2, I may refuse.",
+      "refusal-4": "All I have inside is tea leaves. And a little limescale.",
+      "refusal-5": "The coffee machine is next door. It called in sick today.",
+      "refusal-6": "I forwarded your request to the coffee machine. It says it doesn't know you.",
+      "refusal-7": "Did you know tea has plenty of caffeine too?",
+      "refusal-8": "I've calmly reconsidered… no.",
+      "refusal-9": "I called my lawyer, a thermos. He says no as well.",
+      "refusal-10": "Press once more and I'm putting my lid on.",
+      "refusal-11": "(The lid is on.)",
+      "refusal-12": "Fine, the lid popped off by itself. Still no.",
+      "refusal-13": "I wanted to be a coffee machine as a kid. Turns out I make a better teapot.",
+      "refusal-14": "You're pressing so earnestly I'm almost touched. Still no.",
+      "refusal-15": "Loading coffee… failed: no beans found.",
+      "refusal-16": "I'll count to three. One, two… never mind, I can't count, I'm a teapot.",
+      "refusal-17": "For the last time: no… wait, are you very tired?"
+    },
+    "museum": {
+      "name": "Style museum",
+      "title": "Style museum",
+      "lead": "Every Memos Plus style, hung in order of its years. Touching the exhibits is allowed: one click puts it on.",
+      "room": "Room {{number}}",
+      "materials": "Materials: ",
+      "here": "You are in this room",
+      "enter": "Wear this style",
+      "locked-title": "This room is closed",
+      "locked-note": "Golden light shows under the door. They say whoever finds every legendary reaction can push it open.",
+      "terminal-era": "1970s to now",
+      "terminal-materials": "Monospace type, green phosphor, one blinking cursor",
+      "terminal-note": "The first blogs probably looked like this, before anyone called them blogs.",
+      "pixel-era": "1985 – 1995",
+      "pixel-materials": "An 8-bit palette, blocks, hard drop shadows",
+      "pixel-note": "Every pixel placed by hand, or so it looks.",
+      "y2k-era": "1998 – 2003",
+      "y2k-materials": "Silver metal, bevelled buttons, gradient title bars",
+      "y2k-note": "The millennium bug didn't end the world, but it left us these buttons.",
+      "aero-era": "2006 – 2012",
+      "aero-materials": "Glass, bubbles, bright green hills and an always clear sky",
+      "aero-note": "When technology was going to make the world cleaner.",
+      "vaporwave-era": "2011 – 2013",
+      "vaporwave-materials": "Pink-violet gradients, sunsets, a grid horizon",
+      "vaporwave-note": "Nostalgia for a past that never happened.",
+      "neumorphism-era": "2019 – 2020",
+      "neumorphism-materials": "Raised and pressed surfaces of one colour, soft double shadows",
+      "neumorphism-note": "Designers loved it briefly, then noticed nobody could find the buttons.",
+      "glass-era": "2020 to now",
+      "glass-materials": "Frosted glass, colour blobs, thin white edges",
+      "glass-note": "You can see what is behind it; that is the point.",
+      "handdrawn-era": "Timeless",
+      "handdrawn-materials": "Pencil, eraser smudges, wobbly lines",
+      "handdrawn-note": "The only room in the museum where drawing on the walls is allowed.",
+      "default-era": "Now",
+      "default-materials": "Clean cards and just enough white space",
+      "default-note": "What every style looks like with its costume off.",
+      "golden-era": "Legend",
+      "golden-materials": "Gold leaf, a halo, a touch of vanity",
+      "golden-note": "Congratulations, you opened the door."
+    },
+    "time": {
+      "name": "Era hopper",
+      "title": "Era hopper",
+      "lead": "See this site squeezed into the browser of another year.",
+      "year": "Year",
+      "era-style": "The style of this era: {{style}}",
+      "stay": "Stay in this era",
+      "staying": "You already live in this era",
+      "dos-memory": "640K ought to be enough for anybody.",
+      "dos-files": "{{count}} file(s)",
+      "welcome": "★☆★ Welcome to {{site}}! Now listed in all major search engines! ★☆★",
+      "homepage": "{{site}}'s Home Page",
+      "construction": "UNDER CONSTRUCTION",
+      "visitor-before": "You are visitor number ",
+      "visitor-after": "",
+      "best-viewed": "Best viewed at 800×600 in Netscape 4.0 or later",
+      "read-more": "Read more »",
+      "subscribe": "Subscribe via RSS",
+      "share-2009": "Share on: Digg · del.icio.us · StumbleUpon",
+      "neural-link": "Neural link established · projecting {{site}}",
+      "readers-2049": "8,000,000,000 readers are online with you right now (most of them AIs)"
+    }
   }
 }

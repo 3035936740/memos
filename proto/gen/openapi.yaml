@@ -2203,6 +2203,131 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/style-packs:
+        get:
+            tags:
+                - InstanceService
+            description: Lists enabled community styles. Disabled metadata is administrator-only.
+            operationId: InstanceService_ListStylePacks
+            parameters:
+                - name: includeDisabled
+                  in: query
+                  schema:
+                    type: boolean
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ListStylePacksResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        post:
+            tags:
+                - InstanceService
+            description: Installs a validated style ZIP, initially disabled.
+            operationId: InstanceService_InstallStylePack
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/InstallStylePackRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StylePack'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/style-packs/{id}:
+        delete:
+            tags:
+                - InstanceService
+            description: Removes a style and resets references in the instance default.
+            operationId: InstanceService_DeleteStylePack
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content: {}
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+        patch:
+            tags:
+                - InstanceService
+            description: Replaces an installed version or changes its enabled state.
+            operationId: InstanceService_UpdateStylePack
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateStylePackRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/StylePack'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/style-packs/{id}:export:
+        get:
+            tags:
+                - InstanceService
+            description: Exports the original ZIP for administrator inspection.
+            operationId: InstanceService_ExportStylePack
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ExportStylePackResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/users:
         get:
             tags:
@@ -3612,6 +3737,12 @@ components:
             properties:
                 showAll:
                     type: boolean
+        ExportStylePackResponse:
+            type: object
+            properties:
+                zip:
+                    type: string
+                    format: bytes
         FieldMapping:
             type: object
             properties:
@@ -3713,6 +3844,12 @@ components:
             properties:
                 oauth2Config:
                     $ref: '#/components/schemas/OAuth2Config'
+        InstallStylePackRequest:
+            type: object
+            properties:
+                zip:
+                    type: string
+                    format: bytes
         InstanceProfile:
             type: object
             properties:
@@ -4284,6 +4421,13 @@ components:
                         $ref: '#/components/schemas/Space'
                 nextPageToken:
                     type: string
+        ListStylePacksResponse:
+            type: object
+            properties:
+                stylePacks:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StylePack'
         ListUserNotificationsResponse:
             type: object
             properties:
@@ -5185,6 +5329,26 @@ components:
                     type: boolean
                     description: "insecure_skip_tls_verify disables TLS certificate verification when connecting\r\n to the S3 endpoint. Only enable this for trusted endpoints that use a self-signed\r\n certificate; it removes protection against man-in-the-middle attacks."
             description: "S3 configuration for an S3-compatible object store.\r\n Reference: https://developers.cloudflare.com/r2/examples/aws/aws-sdk-go/"
+        StylePack:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: object
+                    additionalProperties:
+                        type: string
+                reactsLike:
+                    type: string
+                colorScheme:
+                    type: string
+                cssUrl:
+                    type: string
+                version:
+                    type: string
+                enabled:
+                    type: boolean
+            description: Public community style metadata. CSS and assets have immutable version URLs.
         TestInstanceEmailSettingRequest:
             type: object
             properties:
@@ -5228,6 +5392,17 @@ components:
                 contentType:
                     type: string
                     description: Optional. The MIME type of the input audio.
+        UpdateStylePackRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                enabled:
+                    type: boolean
+                zip:
+                    type: string
+                    description: Optional replacement archive; its manifest ID must match id.
+                    format: bytes
         UpsertMemoReactionRequest:
             required:
                 - name

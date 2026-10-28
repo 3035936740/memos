@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { type Translations, useTranslate } from "@/utils/i18n";
-import { loadTheme, THEME_OPTIONS } from "@/utils/theme";
+import { chooseTheme, THEME_OPTIONS } from "@/utils/theme";
 
 interface ThemeSelectProps {
   value?: string;
@@ -111,7 +111,7 @@ const ThemeSelect = ({ value, onValueChange, className, compact = false, iconOnl
 
   const handleThemeChange = (newTheme: string) => {
     // Apply theme globally immediately
-    loadTheme(newTheme);
+    chooseTheme(newTheme);
     // Also notify parent component if callback is provided
     if (onValueChange) {
       onValueChange(newTheme);

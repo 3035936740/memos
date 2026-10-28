@@ -1,0 +1,42 @@
+/* Low-power mode (utils/effects.ts sets html[data-effects="lite"]): every style keeps its look but the decorative
+   motion stops, the same set that already stands still for "reduce motion", plus background blur, the costliest
+   thing these styles paint. The canvases and the rain shader check the same mode in script. */
+
+html[data-effects="lite"] :is(body, #root)::before,
+html[data-effects="lite"] :is(body, #root)::after,
+html[data-effects="lite"] [data-styled-blog],
+html[data-effects="lite"] [data-styled-blog] :is([data-sb-card], [data-sb-hero-title]),
+html[data-effects="lite"] [data-styled-blog] [data-sb-card]::before,
+html[data-effects="lite"]
+  [data-styled-blog]
+  :is(
+    [data-sb-widget],
+    [data-sb-nav-link],
+    [data-memo-editor],
+    [data-blog-composer],
+    [data-sb-subcard],
+    [data-sb-subitem],
+    [data-memo-view]
+  )::before,
+html[data-effects="lite"] [data-styled-blog] [data-sb-hero-title]::after,
+html[data-effects="lite"] :is([data-cat-leg], [data-cat-tail], [data-reaction-banner], [data-pixel-boss-sprite]),
+html[data-effects="lite"] [data-settings-section] [data-slot],
+html[data-effects="lite"] :is([data-page-panel], [data-settings-surface])::before {
+  animation: none !important;
+}
+
+html[data-effects="lite"] [data-styled-blog] [data-sb-card] {
+  transition: none;
+}
+
+html[data-effects="lite"] [data-styled-blog] [data-sb-card]:hover {
+  transform: none;
+}
+
+/* Translucent surfaces stay translucent; only the frosting goes. */
+html[data-effects="lite"] *,
+html[data-effects="lite"] *::before,
+html[data-effects="lite"] *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

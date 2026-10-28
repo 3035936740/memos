@@ -25,6 +25,7 @@ type MemoAttachmentBinding struct {
 // reference relations. Removed attachment rows are deleted in the same
 // transaction; callers may clean up external objects after the commit.
 type MemoMutation struct {
+	ImportRecord *MemoImportRecord
 	// MemoCreate requests that the memo row be created in this same transaction
 	// before attachments and relations are applied. CommentContextMemoID creates
 	// one immutable COMMENT relation from the new memo to the named context memo.

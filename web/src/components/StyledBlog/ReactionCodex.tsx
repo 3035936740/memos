@@ -15,8 +15,8 @@ import { blogStyleLabelKey, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
 import {
   ELEMENTS,
-  elementReactionId,
   elementName,
+  elementReactionId,
   isReactiveStyle,
   LEGENDARY_REACTIONS,
   legendaryFlavor,

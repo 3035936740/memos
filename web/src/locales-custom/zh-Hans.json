@@ -169,6 +169,10 @@
       "delete-title": "删除选中的 {{count}} 条？",
       "delete-description": "删除后无法恢复，附件也会一起删除。",
       "privacy-description": "选中的备忘录将对所有人公开，里面好像有这些信息："
+    },
+    "post-look": {
+      "text": "作者为这篇文章选了外观：{{look}}。",
+      "decline": "用我自己的外观"
     }
   },
   "editor": {
@@ -386,11 +390,27 @@
       "bookmarklet": "书签小工具",
       "bookmarklet-description": "把这个按钮拖到浏览器的书签栏。之后在任意网页选中文字再点它，会在新标签页打开 Memos，把选中的文字和出处放进草稿。",
       "bookmarklet-name": "收藏到 Memos",
-      "bookmarklet-drag": "拖到书签栏"
+      "bookmarklet-drag": "拖到书签栏",
+      "effects": "动态效果",
+      "effects-description": "省电模式保留每种风格的样子，只停掉粒子、雨和会动的背景。选“自动”时，较慢的设备会自动切换。只保存在这个浏览器里。",
+      "effects-auto": "自动",
+      "effects-full": "完整",
+      "effects-lite": "省电"
     },
     "spaces": {
       "current-space": "当前空间",
       "manage": "管理"
+    },
+    "system": {
+      "essentials-description": "站点叫什么、谁能看、谁能注册。",
+      "first-visit-title": "新访客看到的样子",
+      "first-visit-description": "第一次来的人看到的语言、配色和风格。访客之后可以自己改。",
+      "advanced": "进阶设置",
+      "advanced-description": "每页数量、背景、节日特效、登录规则、自定义代码、导航和分类、音乐、回收站与历史版本、外观包。",
+      "more-title": "更多站点选项",
+      "more-description": "每页数量、背景图片、节日特效和日历的一周起始日。",
+      "accounts-title": "账号与登录",
+      "accounts-description": "登录方式、用户能否修改资料，以及是否保存照片的拍摄信息。"
     }
   },
   "music-admin": {
@@ -723,5 +743,128 @@
     "downloading": "正在导出…",
     "running": "已有备份正在导出，请稍后再试。",
     "failed": "备份下载失败"
+  },
+  "about": {
+    "plus-version": "Memos Plus 版本",
+    "channel-stable": "正式版",
+    "channel-preview": "预览版",
+    "channel-dev": "开发版",
+    "based-on": "基于",
+    "release-notes": "更新说明",
+    "dev-build-note": "这是自己从源码构建的版本，没有对应的发布页面。",
+    "version-unknown": "服务器没有提供版本信息。",
+    "demo-site-note": "体验所有风格和空间",
+    "plus-description": "Memos Plus 在原版 Memos 的基础上扩展了博客视图与多种风格、空间、投票、音乐播放，以及备份、回收站和历史版本等功能。感谢原版 Memos 的作者与所有贡献者。"
+  },
+  "effects": {
+    "auto-lite": "动画有点卡，已切换到省电模式。可以在 设置 → 偏好设置 里改回来。"
+  },
+  "oddities": {
+    "title": "奇怪的页面",
+    "void": {
+      "name": "树洞粉碎机",
+      "lead": "写下想说、但不想留下的话。按回车，它就没了。",
+      "label": "要丢掉的话",
+      "placeholder": "比如：今天其实有点累。",
+      "privacy": "不保存，不上传，不留草稿。",
+      "let-go": "丢掉",
+      "count": "这个浏览器已经丢掉了 {{count}} 句话。",
+      "empty": "这里还什么都没丢过。",
+      "milestone-1": "第一句总是最难的。",
+      "milestone-10": "十句了。轻松一点了吗？",
+      "milestone-50": "五十句。树洞说它不累，反正它什么也不装。",
+      "milestone-100": "一百句。哪天想留下点什么，Memos 就在隔壁。",
+      "milestone-500": "五百句。这个树洞已经是你的老朋友了。",
+      "milestone-1000": "一千句。树洞给你颁了一枚看不见的奖章。"
+    },
+    "teapot": {
+      "name": "418 茶壶",
+      "title": "我是一把茶壶",
+      "lead": "这台服务器是一把茶壶。根据 RFC 2324，它有权拒绝煮咖啡。",
+      "brew": "煮一杯咖啡",
+      "again": "再来一杯？",
+      "refused": "已被拒绝 {{count}} 次",
+      "pour": "好吧……给你倒杯茶。热的，小心烫。",
+      "refusal-1": "我是茶壶，不煮咖啡。",
+      "refusal-2": "真的，我是茶壶。你看我的壶嘴。",
+      "refusal-3": "根据 RFC 2324 第 2.3.2 节，我有权拒绝。",
+      "refusal-4": "我肚子里只有茶叶，还有一点点水垢。",
+      "refusal-5": "咖啡机在隔壁，它今天请假了。",
+      "refusal-6": "我把你的请求转给咖啡机了。它说不认识你。",
+      "refusal-7": "你知道吗，茶里的咖啡因其实也不少。",
+      "refusal-8": "我冷静地重新考虑了一下……不行。",
+      "refusal-9": "我打电话问了我的律师，一个保温杯。他也说不行。",
+      "refusal-10": "你再按一次，我就要把盖子扣上了。",
+      "refusal-11": "（盖子扣上了。）",
+      "refusal-12": "好吧，盖子自己弹开了。还是不行。",
+      "refusal-13": "我小时候也想当咖啡机，后来发现自己更适合当茶壶。",
+      "refusal-14": "你按得这么认真，我有点感动。但还是不行。",
+      "refusal-15": "正在加载咖啡……加载失败：找不到咖啡豆。",
+      "refusal-16": "我数到三。一，二……算了，我不会数数，我是茶壶。",
+      "refusal-17": "最后说一次：不……等等，你是不是很累？"
+    },
+    "museum": {
+      "name": "风格博物馆",
+      "title": "风格博物馆",
+      "lead": "Memos Plus 的每一种风格，按年代陈列。可以触摸展品：点一下就能换上。",
+      "room": "第 {{number}} 展厅",
+      "materials": "材料：",
+      "here": "你正在这间展厅里",
+      "enter": "换上这个风格",
+      "locked-title": "此展厅暂不开放",
+      "locked-note": "门缝里透出金色的光。据说集齐所有传说反应的人，能推开这扇门。",
+      "terminal-era": "1970 年代至今",
+      "terminal-materials": "等宽字体、绿色荧光、一个闪烁的光标",
+      "terminal-note": "最早的博客大概就长这样，只是那时候还不叫博客。",
+      "pixel-era": "1985 – 1995",
+      "pixel-materials": "8 位色板、方块、硬朗的投影",
+      "pixel-note": "每一个像素都是手工摆上去的，至少看起来是。",
+      "y2k-era": "1998 – 2003",
+      "y2k-materials": "银色金属、斜面按钮、渐变标题栏",
+      "y2k-note": "千年虫没有毁掉世界，但留下了这种按钮。",
+      "aero-era": "2006 – 2012",
+      "aero-materials": "玻璃、气泡、亮绿色的草地和永远晴朗的天空",
+      "aero-note": "那个相信科技会让世界更干净的年代。",
+      "vaporwave-era": "2011 – 2013",
+      "vaporwave-materials": "粉紫渐变、落日、网格地平线",
+      "vaporwave-note": "对一个从未存在过的过去的怀念。",
+      "neumorphism-era": "2019 – 2020",
+      "neumorphism-materials": "同色的凸起与凹陷、柔和的双重阴影",
+      "neumorphism-note": "设计师们短暂地爱上了它，然后发现按钮看不清。",
+      "glass-era": "2020 年至今",
+      "glass-materials": "毛玻璃、彩色光斑、细细的白边",
+      "glass-note": "透过它能看见后面的东西，这正是它的意义。",
+      "handdrawn-era": "不分年代",
+      "handdrawn-materials": "铅笔、橡皮擦痕、歪歪扭扭的线",
+      "handdrawn-note": "本馆唯一允许涂鸦的展厅。",
+      "default-era": "现在",
+      "default-materials": "干净的卡片、恰到好处的留白",
+      "default-note": "所有风格脱下外衣之后的样子。",
+      "golden-era": "传说",
+      "golden-materials": "金箔、光晕、一点点自负",
+      "golden-note": "恭喜你推开了这扇门。"
+    },
+    "time": {
+      "name": "年代穿越",
+      "title": "年代穿越",
+      "lead": "把这个站塞进别的年代的浏览器里看看。",
+      "year": "年份",
+      "era-style": "这个年代对应的风格：{{style}}",
+      "stay": "留在这个年代",
+      "staying": "你已经在这个年代了",
+      "dos-memory": "640K 内存应该对任何人都够用了。",
+      "dos-files": "{{count}} 个文件",
+      "welcome": "★☆★ 欢迎光临 {{site}}！本站已被各大搜索引擎收录！★☆★",
+      "homepage": "{{site}} 的个人主页",
+      "construction": "本站施工中",
+      "visitor-before": "您是本站第 ",
+      "visitor-after": " 位访客",
+      "best-viewed": "建议使用 800×600 分辨率、Netscape 4.0 以上版本浏览",
+      "read-more": "阅读全文 »",
+      "subscribe": "订阅 RSS",
+      "share-2009": "分享到：开心网 · 人人网 · 饭否",
+      "neural-link": "神经链接已建立 · 正在投射 {{site}}",
+      "readers-2049": "此刻有 8,000,000,000 位读者与你同步在线（大部分是 AI）"
+    }
   }
 }

@@ -1,0 +1,87 @@
+/* The share image (memo detail → share → image) wears the current Blog 2 style: a backdrop in the style's
+   colours with the post on the style's own card. html-to-image copies computed styles into the PNG, but not
+   backdrop filters, so the glassy styles get a vivid backdrop to show through rather than relying on blur.
+   Default keeps the plain card the share image always had. */
+
+/* :where() keeps these below the per-style rules that follow. */
+html:where([data-style]:not([data-style="default"])) [data-share-image] {
+  border: 0;
+  border-radius: 20px;
+  padding: 22px 22px 12px;
+  background: var(--sb-share-backdrop, var(--background));
+}
+
+html:where([data-style]:not([data-style="default"])) [data-share-card] {
+  border: var(--sb-border, 1px solid var(--border));
+  border-radius: var(--sb-radius, 16px);
+  background: var(--sb-surface, var(--card));
+  box-shadow: var(--sb-shadow, none);
+  font-family: var(--sb-font-body, inherit);
+}
+
+html[data-style="glass"] [data-share-image] {
+  --sb-share-backdrop:
+    radial-gradient(60% 45% at 8% 6%, var(--sb-glass-a) 0%, transparent 70%),
+    radial-gradient(55% 50% at 100% 35%, var(--sb-glass-b) 0%, transparent 70%),
+    radial-gradient(70% 50% at 30% 100%, var(--sb-glass-c) 0%, transparent 70%), var(--background);
+}
+
+html[data-style="neumorphism"] [data-share-image] {
+  --sb-share-backdrop: var(--background);
+}
+
+html[data-style="aero"] [data-share-image] {
+  --sb-share-backdrop:
+    var(--sb-aero-bubble) 88% 8% / 64px no-repeat, var(--sb-aero-bubble) 6% 72% / 40px no-repeat,
+    linear-gradient(180deg, color-mix(in oklch, var(--primary) 42%, var(--background)) 0%, var(--background) 70%);
+}
+
+html[data-style="y2k"] [data-share-image] {
+  --sb-share-backdrop: var(--sb-y2k-silver);
+}
+
+html[data-style="vaporwave"] [data-share-image] {
+  --sb-share-backdrop:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 28%) 0 1px, transparent 1px 32px) bottom / 100% 26% no-repeat,
+    repeating-linear-gradient(180deg, rgb(255 255 255 / 28%) 0 1px, transparent 1px 18px) bottom / 100% 26% no-repeat,
+    linear-gradient(180deg, var(--sb-vw-lavender) 0%, var(--sb-vw-pink) 100%);
+}
+
+html[data-style="pixel"] [data-share-image] {
+  border-radius: 0;
+  --sb-share-backdrop: linear-gradient(var(--sb-px-ink), var(--sb-px-ink)) bottom / 100% 6px no-repeat, var(--sb-px-sky);
+}
+
+html[data-style="handdrawn"] [data-share-image] {
+  --sb-share-backdrop:
+    var(--sb-paper-blob-a) -18% -14% / 58% no-repeat, var(--sb-paper-blob-b) 118% 112% / 52% no-repeat, var(--background);
+}
+
+html[data-style="handdrawn"] [data-share-card] {
+  border: 1.5px solid var(--sb-ink);
+  border-radius: 3px 7px 4px 6px / 7px 3px 6px 4px;
+}
+
+html[data-style="terminal"] [data-share-image] {
+  border-radius: 0;
+  --sb-share-backdrop: repeating-linear-gradient(180deg, rgb(255 255 255 / 3%) 0 1px, transparent 1px 3px), var(--background);
+}
+
+html[data-style="golden"] [data-share-image] {
+  --sb-share-backdrop: radial-gradient(90% 55% at 50% 0%, var(--sb-gold-glow) 0%, transparent 72%), var(--background);
+}
+
+html[data-style="golden"] [data-share-card] {
+  border: 1px solid var(--sb-gold-line, var(--border));
+}
+
+[data-share-footer] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px 2px;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}

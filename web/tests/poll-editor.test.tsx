@@ -8,7 +8,7 @@ import { memoService } from "@/components/MemoEditor/services/memoService";
 import { createInitialState, EditorProvider, useEditorContext } from "@/components/MemoEditor/state";
 import type { LocalFile } from "@/components/MemoEditor/types/attachment";
 import { type Attachment, AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
-import { MemoSchema, PollSchema, PollVoterSchema, VoterType } from "@/types/proto/api/v1/memo_service_pb";
+import { MemoSchema, PollSchema, PollVoterSchema } from "@/types/proto/api/v1/memo_service_pb";
 
 const api = vi.hoisted(() => ({ getMemo: vi.fn(), updateMemo: vi.fn(), uploadFiles: vi.fn() }));
 vi.mock("@/connect", () => ({ memoServiceClient: api }));
@@ -110,7 +110,10 @@ describe("poll editor attachments", () => {
     expect(screen.getByRole("switch", { name: "投票后才显示票数" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "投票后显示投票用户" })).toBeChecked();
     expect(screen.getByRole("switch", { name: "显示用户所选选项" })).toBeChecked();
-    fireEvent.change(screen.getByRole("combobox"), { target: { value: String(VoterType.ANYONE) } });
+    fireEvent.click(screen.getByRole("combobox"));
+    const guestOption = screen.getByRole("option", { name: "游客也可投票" });
+    fireEvent.keyDown(guestOption, { key: "Enter" });
+    fireEvent.keyUp(guestOption, { key: "Enter" });
     expect(screen.queryByRole("switch", { name: "投票后显示投票用户" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByText("保存投票"));
     fireEvent.click(screen.getByText("Publish"));

@@ -23,6 +23,11 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 
 vi.mock("@/hooks/useSpaceQueries", () => ({
   useSpaces: () => state.query,
+  usePagedSpaces: () => ({ data: undefined }),
+  useBatchSpaces: (_viewer: unknown, names: string[]) => ({
+    data: { spaces: [...state.query.data, newlyCreatedSpace].filter((space) => names.includes(space.name)) },
+    isSuccess: state.query.isSuccess,
+  }),
 }));
 
 const Probe = () => {
@@ -162,7 +167,7 @@ describe("SpaceProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open Space shortcut" }));
 
     expect(screen.getByTestId("selected-name")).toHaveTextContent(newlyCreatedSpace.name);
-    expect(screen.getByTestId("path")).toHaveTextContent("/explore");
+    expect(screen.getByTestId("path")).toHaveTextContent("/space/new");
   });
 
   it("includes an optimistic selected Space when deriving matching titles", () => {
@@ -182,7 +187,7 @@ describe("SpaceProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Select first Space" }));
 
     expect(screen.getByTestId("selected-name")).toHaveTextContent(product.name);
-    expect(screen.getByTestId("path").textContent).toBe(initialPath);
+    expect(screen.getByTestId("path").textContent).toBe(initialPath === "/attachments" ? "/space/product/attachments" : "/space/product");
   });
 
   it.each(["/", "/explore", "/attachments"])("preserves the current collection route when switching to All from %s", (initialPath) => {
@@ -194,7 +199,7 @@ describe("SpaceProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Select Memos" }));
 
     expect(screen.getByTestId("selected-name")).toHaveTextContent("Memos");
-    expect(screen.getByTestId("path").textContent).toBe(initialPath);
+    expect(screen.getByTestId("path").textContent).toBe(initialPath === "/" ? "/explore" : initialPath);
   });
 
   it.each([
@@ -210,7 +215,15 @@ describe("SpaceProvider", () => {
 
     fireEvent.click(screen.getByRole("button", { name: action }));
 
-    expect(screen.getByTestId("path").textContent).toBe("/home");
+    expect(screen.getByTestId("path").textContent).toBe(
+      initialPath.startsWith("/archived")
+        ? action === "Select first Space"
+          ? "/space/product" + initialPath
+          : "/archived"
+        : action === "Select first Space"
+          ? "/space/product"
+          : "/home",
+    );
   });
 
   it("can select All on a resource route without navigating", () => {

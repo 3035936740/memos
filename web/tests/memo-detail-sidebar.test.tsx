@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import MemoDetailSidebar from "@/components/MemoDetailSidebar/MemoDetailSidebar";
 import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { State } from "@/types/proto/api/v1/common_pb";
-import { User_Role } from "@/types/proto/api/v1/user_service_pb";
 import {
   LocationSchema,
   MemoRelation_MemoSchema,
@@ -14,6 +13,7 @@ import {
   MemoSchema,
   Visibility,
 } from "@/types/proto/api/v1/memo_service_pb";
+import { User_Role } from "@/types/proto/api/v1/user_service_pb";
 
 const copyToClipboard = vi.hoisted(() => vi.fn());
 const updateMemo = vi.hoisted(() => vi.fn());
@@ -28,7 +28,10 @@ vi.mock("@/components/MemoMetadata/Relation/useResolvedRelationMemos", () => ({ 
 vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ profile: { instanceUrl: "https://memos.example" } }) }));
 vi.mock("@/hooks/useCurrentUser", () => ({ default: () => ({ name: "users/alice", role: User_Role.ADMIN }) }));
 vi.mock("@/hooks/useMemoQueries", () => ({ useUpdateMemo: () => ({ mutateAsync: updateMemo }) }));
-vi.mock("@/utils/i18n", () => ({ useTranslate: () => (key: string) => key }));
+vi.mock("@/utils/i18n", () => ({
+  findNearestMatchedLanguage: (language: string) => language || "en",
+  useTranslate: () => (key: string) => key,
+}));
 
 describe("MemoDetailSidebar", () => {
   beforeEach(() => {

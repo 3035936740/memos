@@ -15,7 +15,9 @@ vi.mock("@/utils/i18n", async (importOriginal) => ({
 }));
 vi.mock("@/hooks/useCurrentUser", () => ({ default: () => authState.currentUser }));
 vi.mock("@/contexts/AuthContext", () => ({ useAuth: () => ({ userGeneralSetting: undefined }) }));
-vi.mock("@/contexts/InstanceContext", () => ({ useInstance: () => ({ generalSetting: { memoCategoriesJson: "" } }) }));
+vi.mock("@/contexts/InstanceContext", () => ({
+  useInstance: () => ({ generalSetting: { memoCategoriesJson: "" }, aiSetting: { providers: [] } }),
+}));
 vi.mock("@/contexts/SpaceContext", () => ({ useSpaceContext: () => ({ selectedSpaceName: undefined }) }));
 vi.mock("@/components/map/useReverseGeocoding", () => ({ useReverseGeocoding: () => ({ data: undefined }) }));
 vi.mock("@/components/MemoEditor/components/EmojiPickerDialog", () => ({ default: () => null }));
@@ -73,7 +75,6 @@ describe("InsertMenu", () => {
       "editor.insert-menu.insert-image",
       "editor.insert-menu.insert-video",
       "editor.insert-menu.insert-emoji",
-      "editor.insert-menu.ai-assistant",
       "editor.audio-recorder.trigger",
       "editor.insert-menu.link-memo",
       "editor.insert-menu.add-location",

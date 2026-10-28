@@ -1,6 +1,7 @@
 import { forwardRef, useMemo } from "react";
 import MemoContent from "@/components/MemoContent";
 import UserAvatar from "@/components/UserAvatar";
+import { useInstance } from "@/contexts/InstanceContext";
 import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
@@ -10,6 +11,8 @@ import { buildMemoShareImagePreviewModel } from "./memoShareImagePreviewModel";
 const MemoShareImagePreview = forwardRef<HTMLDivElement, { width: number }>(({ width }, ref) => {
   const t = useTranslate();
   const { memo, creator, blurred, showBlurredContent } = useMemoViewContext();
+  const { generalSetting } = useInstance();
+  const siteTitle = generalSetting.customProfile?.title || "Memos Plus";
   const fallbackDisplayName = t("common.memo");
   const locale = i18n.language;
 
@@ -25,8 +28,13 @@ const MemoShareImagePreview = forwardRef<HTMLDivElement, { width: number }>(({ w
   );
 
   return (
-    <div ref={ref} className="overflow-hidden rounded-xl border border-border/50 bg-background p-2 sm:p-2.5" style={{ width }}>
-      <div className="overflow-hidden rounded-lg border border-border/60 bg-background p-4 sm:p-5">
+    <div
+      ref={ref}
+      data-share-image=""
+      className="overflow-hidden rounded-xl border border-border/50 bg-background p-2 sm:p-2.5"
+      style={{ width }}
+    >
+      <div data-share-card="" className="overflow-hidden rounded-lg border border-border/60 bg-background p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div className="flex min-w-0 items-center gap-2.5">
             <UserAvatar avatarUrl={preview.avatarUrl} className="h-8 w-8 rounded-xl" />
@@ -82,6 +90,12 @@ const MemoShareImagePreview = forwardRef<HTMLDivElement, { width: number }>(({ w
             ))}
           </div>
         )}
+      </div>
+
+      {/* Where the post came from, so a shared picture leads back to the site. */}
+      <div data-share-footer="">
+        <span className="min-w-0 truncate">{`${siteTitle} · ${window.location.host}`}</span>
+        {generalSetting.showPoweredBy !== false && siteTitle !== "Memos Plus" && <span className="shrink-0">Memos Plus</span>}
       </div>
     </div>
   );

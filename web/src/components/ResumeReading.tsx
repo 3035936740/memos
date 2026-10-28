@@ -2,6 +2,7 @@ import { XIcon } from "lucide-react";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { isMotionReduced } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
 import { articleReadRatio, articleScrollSpan, loadReadingPosition, saveReadingPosition } from "@/utils/reading-position";
 
@@ -87,7 +88,7 @@ const ResumeReading = ({ memoName, articleRef }: Props) => {
     const article = articleRef.current;
     if (article && offer !== undefined) {
       const { start, end } = articleScrollSpan(article);
-      const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      const still = isMotionReduced();
       window.scrollTo({ top: start + offer * (end - start), behavior: still ? "auto" : "smooth" });
     }
     dismiss();

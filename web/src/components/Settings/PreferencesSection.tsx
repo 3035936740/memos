@@ -1,13 +1,14 @@
 import { create } from "@bufbuild/protobuf";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUpdateUserGeneralSetting } from "@/hooks/useUserQueries";
 import { UserSetting_GeneralSetting, UserSetting_GeneralSettingSchema } from "@/types/proto/api/v1/user_service_pb";
+import { EFFECTS_MODES, type EffectsMode, readEffectsMode, setEffectsMode } from "@/utils/effects";
 import { loadLocale, useTranslate } from "@/utils/i18n";
 import { convertVisibilityFromString, DEFAULT_VISIBILITY_OPTIONS } from "@/utils/memo";
-import { loadTheme } from "@/utils/theme";
+import { chooseTheme } from "@/utils/theme";
 import LocaleSelect from "../LocaleSelect";
 import ThemeSelect from "../ThemeSelect";
 import VisibilityIcon from "../VisibilityIcon";
@@ -35,6 +36,15 @@ const PreferencesSection = () => {
     );
   };
 
+  // Kept in this browser: how much motion a device can take is about the device, not the account.
+  const [effectsMode, setEffectsModeState] = useState(readEffectsMode);
+  const effectsOptions = EFFECTS_MODES.map((mode) => ({ value: mode, label: t(`setting.preference.effects-${mode}`) }));
+  const handleEffectsModeChange = (value: string) => {
+    const mode = value as EffectsMode;
+    setEffectsMode(mode);
+    setEffectsModeState(mode);
+  };
+
   const visibilityOptions = useMemo(
     () => DEFAULT_VISIBILITY_OPTIONS.map((option) => ({ value: option.name, label: t(option.labelKey) })),
     [t],
@@ -53,7 +63,7 @@ const PreferencesSection = () => {
 
   const handleThemeChange = (theme: string) => {
     // Apply theme immediately for instant UI feedback
-    loadTheme(theme);
+    chooseTheme(theme);
     // Persist to user settings
     updateUserGeneralSetting(
       { generalSetting: { theme }, updateMask: ["theme"] },
@@ -96,6 +106,21 @@ const PreferencesSection = () => {
 
           <SettingListItem label={t("setting.preference.theme")} description={t("setting.preference.theme-description")}>
             <ThemeSelect value={setting.theme} onValueChange={handleThemeChange} />
+          </SettingListItem>
+
+          <SettingListItem label={t("setting.preference.effects")} description={t("setting.preference.effects-description")}>
+            <Select value={effectsMode} items={effectsOptions} onValueChange={handleEffectsModeChange}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {effectsOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </SettingListItem>
         </SettingList>
       </SettingGroup>

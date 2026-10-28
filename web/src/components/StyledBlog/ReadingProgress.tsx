@@ -1,4 +1,5 @@
 import { type RefObject, useEffect, useRef } from "react";
+import useLiteEffects from "@/hooks/useLiteEffects";
 import { recordRead } from "@/utils/blog-progress";
 import { tagItemsOf } from "@/utils/tag-items";
 import RainyGlass from "./RainyGlass";
@@ -25,6 +26,7 @@ const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
   const labelRef = useRef<HTMLSpanElement>(null);
   const readRef = useRef({ memoName, tags, style });
   const items = tagItemsOf(tags);
+  const lite = useLiteEffects();
 
   useEffect(() => {
     readRef.current = { memoName, tags, style };
@@ -84,7 +86,8 @@ const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
 
   return (
     <>
-      {items.includes("rain") && <RainyGlass />}
+      {/* The rain is a WebGL shader; low-power mode leaves it out. */}
+      {items.includes("rain") && !lite && <RainyGlass />}
       <div data-reading-progress="" aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[3px]">
         <div ref={fillRef} data-reading-progress-fill="" className="h-full w-0 bg-primary" />
         <span ref={labelRef} data-reading-progress-label="" className="hidden" />

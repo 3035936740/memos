@@ -15,6 +15,27 @@ import "google/type/color.proto";
 option go_package = "gen/api/v1";
 
 service InstanceService {
+  // Lists enabled community styles. Disabled metadata is administrator-only.
+  rpc ListStylePacks(ListStylePacksRequest) returns (ListStylePacksResponse) {
+    option (google.api.http) = {get: "/api/v1/style-packs"};
+  }
+  // Installs a validated style ZIP, initially disabled.
+  rpc InstallStylePack(InstallStylePackRequest) returns (StylePack) {
+    option (google.api.http) = {post: "/api/v1/style-packs" body: "*"};
+  }
+  // Replaces an installed version or changes its enabled state.
+  rpc UpdateStylePack(UpdateStylePackRequest) returns (StylePack) {
+    option (google.api.http) = {patch: "/api/v1/style-packs/{id}" body: "*"};
+  }
+  // Removes a style and resets references in the instance default.
+  rpc DeleteStylePack(DeleteStylePackRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/style-packs/{id}"};
+  }
+  // Exports the original ZIP for administrator inspection.
+  rpc ExportStylePack(ExportStylePackRequest) returns (ExportStylePackResponse) {
+    option (google.api.http) = {get: "/api/v1/style-packs/{id}:export"};
+  }
+
   // Gets the instance profile.
   rpc GetInstanceProfile(GetInstanceProfileRequest) returns (InstanceProfile) {
     option (google.api.http) = {get: "/api/v1/instance/profile"};
@@ -489,3 +510,26 @@ message InstanceStats {
     int64 size_bytes = 2;
   }
 }
+
+// Public community style metadata. CSS and assets have immutable version URLs.
+message StylePack {
+  string id = 1;
+  map<string, string> name = 2;
+  string reacts_like = 3;
+  string color_scheme = 4;
+  string css_url = 5;
+  string version = 6;
+  bool enabled = 7;
+}
+message ListStylePacksRequest { bool include_disabled = 1; }
+message ListStylePacksResponse { repeated StylePack style_packs = 1; }
+message InstallStylePackRequest { bytes zip = 1; }
+message UpdateStylePackRequest {
+  string id = 1;
+  optional bool enabled = 2;
+  // Optional replacement archive; its manifest ID must match id.
+  bytes zip = 3;
+}
+message DeleteStylePackRequest { string id = 1; }
+message ExportStylePackRequest { string id = 1; }
+message ExportStylePackResponse { bytes zip = 1; }

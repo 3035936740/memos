@@ -87,7 +87,7 @@ vi.mock("@/components/CreateSpaceDialog", () => ({
               syncToMainFeed: true,
               currentUserRole: 1,
               memberCount: 1,
- memoCount: 0,
+              memoCount: 0,
             };
             state.spaces = [...state.spaces, createdSpace];
             onCreated?.(createdSpace);
@@ -142,7 +142,7 @@ const adminSpace: Space = {
   syncToMainFeed: true,
   currentUserRole: 1,
   memberCount: 2,
- memoCount: 0,
+  memoCount: 0,
 };
 
 const userSpace: Space = {
@@ -180,7 +180,7 @@ const receivedInvitation: SpaceInvitation = {
     syncToMainFeed: true,
     currentUserRole: 0,
     memberCount: 0,
- memoCount: 0,
+    memoCount: 0,
   },
 };
 

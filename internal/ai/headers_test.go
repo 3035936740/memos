@@ -13,7 +13,7 @@ import (
 
 func TestProviderHeadersDoNotMutateClientOrFollowCrossOriginRedirect(t *testing.T) {
 	var leaked atomic.Bool
-	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	target := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		leaked.Store(true)
 		_, _ = w.Write([]byte("unexpected"))
 	}))

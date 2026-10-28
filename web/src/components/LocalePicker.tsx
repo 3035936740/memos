@@ -30,7 +30,7 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
   return (
     <div
       className={cn(
-        "flex max-h-[min(24rem,calc(100vh-2rem))] w-[var(--anchor-width)] min-w-48 max-w-[calc(100vw-2rem)] flex-col",
+        "flex min-h-0 w-full min-w-0 max-w-full max-h-[min(24rem,calc(100dvh-2rem),calc(var(--available-height,100dvh)-1rem))] flex-1 flex-col overflow-hidden",
         className,
       )}
     >
@@ -45,7 +45,11 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
           aria-label={t("common.language")}
         />
       </div>
-      <div className="mt-1 min-h-0 flex-1 touch-pan-y overflow-y-auto p-1" role="listbox" aria-label={t("common.language")}>
+      <div
+        className="mt-1 min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain p-1"
+        role="listbox"
+        aria-label={t("common.language")}
+      >
         {filteredLocales.map((locale) => (
           <div
             key={locale}
@@ -109,7 +113,9 @@ const LocalePicker = (props: LocalePickerProps) => {
             aria-label={iconOnly ? `Language: ${displayName}` : undefined}
             title={iconOnly ? displayName : undefined}
             className={cn(
-              iconOnly ? "bg-transparent text-muted-foreground shadow-none hover:bg-accent/65 hover:text-foreground" : "w-full justify-between",
+              iconOnly
+                ? "bg-transparent text-muted-foreground shadow-none hover:bg-accent/65 hover:text-foreground"
+                : "w-full justify-between",
               className,
             )}
           />
@@ -127,7 +133,7 @@ const LocalePicker = (props: LocalePickerProps) => {
           </>
         )}
       </PopoverTrigger>
-      <PopoverContent align="start" className="p-0">
+      <PopoverContent align="start" className="w-[max(12rem,var(--anchor-width,12rem))] p-1.5" viewportClassName="overflow-hidden">
         <LocaleSearchList value={value} onChange={handleChange} />
       </PopoverContent>
     </Popover>

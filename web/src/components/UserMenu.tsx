@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { Routes } from "@/router";
 import { UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { getLocaleWithFallback, loadLocale, useTranslate } from "@/utils/i18n";
-import { getThemeWithFallback, loadTheme, THEME_OPTIONS } from "@/utils/theme";
+import { chooseTheme, getThemeWithFallback, THEME_OPTIONS } from "@/utils/theme";
 import { LocaleSearchList } from "./LocalePicker";
 import UserAvatar from "./UserAvatar";
 import {
@@ -82,7 +82,7 @@ const UserMenu = (props: Props) => {
   const handleThemeChange = async (theme: string) => {
     if (!currentUser) return;
     // Apply theme immediately for instant UI feedback
-    loadTheme(theme);
+    chooseTheme(theme);
     // Persist to user settings
     updateUserGeneralSetting(
       { generalSetting: { theme }, updateMask: ["theme"] },
@@ -213,8 +213,8 @@ const UserMenu = (props: Props) => {
             <GlobeIcon className="size-4 text-muted-foreground" />
             {t("common.language")}
           </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="max-h-[min(24rem,var(--available-height))] p-0">
-            <LocaleSearchList value={currentLocale} onChange={handleLocaleChange} className="w-64" />
+          <DropdownMenuSubContent className="w-64 max-h-[min(24rem,var(--available-height))] p-1.5" viewportClassName="overflow-hidden">
+            <LocaleSearchList value={currentLocale} onChange={handleLocaleChange} />
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSub>

@@ -54,7 +54,13 @@ export const buildSharedNote = ({ title, text, url }: SharedNote): string => {
   if (quote === title) quote = "";
 
   const parts: string[] = [];
-  if (quote) parts.push(quote.split(/\r?\n/).map((line) => (line.trim() ? `> ${line}` : ">")).join("\n"));
+  if (quote)
+    parts.push(
+      quote
+        .split(/\r?\n/)
+        .map((line) => (line.trim() ? `> ${line}` : ">"))
+        .join("\n"),
+    );
   if (link) parts.push(title ? `[${escapeLinkText(title)}](${escapeLinkTarget(link)})` : link);
   else if (title) parts.push(title);
   return parts.join("\n\n");

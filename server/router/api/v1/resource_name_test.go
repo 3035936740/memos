@@ -1,9 +1,10 @@
 package v1
 
 import (
-	"github.com/google/uuid"
 	"strings"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestValidateAndGenerateUIDValidatesUserProvidedResourceIDs(t *testing.T) {

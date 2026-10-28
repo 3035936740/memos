@@ -103,6 +103,7 @@ func newGatewayMarshaler() *runtime.HTTPBodyMarshaler {
 
 // RegisterGateway registers the gRPC-Gateway and Connect handlers with the given Echo instance.
 func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Echo) error {
+	RegisterStylePackResources(echoServer, s)
 	// Shared authorizer: one source of truth for authentication and anonymous-access
 	// policy, used by both the gRPC-Gateway middleware and the Connect interceptor.
 	authorizer := NewAuthorizer(s.Store, s.Secret)
@@ -185,6 +186,7 @@ func (s *APIV1Service) RegisterGateway(ctx context.Context, echoServer *echo.Ech
 	// Register SSE endpoint with same CORS as rest of /api/v1.
 	RegisterSSERoutes(gwGroup, s.SSEHub, s.Store, s.Secret)
 	RegisterContentModerationRoutes(gwGroup, s, authorizer)
+	RegisterBlogImportRoutes(gwGroup, s, authorizer)
 	RegisterModerationRoutes(gwGroup, s, authorizer)
 	RegisterEmojiRoutes(gwGroup, s, authorizer)
 	registerBackupRoutes(gwGroup, s, authorizer)

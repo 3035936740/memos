@@ -12,7 +12,14 @@ permissions:
   contents: read
 
 jobs:
+  backend-checks:
+    uses: ./.github/workflows/backend-tests.yml
+  frontend-checks:
+    uses: ./.github/workflows/frontend-tests.yml
+  upgrade-smoke:
+    uses: ./.github/workflows/upgrade-smoke.yml
   build-frontend:
+    needs: [backend-checks, frontend-checks, upgrade-smoke]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -163,3 +170,9 @@ jobs:
       - name: Inspect images
         run: |
           docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/memos-plus:canary
+
+  verify-public-image:
+    needs: merge
+    uses: ./.github/workflows/verify-public-image.yml
+    with:
+      image: ghcr.io/${{ github.repository_owner }}/memos-plus:canary
