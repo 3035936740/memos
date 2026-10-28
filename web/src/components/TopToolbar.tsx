@@ -1,6 +1,7 @@
 import { Clock3Icon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import BatchSelectButton from "@/components/BatchSelectButton";
 import LocalePicker from "@/components/LocalePicker";
 import StyleSelect from "@/components/StyleSelect";
 import ThemeSelect from "@/components/ThemeSelect";
@@ -109,6 +110,7 @@ const TopToolbar = () => {
     >
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
         <ToolbarPreferences />
+        <BatchSelectButton />
         <div className="ml-auto flex items-center gap-1.5">
           <ToolbarMusicPlayer />
           <ToolbarCalendar />

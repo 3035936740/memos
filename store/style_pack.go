@@ -61,11 +61,17 @@ func (s *Store) SaveStylePack(ctx context.Context, p *stylepack.Pack, userID int
 	}
 	manifest, _ := json.Marshal(p.Manifest)
 	names, _ := json.Marshal(p.Manifest.Name)
+	// Large compiled output is served from the chunked resource too. The legacy
+	// duplicate column must not turn the metadata UPDATE into a large SQL packet.
+	compiledInline := p.Compiled
+	if len(compiledInline) > styleResourceChunkBytes {
+		compiledInline = ""
+	}
 	nowSec := time.Now().Unix()
 	if exists == 1 {
-		_, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `UPDATE style_pack SET name_json=?,manifest_json=?,css_original=?,css_compiled=?,version=?,updated_ts=? WHERE id=?`), string(names), string(manifest), p.Original, p.Compiled, p.Version, nowSec, p.Manifest.ID)
+		_, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `UPDATE style_pack SET name_json=?,manifest_json=?,css_original=?,css_compiled=?,version=?,updated_ts=? WHERE id=?`), string(names), string(manifest), p.Original, compiledInline, p.Version, nowSec, p.Manifest.ID)
 	} else {
-		_, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO style_pack(id,name_json,manifest_json,css_original,css_compiled,version,enabled,created_ts,updated_ts,installed_by) VALUES (?,?,?,?,?,?,?,?,?,?)`), p.Manifest.ID, string(names), string(manifest), p.Original, p.Compiled, p.Version, 0, nowSec, nowSec, userID)
+		_, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO style_pack(id,name_json,manifest_json,css_original,css_compiled,version,enabled,created_ts,updated_ts,installed_by) VALUES (?,?,?,?,?,?,?,?,?,?)`), p.Manifest.ID, string(names), string(manifest), p.Original, compiledInline, p.Version, 0, nowSec, nowSec, userID)
 	}
 	if err != nil {
 		return err
@@ -82,8 +88,22 @@ func (s *Store) SaveStylePack(ctx context.Context, p *stylepack.Pack, userID int
 		if !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
-		if _, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO style_pack_resource(pack_id,version,name,content_type,content) VALUES (?,?,?,?,?)`), p.Manifest.ID, p.Version, a.Name, a.ContentType, a.Content); err != nil {
+		// Keep each bound binary parameter comfortably below MySQL's historical
+		// 4 MiB max_allowed_packet, including the original 20 MiB ZIP.
+		content := a.Content
+		if len(content) > styleResourceChunkBytes {
+			content = []byte{}
+		}
+		if _, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO style_pack_resource(pack_id,version,name,content_type,content) VALUES (?,?,?,?,?)`), p.Manifest.ID, p.Version, a.Name, a.ContentType, content); err != nil {
 			return err
+		}
+		if len(a.Content) > styleResourceChunkBytes {
+			for offset, index := 0, 0; offset < len(a.Content); offset, index = offset+styleResourceChunkBytes, index+1 {
+				chunk := a.Content[offset:min(offset+styleResourceChunkBytes, len(a.Content))]
+				if _, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO style_pack_resource_chunk(pack_id,version,name,chunk_index,content) VALUES (?,?,?,?,?)`), p.Manifest.ID, p.Version, a.Name, index, chunk); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return tx.Commit()
@@ -101,6 +121,9 @@ func (s *Store) ChangeStylePack(ctx context.Context, id string, enabled bool, re
 		return errors.Wrap(err, "style pack not found")
 	}
 	if remove {
+		if _, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `DELETE FROM style_pack_resource_chunk WHERE pack_id=?`), id); err != nil {
+			return err
+		}
 		if _, err = tx.ExecContext(ctx, BindSQL(s.profile.Driver, `DELETE FROM style_pack_resource WHERE pack_id=?`), id); err != nil {
 			return err
 		}
@@ -147,17 +170,58 @@ func (s *Store) ChangeStylePack(ctx context.Context, id string, enabled bool, re
 	s.instanceSettingCache.Delete(ctx, "GENERAL")
 	return nil
 }
+
+const styleResourceChunkBytes = 1 << 20
+
 func (s *Store) StylePackResource(ctx context.Context, id, version, name string, admin bool) (*stylepack.Asset, error) {
+	return s.loadStylePackResource(ctx, id, version, name, admin, false)
+}
+
+// StylePackPreviewResource requires the current version even when the pack is disabled.
+func (s *Store) StylePackPreviewResource(ctx context.Context, id, version, name string) (*stylepack.Asset, error) {
+	return s.loadStylePackResource(ctx, id, version, name, true, true)
+}
+
+func (s *Store) loadStylePackResource(ctx context.Context, id, version, name string, admin, current bool) (*stylepack.Asset, error) {
 	query := `SELECT r.content_type,r.content FROM style_pack_resource r JOIN style_pack p ON p.id=r.pack_id WHERE r.pack_id=? AND r.version=? AND r.name=?`
 	if !admin {
 		query += " AND p.enabled=1"
+	}
+	if current {
+		query += " AND p.version=r.version"
 	}
 	a := &stylepack.Asset{Name: name}
 	err := s.driver.GetDB().QueryRowContext(ctx, BindSQL(s.profile.Driver, query), id, version, name).Scan(&a.ContentType, &a.Content)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
-	return a, errors.Wrap(err, "read style resource")
+	if err != nil {
+		return nil, errors.Wrap(err, "read style resource")
+	}
+	if len(a.Content) == 0 {
+		rows, err := s.driver.GetDB().QueryContext(ctx, BindSQL(s.profile.Driver, `SELECT chunk_index,content FROM style_pack_resource_chunk WHERE pack_id=? AND version=? AND name=? ORDER BY chunk_index`), id, version, name)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		index := 0
+		for rows.Next() {
+			var storedIndex int
+			var chunk []byte
+			if err = rows.Scan(&storedIndex, &chunk); err != nil {
+				return nil, err
+			}
+			if storedIndex != index || len(chunk) > styleResourceChunkBytes || len(a.Content)+len(chunk) > stylepack.MaxZIPBytes {
+				return nil, errors.New("invalid style resource chunks")
+			}
+			a.Content = append(a.Content, chunk...)
+			index++
+		}
+		if err = rows.Err(); err != nil {
+			return nil, err
+		}
+	}
+	return a, nil
 }
 func (s *Store) IsStyleEnabled(ctx context.Context, id string) (bool, error) {
 	if stylepack.IsBuiltin(id) || id == "" {

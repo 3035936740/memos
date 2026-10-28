@@ -20,6 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	InstanceService_PreviewStylePack_FullMethodName         = "/memos.api.v1.InstanceService/PreviewStylePack"
+	InstanceService_ValidateStylePack_FullMethodName        = "/memos.api.v1.InstanceService/ValidateStylePack"
 	InstanceService_ListStylePacks_FullMethodName           = "/memos.api.v1.InstanceService/ListStylePacks"
 	InstanceService_InstallStylePack_FullMethodName         = "/memos.api.v1.InstanceService/InstallStylePack"
 	InstanceService_UpdateStylePack_FullMethodName          = "/memos.api.v1.InstanceService/UpdateStylePack"
@@ -37,6 +39,10 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type InstanceServiceClient interface {
+	// Creates a one-hour administrator preview without enabling the pack.
+	PreviewStylePack(ctx context.Context, in *PreviewStylePackRequest, opts ...grpc.CallOption) (*PreviewStylePackResponse, error)
+	// Checks an archive without installing it. Errors include a file and line.
+	ValidateStylePack(ctx context.Context, in *ValidateStylePackRequest, opts ...grpc.CallOption) (*ValidateStylePackResponse, error)
 	// Lists enabled community styles. Disabled metadata is administrator-only.
 	ListStylePacks(ctx context.Context, in *ListStylePacksRequest, opts ...grpc.CallOption) (*ListStylePacksResponse, error)
 	// Installs a validated style ZIP, initially disabled.
@@ -67,6 +73,26 @@ type instanceServiceClient struct {
 
 func NewInstanceServiceClient(cc grpc.ClientConnInterface) InstanceServiceClient {
 	return &instanceServiceClient{cc}
+}
+
+func (c *instanceServiceClient) PreviewStylePack(ctx context.Context, in *PreviewStylePackRequest, opts ...grpc.CallOption) (*PreviewStylePackResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreviewStylePackResponse)
+	err := c.cc.Invoke(ctx, InstanceService_PreviewStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *instanceServiceClient) ValidateStylePack(ctx context.Context, in *ValidateStylePackRequest, opts ...grpc.CallOption) (*ValidateStylePackResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ValidateStylePackResponse)
+	err := c.cc.Invoke(ctx, InstanceService_ValidateStylePack_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *instanceServiceClient) ListStylePacks(ctx context.Context, in *ListStylePacksRequest, opts ...grpc.CallOption) (*ListStylePacksResponse, error) {
@@ -183,6 +209,10 @@ func (c *instanceServiceClient) GetInstanceStats(ctx context.Context, in *GetIns
 // All implementations must embed UnimplementedInstanceServiceServer
 // for forward compatibility.
 type InstanceServiceServer interface {
+	// Creates a one-hour administrator preview without enabling the pack.
+	PreviewStylePack(context.Context, *PreviewStylePackRequest) (*PreviewStylePackResponse, error)
+	// Checks an archive without installing it. Errors include a file and line.
+	ValidateStylePack(context.Context, *ValidateStylePackRequest) (*ValidateStylePackResponse, error)
 	// Lists enabled community styles. Disabled metadata is administrator-only.
 	ListStylePacks(context.Context, *ListStylePacksRequest) (*ListStylePacksResponse, error)
 	// Installs a validated style ZIP, initially disabled.
@@ -215,6 +245,12 @@ type InstanceServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedInstanceServiceServer struct{}
 
+func (UnimplementedInstanceServiceServer) PreviewStylePack(context.Context, *PreviewStylePackRequest) (*PreviewStylePackResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PreviewStylePack not implemented")
+}
+func (UnimplementedInstanceServiceServer) ValidateStylePack(context.Context, *ValidateStylePackRequest) (*ValidateStylePackResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ValidateStylePack not implemented")
+}
 func (UnimplementedInstanceServiceServer) ListStylePacks(context.Context, *ListStylePacksRequest) (*ListStylePacksResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListStylePacks not implemented")
 }
@@ -267,6 +303,42 @@ func RegisterInstanceServiceServer(s grpc.ServiceRegistrar, srv InstanceServiceS
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&InstanceService_ServiceDesc, srv)
+}
+
+func _InstanceService_PreviewStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreviewStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).PreviewStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_PreviewStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).PreviewStylePack(ctx, req.(*PreviewStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InstanceService_ValidateStylePack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateStylePackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InstanceServiceServer).ValidateStylePack(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InstanceService_ValidateStylePack_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InstanceServiceServer).ValidateStylePack(ctx, req.(*ValidateStylePackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _InstanceService_ListStylePacks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -474,6 +546,14 @@ var InstanceService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "memos.api.v1.InstanceService",
 	HandlerType: (*InstanceServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "PreviewStylePack",
+			Handler:    _InstanceService_PreviewStylePack_Handler,
+		},
+		{
+			MethodName: "ValidateStylePack",
+			Handler:    _InstanceService_ValidateStylePack_Handler,
+		},
 		{
 			MethodName: "ListStylePacks",
 			Handler:    _InstanceService_ListStylePacks_Handler,

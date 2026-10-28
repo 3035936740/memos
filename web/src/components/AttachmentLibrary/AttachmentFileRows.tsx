@@ -47,6 +47,7 @@ export const AttachmentDocumentRows = ({ items }: { items: AttachmentLibraryList
     <div className="space-y-3">
       {items.map((item) => (
         <article
+          data-attachment-card=""
           key={item.attachment.name}
           className="flex items-center gap-2.5 rounded-[18px] border border-border/60 bg-background/90 p-3 shadow-sm shadow-black/[0.02]"
         >
@@ -76,6 +77,7 @@ export const AttachmentAudioRows = ({ items }: { items: AttachmentLibraryListIte
     <div className="space-y-2.5">
       {items.map((item) => (
         <article
+          data-attachment-card=""
           key={item.attachment.name}
           className="rounded-[18px] border border-border/60 bg-background/90 p-2.5 shadow-sm shadow-black/[0.02]"
         >
@@ -103,6 +105,7 @@ export const AttachmentUnusedRows = ({ items }: { items: AttachmentLibraryListIt
     <div className="space-y-2.5">
       {items.map((item) => (
         <article
+          data-attachment-card=""
           key={item.attachment.name}
           className="flex items-center gap-2.5 rounded-[18px] border border-warning/30 bg-warning/5 p-3 shadow-sm shadow-black/[0.02]"
         >

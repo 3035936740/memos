@@ -85,7 +85,10 @@ function SelectContent({
           {...props}
         >
           {/* Keep the themed frame stationary while Base UI scrolls and highlights the list. */}
-          <SelectPrimitive.List className="relative z-0 min-h-0 scroll-my-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1">
+          <SelectPrimitive.List
+            data-slot="select-viewport"
+            className="relative z-0 min-h-0 scroll-my-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1"
+          >
             {children}
           </SelectPrimitive.List>
         </SelectPrimitive.Popup>

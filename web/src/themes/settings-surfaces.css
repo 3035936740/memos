@@ -290,6 +290,7 @@ html[data-style="golden"] [data-settings-surface] {
 html[data-style="handdrawn"]
 :is(
   [data-page-panel],
+  [data-attachment-card],
   [data-settings-surface],
   [data-slot="dropdown-menu-content"],
   [data-slot="popover-content"],
@@ -303,6 +304,7 @@ html[data-style="handdrawn"]
 html[data-style="handdrawn"]
   :is(
     [data-page-panel],
+    [data-attachment-card],
     [data-settings-surface],
     [data-slot="dropdown-menu-content"],
     [data-slot="popover-content"],
@@ -325,6 +327,7 @@ html[data-style="handdrawn"]
   html[data-style="handdrawn"]
     :is(
       [data-page-panel],
+    [data-attachment-card],
       [data-settings-surface],
       [data-slot="dropdown-menu-content"],
       [data-slot="popover-content"],
@@ -415,6 +418,14 @@ html[data-style="handdrawn"]
 }
 
 /* Filter displacement needs space inside the popup's clipping boundary. */
+html[data-style="handdrawn"] [data-slot="select-content"] {
+  padding: 4px;
+}
+
+html[data-style="handdrawn"] [data-slot="select-viewport"] {
+  padding: 2px;
+}
+
 html[data-style="handdrawn"][data-style]
 :is([data-slot="select-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"])::before {
   inset: 2px;
@@ -433,6 +444,7 @@ html[data-style="handdrawn"][data-style]
 html[data-style="handdrawn"]
 :is(
   [data-page-panel],
+  [data-attachment-card],
   [data-settings-surface],
   [data-slot="dropdown-menu-content"],
   [data-slot="popover-content"],
@@ -456,73 +468,7 @@ html[data-style]:not([data-style="default"]) [data-memo-selection-overlay]:focus
   outline-offset: 3px;
 }
 
-html[data-style]:not([data-style="default"], [data-style="handdrawn"], [data-style="y2k"], [data-style="vaporwave"])
-  [data-memo-selectable][data-selected]
-  > :is([data-sb-card], [data-memo-view]) {
-  border-color: var(--primary);
-}
-
-html[data-style]:not([data-style="default"]) [data-memo-selection-indicator] {
-  border: var(--sb-field-border, 2px solid var(--border));
-  border-radius: var(--sb-checkbox-radius, 4px);
-}
-
-/* Tint the existing ink frame instead of drawing a straight selection ring over it. */
-html[data-style="handdrawn"] [data-memo-selectable][data-selected] > [data-sb-card]::before {
-  border-color: var(--primary);
-  border-width: 1.5px;
-}
-
-html[data-style="handdrawn"] [data-memo-selection-indicator] {
-  border-color: transparent;
-  border-radius: 2px 4px 3px 2px;
-  background: var(--card);
-  color: var(--primary);
-}
-
-html[data-style="handdrawn"] [data-memo-selection-indicator]::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1.3px solid var(--sb-ink);
-  border-radius: inherit;
-  pointer-events: none;
-  filter: url(#sb-sketch-2);
-}
-
-/* Window frames already contain several borders and fake caption buttons.
-   Selection uses a separate checkbox gutter instead of piling another frame
-   and checkmark over the title bar. Other card styles retain their placement. */
-html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) {
-  padding-inline-start: 2rem;
-}
-
-html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) > [data-memo-selection-overlay] {
-  background: transparent;
-}
-
-html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) [data-memo-selection-indicator] {
-  inset-inline-start: 3px;
-  inset-inline-end: auto;
-  top: 50%;
-  translate: 0 -50%;
-  width: 18px;
-  height: 18px;
-}
-
-/* Even the hover-only entry sits below a decorated caption. */
-html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selectable]:has(> [data-sb-card]) > [data-memo-select-start] {
-  top: 2.5rem;
-}
-
-html[data-style="y2k"] [data-memo-selection-indicator] {
-  border: 0;
-  border-radius: 0;
-  background: var(--w98-window);
-  color: var(--w98-window-text);
-  box-shadow: var(--w98-sunken);
-}
-
+/* A picked window is the active one: its title bar lights up navy. */
 html[data-style="y2k"] [data-memo-selectable][data-selected] > [data-sb-card]::before {
   background:
     var(--w98-icon-page) 3px center / 16px 16px no-repeat,
@@ -535,24 +481,30 @@ html[data-style="y2k"] [data-memo-batch-bar][data-settings-surface] {
   box-shadow: var(--w98-raised);
 }
 
-html[data-style="vaporwave"] [data-memo-selection-indicator] {
-  border: 2px solid var(--sb-vw-ink);
-  border-radius: 0;
-  background: var(--sb-vw-window);
-  color: var(--sb-vw-ink);
-  box-shadow: 2px 2px 0 var(--sb-vw-drop);
-}
-
-html[data-style="vaporwave"] [data-memo-selection-overlay][aria-pressed="true"] [data-memo-selection-indicator] {
-  background: var(--sb-vw-lavender);
-}
-
 html[data-style="vaporwave"] [data-memo-batch-bar][data-settings-surface] {
   box-shadow: 2px 2px 0 var(--sb-vw-drop);
 }
 
-/* The entry stays on the left, leaving the upper-right note in its usual place.
-   Only an active full-width batch bar needs the lower annotation position. */
+/* The batch toolbar's dividers: an etched groove in Y2K, an ink rule in the outlined styles. */
+html[data-style="y2k"] [data-memo-batch-separator] {
+  width: 2px;
+  background: none;
+  box-shadow:
+    inset 1px 0 var(--w98-shadow),
+    inset -1px 0 var(--w98-hilight);
+}
+
+html[data-style="vaporwave"] [data-memo-batch-separator] {
+  width: 2px;
+  background: var(--sb-vw-ink);
+}
+
+html[data-style="pixel"] [data-memo-batch-separator] {
+  width: 3px;
+  background: var(--sb-px-ink);
+}
+
+/* While the batch toolbar is up, the hand-written pinned note sits a little lower so the bar does not clip it. */
 html[data-style="handdrawn"] [data-memo-batch-bar] ~ [data-memo-batch-list] [data-sb-card][data-sb-pinned]::after {
   top: -8px;
 }

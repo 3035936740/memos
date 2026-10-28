@@ -11,19 +11,33 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
+	"golang.org/x/mod/semver"
 
 	"github.com/usememos/memos/internal/safearchive"
+	"github.com/usememos/memos/internal/version"
 )
 
-const MaxZIPBytes = 3 << 20
+const (
+	MaxZIPBytes    = 20 << 20
+	MaxFontBytes   = 8 << 20
+	MaxFontsBytes  = 16 << 20
+	MaxFonts       = 128
+	MaxAssetsBytes = 2 << 20
+	MaxAssets      = 20
+)
 
 var Builtins = []string{"default", "glass", "neumorphism", "aero", "y2k", "vaporwave", "pixel", "handdrawn", "terminal", "golden"}
 
 type Manifest struct {
+	Description map[string]string `json:"description,omitempty"`
+	Preview     string            `json:"preview,omitempty"`
+	MinVersion  string            `json:"minVersion,omitempty"`
 	Kind        string            `json:"kind"`
 	Version     int               `json:"version"`
 	ID          string            `json:"id"`
@@ -58,11 +72,17 @@ func validID(id string) bool {
 	return true
 }
 
-func Parse(data []byte) (*Pack, error) {
+func Parse(data []byte) (pack *Pack, parseErr error) {
+	file := "archive.zip"
+	defer func() {
+		if parseErr != nil {
+			parseErr = diagnose(file, parseErr)
+		}
+	}()
 	if len(data) > MaxZIPBytes {
-		return nil, errors.New("style ZIP exceeds 3 MB")
+		return nil, errors.New("style ZIP exceeds 20 MiB")
 	}
-	files, err := safearchive.Read(bytes.NewReader(data), int64(len(data)), safearchive.Limits{Files: 64, TotalBytes: (2 << 20) + (200 << 10) + (16 << 10), FileBytes: 2 << 20})
+	files, err := safearchive.Read(bytes.NewReader(data), int64(len(data)), safearchive.Limits{Files: 160, TotalBytes: MaxFontsBytes + MaxAssetsBytes + (200 << 10) + (128 << 10), FileBytes: MaxFontBytes})
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +90,8 @@ func Parse(data []byte) (*Pack, error) {
 	if manifestFile == nil || cssFile == nil {
 		return nil, errors.New("style.json and style.css required at ZIP root")
 	}
-	b, err := safearchive.Bytes(manifestFile, 16<<10)
+	file = "style.json"
+	b, err := safearchive.Bytes(manifestFile, 128<<10)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +99,11 @@ func Parse(data []byte) (*Pack, error) {
 	d := json.NewDecoder(bytes.NewReader(b))
 	d.DisallowUnknownFields()
 	if err = d.Decode(&p.Manifest); err != nil {
-		return nil, errors.Wrap(err, "invalid style.json")
+		line := 1
+		if syntax, ok := err.(*json.SyntaxError); ok {
+			line += bytes.Count(b[:min(int(syntax.Offset), len(b))], []byte("\n"))
+		}
+		return nil, &Diagnostic{File: "style.json", Line: line, Message: err.Error()}
 	}
 	if d.Decode(&struct{}{}) != io.EOF {
 		return nil, errors.New("trailing manifest JSON")
@@ -110,13 +135,32 @@ func Parse(data []byte) (*Pack, error) {
 	if m.ColorScheme != "" && m.ColorScheme != "light" && m.ColorScheme != "dark" {
 		return nil, errors.New("invalid colorScheme")
 	}
+	if len(m.Description) > 32 {
+		return nil, errors.New("description allows at most 32 languages")
+	}
+	for lang, text := range m.Description {
+		if lang == "" || len(lang) > 32 || utf8.RuneCountInString(text) > 500 {
+			return nil, errors.New("invalid localized description (maximum 500 characters)")
+		}
+	}
+	if m.MinVersion != "" {
+		full := regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$`)
+		required, current := "v"+m.MinVersion, "v"+strings.TrimPrefix(version.PlusVersion, "v")
+		if !full.MatchString(m.MinVersion) || !semver.IsValid(required) {
+			return nil, errors.New("invalid minVersion: expected semantic version major.minor.patch")
+		}
+		if !semver.IsValid(current) || semver.Compare(current, required) < 0 {
+			return nil, errors.Errorf("style requires Memos Plus %s or newer (current %s)", m.MinVersion, version.PlusVersion)
+		}
+	}
+	file = "style.css"
 	b, err = safearchive.Bytes(cssFile, 200<<10)
 	if err != nil {
 		return nil, err
 	}
 	p.Original = string(b)
 	resources := map[string]Asset{}
-	var total int
+	var imageBytes, fontBytes, imageCount, fontCount int
 	names := make([]string, 0, len(files))
 	for n := range files {
 		names = append(names, n)
@@ -130,16 +174,28 @@ func Parse(data []byte) (*Pack, error) {
 		if !strings.HasPrefix(name, "assets/") {
 			return nil, errors.Errorf("unexpected ZIP entry %q", name)
 		}
-		if len(p.Assets) >= 20 {
-			return nil, errors.New("at most 20 assets allowed")
+		file = name
+		limit := int64(MaxAssetsBytes)
+		isFont := strings.EqualFold(path.Ext(name), ".woff2")
+		if isFont {
+			limit = MaxFontBytes
 		}
-		blob, e := safearchive.Bytes(f, 2<<20)
+		blob, e := safearchive.Bytes(f, limit)
 		if e != nil {
 			return nil, e
 		}
-		total += len(blob)
-		if total > 2<<20 {
-			return nil, errors.New("assets exceed 2 MB")
+		if isFont {
+			fontCount++
+			fontBytes += len(blob)
+			if fontCount > MaxFonts || fontBytes > MaxFontsBytes {
+				return nil, errors.New("WOFF2 quota exceeded: at most 128 files totaling 16 MiB")
+			}
+		} else {
+			imageCount++
+			imageBytes += len(blob)
+			if imageCount > MaxAssets || imageBytes > MaxAssetsBytes {
+				return nil, errors.New("image assets exceed 20 files or 2 MiB")
+			}
 		}
 		contentType, e := assetType(name, blob)
 		if e != nil {
@@ -149,6 +205,13 @@ func Parse(data []byte) (*Pack, error) {
 		resources[a.Name] = a
 		p.Assets = append(p.Assets, a)
 	}
+	if m.Preview != "" {
+		preview, ok := resources[m.Preview]
+		if !ok || !strings.HasPrefix(preview.ContentType, "image/") {
+			return nil, &Diagnostic{File: "style.json", Line: 1, Message: "preview must name an existing image inside assets/"}
+		}
+	}
+	file = "style.css"
 	// Hash the compiled representation as well: a compiler upgrade must not
 	// change the bytes behind an already cached immutable version URL.
 	template, err := Compile(m.ID, "__pack_version__", p.Original, resources)

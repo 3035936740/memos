@@ -1002,6 +1002,9 @@ type StylePack struct {
 	CssUrl        string                 `protobuf:"bytes,5,opt,name=css_url,json=cssUrl,proto3" json:"css_url,omitempty"`
 	Version       string                 `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
 	Enabled       bool                   `protobuf:"varint,7,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	Description   map[string]string      `protobuf:"bytes,8,rep,name=description,proto3" json:"description,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	PreviewUrl    string                 `protobuf:"bytes,9,opt,name=preview_url,json=previewUrl,proto3" json:"preview_url,omitempty"`
+	MinVersion    string                 `protobuf:"bytes,10,opt,name=min_version,json=minVersion,proto3" json:"min_version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1085,6 +1088,287 @@ func (x *StylePack) GetEnabled() bool {
 	return false
 }
 
+func (x *StylePack) GetDescription() map[string]string {
+	if x != nil {
+		return x.Description
+	}
+	return nil
+}
+
+func (x *StylePack) GetPreviewUrl() string {
+	if x != nil {
+		return x.PreviewUrl
+	}
+	return ""
+}
+
+func (x *StylePack) GetMinVersion() string {
+	if x != nil {
+		return x.MinVersion
+	}
+	return ""
+}
+
+type PreviewStylePackRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PreviewStylePackRequest) Reset() {
+	*x = PreviewStylePackRequest{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PreviewStylePackRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PreviewStylePackRequest) ProtoMessage() {}
+
+func (x *PreviewStylePackRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PreviewStylePackRequest.ProtoReflect.Descriptor instead.
+func (*PreviewStylePackRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PreviewStylePackRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type PreviewStylePackResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CssUrl        string                 `protobuf:"bytes,1,opt,name=css_url,json=cssUrl,proto3" json:"css_url,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PreviewStylePackResponse) Reset() {
+	*x = PreviewStylePackResponse{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PreviewStylePackResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PreviewStylePackResponse) ProtoMessage() {}
+
+func (x *PreviewStylePackResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PreviewStylePackResponse.ProtoReflect.Descriptor instead.
+func (*PreviewStylePackResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *PreviewStylePackResponse) GetCssUrl() string {
+	if x != nil {
+		return x.CssUrl
+	}
+	return ""
+}
+
+func (x *PreviewStylePackResponse) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+type ValidateStylePackRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Zip           []byte                 `protobuf:"bytes,1,opt,name=zip,proto3" json:"zip,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateStylePackRequest) Reset() {
+	*x = ValidateStylePackRequest{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateStylePackRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateStylePackRequest) ProtoMessage() {}
+
+func (x *ValidateStylePackRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateStylePackRequest.ProtoReflect.Descriptor instead.
+func (*ValidateStylePackRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ValidateStylePackRequest) GetZip() []byte {
+	if x != nil {
+		return x.Zip
+	}
+	return nil
+}
+
+type StylePackValidationError struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	File          string                 `protobuf:"bytes,1,opt,name=file,proto3" json:"file,omitempty"`
+	Line          int32                  `protobuf:"varint,2,opt,name=line,proto3" json:"line,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StylePackValidationError) Reset() {
+	*x = StylePackValidationError{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StylePackValidationError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StylePackValidationError) ProtoMessage() {}
+
+func (x *StylePackValidationError) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StylePackValidationError.ProtoReflect.Descriptor instead.
+func (*StylePackValidationError) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *StylePackValidationError) GetFile() string {
+	if x != nil {
+		return x.File
+	}
+	return ""
+}
+
+func (x *StylePackValidationError) GetLine() int32 {
+	if x != nil {
+		return x.Line
+	}
+	return 0
+}
+
+func (x *StylePackValidationError) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type ValidateStylePackResponse struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	Manifest      *StylePack                  `protobuf:"bytes,1,opt,name=manifest,proto3" json:"manifest,omitempty"`
+	Errors        []*StylePackValidationError `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	CompiledSize  int32                       `protobuf:"varint,3,opt,name=compiled_size,json=compiledSize,proto3" json:"compiled_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateStylePackResponse) Reset() {
+	*x = ValidateStylePackResponse{}
+	mi := &file_api_v1_instance_service_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateStylePackResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateStylePackResponse) ProtoMessage() {}
+
+func (x *ValidateStylePackResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_instance_service_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateStylePackResponse.ProtoReflect.Descriptor instead.
+func (*ValidateStylePackResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ValidateStylePackResponse) GetManifest() *StylePack {
+	if x != nil {
+		return x.Manifest
+	}
+	return nil
+}
+
+func (x *ValidateStylePackResponse) GetErrors() []*StylePackValidationError {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+func (x *ValidateStylePackResponse) GetCompiledSize() int32 {
+	if x != nil {
+		return x.CompiledSize
+	}
+	return 0
+}
+
 type ListStylePacksRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	IncludeDisabled bool                   `protobuf:"varint,1,opt,name=include_disabled,json=includeDisabled,proto3" json:"include_disabled,omitempty"`
@@ -1094,7 +1378,7 @@ type ListStylePacksRequest struct {
 
 func (x *ListStylePacksRequest) Reset() {
 	*x = ListStylePacksRequest{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[11]
+	mi := &file_api_v1_instance_service_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1106,7 +1390,7 @@ func (x *ListStylePacksRequest) String() string {
 func (*ListStylePacksRequest) ProtoMessage() {}
 
 func (x *ListStylePacksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[11]
+	mi := &file_api_v1_instance_service_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1119,7 +1403,7 @@ func (x *ListStylePacksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListStylePacksRequest.ProtoReflect.Descriptor instead.
 func (*ListStylePacksRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{11}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListStylePacksRequest) GetIncludeDisabled() bool {
@@ -1138,7 +1422,7 @@ type ListStylePacksResponse struct {
 
 func (x *ListStylePacksResponse) Reset() {
 	*x = ListStylePacksResponse{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[12]
+	mi := &file_api_v1_instance_service_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1150,7 +1434,7 @@ func (x *ListStylePacksResponse) String() string {
 func (*ListStylePacksResponse) ProtoMessage() {}
 
 func (x *ListStylePacksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[12]
+	mi := &file_api_v1_instance_service_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1163,7 +1447,7 @@ func (x *ListStylePacksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListStylePacksResponse.ProtoReflect.Descriptor instead.
 func (*ListStylePacksResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{12}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ListStylePacksResponse) GetStylePacks() []*StylePack {
@@ -1182,7 +1466,7 @@ type InstallStylePackRequest struct {
 
 func (x *InstallStylePackRequest) Reset() {
 	*x = InstallStylePackRequest{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[13]
+	mi := &file_api_v1_instance_service_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1478,7 @@ func (x *InstallStylePackRequest) String() string {
 func (*InstallStylePackRequest) ProtoMessage() {}
 
 func (x *InstallStylePackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[13]
+	mi := &file_api_v1_instance_service_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1491,7 @@ func (x *InstallStylePackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstallStylePackRequest.ProtoReflect.Descriptor instead.
 func (*InstallStylePackRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{13}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *InstallStylePackRequest) GetZip() []byte {
@@ -1229,7 +1513,7 @@ type UpdateStylePackRequest struct {
 
 func (x *UpdateStylePackRequest) Reset() {
 	*x = UpdateStylePackRequest{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[14]
+	mi := &file_api_v1_instance_service_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1241,7 +1525,7 @@ func (x *UpdateStylePackRequest) String() string {
 func (*UpdateStylePackRequest) ProtoMessage() {}
 
 func (x *UpdateStylePackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[14]
+	mi := &file_api_v1_instance_service_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1254,7 +1538,7 @@ func (x *UpdateStylePackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateStylePackRequest.ProtoReflect.Descriptor instead.
 func (*UpdateStylePackRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{14}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *UpdateStylePackRequest) GetId() string {
@@ -1287,7 +1571,7 @@ type DeleteStylePackRequest struct {
 
 func (x *DeleteStylePackRequest) Reset() {
 	*x = DeleteStylePackRequest{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[15]
+	mi := &file_api_v1_instance_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1299,7 +1583,7 @@ func (x *DeleteStylePackRequest) String() string {
 func (*DeleteStylePackRequest) ProtoMessage() {}
 
 func (x *DeleteStylePackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[15]
+	mi := &file_api_v1_instance_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1312,7 +1596,7 @@ func (x *DeleteStylePackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteStylePackRequest.ProtoReflect.Descriptor instead.
 func (*DeleteStylePackRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{15}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *DeleteStylePackRequest) GetId() string {
@@ -1331,7 +1615,7 @@ type ExportStylePackRequest struct {
 
 func (x *ExportStylePackRequest) Reset() {
 	*x = ExportStylePackRequest{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[16]
+	mi := &file_api_v1_instance_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1343,7 +1627,7 @@ func (x *ExportStylePackRequest) String() string {
 func (*ExportStylePackRequest) ProtoMessage() {}
 
 func (x *ExportStylePackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[16]
+	mi := &file_api_v1_instance_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1356,7 +1640,7 @@ func (x *ExportStylePackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportStylePackRequest.ProtoReflect.Descriptor instead.
 func (*ExportStylePackRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{16}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ExportStylePackRequest) GetId() string {
@@ -1375,7 +1659,7 @@ type ExportStylePackResponse struct {
 
 func (x *ExportStylePackResponse) Reset() {
 	*x = ExportStylePackResponse{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[17]
+	mi := &file_api_v1_instance_service_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1387,7 +1671,7 @@ func (x *ExportStylePackResponse) String() string {
 func (*ExportStylePackResponse) ProtoMessage() {}
 
 func (x *ExportStylePackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[17]
+	mi := &file_api_v1_instance_service_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1400,7 +1684,7 @@ func (x *ExportStylePackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportStylePackResponse.ProtoReflect.Descriptor instead.
 func (*ExportStylePackResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{17}
+	return file_api_v1_instance_service_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ExportStylePackResponse) GetZip() []byte {
@@ -1485,7 +1769,7 @@ type InstanceSetting_GeneralSetting struct {
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
 	*x = InstanceSetting_GeneralSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[18]
+	mi := &file_api_v1_instance_service_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1497,7 +1781,7 @@ func (x *InstanceSetting_GeneralSetting) String() string {
 func (*InstanceSetting_GeneralSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_GeneralSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[18]
+	mi := &file_api_v1_instance_service_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1734,7 +2018,7 @@ type InstanceSetting_Storage struct {
 
 func (x *InstanceSetting_Storage) Reset() {
 	*x = InstanceSetting_Storage{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[19]
+	mi := &file_api_v1_instance_service_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1746,7 +2030,7 @@ func (x *InstanceSetting_Storage) String() string {
 func (*InstanceSetting_Storage) ProtoMessage() {}
 
 func (x *InstanceSetting_Storage) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[19]
+	mi := &file_api_v1_instance_service_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1831,7 +2115,7 @@ type InstanceSetting_StorageSetting struct {
 
 func (x *InstanceSetting_StorageSetting) Reset() {
 	*x = InstanceSetting_StorageSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[20]
+	mi := &file_api_v1_instance_service_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1843,7 +2127,7 @@ func (x *InstanceSetting_StorageSetting) String() string {
 func (*InstanceSetting_StorageSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_StorageSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[20]
+	mi := &file_api_v1_instance_service_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1916,7 +2200,7 @@ type InstanceSetting_MemoRelatedSetting struct {
 
 func (x *InstanceSetting_MemoRelatedSetting) Reset() {
 	*x = InstanceSetting_MemoRelatedSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[21]
+	mi := &file_api_v1_instance_service_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1928,7 +2212,7 @@ func (x *InstanceSetting_MemoRelatedSetting) String() string {
 func (*InstanceSetting_MemoRelatedSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_MemoRelatedSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[21]
+	mi := &file_api_v1_instance_service_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1979,7 +2263,7 @@ type InstanceSetting_TagMetadata struct {
 
 func (x *InstanceSetting_TagMetadata) Reset() {
 	*x = InstanceSetting_TagMetadata{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[22]
+	mi := &file_api_v1_instance_service_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1991,7 +2275,7 @@ func (x *InstanceSetting_TagMetadata) String() string {
 func (*InstanceSetting_TagMetadata) ProtoMessage() {}
 
 func (x *InstanceSetting_TagMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[22]
+	mi := &file_api_v1_instance_service_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2037,7 +2321,7 @@ type InstanceSetting_TagsSetting struct {
 
 func (x *InstanceSetting_TagsSetting) Reset() {
 	*x = InstanceSetting_TagsSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[23]
+	mi := &file_api_v1_instance_service_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2049,7 +2333,7 @@ func (x *InstanceSetting_TagsSetting) String() string {
 func (*InstanceSetting_TagsSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_TagsSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[23]
+	mi := &file_api_v1_instance_service_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2082,7 +2366,7 @@ type InstanceSetting_NotificationSetting struct {
 
 func (x *InstanceSetting_NotificationSetting) Reset() {
 	*x = InstanceSetting_NotificationSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[24]
+	mi := &file_api_v1_instance_service_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2094,7 +2378,7 @@ func (x *InstanceSetting_NotificationSetting) String() string {
 func (*InstanceSetting_NotificationSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_NotificationSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[24]
+	mi := &file_api_v1_instance_service_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2133,7 +2417,7 @@ type InstanceSetting_AISetting struct {
 
 func (x *InstanceSetting_AISetting) Reset() {
 	*x = InstanceSetting_AISetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[25]
+	mi := &file_api_v1_instance_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2145,7 +2429,7 @@ func (x *InstanceSetting_AISetting) String() string {
 func (*InstanceSetting_AISetting) ProtoMessage() {}
 
 func (x *InstanceSetting_AISetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[25]
+	mi := &file_api_v1_instance_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2195,7 +2479,7 @@ type InstanceSetting_TextGenerationConfig struct {
 
 func (x *InstanceSetting_TextGenerationConfig) Reset() {
 	*x = InstanceSetting_TextGenerationConfig{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[26]
+	mi := &file_api_v1_instance_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2207,7 +2491,7 @@ func (x *InstanceSetting_TextGenerationConfig) String() string {
 func (*InstanceSetting_TextGenerationConfig) ProtoMessage() {}
 
 func (x *InstanceSetting_TextGenerationConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[26]
+	mi := &file_api_v1_instance_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2292,7 +2576,7 @@ type InstanceSetting_AIProviderConfig struct {
 
 func (x *InstanceSetting_AIProviderConfig) Reset() {
 	*x = InstanceSetting_AIProviderConfig{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[27]
+	mi := &file_api_v1_instance_service_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2304,7 +2588,7 @@ func (x *InstanceSetting_AIProviderConfig) String() string {
 func (*InstanceSetting_AIProviderConfig) ProtoMessage() {}
 
 func (x *InstanceSetting_AIProviderConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[27]
+	mi := &file_api_v1_instance_service_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2446,7 +2730,7 @@ type InstanceSetting_TranscriptionConfig struct {
 
 func (x *InstanceSetting_TranscriptionConfig) Reset() {
 	*x = InstanceSetting_TranscriptionConfig{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[28]
+	mi := &file_api_v1_instance_service_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2458,7 +2742,7 @@ func (x *InstanceSetting_TranscriptionConfig) String() string {
 func (*InstanceSetting_TranscriptionConfig) ProtoMessage() {}
 
 func (x *InstanceSetting_TranscriptionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[28]
+	mi := &file_api_v1_instance_service_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2512,7 +2796,7 @@ type InstanceSetting_AccessSetting struct {
 
 func (x *InstanceSetting_AccessSetting) Reset() {
 	*x = InstanceSetting_AccessSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[29]
+	mi := &file_api_v1_instance_service_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2524,7 +2808,7 @@ func (x *InstanceSetting_AccessSetting) String() string {
 func (*InstanceSetting_AccessSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_AccessSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[29]
+	mi := &file_api_v1_instance_service_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2559,7 +2843,7 @@ type InstanceSetting_GeneralSetting_CustomProfile struct {
 
 func (x *InstanceSetting_GeneralSetting_CustomProfile) Reset() {
 	*x = InstanceSetting_GeneralSetting_CustomProfile{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[30]
+	mi := &file_api_v1_instance_service_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2571,7 +2855,7 @@ func (x *InstanceSetting_GeneralSetting_CustomProfile) String() string {
 func (*InstanceSetting_GeneralSetting_CustomProfile) ProtoMessage() {}
 
 func (x *InstanceSetting_GeneralSetting_CustomProfile) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[30]
+	mi := &file_api_v1_instance_service_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2628,7 +2912,7 @@ type InstanceSetting_Storage_S3Config struct {
 
 func (x *InstanceSetting_Storage_S3Config) Reset() {
 	*x = InstanceSetting_Storage_S3Config{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[31]
+	mi := &file_api_v1_instance_service_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2640,7 +2924,7 @@ func (x *InstanceSetting_Storage_S3Config) String() string {
 func (*InstanceSetting_Storage_S3Config) ProtoMessage() {}
 
 func (x *InstanceSetting_Storage_S3Config) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[31]
+	mi := &file_api_v1_instance_service_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2725,7 +3009,7 @@ type InstanceSetting_StorageSetting_S3Config struct {
 
 func (x *InstanceSetting_StorageSetting_S3Config) Reset() {
 	*x = InstanceSetting_StorageSetting_S3Config{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[32]
+	mi := &file_api_v1_instance_service_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2737,7 +3021,7 @@ func (x *InstanceSetting_StorageSetting_S3Config) String() string {
 func (*InstanceSetting_StorageSetting_S3Config) ProtoMessage() {}
 
 func (x *InstanceSetting_StorageSetting_S3Config) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[32]
+	mi := &file_api_v1_instance_service_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2821,7 +3105,7 @@ type InstanceSetting_NotificationSetting_EmailSetting struct {
 
 func (x *InstanceSetting_NotificationSetting_EmailSetting) Reset() {
 	*x = InstanceSetting_NotificationSetting_EmailSetting{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[34]
+	mi := &file_api_v1_instance_service_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2833,7 +3117,7 @@ func (x *InstanceSetting_NotificationSetting_EmailSetting) String() string {
 func (*InstanceSetting_NotificationSetting_EmailSetting) ProtoMessage() {}
 
 func (x *InstanceSetting_NotificationSetting_EmailSetting) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[34]
+	mi := &file_api_v1_instance_service_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2932,7 +3216,7 @@ type InstanceStats_DatabaseStats struct {
 
 func (x *InstanceStats_DatabaseStats) Reset() {
 	*x = InstanceStats_DatabaseStats{}
-	mi := &file_api_v1_instance_service_proto_msgTypes[36]
+	mi := &file_api_v1_instance_service_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2944,7 +3228,7 @@ func (x *InstanceStats_DatabaseStats) String() string {
 func (*InstanceStats_DatabaseStats) ProtoMessage() {}
 
 func (x *InstanceStats_DatabaseStats) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_instance_service_proto_msgTypes[36]
+	mi := &file_api_v1_instance_service_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3194,7 +3478,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\rDatabaseStats\x12\x16\n" +
 	"\x06driver\x18\x01 \x01(\tR\x06driver\x12\x1d\n" +
 	"\n" +
-	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\"\x9c\x02\n" +
+	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\"\xea\x03\n" +
 	"\tStylePack\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x125\n" +
 	"\x04name\x18\x02 \x03(\v2!.memos.api.v1.StylePack.NameEntryR\x04name\x12\x1f\n" +
@@ -3203,10 +3487,35 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\fcolor_scheme\x18\x04 \x01(\tR\vcolorScheme\x12\x17\n" +
 	"\acss_url\x18\x05 \x01(\tR\x06cssUrl\x12\x18\n" +
 	"\aversion\x18\x06 \x01(\tR\aversion\x12\x18\n" +
-	"\aenabled\x18\a \x01(\bR\aenabled\x1a7\n" +
+	"\aenabled\x18\a \x01(\bR\aenabled\x12J\n" +
+	"\vdescription\x18\b \x03(\v2(.memos.api.v1.StylePack.DescriptionEntryR\vdescription\x12\x1f\n" +
+	"\vpreview_url\x18\t \x01(\tR\n" +
+	"previewUrl\x12\x1f\n" +
+	"\vmin_version\x18\n" +
+	" \x01(\tR\n" +
+	"minVersion\x1a7\n" +
 	"\tNameEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"B\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a>\n" +
+	"\x10DescriptionEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\")\n" +
+	"\x17PreviewStylePackRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"n\n" +
+	"\x18PreviewStylePackResponse\x12\x17\n" +
+	"\acss_url\x18\x01 \x01(\tR\x06cssUrl\x129\n" +
+	"\n" +
+	"expires_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\",\n" +
+	"\x18ValidateStylePackRequest\x12\x10\n" +
+	"\x03zip\x18\x01 \x01(\fR\x03zip\"\\\n" +
+	"\x18StylePackValidationError\x12\x12\n" +
+	"\x04file\x18\x01 \x01(\tR\x04file\x12\x12\n" +
+	"\x04line\x18\x02 \x01(\x05R\x04line\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"\xb5\x01\n" +
+	"\x19ValidateStylePackResponse\x123\n" +
+	"\bmanifest\x18\x01 \x01(\v2\x17.memos.api.v1.StylePackR\bmanifest\x12>\n" +
+	"\x06errors\x18\x02 \x03(\v2&.memos.api.v1.StylePackValidationErrorR\x06errors\x12#\n" +
+	"\rcompiled_size\x18\x03 \x01(\x05R\fcompiledSize\"B\n" +
 	"\x15ListStylePacksRequest\x12)\n" +
 	"\x10include_disabled\x18\x01 \x01(\bR\x0fincludeDisabled\"R\n" +
 	"\x16ListStylePacksResponse\x128\n" +
@@ -3229,8 +3538,10 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x12InstanceAccessMode\x12$\n" +
 	" INSTANCE_ACCESS_MODE_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cINSTANCE_ACCESS_MODE_PRIVATE\x10\x01\x12\x1f\n" +
-	"\x1bINSTANCE_ACCESS_MODE_PUBLIC\x10\x022\x81\f\n" +
-	"\x0fInstanceService\x12x\n" +
+	"\x1bINSTANCE_ACCESS_MODE_PUBLIC\x10\x022\xa2\x0e\n" +
+	"\x0fInstanceService\x12\x8e\x01\n" +
+	"\x10PreviewStylePack\x12%.memos.api.v1.PreviewStylePackRequest\x1a&.memos.api.v1.PreviewStylePackResponse\"+\x82\xd3\xe4\x93\x02%:\x01*\" /api/v1/style-packs/{id}:preview\x12\x8d\x01\n" +
+	"\x11ValidateStylePack\x12&.memos.api.v1.ValidateStylePackRequest\x1a'.memos.api.v1.ValidateStylePackResponse\"'\x82\xd3\xe4\x93\x02!:\x01*\"\x1c/api/v1/style-packs:validate\x12x\n" +
 	"\x0eListStylePacks\x12#.memos.api.v1.ListStylePacksRequest\x1a$.memos.api.v1.ListStylePacksResponse\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/api/v1/style-packs\x12r\n" +
 	"\x10InstallStylePack\x12%.memos.api.v1.InstallStylePackRequest\x1a\x17.memos.api.v1.StylePack\"\x1e\x82\xd3\xe4\x93\x02\x18:\x01*\"\x13/api/v1/style-packs\x12u\n" +
 	"\x0fUpdateStylePack\x12$.memos.api.v1.UpdateStylePackRequest\x1a\x17.memos.api.v1.StylePack\"#\x82\xd3\xe4\x93\x02\x1d:\x01*2\x18/api/v1/style-packs/{id}\x12q\n" +
@@ -3257,7 +3568,7 @@ func file_api_v1_instance_service_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_instance_service_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_api_v1_instance_service_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_api_v1_instance_service_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_api_v1_instance_service_proto_goTypes = []any{
 	(InstanceAccessMode)(0),                              // 0: memos.api.v1.InstanceAccessMode
 	(InstanceSetting_Key)(0),                             // 1: memos.api.v1.InstanceSetting.Key
@@ -3275,100 +3586,114 @@ var file_api_v1_instance_service_proto_goTypes = []any{
 	(*GetInstanceStatsRequest)(nil),                      // 13: memos.api.v1.GetInstanceStatsRequest
 	(*InstanceStats)(nil),                                // 14: memos.api.v1.InstanceStats
 	(*StylePack)(nil),                                    // 15: memos.api.v1.StylePack
-	(*ListStylePacksRequest)(nil),                        // 16: memos.api.v1.ListStylePacksRequest
-	(*ListStylePacksResponse)(nil),                       // 17: memos.api.v1.ListStylePacksResponse
-	(*InstallStylePackRequest)(nil),                      // 18: memos.api.v1.InstallStylePackRequest
-	(*UpdateStylePackRequest)(nil),                       // 19: memos.api.v1.UpdateStylePackRequest
-	(*DeleteStylePackRequest)(nil),                       // 20: memos.api.v1.DeleteStylePackRequest
-	(*ExportStylePackRequest)(nil),                       // 21: memos.api.v1.ExportStylePackRequest
-	(*ExportStylePackResponse)(nil),                      // 22: memos.api.v1.ExportStylePackResponse
-	(*InstanceSetting_GeneralSetting)(nil),               // 23: memos.api.v1.InstanceSetting.GeneralSetting
-	(*InstanceSetting_Storage)(nil),                      // 24: memos.api.v1.InstanceSetting.Storage
-	(*InstanceSetting_StorageSetting)(nil),               // 25: memos.api.v1.InstanceSetting.StorageSetting
-	(*InstanceSetting_MemoRelatedSetting)(nil),           // 26: memos.api.v1.InstanceSetting.MemoRelatedSetting
-	(*InstanceSetting_TagMetadata)(nil),                  // 27: memos.api.v1.InstanceSetting.TagMetadata
-	(*InstanceSetting_TagsSetting)(nil),                  // 28: memos.api.v1.InstanceSetting.TagsSetting
-	(*InstanceSetting_NotificationSetting)(nil),          // 29: memos.api.v1.InstanceSetting.NotificationSetting
-	(*InstanceSetting_AISetting)(nil),                    // 30: memos.api.v1.InstanceSetting.AISetting
-	(*InstanceSetting_TextGenerationConfig)(nil),         // 31: memos.api.v1.InstanceSetting.TextGenerationConfig
-	(*InstanceSetting_AIProviderConfig)(nil),             // 32: memos.api.v1.InstanceSetting.AIProviderConfig
-	(*InstanceSetting_TranscriptionConfig)(nil),          // 33: memos.api.v1.InstanceSetting.TranscriptionConfig
-	(*InstanceSetting_AccessSetting)(nil),                // 34: memos.api.v1.InstanceSetting.AccessSetting
-	(*InstanceSetting_GeneralSetting_CustomProfile)(nil), // 35: memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
-	(*InstanceSetting_Storage_S3Config)(nil),             // 36: memos.api.v1.InstanceSetting.Storage.S3Config
-	(*InstanceSetting_StorageSetting_S3Config)(nil),      // 37: memos.api.v1.InstanceSetting.StorageSetting.S3Config
-	nil, // 38: memos.api.v1.InstanceSetting.TagsSetting.TagsEntry
-	(*InstanceSetting_NotificationSetting_EmailSetting)(nil), // 39: memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
-	nil,                                 // 40: memos.api.v1.InstanceSetting.AIProviderConfig.CustomHeadersEntry
-	(*InstanceStats_DatabaseStats)(nil), // 41: memos.api.v1.InstanceStats.DatabaseStats
-	nil,                                 // 42: memos.api.v1.StylePack.NameEntry
-	(*User)(nil),                        // 43: memos.api.v1.User
-	(*fieldmaskpb.FieldMask)(nil),       // 44: google.protobuf.FieldMask
-	(*timestamppb.Timestamp)(nil),       // 45: google.protobuf.Timestamp
-	(*color.Color)(nil),                 // 46: google.type.Color
-	(*emptypb.Empty)(nil),               // 47: google.protobuf.Empty
+	(*PreviewStylePackRequest)(nil),                      // 16: memos.api.v1.PreviewStylePackRequest
+	(*PreviewStylePackResponse)(nil),                     // 17: memos.api.v1.PreviewStylePackResponse
+	(*ValidateStylePackRequest)(nil),                     // 18: memos.api.v1.ValidateStylePackRequest
+	(*StylePackValidationError)(nil),                     // 19: memos.api.v1.StylePackValidationError
+	(*ValidateStylePackResponse)(nil),                    // 20: memos.api.v1.ValidateStylePackResponse
+	(*ListStylePacksRequest)(nil),                        // 21: memos.api.v1.ListStylePacksRequest
+	(*ListStylePacksResponse)(nil),                       // 22: memos.api.v1.ListStylePacksResponse
+	(*InstallStylePackRequest)(nil),                      // 23: memos.api.v1.InstallStylePackRequest
+	(*UpdateStylePackRequest)(nil),                       // 24: memos.api.v1.UpdateStylePackRequest
+	(*DeleteStylePackRequest)(nil),                       // 25: memos.api.v1.DeleteStylePackRequest
+	(*ExportStylePackRequest)(nil),                       // 26: memos.api.v1.ExportStylePackRequest
+	(*ExportStylePackResponse)(nil),                      // 27: memos.api.v1.ExportStylePackResponse
+	(*InstanceSetting_GeneralSetting)(nil),               // 28: memos.api.v1.InstanceSetting.GeneralSetting
+	(*InstanceSetting_Storage)(nil),                      // 29: memos.api.v1.InstanceSetting.Storage
+	(*InstanceSetting_StorageSetting)(nil),               // 30: memos.api.v1.InstanceSetting.StorageSetting
+	(*InstanceSetting_MemoRelatedSetting)(nil),           // 31: memos.api.v1.InstanceSetting.MemoRelatedSetting
+	(*InstanceSetting_TagMetadata)(nil),                  // 32: memos.api.v1.InstanceSetting.TagMetadata
+	(*InstanceSetting_TagsSetting)(nil),                  // 33: memos.api.v1.InstanceSetting.TagsSetting
+	(*InstanceSetting_NotificationSetting)(nil),          // 34: memos.api.v1.InstanceSetting.NotificationSetting
+	(*InstanceSetting_AISetting)(nil),                    // 35: memos.api.v1.InstanceSetting.AISetting
+	(*InstanceSetting_TextGenerationConfig)(nil),         // 36: memos.api.v1.InstanceSetting.TextGenerationConfig
+	(*InstanceSetting_AIProviderConfig)(nil),             // 37: memos.api.v1.InstanceSetting.AIProviderConfig
+	(*InstanceSetting_TranscriptionConfig)(nil),          // 38: memos.api.v1.InstanceSetting.TranscriptionConfig
+	(*InstanceSetting_AccessSetting)(nil),                // 39: memos.api.v1.InstanceSetting.AccessSetting
+	(*InstanceSetting_GeneralSetting_CustomProfile)(nil), // 40: memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
+	(*InstanceSetting_Storage_S3Config)(nil),             // 41: memos.api.v1.InstanceSetting.Storage.S3Config
+	(*InstanceSetting_StorageSetting_S3Config)(nil),      // 42: memos.api.v1.InstanceSetting.StorageSetting.S3Config
+	nil, // 43: memos.api.v1.InstanceSetting.TagsSetting.TagsEntry
+	(*InstanceSetting_NotificationSetting_EmailSetting)(nil), // 44: memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
+	nil,                                 // 45: memos.api.v1.InstanceSetting.AIProviderConfig.CustomHeadersEntry
+	(*InstanceStats_DatabaseStats)(nil), // 46: memos.api.v1.InstanceStats.DatabaseStats
+	nil,                                 // 47: memos.api.v1.StylePack.NameEntry
+	nil,                                 // 48: memos.api.v1.StylePack.DescriptionEntry
+	(*User)(nil),                        // 49: memos.api.v1.User
+	(*fieldmaskpb.FieldMask)(nil),       // 50: google.protobuf.FieldMask
+	(*timestamppb.Timestamp)(nil),       // 51: google.protobuf.Timestamp
+	(*color.Color)(nil),                 // 52: google.type.Color
+	(*emptypb.Empty)(nil),               // 53: google.protobuf.Empty
 }
 var file_api_v1_instance_service_proto_depIdxs = []int32{
-	43, // 0: memos.api.v1.InstanceProfile.admin:type_name -> memos.api.v1.User
+	49, // 0: memos.api.v1.InstanceProfile.admin:type_name -> memos.api.v1.User
 	0,  // 1: memos.api.v1.InstanceProfile.access_mode:type_name -> memos.api.v1.InstanceAccessMode
-	23, // 2: memos.api.v1.InstanceSetting.general_setting:type_name -> memos.api.v1.InstanceSetting.GeneralSetting
-	25, // 3: memos.api.v1.InstanceSetting.storage_setting:type_name -> memos.api.v1.InstanceSetting.StorageSetting
-	26, // 4: memos.api.v1.InstanceSetting.memo_related_setting:type_name -> memos.api.v1.InstanceSetting.MemoRelatedSetting
-	28, // 5: memos.api.v1.InstanceSetting.tags_setting:type_name -> memos.api.v1.InstanceSetting.TagsSetting
-	29, // 6: memos.api.v1.InstanceSetting.notification_setting:type_name -> memos.api.v1.InstanceSetting.NotificationSetting
-	30, // 7: memos.api.v1.InstanceSetting.ai_setting:type_name -> memos.api.v1.InstanceSetting.AISetting
-	34, // 8: memos.api.v1.InstanceSetting.access_setting:type_name -> memos.api.v1.InstanceSetting.AccessSetting
+	28, // 2: memos.api.v1.InstanceSetting.general_setting:type_name -> memos.api.v1.InstanceSetting.GeneralSetting
+	30, // 3: memos.api.v1.InstanceSetting.storage_setting:type_name -> memos.api.v1.InstanceSetting.StorageSetting
+	31, // 4: memos.api.v1.InstanceSetting.memo_related_setting:type_name -> memos.api.v1.InstanceSetting.MemoRelatedSetting
+	33, // 5: memos.api.v1.InstanceSetting.tags_setting:type_name -> memos.api.v1.InstanceSetting.TagsSetting
+	34, // 6: memos.api.v1.InstanceSetting.notification_setting:type_name -> memos.api.v1.InstanceSetting.NotificationSetting
+	35, // 7: memos.api.v1.InstanceSetting.ai_setting:type_name -> memos.api.v1.InstanceSetting.AISetting
+	39, // 8: memos.api.v1.InstanceSetting.access_setting:type_name -> memos.api.v1.InstanceSetting.AccessSetting
 	7,  // 9: memos.api.v1.BatchGetInstanceSettingsResponse.settings:type_name -> memos.api.v1.InstanceSetting
 	7,  // 10: memos.api.v1.UpdateInstanceSettingRequest.setting:type_name -> memos.api.v1.InstanceSetting
-	44, // 11: memos.api.v1.UpdateInstanceSettingRequest.update_mask:type_name -> google.protobuf.FieldMask
-	39, // 12: memos.api.v1.TestInstanceEmailSettingRequest.email:type_name -> memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
-	41, // 13: memos.api.v1.InstanceStats.database:type_name -> memos.api.v1.InstanceStats.DatabaseStats
-	45, // 14: memos.api.v1.InstanceStats.generated_time:type_name -> google.protobuf.Timestamp
-	42, // 15: memos.api.v1.StylePack.name:type_name -> memos.api.v1.StylePack.NameEntry
-	15, // 16: memos.api.v1.ListStylePacksResponse.style_packs:type_name -> memos.api.v1.StylePack
-	35, // 17: memos.api.v1.InstanceSetting.GeneralSetting.custom_profile:type_name -> memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
-	2,  // 18: memos.api.v1.InstanceSetting.Storage.type:type_name -> memos.api.v1.InstanceSetting.StorageType
-	36, // 19: memos.api.v1.InstanceSetting.Storage.s3_config:type_name -> memos.api.v1.InstanceSetting.Storage.S3Config
-	4,  // 20: memos.api.v1.InstanceSetting.StorageSetting.storage_type:type_name -> memos.api.v1.InstanceSetting.StorageSetting.StorageType
-	37, // 21: memos.api.v1.InstanceSetting.StorageSetting.s3_config:type_name -> memos.api.v1.InstanceSetting.StorageSetting.S3Config
-	24, // 22: memos.api.v1.InstanceSetting.StorageSetting.storages:type_name -> memos.api.v1.InstanceSetting.Storage
-	46, // 23: memos.api.v1.InstanceSetting.TagMetadata.background_color:type_name -> google.type.Color
-	38, // 24: memos.api.v1.InstanceSetting.TagsSetting.tags:type_name -> memos.api.v1.InstanceSetting.TagsSetting.TagsEntry
-	39, // 25: memos.api.v1.InstanceSetting.NotificationSetting.email:type_name -> memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
-	32, // 26: memos.api.v1.InstanceSetting.AISetting.providers:type_name -> memos.api.v1.InstanceSetting.AIProviderConfig
-	33, // 27: memos.api.v1.InstanceSetting.AISetting.transcription:type_name -> memos.api.v1.InstanceSetting.TranscriptionConfig
-	31, // 28: memos.api.v1.InstanceSetting.AISetting.text_generation:type_name -> memos.api.v1.InstanceSetting.TextGenerationConfig
-	3,  // 29: memos.api.v1.InstanceSetting.AIProviderConfig.type:type_name -> memos.api.v1.InstanceSetting.AIProviderType
-	40, // 30: memos.api.v1.InstanceSetting.AIProviderConfig.custom_headers:type_name -> memos.api.v1.InstanceSetting.AIProviderConfig.CustomHeadersEntry
-	0,  // 31: memos.api.v1.InstanceSetting.AccessSetting.access_mode:type_name -> memos.api.v1.InstanceAccessMode
-	27, // 32: memos.api.v1.InstanceSetting.TagsSetting.TagsEntry.value:type_name -> memos.api.v1.InstanceSetting.TagMetadata
-	16, // 33: memos.api.v1.InstanceService.ListStylePacks:input_type -> memos.api.v1.ListStylePacksRequest
-	18, // 34: memos.api.v1.InstanceService.InstallStylePack:input_type -> memos.api.v1.InstallStylePackRequest
-	19, // 35: memos.api.v1.InstanceService.UpdateStylePack:input_type -> memos.api.v1.UpdateStylePackRequest
-	20, // 36: memos.api.v1.InstanceService.DeleteStylePack:input_type -> memos.api.v1.DeleteStylePackRequest
-	21, // 37: memos.api.v1.InstanceService.ExportStylePack:input_type -> memos.api.v1.ExportStylePackRequest
-	6,  // 38: memos.api.v1.InstanceService.GetInstanceProfile:input_type -> memos.api.v1.GetInstanceProfileRequest
-	8,  // 39: memos.api.v1.InstanceService.GetInstanceSetting:input_type -> memos.api.v1.GetInstanceSettingRequest
-	9,  // 40: memos.api.v1.InstanceService.BatchGetInstanceSettings:input_type -> memos.api.v1.BatchGetInstanceSettingsRequest
-	11, // 41: memos.api.v1.InstanceService.UpdateInstanceSetting:input_type -> memos.api.v1.UpdateInstanceSettingRequest
-	12, // 42: memos.api.v1.InstanceService.TestInstanceEmailSetting:input_type -> memos.api.v1.TestInstanceEmailSettingRequest
-	13, // 43: memos.api.v1.InstanceService.GetInstanceStats:input_type -> memos.api.v1.GetInstanceStatsRequest
-	17, // 44: memos.api.v1.InstanceService.ListStylePacks:output_type -> memos.api.v1.ListStylePacksResponse
-	15, // 45: memos.api.v1.InstanceService.InstallStylePack:output_type -> memos.api.v1.StylePack
-	15, // 46: memos.api.v1.InstanceService.UpdateStylePack:output_type -> memos.api.v1.StylePack
-	47, // 47: memos.api.v1.InstanceService.DeleteStylePack:output_type -> google.protobuf.Empty
-	22, // 48: memos.api.v1.InstanceService.ExportStylePack:output_type -> memos.api.v1.ExportStylePackResponse
-	5,  // 49: memos.api.v1.InstanceService.GetInstanceProfile:output_type -> memos.api.v1.InstanceProfile
-	7,  // 50: memos.api.v1.InstanceService.GetInstanceSetting:output_type -> memos.api.v1.InstanceSetting
-	10, // 51: memos.api.v1.InstanceService.BatchGetInstanceSettings:output_type -> memos.api.v1.BatchGetInstanceSettingsResponse
-	7,  // 52: memos.api.v1.InstanceService.UpdateInstanceSetting:output_type -> memos.api.v1.InstanceSetting
-	47, // 53: memos.api.v1.InstanceService.TestInstanceEmailSetting:output_type -> google.protobuf.Empty
-	14, // 54: memos.api.v1.InstanceService.GetInstanceStats:output_type -> memos.api.v1.InstanceStats
-	44, // [44:55] is the sub-list for method output_type
-	33, // [33:44] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	50, // 11: memos.api.v1.UpdateInstanceSettingRequest.update_mask:type_name -> google.protobuf.FieldMask
+	44, // 12: memos.api.v1.TestInstanceEmailSettingRequest.email:type_name -> memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
+	46, // 13: memos.api.v1.InstanceStats.database:type_name -> memos.api.v1.InstanceStats.DatabaseStats
+	51, // 14: memos.api.v1.InstanceStats.generated_time:type_name -> google.protobuf.Timestamp
+	47, // 15: memos.api.v1.StylePack.name:type_name -> memos.api.v1.StylePack.NameEntry
+	48, // 16: memos.api.v1.StylePack.description:type_name -> memos.api.v1.StylePack.DescriptionEntry
+	51, // 17: memos.api.v1.PreviewStylePackResponse.expires_at:type_name -> google.protobuf.Timestamp
+	15, // 18: memos.api.v1.ValidateStylePackResponse.manifest:type_name -> memos.api.v1.StylePack
+	19, // 19: memos.api.v1.ValidateStylePackResponse.errors:type_name -> memos.api.v1.StylePackValidationError
+	15, // 20: memos.api.v1.ListStylePacksResponse.style_packs:type_name -> memos.api.v1.StylePack
+	40, // 21: memos.api.v1.InstanceSetting.GeneralSetting.custom_profile:type_name -> memos.api.v1.InstanceSetting.GeneralSetting.CustomProfile
+	2,  // 22: memos.api.v1.InstanceSetting.Storage.type:type_name -> memos.api.v1.InstanceSetting.StorageType
+	41, // 23: memos.api.v1.InstanceSetting.Storage.s3_config:type_name -> memos.api.v1.InstanceSetting.Storage.S3Config
+	4,  // 24: memos.api.v1.InstanceSetting.StorageSetting.storage_type:type_name -> memos.api.v1.InstanceSetting.StorageSetting.StorageType
+	42, // 25: memos.api.v1.InstanceSetting.StorageSetting.s3_config:type_name -> memos.api.v1.InstanceSetting.StorageSetting.S3Config
+	29, // 26: memos.api.v1.InstanceSetting.StorageSetting.storages:type_name -> memos.api.v1.InstanceSetting.Storage
+	52, // 27: memos.api.v1.InstanceSetting.TagMetadata.background_color:type_name -> google.type.Color
+	43, // 28: memos.api.v1.InstanceSetting.TagsSetting.tags:type_name -> memos.api.v1.InstanceSetting.TagsSetting.TagsEntry
+	44, // 29: memos.api.v1.InstanceSetting.NotificationSetting.email:type_name -> memos.api.v1.InstanceSetting.NotificationSetting.EmailSetting
+	37, // 30: memos.api.v1.InstanceSetting.AISetting.providers:type_name -> memos.api.v1.InstanceSetting.AIProviderConfig
+	38, // 31: memos.api.v1.InstanceSetting.AISetting.transcription:type_name -> memos.api.v1.InstanceSetting.TranscriptionConfig
+	36, // 32: memos.api.v1.InstanceSetting.AISetting.text_generation:type_name -> memos.api.v1.InstanceSetting.TextGenerationConfig
+	3,  // 33: memos.api.v1.InstanceSetting.AIProviderConfig.type:type_name -> memos.api.v1.InstanceSetting.AIProviderType
+	45, // 34: memos.api.v1.InstanceSetting.AIProviderConfig.custom_headers:type_name -> memos.api.v1.InstanceSetting.AIProviderConfig.CustomHeadersEntry
+	0,  // 35: memos.api.v1.InstanceSetting.AccessSetting.access_mode:type_name -> memos.api.v1.InstanceAccessMode
+	32, // 36: memos.api.v1.InstanceSetting.TagsSetting.TagsEntry.value:type_name -> memos.api.v1.InstanceSetting.TagMetadata
+	16, // 37: memos.api.v1.InstanceService.PreviewStylePack:input_type -> memos.api.v1.PreviewStylePackRequest
+	18, // 38: memos.api.v1.InstanceService.ValidateStylePack:input_type -> memos.api.v1.ValidateStylePackRequest
+	21, // 39: memos.api.v1.InstanceService.ListStylePacks:input_type -> memos.api.v1.ListStylePacksRequest
+	23, // 40: memos.api.v1.InstanceService.InstallStylePack:input_type -> memos.api.v1.InstallStylePackRequest
+	24, // 41: memos.api.v1.InstanceService.UpdateStylePack:input_type -> memos.api.v1.UpdateStylePackRequest
+	25, // 42: memos.api.v1.InstanceService.DeleteStylePack:input_type -> memos.api.v1.DeleteStylePackRequest
+	26, // 43: memos.api.v1.InstanceService.ExportStylePack:input_type -> memos.api.v1.ExportStylePackRequest
+	6,  // 44: memos.api.v1.InstanceService.GetInstanceProfile:input_type -> memos.api.v1.GetInstanceProfileRequest
+	8,  // 45: memos.api.v1.InstanceService.GetInstanceSetting:input_type -> memos.api.v1.GetInstanceSettingRequest
+	9,  // 46: memos.api.v1.InstanceService.BatchGetInstanceSettings:input_type -> memos.api.v1.BatchGetInstanceSettingsRequest
+	11, // 47: memos.api.v1.InstanceService.UpdateInstanceSetting:input_type -> memos.api.v1.UpdateInstanceSettingRequest
+	12, // 48: memos.api.v1.InstanceService.TestInstanceEmailSetting:input_type -> memos.api.v1.TestInstanceEmailSettingRequest
+	13, // 49: memos.api.v1.InstanceService.GetInstanceStats:input_type -> memos.api.v1.GetInstanceStatsRequest
+	17, // 50: memos.api.v1.InstanceService.PreviewStylePack:output_type -> memos.api.v1.PreviewStylePackResponse
+	20, // 51: memos.api.v1.InstanceService.ValidateStylePack:output_type -> memos.api.v1.ValidateStylePackResponse
+	22, // 52: memos.api.v1.InstanceService.ListStylePacks:output_type -> memos.api.v1.ListStylePacksResponse
+	15, // 53: memos.api.v1.InstanceService.InstallStylePack:output_type -> memos.api.v1.StylePack
+	15, // 54: memos.api.v1.InstanceService.UpdateStylePack:output_type -> memos.api.v1.StylePack
+	53, // 55: memos.api.v1.InstanceService.DeleteStylePack:output_type -> google.protobuf.Empty
+	27, // 56: memos.api.v1.InstanceService.ExportStylePack:output_type -> memos.api.v1.ExportStylePackResponse
+	5,  // 57: memos.api.v1.InstanceService.GetInstanceProfile:output_type -> memos.api.v1.InstanceProfile
+	7,  // 58: memos.api.v1.InstanceService.GetInstanceSetting:output_type -> memos.api.v1.InstanceSetting
+	10, // 59: memos.api.v1.InstanceService.BatchGetInstanceSettings:output_type -> memos.api.v1.BatchGetInstanceSettingsResponse
+	7,  // 60: memos.api.v1.InstanceService.UpdateInstanceSetting:output_type -> memos.api.v1.InstanceSetting
+	53, // 61: memos.api.v1.InstanceService.TestInstanceEmailSetting:output_type -> google.protobuf.Empty
+	14, // 62: memos.api.v1.InstanceService.GetInstanceStats:output_type -> memos.api.v1.InstanceStats
+	50, // [50:63] is the sub-list for method output_type
+	37, // [37:50] is the sub-list for method input_type
+	37, // [37:37] is the sub-list for extension type_name
+	37, // [37:37] is the sub-list for extension extendee
+	0,  // [0:37] is the sub-list for field type_name
 }
 
 func init() { file_api_v1_instance_service_proto_init() }
@@ -3386,9 +3711,9 @@ func file_api_v1_instance_service_proto_init() {
 		(*InstanceSetting_AiSetting)(nil),
 		(*InstanceSetting_AccessSetting_)(nil),
 	}
-	file_api_v1_instance_service_proto_msgTypes[14].OneofWrappers = []any{}
-	file_api_v1_instance_service_proto_msgTypes[18].OneofWrappers = []any{}
-	file_api_v1_instance_service_proto_msgTypes[19].OneofWrappers = []any{
+	file_api_v1_instance_service_proto_msgTypes[19].OneofWrappers = []any{}
+	file_api_v1_instance_service_proto_msgTypes[23].OneofWrappers = []any{}
+	file_api_v1_instance_service_proto_msgTypes[24].OneofWrappers = []any{
 		(*InstanceSetting_Storage_S3Config_)(nil),
 	}
 	type x struct{}
@@ -3397,7 +3722,7 @@ func file_api_v1_instance_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_instance_service_proto_rawDesc), len(file_api_v1_instance_service_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   38,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

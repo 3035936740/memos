@@ -128,7 +128,6 @@ const SPRITES: Partial<Record<ParticleKind, string[]>> = {
   bubble: [".XX.", "X..X", "X..X", ".XX."],
   rain: ["X", "X", "X"],
   star: [".X.", "XXX", ".X."],
-  comet: ["XXX...", "..XXX.", "....XX"],
   ember: ["XX", "XX"],
   leaf: ["..XX", ".XXX", "XXX.", "X..."],
   ink: [".X.", "XXX", ".X."],
@@ -223,7 +222,7 @@ const spawn = (kind: ParticleKind, look: ParticleLook, width: number, height: nu
       break;
     case "comet":
       particle.x = random(width * 0.3, width);
-      particle.y = random(0, height * 0.3);
+      particle.y = -24;
       particle.vx = -random(6, 9);
       particle.vy = random(2, 3.5);
       particle.size = random(40, 70);
@@ -556,6 +555,22 @@ const drawWrappedCandy = (context: CanvasRenderingContext2D, particle: Particle)
   context.drawImage(sprite, -side / 2, -side / 2, side, side);
 };
 
+/** A square head leads a stepped tail aligned opposite the flight direction. */
+const drawPixelComet = (context: CanvasRenderingContext2D, particle: Particle) => {
+  const speed = Math.hypot(particle.vx, particle.vy);
+  const length = Math.min(particle.size, particle.age * speed);
+  const unit = 2;
+  const opacity = context.globalAlpha * Math.min(1, (particle.life - particle.age) / 18);
+  for (let distance = length; distance >= unit; distance -= unit) {
+    const x = Math.round(((-particle.vx / speed) * distance) / unit) * unit;
+    const y = Math.round(((-particle.vy / speed) * distance) / unit) * unit;
+    context.globalAlpha = opacity * (1 - distance / particle.size) ** 2 * 0.8;
+    context.fillRect(x, y, unit, unit);
+  }
+  context.globalAlpha = opacity;
+  context.fillRect(-unit, -unit, unit * 2, unit * 2);
+};
+
 const drawComet = (context: CanvasRenderingContext2D, particle: Particle) => {
   const { size, vx, vy, age, life } = particle;
   const length = Math.min(size, age * Math.hypot(vx, vy) * 0.9);
@@ -627,6 +642,11 @@ const drawParticle = (context: CanvasRenderingContext2D, particle: Particle, loo
     context.textBaseline = "middle";
     if (kind === "code" && Math.random() < 0.05) particle.glyph = pick([...CODE_GLYPHS]);
     context.fillText(particle.glyph, 0, 0);
+    return;
+  }
+
+  if (kind === "comet" && look === "pixel") {
+    drawPixelComet(context, particle);
     return;
   }
 
@@ -836,10 +856,11 @@ const ReactionCanvas = ({ layer, kinds, look, density, getEnergy }: Props) => {
         const fade = particle.oneOff ? Math.max(0, 1 - particle.age / particle.life) : 1;
         context.save();
         context.globalAlpha = Math.min(1, twinkle * fade) * particle.opacity * (FAINT_KINDS.includes(particle.kind) ? 0.55 : 1);
-        context.translate(particle.x, particle.y);
+        const pixelComet = activeLook === "pixel" && particle.kind === "comet";
+        context.translate(pixelComet ? Math.round(particle.x) : particle.x, pixelComet ? Math.round(particle.y) : particle.y);
         if (!UPRIGHT_KINDS.includes(particle.kind)) context.rotate(particle.rotation);
         const swell = 1 + energy * 0.5;
-        if (swell !== 1) context.scale(swell, swell);
+        if (swell !== 1 && !pixelComet) context.scale(swell, swell);
         drawParticle(context, particle, activeLook, dark);
         context.restore();
         particles[alive++] = particle;

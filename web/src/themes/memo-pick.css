@@ -1,0 +1,374 @@
+/* Batch picking (PagedMemoList/MemoSelection): while picking, a rail runs down the left of each card with a mark
+   at its top. Nothing else in the app styles these elements, so each style draws its own here: a quiet track and a
+   round mark by default, then a version in every style's own material. */
+
+html [data-memo-pick-rail] {
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  transition: background-color 150ms ease;
+}
+
+html [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
+html [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+html [data-memo-pick-mark] {
+  box-sizing: border-box;
+  border: 2px solid color-mix(in oklch, var(--foreground) 35%, transparent);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--primary-foreground);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+html [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: var(--primary);
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 25%, transparent);
+}
+
+html [data-memo-pick-check] {
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+html [data-memo-selectable][data-selected] [data-memo-pick-check] {
+  opacity: 1;
+  transform: none;
+}
+
+html [data-memo-selection-wash] {
+  border-radius: var(--sb-radius, 0.75rem);
+  background: color-mix(in oklch, var(--primary) 5%, transparent);
+}
+
+/* Glass: a frosted strip and a glass bead that glows in the theme colour once picked. */
+
+html[data-style="glass"] [data-memo-pick-rail] {
+  border: 1px solid var(--sb-glass-edge);
+  background: linear-gradient(180deg, rgb(255 255 255 / 34%) 0%, rgb(255 255 255 / 10%) 100%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+html[data-style="glass"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 46%) 0%, rgb(255 255 255 / 18%) 100%);
+}
+
+html[data-style="glass"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: color-mix(in oklch, var(--primary) 26%, transparent);
+}
+
+html[data-style="glass"] [data-memo-pick-mark] {
+  border: 1px solid var(--sb-glass-sheen);
+  background: radial-gradient(circle at 35% 30%, rgb(255 255 255 / 90%) 0%, rgb(255 255 255 / 30%) 60%, rgb(255 255 255 / 12%) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--sb-glass-sheen),
+    0 2px 6px rgb(0 0 0 / 15%);
+}
+
+html[data-style="glass"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: var(--sb-glass-sheen);
+  background: radial-gradient(circle at 35% 30%, color-mix(in oklch, var(--primary) 35%, white) 0%, var(--primary) 70%);
+  box-shadow:
+    inset 0 1px 0 var(--sb-glass-sheen),
+    0 0 12px color-mix(in oklch, var(--primary) 60%, transparent);
+}
+
+/* Neumorphism: a groove pressed into the surface and a raised knob that sinks into it when picked. */
+
+html[data-style="neumorphism"] [data-memo-pick-rail] {
+  background: var(--sb-neu-base);
+  box-shadow: var(--sb-neu-pressed);
+}
+
+html[data-style="neumorphism"] [data-memo-selectable]:hover > [data-memo-pick-rail],
+html[data-style="neumorphism"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: var(--sb-neu-base);
+}
+
+html[data-style="neumorphism"] [data-memo-pick-mark] {
+  border: 0;
+  background: var(--sb-neu-base);
+  color: var(--primary);
+  box-shadow:
+    3px 3px 6px var(--sb-neu-dark),
+    -3px -3px 6px var(--sb-neu-light);
+}
+
+html[data-style="neumorphism"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  background: var(--sb-neu-base);
+  box-shadow: var(--sb-neu-pressed);
+}
+
+/* Frutiger Aero: an aqua jelly strip and a soap bubble that turns into a green gel button when picked. */
+
+html[data-style="aero"] [data-memo-pick-rail],
+html[data-style="aero"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  border: 1px solid rgb(255 255 255 / 90%);
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 85%) 0%,
+    rgb(200 236 255 / 60%) 45%,
+    rgb(120 200 245 / 45%) 55%,
+    rgb(220 245 255 / 70%) 100%
+  );
+  box-shadow: 0 1px 3px rgb(0 80 150 / 20%);
+}
+
+html[data-style="aero"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: linear-gradient(
+    90deg,
+    rgb(210 249 176 / 90%) 0%,
+    rgb(119 216 79 / 75%) 48%,
+    rgb(68 173 44 / 75%) 52%,
+    rgb(149 230 111 / 85%) 100%
+  );
+}
+
+html[data-style="aero"] [data-memo-pick-mark] {
+  border: 1px solid rgb(255 255 255 / 90%);
+  background: var(--sb-aero-bubble) center / contain no-repeat, rgb(255 255 255 / 25%);
+  color: #ffffff;
+}
+
+html[data-style="aero"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: #3a9a2a;
+  background: var(--sb-aero-green);
+  box-shadow: 0 0 8px rgb(119 216 79 / 70%);
+}
+
+/* Y2K: no rail, just the Windows 98 check box: white, sunk two lines deep, a black tick. */
+
+html[data-style="y2k"] [data-memo-pick-rail],
+html[data-style="y2k"] [data-memo-selectable]:hover > [data-memo-pick-rail],
+html[data-style="y2k"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: transparent;
+}
+
+html[data-style="y2k"] [data-memo-pick-mark],
+html[data-style="y2k"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  width: 13px;
+  height: 13px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-window);
+  color: var(--w98-window-text);
+  box-shadow: var(--w98-sunken);
+}
+
+html[data-style="y2k"] [data-memo-pick-check] {
+  width: 9px;
+  height: 9px;
+  transition: none;
+}
+
+/* Y2K's Windows XP legend: the Luna check box, a pale gradient square in a blue frame with a green tick. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-memo-pick-mark],
+html[data-style="y2k"][data-legend="cyber"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border: 1px solid #1c5180;
+  background: linear-gradient(135deg, #dcdcd7 0%, #ffffff 100%);
+  color: #21a121;
+  box-shadow: none;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-memo-selectable]:hover [data-memo-pick-mark] {
+  box-shadow: inset 0 0 0 2px #f8b636;
+}
+
+/* Vaporwave: a pinstriped strip in an ink frame and a square box with a hard drop, filled pink when picked. */
+
+html[data-style="vaporwave"] [data-memo-pick-rail] {
+  border: 2px solid var(--sb-vw-ink);
+  border-radius: 0;
+  background: var(--sb-vw-stripes);
+}
+
+html[data-style="vaporwave"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: var(--sb-vw-window);
+}
+
+html[data-style="vaporwave"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: var(--sb-vw-lavender);
+}
+
+html[data-style="vaporwave"] [data-memo-pick-mark] {
+  border: 2px solid var(--sb-vw-ink);
+  border-radius: 0;
+  background: var(--sb-vw-window);
+  color: var(--sb-vw-ink);
+  box-shadow: 2px 2px 0 var(--sb-vw-drop);
+}
+
+html[data-style="vaporwave"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: var(--sb-vw-ink);
+  background: var(--sb-vw-pink);
+  box-shadow: 2px 2px 0 var(--sb-vw-drop);
+}
+
+/* Pixel: a framed strip and a block with a hard shadow that turns coin yellow when picked. */
+
+html[data-style="pixel"] [data-memo-pick-rail] {
+  border: 3px solid var(--sb-px-ink);
+  border-radius: 0;
+  background: var(--card);
+}
+
+html[data-style="pixel"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: color-mix(in oklch, var(--sb-px-coin) 20%, var(--card));
+}
+
+html[data-style="pixel"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: color-mix(in oklch, var(--sb-px-coin) 45%, var(--card));
+}
+
+html[data-style="pixel"] [data-memo-pick-mark] {
+  border: 3px solid var(--sb-px-ink);
+  border-radius: 0;
+  background: var(--card);
+  color: var(--sb-px-ink);
+  box-shadow: 2px 2px 0 var(--sb-px-ink);
+}
+
+html[data-style="pixel"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: var(--sb-px-ink);
+  background: var(--sb-px-coin);
+  box-shadow: 2px 2px 0 var(--sb-px-ink);
+}
+
+html[data-style="pixel"] [data-memo-pick-check],
+html[data-style="pixel"] [data-memo-selectable][data-selected] [data-memo-pick-check] {
+  transform: none;
+  transition: none;
+  shape-rendering: crispEdges;
+}
+
+/* Hand-drawn: a pencilled dashed line, a wobbly ink ring and, once picked, a tick drawn in the theme's ink. */
+
+html[data-style="handdrawn"] [data-memo-pick-rail],
+html[data-style="handdrawn"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  border-radius: 0;
+  background: repeating-linear-gradient(180deg, var(--sb-ink) 0 6px, transparent 6px 11px) center top / 1.5px 100% no-repeat;
+}
+
+html[data-style="handdrawn"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: repeating-linear-gradient(180deg, var(--primary) 0 6px, transparent 6px 11px) center top / 2px 100% no-repeat;
+}
+
+html[data-style="handdrawn"] [data-memo-pick-mark],
+html[data-style="handdrawn"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border: 0;
+  background: var(--card);
+  color: var(--primary);
+  box-shadow: none;
+}
+
+html[data-style="handdrawn"] [data-memo-pick-mark]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--sb-ink);
+  border-radius: 50% 45% 55% 48% / 48% 55% 45% 52%;
+  filter: url(#sb-sketch-2);
+}
+
+html[data-style="handdrawn"] [data-memo-selectable][data-selected] [data-memo-pick-mark]::before {
+  border-color: var(--primary);
+}
+
+html[data-style="handdrawn"] [data-memo-selectable][data-selected] [data-memo-pick-check] {
+  transform: rotate(-10deg) scale(1.35);
+}
+
+/* Developer: a box-drawing line down the side and a [ ] that becomes [x]. */
+
+html[data-style="terminal"] [data-memo-pick-rail],
+html[data-style="terminal"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  border-radius: 0;
+  background: linear-gradient(var(--sb-line), var(--sb-line)) center / 1px 100% no-repeat;
+}
+
+html[data-style="terminal"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: linear-gradient(var(--sb-tui-green), var(--sb-tui-green)) center / 1px 100% no-repeat;
+}
+
+html[data-style="terminal"] [data-memo-pick-mark],
+html[data-style="terminal"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  width: auto;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 0;
+  background: var(--card);
+  color: var(--sb-tui-dim);
+  box-shadow: none;
+  font-family: var(--sb-font-body);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+html[data-style="terminal"] [data-memo-pick-mark]::before {
+  content: "[ ]";
+  white-space: pre;
+}
+
+html[data-style="terminal"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  color: var(--sb-tui-green);
+}
+
+html[data-style="terminal"] [data-memo-selectable][data-selected] [data-memo-pick-mark]::before {
+  content: "[x]";
+}
+
+html[data-style="terminal"] [data-memo-pick-check] {
+  display: none;
+}
+
+/* Golden legend: a fine gold thread and a gold-rimmed seal, struck in gold when picked. */
+
+html[data-style="golden"] [data-memo-pick-rail],
+html[data-style="golden"] [data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: linear-gradient(var(--sb-gold-line), var(--sb-gold-line)) center / 1px 100% no-repeat;
+}
+
+html[data-style="golden"] [data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background:
+    linear-gradient(var(--sb-gold-line), var(--sb-gold-line)) center / 1px 100% no-repeat,
+    linear-gradient(180deg, transparent 0%, var(--sb-gold-glow) 20%, var(--sb-gold-glow) 80%, transparent 100%);
+}
+
+html[data-style="golden"] [data-memo-pick-mark] {
+  border: 1.5px solid var(--sb-gold-line);
+  background: var(--card);
+  color: #2a1d05;
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 8px var(--sb-gold-glow);
+}
+
+html[data-style="golden"] [data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: #f2c14e;
+  background: linear-gradient(135deg, #f7d77a 0%, #c8952c 100%);
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 12px var(--sb-gold-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-memo-pick-rail],
+  [data-memo-pick-mark],
+  [data-memo-pick-check] {
+    transition: none;
+  }
+}

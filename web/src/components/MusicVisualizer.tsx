@@ -307,8 +307,8 @@ const MusicVisualizerRenderer = ({ kind, variant, className }: Props & { kind: V
 };
 
 const MusicVisualizer = memo((props: Props) => {
-  const { feedLayout, blogStyle } = useView();
-  const kind = (isStyledBlog(feedLayout) && KIND_BY_STYLE[blogStyle]) || "bars";
+  const { feedLayout, sceneStyle } = useView();
+  const kind = (isStyledBlog(feedLayout) && KIND_BY_STYLE[sceneStyle]) || "bars";
   // Each drawing mode owns its DOM refs and animation lifecycle. A previous
   // mode's cleanup must never apply its clip/transform to the new mode's nodes.
   return <MusicVisualizerRenderer key={`${kind}:${props.variant}`} kind={kind} {...props} />;

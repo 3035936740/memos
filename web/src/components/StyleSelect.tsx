@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useBlogProgress } from "@/utils/blog-progress";
 import { BLOG_STYLE_OPTIONS, type BlogStyle, isBlogStyle, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
-import { stylePackLabel } from "@/utils/style-packs";
+import { stylePackLabel, stylePackScheme } from "@/utils/style-packs";
 import { computeFusion, elementName, legendaryName } from "@/utils/style-reactions";
 
 const STYLE_ICONS: Record<BlogStyle, ReactElement> = {
@@ -62,7 +62,11 @@ const StyleSelect = ({ className, iconOnly = false }: Props) => {
     (option) => !SECRET_BLOG_STYLES.includes(option.value) || progress.achievements.includes(option.value) || styleId === option.value,
   ).map((option) => ({ ...option, label: t(option.labelKey) }));
   // Installed community packs follow the built-in styles.
-  const packOptions = stylePacks.map((pack) => ({ value: pack.id, label: stylePackLabel(pack, i18n.language) }));
+  const packOptions = stylePacks.map((pack) => ({
+    value: pack.id,
+    label: stylePackLabel(pack, i18n.language),
+    scheme: stylePackScheme(pack),
+  }));
   const items = [...options, ...packOptions];
   const currentLabel = items.find((option) => option.value === styleId)?.label ?? t("blog-style.default");
   // The button's label names the style × theme reaction that is on, if any.
@@ -124,6 +128,11 @@ const StyleSelect = ({ className, iconOnly = false }: Props) => {
               <div className="flex items-center gap-2">
                 {STYLE_PACK_ICON}
                 <span>{option.label}</span>
+                {option.scheme && (
+                  <span className="text-xs text-muted-foreground">
+                    {t(option.scheme === "dark" ? "style-packs.dark-only" : "style-packs.light-only")}
+                  </span>
+                )}
               </div>
             </SelectItem>
           ))}

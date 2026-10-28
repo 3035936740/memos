@@ -169,7 +169,8 @@
       "delete-title": "刪除選取的 {{count}} 則？",
       "delete-description": "刪除後無法復原，附件也會一起刪除。",
       "privacy-description": "選取的備忘錄將對所有人公開，裡面好像有這些資訊：",
-      "start-with": "從這則開始批次整理：{{title}}"
+      "start-with": "從這則開始批次整理：{{title}}",
+      "toolbar": "批次操作"
     },
     "post-look": {
       "text": "作者為這篇文章選了外觀：{{look}}。",
@@ -887,6 +888,10 @@
     "enabled": "為所有訪客開啟「{{name}}」",
     "reacts-like": "和「{{style}}」一樣會跟配色起反應",
     "no-reactions": "不和配色起反應",
+    "scheme-light": "只為亮色配色設計：用暗色配色的訪客會暫時看到對應的亮色配色",
+    "scheme-dark": "只為暗色配色設計：用亮色配色的訪客會暫時看到對應的暗色配色",
+    "light-only": "僅亮色",
+    "dark-only": "僅暗色",
     "update": "換新版本",
     "export": "匯出",
     "installed": "已安裝「{{name}}」，開啟後訪客才能看到",
@@ -899,7 +904,7 @@
     "delete-title": "刪除「{{name}}」？",
     "delete-description": "正在用這個風格的訪客、新訪客預設風格和指定了它的文章，都會改回預設風格。",
     "rules": "為了安全，風格包不能帶腳本，也不能從外部網站載入任何東西；安裝時伺服器會檢查並拒絕不合規的檔案。",
-    "format-link": "風格包格式說明"
+    "format-link": "風格包製作說明"
   },
   "blog-import": {
     "main-site": "主站匯入",

@@ -95,6 +95,7 @@ func init() {
 	viper.AutomaticEnv()
 
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(stylePackCommand())
 }
 
 func runServer() error {

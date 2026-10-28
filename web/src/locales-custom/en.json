@@ -171,7 +171,8 @@
       "delete-title": "Delete {{count}} memos?",
       "delete-description": "This cannot be undone. Their attachments are deleted too.",
       "privacy-description": "Anyone will be able to see the selected memos. They seem to contain:",
-      "start-with": "Start picking with: {{title}}"
+      "start-with": "Start picking with: {{title}}",
+      "toolbar": "Batch actions"
     },
     "post-look": {
       "text": "The author picked a look for this post: {{look}}.",
@@ -889,6 +890,10 @@
     "enabled": "Turn on {{name}} for all visitors",
     "reacts-like": "Reacts to themes like {{style}}",
     "no-reactions": "No theme reactions",
+    "scheme-light": "Drawn for light themes only: visitors on a dark theme see its light counterpart while the pack shows",
+    "scheme-dark": "Drawn for dark themes only: visitors on a light theme see its dark counterpart while the pack shows",
+    "light-only": "Light only",
+    "dark-only": "Dark only",
     "update": "Replace with new version",
     "export": "Export",
     "installed": "Installed {{name}}; turn it on for visitors to see it",
@@ -901,7 +906,7 @@
     "delete-title": "Delete {{name}}?",
     "delete-description": "Visitors wearing it, the newcomers' default style and posts that name it all go back to the default style.",
     "rules": "For safety, a style pack can't run scripts or load anything from other sites; the server checks each file on install and refuses ones that break these rules.",
-    "format-link": "The style pack format"
+    "format-link": "How to make a style pack"
   },
   "blog-import": {
     "main-site": "Main site import",

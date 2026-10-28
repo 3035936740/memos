@@ -19,7 +19,10 @@ const AttachmentMediaCard = ({ item, onPreview }: { item: AttachmentLibraryMedia
     ?.value.durationSeconds;
 
   return (
-    <article className="overflow-hidden rounded-[20px] border border-border/60 bg-background/90 shadow-sm shadow-black/[0.03]">
+    <article
+      data-attachment-card=""
+      className="overflow-hidden rounded-[20px] border border-border/60 bg-background/90 shadow-sm shadow-black/[0.03]"
+    >
       <div className="relative block w-full cursor-pointer text-left" onClick={onPreview}>
         <div className="relative aspect-[5/4] overflow-hidden bg-muted/40">
           {item.kind === "video" ? (
@@ -57,7 +60,7 @@ const AttachmentMediaCard = ({ item, onPreview }: { item: AttachmentLibraryMedia
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 p-3">
+      <div data-attachment-caption="" className="flex flex-col gap-2 p-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 truncate text-sm font-medium leading-5 text-foreground" title={item.filename}>
             {item.filename}

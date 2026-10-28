@@ -100,8 +100,8 @@ const BurningThought = ({ thought, onDone }: { thought: Thought; onDone: (id: nu
  */
 const Void = () => {
   const t = useTranslate();
-  const { feedLayout, blogStyle } = useView();
-  const effect = voidEffectFor(isStyledBlog(feedLayout) ? blogStyle : undefined);
+  const { feedLayout, sceneStyle } = useView();
+  const effect = voidEffectFor(isStyledBlog(feedLayout) ? sceneStyle : undefined);
   const [draft, setDraft] = useState("");
   const [burning, setBurning] = useState<Thought[]>([]);
   const [count, setCount] = useState(readVoidCount);

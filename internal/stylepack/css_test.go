@@ -34,7 +34,7 @@ func TestFontsAndSVGMustUseOwnedResources(t *testing.T) {
 	out, err := Compile("test-pack", "v", `@font-face{font-family:"Pack Font";src:url(asset:font.woff2) format("woff2")} .a{font-family:"Pack Font";background:url(asset:art.svg)}`, assets)
 	require.NoError(t, err)
 	require.Contains(t, out, `"memos-pack-test-pack-Pack-Font"`)
-	for _, source := range []string{`@font-face{font-family:X;src:local(Arial)}`, `@font-face{font-family:X;src:url(data:font/woff2;base64,AAAA)}`, `.a{cursor:url(asset:art.svg),auto}`, `.a{--image:url(asset:art.svg)}`} {
+	for _, source := range []string{`@font-face{font-family:X;src:local(Arial)}`, `@font-face{font-family:X;src:url(data:font/woff2;base64,AAAA)}`} {
 		_, err = Compile("test-pack", "v", source, assets)
 		require.Error(t, err)
 	}

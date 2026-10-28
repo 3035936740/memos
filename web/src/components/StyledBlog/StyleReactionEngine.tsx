@@ -107,7 +107,7 @@ interface Banner {
 const StyleReactionEngine = () => {
   const t = useTranslate();
   const { generalSetting, isInitialized } = useInstance();
-  const { feedLayout, blogStyle, applyFirstVisitStyle, resetToDefaults } = useView();
+  const { feedLayout, blogStyle, sceneStyle, applyFirstVisitStyle, resetToDefaults } = useView();
   const { getEnergy, resetPrefs } = useMusicEffects();
   useStylePackLoader();
   const progress = useBlogProgress();
@@ -264,7 +264,7 @@ const StyleReactionEngine = () => {
 
   return (
     <>
-      {styled && activeStyle === "vaporwave" && fusion.legendary?.id !== "outrun" && (
+      {styled && sceneStyle === "vaporwave" && fusion.legendary?.id !== "outrun" && (
         <Suspense fallback={null}>
           <VaporwaveSkyline />
         </Suspense>
@@ -275,7 +275,7 @@ const StyleReactionEngine = () => {
           <ReactionCanvas layer="front" kinds={NO_KINDS} look={look} density={1} getEnergy={getEnergy} />
         </>
       )}
-      {styled && activeStyle === "pixel" && <PixelBoss />}
+      {styled && sceneStyle === "pixel" && <PixelBoss />}
       {styled && transformations.traveler && (
         <div data-travel-stamp="" aria-hidden className="pointer-events-none fixed bottom-6 end-6 z-[4]" />
       )}

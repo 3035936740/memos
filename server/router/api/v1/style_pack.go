@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"google.golang.org/grpc/codes"
@@ -32,7 +34,15 @@ func (s *APIV1Service) stylePackAdmin(ctx context.Context) (*store.User, error) 
 func stylePackMetadata(p *store.StylePack) *v1pb.StylePack {
 	m := stylepack.Manifest{}
 	_ = json.Unmarshal([]byte(p.ManifestJSON), &m)
-	return &v1pb.StylePack{Id: p.ID, Name: m.Name, ReactsLike: m.ReactsLike, ColorScheme: m.ColorScheme, CssUrl: "/style-packs/" + p.ID + "/" + p.Version + ".css", Version: p.Version, Enabled: p.Enabled}
+	meta := &v1pb.StylePack{Id: p.ID, Name: m.Name, Description: m.Description, MinVersion: m.MinVersion, ReactsLike: m.ReactsLike, ColorScheme: m.ColorScheme, CssUrl: "/style-packs/" + p.ID + "/" + p.Version + ".css", Version: p.Version, Enabled: p.Enabled}
+	if m.Preview != "" {
+		parts := strings.Split(m.Preview, "/")
+		for i := range parts {
+			parts[i] = url.PathEscape(parts[i])
+		}
+		meta.PreviewUrl = "/style-packs/" + p.ID + "/" + p.Version + "/assets/" + strings.Join(parts, "/")
+	}
+	return meta
 }
 func (s *APIV1Service) ListStylePacks(ctx context.Context, r *v1pb.ListStylePacksRequest) (*v1pb.ListStylePacksResponse, error) {
 	if r.IncludeDisabled {
@@ -128,11 +138,23 @@ func (s *APIV1Service) ExportStylePack(ctx context.Context, r *v1pb.ExportStyleP
 }
 
 func RegisterStylePackResources(e *echo.Echo, s *APIV1Service) {
-	serve := func(c *echo.Context, name, version string) error {
+	serve := func(c *echo.Context, name, version string, preview bool) error {
+		if preview {
+			c.Response().Header().Set("Cache-Control", "private, no-store")
+			if !s.validStylePreview(c.Param("token"), c.Param("id"), version, time.Now()) {
+				return c.NoContent(404)
+			}
+		}
 		if strings.HasPrefix(name, "__") && name != "__compiled.css" {
 			return c.NoContent(404)
 		}
-		a, err := s.Store.StylePackResource(c.Request().Context(), c.Param("id"), version, name, false)
+		var a *stylepack.Asset
+		var err error
+		if preview {
+			a, err = s.Store.StylePackPreviewResource(c.Request().Context(), c.Param("id"), version, name)
+		} else {
+			a, err = s.Store.StylePackResource(c.Request().Context(), c.Param("id"), version, name, false)
+		}
 		if err != nil {
 			return c.NoContent(500)
 		}
@@ -140,27 +162,50 @@ func RegisterStylePackResources(e *echo.Echo, s *APIV1Service) {
 			return c.NoContent(404)
 		}
 		h := c.Response().Header()
-		h.Set("Cache-Control", "public, max-age=31536000, immutable")
+		if !preview {
+			h.Set("Cache-Control", "public, max-age=31536000, immutable")
+		}
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("Cross-Origin-Resource-Policy", "same-origin")
 		h.Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox")
 		if a.ContentType == "image/svg+xml" {
 			h.Set("Content-Disposition", `inline; filename="image.svg"`)
 		}
-		return c.Blob(http.StatusOK, a.ContentType, a.Content)
+		content := a.Content
+		if preview && name == "__compiled.css" {
+			original := "/style-packs/" + c.Param("id") + "/" + version + "/assets/"
+			replacement := "/style-packs/preview/" + c.Param("token") + "/" + c.Param("id") + "/" + version + "/assets/"
+			content = []byte(strings.ReplaceAll(string(content), original, replacement))
+		}
+		return c.Blob(http.StatusOK, a.ContentType, content)
 	}
 	e.GET("/style-packs/:id/:version", func(c *echo.Context) error {
 		v := c.Param("version")
 		if !strings.HasSuffix(v, ".css") {
 			return c.NoContent(404)
 		}
-		return serve(c, "__compiled.css", strings.TrimSuffix(v, ".css"))
+		return serve(c, "__compiled.css", strings.TrimSuffix(v, ".css"), false)
 	})
 	e.GET("/style-packs/:id/:version/assets/*", func(c *echo.Context) error {
 		name := c.Param("*")
 		if strings.HasPrefix(name, "__") {
 			return c.NoContent(404)
 		}
-		return serve(c, name, c.Param("version"))
+		return serve(c, name, c.Param("version"), false)
+	})
+	e.GET("/style-packs/preview/:token/:id/:version", func(c *echo.Context) error {
+		v := c.Param("version")
+		c.Response().Header().Set("Cache-Control", "private, no-store")
+		if !strings.HasSuffix(v, ".css") {
+			return c.NoContent(404)
+		}
+		return serve(c, "__compiled.css", strings.TrimSuffix(v, ".css"), true)
+	})
+	e.GET("/style-packs/preview/:token/:id/:version/assets/*", func(c *echo.Context) error {
+		if strings.HasPrefix(c.Param("*"), "__") {
+			c.Response().Header().Set("Cache-Control", "private, no-store")
+			return c.NoContent(404)
+		}
+		return serve(c, c.Param("*"), c.Param("version"), true)
 	})
 }

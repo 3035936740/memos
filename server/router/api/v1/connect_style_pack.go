@@ -9,6 +9,22 @@ import (
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 )
 
+func (s *ConnectServiceHandler) PreviewStylePack(ctx context.Context, req *connect.Request[v1pb.PreviewStylePackRequest]) (*connect.Response[v1pb.PreviewStylePackResponse], error) {
+	response, err := s.APIV1Service.PreviewStylePack(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(response), nil
+}
+
+func (s *ConnectServiceHandler) ValidateStylePack(ctx context.Context, req *connect.Request[v1pb.ValidateStylePackRequest]) (*connect.Response[v1pb.ValidateStylePackResponse], error) {
+	response, err := s.APIV1Service.ValidateStylePack(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(response), nil
+}
+
 func (s *ConnectServiceHandler) ListStylePacks(ctx context.Context, req *connect.Request[v1pb.ListStylePacksRequest]) (*connect.Response[v1pb.ListStylePacksResponse], error) {
 	resp, err := s.APIV1Service.ListStylePacks(ctx, req.Msg)
 	if err != nil {

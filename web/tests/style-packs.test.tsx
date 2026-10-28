@@ -4,13 +4,15 @@ import { afterEach, describe, expect, it } from "vitest";
 import { useView, ViewProvider } from "@/contexts/ViewContext";
 import { StylePackSchema } from "@/types/proto/api/v1/instance_service_pb";
 import { postLookOf } from "@/utils/post-look";
-import { applyStylePackStylesheet, isStylePackId, stylePackBase, stylePackLabel } from "@/utils/style-packs";
+import { applyStylePackStylesheet, isStylePackId, stylePackBase, stylePackLabel, stylePackScheme } from "@/utils/style-packs";
+import { loadTheme } from "@/utils/theme";
 
-const pack = (id: string, reactsLike = "") =>
+const pack = (id: string, reactsLike = "", colorScheme = "") =>
   create(StylePackSchema, {
     id,
     name: { en: "Sunset paper", "zh-Hans": "夕阳信纸" },
     reactsLike,
+    colorScheme,
     cssUrl: `/style-packs/${id}/1.css`,
     enabled: true,
   });
@@ -30,6 +32,13 @@ describe("style pack helpers", () => {
     expect(stylePackBase(pack("sunset-paper", "handdrawn"))).toBe("handdrawn");
     expect(stylePackBase(pack("sunset-paper", "not-a-style"))).toBe("default");
     expect(stylePackBase(undefined)).toBe("default");
+  });
+
+  it("reads the one scheme a pack is drawn for", () => {
+    expect(stylePackScheme(pack("sunset-paper", "", "dark"))).toBe("dark");
+    expect(stylePackScheme(pack("sunset-paper", "", "light"))).toBe("light");
+    expect(stylePackScheme(pack("sunset-paper"))).toBeUndefined();
+    expect(stylePackScheme(undefined)).toBeUndefined();
   });
 
   it("names a pack in the reader's language", () => {
@@ -65,6 +74,7 @@ describe("ViewContext with style packs", () => {
   afterEach(() => {
     localStorage.clear();
     delete document.documentElement.dataset.style;
+    delete document.documentElement.dataset.stylePack;
   });
 
   const mount = () => render(<Probe />, { wrapper: ViewProvider });
@@ -82,6 +92,30 @@ describe("ViewContext with style packs", () => {
     act(() => view.setBlogStyle("glass"));
     expect(view.styleId).toBe("glass");
     expect(view.stylePack).toBeUndefined();
+  });
+
+  it("borrows reactions but not scenery, and marks <html> while a pack shows", () => {
+    mount();
+    act(() => view.setStylePacks([pack("sunset-paper", "vaporwave")]));
+    act(() => view.setStylePack("sunset-paper"));
+    expect(view.blogStyle).toBe("vaporwave");
+    expect(view.sceneStyle).toBe("default");
+    expect(document.documentElement.dataset.stylePack).toBe("");
+
+    act(() => view.setBlogStyle("vaporwave"));
+    expect(view.sceneStyle).toBe("vaporwave");
+    expect(document.documentElement.dataset.stylePack).toBeUndefined();
+  });
+
+  it("shows a dark-only pack in a dark theme and gives the visitor's theme back", () => {
+    loadTheme("paper", { persist: false });
+    mount();
+    act(() => view.setStylePacks([pack("night-ink", "", "dark")]));
+    act(() => view.setStylePack("night-ink"));
+    expect(document.documentElement.dataset.theme).toBe("default-dark");
+
+    act(() => view.setBlogStyle("glass"));
+    expect(document.documentElement.dataset.theme).toBe("paper");
   });
 
   it("keeps a saved pack until the list arrives, then falls back if it is gone", () => {

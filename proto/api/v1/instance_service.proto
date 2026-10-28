@@ -15,6 +15,14 @@ import "google/type/color.proto";
 option go_package = "gen/api/v1";
 
 service InstanceService {
+  // Creates a one-hour administrator preview without enabling the pack.
+  rpc PreviewStylePack(PreviewStylePackRequest) returns (PreviewStylePackResponse) {
+    option (google.api.http) = {post: "/api/v1/style-packs/{id}:preview" body: "*"};
+  }
+  // Checks an archive without installing it. Errors include a file and line.
+  rpc ValidateStylePack(ValidateStylePackRequest) returns (ValidateStylePackResponse) {
+    option (google.api.http) = {post: "/api/v1/style-packs:validate" body: "*"};
+  }
   // Lists enabled community styles. Disabled metadata is administrator-only.
   rpc ListStylePacks(ListStylePacksRequest) returns (ListStylePacksResponse) {
     option (google.api.http) = {get: "/api/v1/style-packs"};
@@ -528,6 +536,25 @@ message StylePack {
   string css_url = 5;
   string version = 6;
   bool enabled = 7;
+  map<string, string> description = 8;
+  string preview_url = 9;
+  string min_version = 10;
+}
+message PreviewStylePackRequest { string id = 1; }
+message PreviewStylePackResponse {
+  string css_url = 1;
+  google.protobuf.Timestamp expires_at = 2;
+}
+message ValidateStylePackRequest { bytes zip = 1; }
+message StylePackValidationError {
+  string file = 1;
+  int32 line = 2;
+  string message = 3;
+}
+message ValidateStylePackResponse {
+  StylePack manifest = 1;
+  repeated StylePackValidationError errors = 2;
+  int32 compiled_size = 3;
 }
 message ListStylePacksRequest { bool include_disabled = 1; }
 message ListStylePacksResponse { repeated StylePack style_packs = 1; }

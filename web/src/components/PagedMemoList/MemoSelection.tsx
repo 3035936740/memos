@@ -1,4 +1,14 @@
-import { CheckIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArchiveRestoreIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  EyeIcon,
+  ListChecksIcon,
+  PinIcon,
+  PinOffIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { createContext, type PointerEvent, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -11,6 +21,7 @@ import { useDeleteMemo, useUpdateMemo } from "@/hooks/useMemoQueries";
 import { cn } from "@/lib/utils";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { type Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import { announceBatchState, BATCH_TOGGLE_EVENT } from "@/utils/batch-selection";
 import { useTranslate } from "@/utils/i18n";
 import { findPrivateInfo, type PrivacyFinding } from "@/utils/privacy-check";
 import { isSuperUser } from "@/utils/user";
@@ -68,6 +79,28 @@ export const MemoSelectionProvider = ({ memos, enabled, children }: ProviderProp
   const [active, setActive] = useState(false);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
+  // The toolbar's batch button (outside this list) toggles picking; tell it whenever that changes.
+  useEffect(() => {
+    if (!enabled) return;
+    const toggle = () => {
+      setSelected(new Set());
+      setActive((current) => !current);
+    };
+    window.addEventListener(BATCH_TOGGLE_EVENT, toggle);
+    return () => window.removeEventListener(BATCH_TOGGLE_EVENT, toggle);
+  }, [enabled]);
+
+  useEffect(() => {
+    announceBatchState({ available: enabled, active: enabled && active });
+  }, [active, enabled]);
+
+  useEffect(
+    () => () => {
+      announceBatchState({ available: false, active: false });
+    },
+    [],
+  );
+
   // Memos that leave the page (another page, a filter, an archive) leave the selection too.
   useEffect(() => {
     setSelected((current) => {
@@ -117,9 +150,9 @@ export const MemoSelectionProvider = ({ memos, enabled, children }: ProviderProp
 };
 
 /**
- * Wraps one memo card. Before picking starts, a check circle shows in the card's corner on hover (or keyboard focus)
- * and holding the card on a touch screen does the same: either starts picking with this card. While picking, a click
- * on the card picks it instead of opening it.
+ * Wraps one memo card. Picking starts from the toolbar's batch button, or by holding a card on a touch screen.
+ * While picking, a rail runs down the left of every card with a mark at its top; the whole card toggles it. Each style
+ * draws its own rail and mark (themes/memo-pick.css), on elements no other rule in the app touches.
  */
 export const SelectableMemo = ({ memo, children }: { memo: Memo; children: ReactNode }) => {
   const t = useTranslate();
@@ -156,7 +189,7 @@ export const SelectableMemo = ({ memo, children }: { memo: Memo; children: React
     return (
       <div
         data-memo-selectable=""
-        className="group/select relative"
+        className="relative"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={cancelPress}
@@ -171,44 +204,32 @@ export const SelectableMemo = ({ memo, children }: { memo: Memo; children: React
         }}
       >
         {children}
-        <button
-          type="button"
-          data-memo-select-start=""
-          data-memo-selection-indicator=""
-          title={t("memo.batch.start")}
-          aria-label={t("memo.batch.start-with", { title })}
-          onClick={() => selection.start(memo.name)}
-          className="absolute end-3 top-3 z-10 flex size-5 items-center justify-center rounded-md border-2 border-muted-foreground/60 bg-background opacity-0 transition-opacity group-hover/select:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:none)]:hidden"
-        />
       </div>
     );
   }
 
   return (
-    <div data-memo-selectable="" data-memo-selection-active="" data-selected={picked || undefined} className="relative">
+    <div data-memo-selectable="" data-memo-selection-active="" data-selected={picked || undefined} className="relative ps-9">
       {children}
+      {/* Layout only; every style draws the rail and mark in themes/memo-pick.css. */}
+      <span
+        data-memo-pick-rail=""
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 start-0 z-10 flex w-7 justify-center pt-2.5"
+      >
+        <span data-memo-pick-mark="" className="relative flex size-5 shrink-0 items-center justify-center">
+          <CheckIcon data-memo-pick-check="" className="size-3" strokeWidth={3.5} />
+        </span>
+      </span>
+      {picked && <span data-memo-selection-wash="" aria-hidden className="pointer-events-none absolute inset-y-0 start-9 end-0 z-10" />}
       <button
         data-memo-selection-overlay=""
         type="button"
         aria-pressed={picked}
         aria-label={t("memo.batch.pick", { title })}
         onClick={() => selection.toggle(memo.name)}
-        className={cn(
-          "absolute inset-0 z-10 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          picked ? "bg-primary/5 ring-2 ring-primary ring-inset" : "hover:bg-foreground/[0.03]",
-        )}
-      >
-        <span
-          data-memo-selection-indicator=""
-          aria-hidden
-          className={cn(
-            "absolute end-3 top-3 flex size-5 items-center justify-center rounded-md border-2",
-            picked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/60 bg-background",
-          )}
-        >
-          {picked && <CheckIcon className="size-3.5" strokeWidth={3} />}
-        </span>
-      </button>
+        className="absolute inset-0 z-10 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
     </div>
   );
 };
@@ -297,12 +318,17 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
     <div
       data-memo-batch-bar=""
       data-settings-surface=""
+      role="toolbar"
+      aria-label={t("memo.batch.toolbar")}
       className={cn(
-        "sticky top-16 z-20 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-border bg-card/95 px-3 py-2 shadow-sm",
+        "sticky top-16 z-20 flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card/95 px-2 py-1.5 shadow-sm",
         className,
       )}
     >
-      <span className="text-sm tabular-nums">{t("memo.batch.count", { count: picked.length })}</span>
+      <span className="flex items-center gap-1.5 px-1.5 text-sm font-medium tabular-nums text-foreground">
+        <ListChecksIcon aria-hidden className="size-4 text-primary" />
+        {t("memo.batch.count", { count: picked.length })}
+      </span>
       <Button
         variant="ghost"
         size="sm"
@@ -311,13 +337,20 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
       >
         {allPicked ? t("memo.batch.pick-none") : t("memo.batch.pick-page")}
       </Button>
-      <div className="ms-auto flex flex-wrap items-center gap-1">
+      <span data-memo-batch-separator="" aria-hidden className="mx-1 h-5 w-px bg-border" />
+      <div className="flex flex-wrap items-center gap-0.5">
         {!archived && (
           <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" disabled={disabled} />}>
-              {t("common.visibility")}
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="sm" disabled={disabled} title={t("common.visibility")} aria-label={t("common.visibility")} />
+              }
+            >
+              <EyeIcon aria-hidden />
+              <span className="hidden sm:inline">{t("common.visibility")}</span>
+              <ChevronDownIcon aria-hidden className="opacity-60" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={2}>
+            <DropdownMenuContent align="start" sideOffset={4}>
               {VISIBILITY_CHOICES.map((choice) => (
                 <DropdownMenuItem
                   key={choice.value}
@@ -332,24 +365,42 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
         )}
         {!archived && isSuperUser(currentUser) && (
           <>
-            <Button variant="ghost" size="sm" disabled={disabled} onClick={() => void setPinned(true)}>
-              {t("common.pin")}
+            <Button variant="ghost" size="sm" disabled={disabled} title={t("common.pin")} onClick={() => void setPinned(true)}>
+              <PinIcon aria-hidden />
+              <span className="hidden sm:inline">{t("common.pin")}</span>
             </Button>
-            <Button variant="ghost" size="sm" disabled={disabled} onClick={() => void setPinned(false)}>
-              {t("common.unpin")}
+            <Button variant="ghost" size="sm" disabled={disabled} title={t("common.unpin")} onClick={() => void setPinned(false)}>
+              <PinOffIcon aria-hidden />
+              <span className="hidden sm:inline">{t("common.unpin")}</span>
             </Button>
           </>
         )}
-        <Button variant="ghost" size="sm" disabled={disabled} onClick={() => void setState(archived ? State.NORMAL : State.ARCHIVED)}>
-          {archived ? t("common.restore") : t("common.archive")}
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          title={archived ? t("common.restore") : t("common.archive")}
+          onClick={() => void setState(archived ? State.NORMAL : State.ARCHIVED)}
+        >
+          {archived ? <ArchiveRestoreIcon aria-hidden /> : <ArchiveIcon aria-hidden />}
+          <span className="hidden sm:inline">{archived ? t("common.restore") : t("common.archive")}</span>
         </Button>
-        <Button variant="ghost" size="sm" className="text-destructive" disabled={disabled} onClick={() => setConfirmingDelete(true)}>
-          {t("common.delete")}
-        </Button>
-        <Button variant="outline" size="sm" disabled={busy} onClick={finish}>
-          {t("memo.batch.finish")}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-destructive hover:text-destructive"
+          disabled={disabled}
+          title={t("common.delete")}
+          onClick={() => setConfirmingDelete(true)}
+        >
+          <Trash2Icon aria-hidden />
+          <span className="hidden sm:inline">{t("common.delete")}</span>
         </Button>
       </div>
+      <Button size="sm" className="ms-auto" disabled={busy} onClick={finish}>
+        <CheckIcon aria-hidden />
+        {t("memo.batch.finish")}
+      </Button>
 
       <ConfirmDialog
         open={confirmingDelete}

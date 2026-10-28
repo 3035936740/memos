@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { chooseTheme, loadTheme, setThemeOverride, THEME_CHOSEN_EVENT } from "@/utils/theme";
+import { chooseTheme, loadTheme, setColorSchemeConstraint, setThemeOverride, THEME_CHOSEN_EVENT } from "@/utils/theme";
 
 const shownTheme = () => document.documentElement.dataset.theme;
 
 describe("setThemeOverride", () => {
   afterEach(() => {
     setThemeOverride(undefined);
+    setColorSchemeConstraint(undefined);
     localStorage.clear();
   });
 
@@ -21,6 +22,27 @@ describe("setThemeOverride", () => {
 
     setThemeOverride(undefined);
     expect(shownTheme()).toBe("matcha");
+  });
+
+  it("keeps to the one scheme a style pack is drawn for", () => {
+    loadTheme("editorial");
+    setColorSchemeConstraint("dark");
+    expect(shownTheme()).toBe("editorial-dark");
+
+    // A theme without a dark counterpart gives way to default's.
+    loadTheme("paper");
+    expect(shownTheme()).toBe("default-dark");
+    expect(localStorage.getItem("memos-theme")).toBe("paper");
+
+    // A theme already in the scheme stays.
+    loadTheme("neon-rain-dark");
+    expect(shownTheme()).toBe("neon-rain-dark");
+
+    setColorSchemeConstraint("light");
+    expect(shownTheme()).toBe("default");
+
+    setColorSchemeConstraint(undefined);
+    expect(shownTheme()).toBe("neon-rain-dark");
   });
 
   it("announces a theme picked by hand", () => {

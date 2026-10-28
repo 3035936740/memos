@@ -33,17 +33,18 @@ const sparkleColor = (gold: boolean) => {
  * Small surprises tied to the Blog 2 styles: the Konami code turns on pixel retro, the pointer leaves a trail of
  * sparkles in Y2K (gold ones for regulars in any style), "/" opens a pretend shell in the developer style, and a
  * developer-style master can move between posts with Vim keys. The rest live in CSS and StyleReactionEngine.
+ * They belong to the built-in styles themselves, so a pack that borrows one's reactions does not bring them.
  */
 const StyleEasterEggs = () => {
   const t = useTranslate();
-  const { feedLayout, blogStyle, setFeedLayout, setBlogStyle } = useView();
+  const { feedLayout, sceneStyle, setFeedLayout, setBlogStyle } = useView();
   const progress = useBlogProgress();
   const [terminalOpen, setTerminalOpen] = useState(false);
   const styled = feedLayout === "blog2";
   const { regular, masteredStyles } = computeTransformations(progress);
-  const sparkles = styled && (blogStyle === "y2k" || regular);
-  const goldSparkles = blogStyle !== "y2k";
-  const vimKeys = styled && blogStyle === "terminal" && masteredStyles.includes("terminal");
+  const sparkles = styled && (sceneStyle === "y2k" || regular);
+  const goldSparkles = sceneStyle !== "y2k";
+  const vimKeys = styled && sceneStyle === "terminal" && masteredStyles.includes("terminal");
 
   // Up up down down left right left right B A, anywhere outside a text field.
   useEffect(() => {
@@ -109,7 +110,7 @@ const StyleEasterEggs = () => {
 
   // Developer style: "/" opens the shell.
   useEffect(() => {
-    if (!styled || blogStyle !== "terminal") return;
+    if (!styled || sceneStyle !== "terminal") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
       event.preventDefault();
@@ -117,7 +118,7 @@ const StyleEasterEggs = () => {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [blogStyle, styled]);
+  }, [sceneStyle, styled]);
 
   // Developer mastery: j / k move between posts, o opens one, gg and G jump to the top and the bottom.
   useEffect(() => {
@@ -148,7 +149,7 @@ const StyleEasterEggs = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [vimKeys]);
 
-  return terminalOpen && styled && blogStyle === "terminal" ? <TerminalConsole onClose={() => setTerminalOpen(false)} /> : null;
+  return terminalOpen && styled && sceneStyle === "terminal" ? <TerminalConsole onClose={() => setTerminalOpen(false)} /> : null;
 };
 
 export default StyleEasterEggs;

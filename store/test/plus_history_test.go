@@ -154,5 +154,5 @@ func TestPlusUpgradeFrom034AcrossDrivers(t *testing.T) {
 	require.NoError(t, s.Migrate(ctx))
 	var count int
 	require.NoError(t, database.QueryRowContext(ctx, "SELECT COUNT(*) FROM memos_plus_migration").Scan(&count))
-	require.Equal(t, 4, count)
+	require.Equal(t, 5, count)
 }

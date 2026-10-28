@@ -20,6 +20,10 @@ export const isStylePackId = (value: unknown): value is string =>
 export const stylePackBase = (pack: Pick<StylePack, "reactsLike"> | undefined): BlogStyle =>
   pack && isBlogStyle(pack.reactsLike) ? pack.reactsLike : DEFAULT_BLOG_STYLE;
 
+/** The one scheme a pack is drawn for (its manifest's colorScheme); while it shows, the page keeps to it. */
+export const stylePackScheme = (pack: Pick<StylePack, "colorScheme"> | undefined): "light" | "dark" | undefined =>
+  pack?.colorScheme === "light" || pack?.colorScheme === "dark" ? pack.colorScheme : undefined;
+
 /** A pack's name in the reader's language: exact locale, then its base language, then English, then any. */
 export const stylePackLabel = (pack: Pick<StylePack, "id" | "name">, locale: string) => {
   const names = pack.name ?? {};

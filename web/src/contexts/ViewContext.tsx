@@ -2,8 +2,8 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useL
 import type { StylePack } from "@/types/proto/api/v1/instance_service_pb";
 import { type BlogStyle, DEFAULT_BLOG_STYLE, isBlogStyle } from "@/utils/blog-style";
 import type { PostLook } from "@/utils/post-look";
-import { isStylePackId, stylePackBase } from "@/utils/style-packs";
-import { setThemeOverride, THEME_CHOSEN_EVENT } from "@/utils/theme";
+import { isStylePackId, stylePackBase, stylePackScheme } from "@/utils/style-packs";
+import { setColorSchemeConstraint, setThemeOverride, THEME_CHOSEN_EVENT } from "@/utils/theme";
 
 export type MemoTimeBasis = "create_time" | "update_time";
 export type MemoFeedLayout = "memo" | "blog-classic" | "blog2";
@@ -34,10 +34,16 @@ interface ViewContextValue {
   feedLayout: MemoFeedLayout;
   /**
    * The built-in style showing now (the post's own while one is open with a look of its own, otherwise the
-   * visitor's), or while a style pack shows, the built-in style it behaves like. Reactions, music and easter eggs
-   * key on this.
+   * visitor's), or while a style pack shows, the built-in style it behaves like. Reactions, particles and the
+   * music's beat key on this.
    */
   blogStyle: BlogStyle;
+  /**
+   * The built-in style whose own scenery and extras show: the vaporwave city, the pixel boss, the developer shell
+   * and Vim keys, Y2K's sparkles, the music visualizer's look and the void's effect. blogStyle while a built-in
+   * style shows; default while a pack shows, as a pack borrows only the reactions of the style in its reactsLike.
+   */
+  sceneStyle: BlogStyle;
   /** What <html data-style> carries: a built-in style, or a style pack's id while one shows. */
   styleId: string;
   /** The style pack showing now, if any. */
@@ -147,6 +153,8 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   const stylePack = postPack ?? findPack(savedPackId);
   const styleId = blog2 && postLook?.style ? postLook.style : (stylePack?.id ?? savedPackId ?? viewState.blogStyle);
   const blogStyle = blog2 && postLook?.style ? postLook.style : savedPackId || postPack ? stylePackBase(stylePack) : viewState.blogStyle;
+  const sceneStyle = isBlogStyle(styleId) ? styleId : DEFAULT_BLOG_STYLE;
+  const packScheme = stylePackScheme(stylePack);
   // Whether this browser had saved view settings when the app started; first-visit defaults only apply when not.
   const hadSavedViewRef = useRef(hasSavedView());
   const timeBasis = viewState.timeBasis ?? "create_time";
@@ -157,6 +165,19 @@ export function ViewProvider({ children }: { children: ReactNode }) {
     if (viewState.feedLayout === "blog2") document.documentElement.dataset.style = styleId;
     else delete document.documentElement.dataset.style;
   }, [styleId, viewState.feedLayout]);
+
+  // A pack is marked on <html> as well, so the page shells step aside for the background it paints on body.
+  const wearingPack = blog2 && !isBlogStyle(styleId);
+  useLayoutEffect(() => {
+    if (wearingPack) document.documentElement.dataset.stylePack = "";
+    else delete document.documentElement.dataset.stylePack;
+  }, [wearingPack]);
+
+  // A pack drawn for only light or only dark (its manifest's colorScheme) shows in that scheme whatever the theme.
+  useLayoutEffect(() => {
+    setColorSchemeConstraint(packScheme);
+    return () => setColorSchemeConstraint(undefined);
+  }, [packScheme]);
 
   const setPostLook = useCallback((look: PostLook | undefined) => {
     setPostLookState(look);
@@ -245,6 +266,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         maxColumns: viewState.maxColumns,
         feedLayout: viewState.feedLayout,
         blogStyle,
+        sceneStyle,
         styleId,
         stylePack,
         stylePacks,

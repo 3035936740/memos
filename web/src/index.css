@@ -7,6 +7,7 @@
 @import "./themes/share-image.css";
 @import "./themes/lite-effects.css";
 @import "./themes/oddities.css";
+@import "./themes/memo-pick.css";
 
 /* Markdown images are block elements, so text-align alone cannot move them.
    Keep image alignment scoped to the validated memo alignment container. */

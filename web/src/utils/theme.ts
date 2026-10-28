@@ -318,7 +318,19 @@ let requestedTheme: Theme | undefined;
 /** A theme shown in place of the requested one without saving it, such as the look an author chose for a post. */
 let themeOverride: ResolvedTheme | undefined;
 
-const applyResolvedTheme = (theme: ResolvedTheme): void => {
+/** The one scheme the showing style pack is drawn for (its manifest's colorScheme), if it names one. */
+let schemeConstraint: "light" | "dark" | undefined;
+
+/** `theme`, or while a pack allows only the other scheme, its counterpart there (default's when it has none). */
+const withinScheme = (theme: ResolvedTheme): ResolvedTheme => {
+  if (!schemeConstraint || isDarkTheme(theme) === (schemeConstraint === "dark")) return theme;
+  const counterpart = schemeConstraint === "dark" ? `${theme}-dark` : theme.replace(/-dark$/, "");
+  if (isValidTheme(counterpart) && counterpart !== "system") return counterpart;
+  return schemeConstraint === "dark" ? "default-dark" : "default";
+};
+
+const applyResolvedTheme = (requested: ResolvedTheme): void => {
+  const theme = withinScheme(requested);
   injectThemeStyle(theme);
   setThemeAttribute(theme);
   updateThemeColorMeta(theme);
@@ -352,6 +364,16 @@ export const setThemeOverride = (theme: ResolvedTheme | undefined): void => {
   if (theme === themeOverride) return;
   themeOverride = theme;
   applyResolvedTheme(theme ?? resolveTheme(requestedTheme ?? getInitialTheme()));
+};
+
+/**
+ * Keeps the page in one scheme while a style pack drawn only for it shows: a theme of the other scheme gives way
+ * to its counterpart, or to default's. undefined lifts it. The visitor's choice and any override stay underneath.
+ */
+export const setColorSchemeConstraint = (scheme: "light" | "dark" | undefined): void => {
+  if (scheme === schemeConstraint) return;
+  schemeConstraint = scheme;
+  applyResolvedTheme(themeOverride ?? resolveTheme(requestedTheme ?? getInitialTheme()));
 };
 
 /** Fired when the visitor picks a theme themselves; ViewContext then ends any post look so the pick shows. */

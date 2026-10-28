@@ -2328,6 +2328,62 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/style-packs/{id}:preview:
+        post:
+            tags:
+                - InstanceService
+            description: Creates a one-hour administrator preview without enabling the pack.
+            operationId: InstanceService_PreviewStylePack
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PreviewStylePackRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/PreviewStylePackResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
+    /api/v1/style-packs:validate:
+        post:
+            tags:
+                - InstanceService
+            description: Checks an archive without installing it. Errors include a file and line.
+            operationId: InstanceService_ValidateStylePack
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ValidateStylePackRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidateStylePackResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/users:
         get:
             tags:
@@ -5019,6 +5075,19 @@ components:
                         type: string
                     description: Output only. Present only when participant choices are visible.
             description: Public profile and optionally visible choices for a sampled poll participant.
+        PreviewStylePackRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+        PreviewStylePackResponse:
+            type: object
+            properties:
+                cssUrl:
+                    type: string
+                expiresAt:
+                    type: string
+                    format: date-time
         PurgeMemoRequest:
             type: object
             properties:
@@ -5360,7 +5429,25 @@ components:
                     type: string
                 enabled:
                     type: boolean
+                description:
+                    type: object
+                    additionalProperties:
+                        type: string
+                previewUrl:
+                    type: string
+                minVersion:
+                    type: string
             description: Public community style metadata. CSS and assets have immutable version URLs.
+        StylePackValidationError:
+            type: object
+            properties:
+                file:
+                    type: string
+                line:
+                    type: integer
+                    format: int32
+                message:
+                    type: string
         TestInstanceEmailSettingRequest:
             type: object
             properties:
@@ -5728,6 +5815,24 @@ components:
                     type: boolean
                     description: Whether a signing secret is configured for this webhook.
             description: UserWebhook represents a webhook owned by a user.
+        ValidateStylePackRequest:
+            type: object
+            properties:
+                zip:
+                    type: string
+                    format: bytes
+        ValidateStylePackResponse:
+            type: object
+            properties:
+                manifest:
+                    $ref: '#/components/schemas/StylePack'
+                errors:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/StylePackValidationError'
+                compiledSize:
+                    type: integer
+                    format: int32
         VideoMetadata:
             type: object
             properties:

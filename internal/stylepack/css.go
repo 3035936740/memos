@@ -61,18 +61,19 @@ func tokenText(tokens []css.Token) string {
 	return b.String()
 }
 func lexerTokens(s string) ([]css.Token, error) {
-	l := css.NewLexer(parse.NewInputString(s))
+	input := parse.NewInputString(s)
+	l := css.NewLexer(input)
 	tokens := []css.Token{}
 	for {
 		tt, b := l.Next()
 		if tt == css.ErrorToken {
 			if l.Err() != io.EOF {
-				return nil, l.Err()
+				return nil, errors.Errorf("style.css line %d: %s", 1+strings.Count(s[:min(input.Offset(), len(s))], "\n"), l.Err().Error())
 			}
 			break
 		}
 		if tt == css.BadURLToken || tt == css.BadStringToken {
-			return nil, errors.New("invalid CSS token")
+			return nil, errors.Errorf("style.css line %d: invalid CSS token", 1+strings.Count(s[:min(input.Offset(), len(s))], "\n"))
 		}
 		tokens = append(tokens, css.Token{TokenType: tt, Data: append([]byte(nil), b...)})
 	}
@@ -84,15 +85,22 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 		return "", errors.New("CSS exceeds 200 KB")
 	}
 	scope := `html[data-style="` + id + `"]`
+	parserSource, atNames, err := parserAtRules(source)
+	if err != nil {
+		return "", err
+	}
 	// First collect globally named constructs, then rename declarations too.
 	names := map[string]string{}
 	inFont := false
-	parser := css.NewParser(parse.NewInputString(source), false)
+	parser := css.NewParser(parse.NewInputString(parserSource), false)
 	firstPassError := func(reason string) error {
 		return errors.Errorf("style.css line %d: %s", 1+strings.Count(source[:min(parser.Offset(), len(source))], "\n"), reason)
 	}
 	for {
 		grammar, _, data := parser.Next()
+		if original := atNames[parser.Offset()]; original != "" && (grammar == css.BeginAtRuleGrammar || grammar == css.AtRuleGrammar) {
+			data = []byte(original)
+		}
 		if grammar == css.ErrorGrammar {
 			if parser.Err() != io.EOF {
 				return "", firstPassError(parser.Err().Error())
@@ -124,11 +132,15 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 			names[name] = "memos-pack-" + id + "-" + name
 		}
 	}
-	p := css.NewParser(parse.NewInputString(source), false)
+	p := css.NewParser(parse.NewInputString(parserSource), false)
 	out := strings.Builder{}
 	stack := []string{}
+	descriptors := map[string]string{}
 	for {
 		grammar, _, data := p.Next()
+		if original := atNames[p.Offset()]; original != "" && (grammar == css.BeginAtRuleGrammar || grammar == css.AtRuleGrammar) {
+			data = []byte(original)
+		}
 		fail := func(reason string) (string, error) {
 			offset := min(p.Offset(), len(source))
 			return "", errors.Errorf("style.css line %d: %s", 1+strings.Count(source[:offset], "\n"), reason)
@@ -152,8 +164,11 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 				return fail("only UTF-8 charset allowed")
 			}
 		case css.BeginAtRuleGrammar:
+			if len(stack) > 0 && (stack[len(stack)-1] == "@property" || stack[len(stack)-1] == "@font-face") {
+				return fail("nested at-rule in descriptor block")
+			}
 			switch name {
-			case "@media", "@supports", "@container", "@layer":
+			case "@media", "@supports", "@container", "@layer", "@starting-style":
 				if _, err := safeValues("@condition", values, false, id, version, assets, names); err != nil {
 					return fail(err.Error())
 				}
@@ -161,6 +176,14 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 			case "@keyframes", "@-webkit-keyframes":
 				key := strings.TrimSpace(cssText(tokenText(values)))
 				out.WriteString(name + " " + names[key] + "{")
+			case "@property":
+				key := strings.TrimSpace(cssText(tokenText(values)))
+				keyTokens, keyErr := lexerTokens(key)
+				if keyErr != nil || !strings.HasPrefix(key, "--"+id+"-") || len(keyTokens) != 1 || (keyTokens[0].TokenType != css.IdentToken && keyTokens[0].TokenType != css.CustomPropertyNameToken) || len(key) <= len(id)+3 {
+					return fail("@property name must start with --" + id + "-")
+				}
+				descriptors = map[string]string{}
+				out.WriteString("@property " + key + "{")
 			case "@font-face":
 				out.WriteString("@font-face{")
 			default:
@@ -168,6 +191,9 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 			}
 			stack = append(stack, name)
 		case css.BeginRulesetGrammar:
+			if len(stack) > 0 && (stack[len(stack)-1] == "@property" || stack[len(stack)-1] == "@font-face") {
+				return fail("ruleset in descriptor block")
+			}
 			selector := tokenText(values)
 			if len(stack) > 0 && (stack[len(stack)-1] == "@keyframes" || stack[len(stack)-1] == "@-webkit-keyframes") {
 				out.WriteString(selector + "{")
@@ -182,6 +208,9 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 		case css.EndAtRuleGrammar, css.EndRulesetGrammar:
 			if len(stack) == 0 {
 				return fail("unbalanced stylesheet")
+			}
+			if stack[len(stack)-1] == "@property" && (descriptors["syntax"] == "" || descriptors["inherits"] == "" || (descriptors["syntax"] != `"*"` && descriptors["syntax"] != `'*'` && descriptors["initial-value"] == "")) {
+				return fail("@property requires syntax, inherits and initial-value (except universal syntax)")
 			}
 			stack = stack[:len(stack)-1]
 			out.WriteByte('}')
@@ -201,6 +230,25 @@ func Compile(id, version, source string, assets map[string]Asset) (string, error
 			v, err := safeValues(name, values, font, id, version, assets, names)
 			if err != nil {
 				return fail(err.Error())
+			}
+			if len(stack) > 0 && stack[len(stack)-1] == "@property" {
+				if _, duplicate := descriptors[name]; duplicate {
+					return fail("duplicate @property descriptor")
+				}
+				switch name {
+				case "syntax":
+					if len(values) != 1 || values[0].TokenType != css.StringToken {
+						return fail("@property syntax must be a string")
+					}
+				case "inherits":
+					if v != "true" && v != "false" {
+						return fail("@property inherits must be true or false")
+					}
+				case "initial-value":
+				default:
+					return fail("unknown @property descriptor")
+				}
+				descriptors[name] = v
 			}
 			out.WriteString(string(data) + ":" + v + ";")
 		default:
@@ -236,18 +284,39 @@ func scopeSelector(tokens []css.Token, scope string) (string, error) {
 	for _, g := range groups {
 		var b strings.Builder
 		hasLeadingRoot := false
+		brackets, functions := 0, 0
 		for i := 0; i < len(g); i++ {
 			t := g[i]
-			if t.TokenType == css.ColonToken && i+1 < len(g) && g[i+1].TokenType == css.IdentToken && strings.EqualFold(cssText(string(g[i+1].Data)), "root") {
-				if strings.TrimSpace(b.String()) == "" {
-					hasLeadingRoot = true
+			root := t.TokenType == css.ColonToken && i+1 < len(g) && g[i+1].TokenType == css.IdentToken && strings.EqualFold(cssText(string(g[i+1].Data)), "root")
+			html := t.TokenType == css.IdentToken && strings.EqualFold(cssText(string(t.Data)), "html") && brackets == 0
+			if html && i > 0 && ((g[i-1].TokenType == css.DelimToken && string(g[i-1].Data) == ".") || g[i-1].TokenType == css.ColonToken) {
+				html = false
+			}
+			if root || html {
+				if functions > 0 || strings.TrimSpace(b.String()) != "" {
+					return "", errors.New(":root / html 只能写在选择器开头 (must appear only at the start of a selector)")
 				}
+				hasLeadingRoot = true
 				b.WriteString(scope)
-				i++
+				if root {
+					i++
+				}
 				continue
 			}
 			if t.TokenType == css.DelimToken && string(t.Data) == "&" {
 				return "", errors.New("CSS nesting is not supported")
+			}
+			if t.TokenType == css.LeftBracketToken {
+				brackets++
+			}
+			if t.TokenType == css.RightBracketToken {
+				brackets--
+			}
+			if t.TokenType == css.FunctionToken || t.TokenType == css.LeftParenthesisToken {
+				functions++
+			}
+			if t.TokenType == css.RightParenthesisToken {
+				functions--
 			}
 			b.Write(t.Data)
 		}
@@ -278,8 +347,31 @@ func safeValues(property string, tokens []css.Token, font bool, id, version stri
 			if font && property == "src" && function != "format" && function != "tech" {
 				return "", errors.New("font src must use asset URLs")
 			}
+			if function == "attr" {
+				// Only the legacy, string-producing form can be used. Never accept typed attr().
+				if property != "content" || string(t.Data) != "attr(" {
+					return "", errors.New("attr() is allowed only as an unescaped content function")
+				}
+				j := i + 1
+				for j < len(tokens) && (tokens[j].TokenType == css.WhitespaceToken || tokens[j].TokenType == css.CommentToken) {
+					j++
+				}
+				if j >= len(tokens) || tokens[j].TokenType != css.IdentToken || !strings.HasPrefix(cssText(string(tokens[j].Data)), "data-sb-") || len(cssText(string(tokens[j].Data))) <= 8 {
+					return "", errors.New("attr() requires one data-sb- attribute")
+				}
+				j++
+				for j < len(tokens) && (tokens[j].TokenType == css.WhitespaceToken || tokens[j].TokenType == css.CommentToken) {
+					j++
+				}
+				if j >= len(tokens) || tokens[j].TokenType != css.RightParenthesisToken {
+					return "", errors.New("typed attr() and fallback arguments are forbidden")
+				}
+				b.WriteString(tokenText(tokens[i : j+1]))
+				i = j
+				continue
+			}
 			switch function {
-			case "expression", "url", "image-set", "-webkit-image-set", "src", "paint", "element", "-moz-element", "attr":
+			case "expression", "url", "image-set", "-webkit-image-set", "src", "paint", "element", "-moz-element":
 				return "", errors.Errorf("forbidden CSS function %s", function)
 			}
 		}
@@ -303,29 +395,13 @@ func safeValues(property string, tokens []css.Token, font bool, id, version stri
 					return "", errors.New("font src must use WOFF2 asset")
 				}
 				fontAsset = true
-				if asset.ContentType == "image/svg+xml" && property != "background" && property != "background-image" {
-					return "", errors.New("SVG is permitted only in CSS backgrounds")
+				if asset.ContentType == "image/svg+xml" && !svgProperty(property) {
+					return "", errors.New("SVG is not allowed on this property")
 				}
 				u = "/style-packs/" + id + "/" + version + "/assets/" + escapeAsset(name)
 			} else if strings.HasPrefix(u, "data:") && !font {
-				comma := strings.IndexByte(u, ',')
-				if comma < 0 {
-					return "", errors.New("invalid image data URL")
-				}
-				header := strings.ToLower(u[5:comma])
-				if !strings.HasSuffix(header, ";base64") {
-					return "", errors.New("data URL must be base64 image")
-				}
-				mime := strings.TrimSuffix(header, ";base64")
-				if mime != "image/png" && mime != "image/jpeg" && mime != "image/gif" && mime != "image/webp" {
-					return "", errors.New("unsupported image data URL")
-				}
-				data, err := base64.StdEncoding.DecodeString(u[comma+1:])
-				if err != nil || len(data) > 64<<10 {
-					return "", errors.New("image data URL exceeds 64 KB or is malformed")
-				}
-				if http.DetectContentType(data) != mime {
-					return "", errors.New("image data URL does not match its MIME type")
+				if err := validateImageData(u, property); err != nil {
+					return "", err
 				}
 			} else {
 				return "", errors.New("external or non-asset URL forbidden")
@@ -359,4 +435,53 @@ func escapeAsset(name string) string {
 		parts[i] = url.PathEscape(parts[i])
 	}
 	return strings.Join(parts, "/")
+}
+
+func svgProperty(property string) bool {
+	if strings.HasPrefix(property, "--") {
+		return true
+	}
+	switch property {
+	case "background", "background-image", "mask", "mask-image", "-webkit-mask", "-webkit-mask-image", "mask-border", "mask-border-source", "-webkit-mask-box-image", "border-image", "border-image-source", "list-style", "list-style-image", "content", "cursor":
+		return true
+	}
+	return false
+}
+
+func validateImageData(u, property string) error {
+	comma := strings.IndexByte(u, ',')
+	if comma < 0 {
+		return errors.New("invalid image data URL")
+	}
+	header := strings.ToLower(u[5:comma])
+	encoded := strings.HasSuffix(header, ";base64")
+	mime := strings.TrimSuffix(header, ";base64")
+	if mime != "image/svg+xml" && mime != "image/png" && mime != "image/jpeg" && mime != "image/gif" && mime != "image/webp" {
+		return errors.New("unsupported image data URL")
+	}
+	if !encoded && mime != "image/svg+xml" {
+		return errors.New("raster data URL must be base64")
+	}
+	var data []byte
+	var err error
+	if encoded {
+		data, err = base64.StdEncoding.DecodeString(u[comma+1:])
+	} else {
+		var decoded string
+		decoded, err = url.PathUnescape(u[comma+1:])
+		data = []byte(decoded)
+	}
+	if err != nil || len(data) > 64<<10 {
+		return errors.New("image data URL exceeds 64 KiB or is malformed")
+	}
+	if mime == "image/svg+xml" {
+		if !svgProperty(property) {
+			return errors.New("SVG is not allowed on this property")
+		}
+		return validateSVG(data)
+	}
+	if http.DetectContentType(data) != mime {
+		return errors.New("image data URL does not match its MIME type")
+	}
+	return nil
 }

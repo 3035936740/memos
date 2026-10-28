@@ -8,8 +8,10 @@
    Shared: page background showing through, surfaces, type hooks
    --------------------------------------------------------------------------- */
 
-/* Styles paint the page background themselves, so the app's shells must not cover it. */
+/* Styles paint the page background themselves, so the app's shells must not cover it. A style pack (marked
+   data-style-pack by ViewContext) paints it on body, or leaves body's plain background colour showing. */
 html:is(
+  [data-style-pack],
   [data-style="handdrawn"],
   [data-style="aero"],
   [data-style="y2k"],
@@ -30,7 +32,7 @@ html:is(
   background-color: transparent;
 }
 
-html:is([data-style="aero"], [data-style="y2k"], [data-style="terminal"]) body {
+html:is([data-style-pack], [data-style="aero"], [data-style="y2k"], [data-style="terminal"]) body {
   font-family: var(--sb-font-body);
 }
 
@@ -4920,6 +4922,30 @@ html:is([data-style]:not([data-style="default"]), [data-particles]) [data-page-p
   box-shadow: var(--sb-shadow, var(--shadow-xs));
   -webkit-backdrop-filter: var(--sb-blur, none);
   backdrop-filter: var(--sb-blur, none);
+}
+
+/* Library media and files use the same material as the surrounding style.
+   Keep their image/layout padding intact rather than applying page-panel spacing. */
+html[data-style]:not([data-style="default"]) [data-attachment-card] {
+  border: var(--sb-border, 1px solid var(--border));
+  border-radius: var(--sb-radius, 16px);
+  background: var(--sb-surface, var(--card));
+  color: var(--foreground);
+  box-shadow: var(--sb-shadow, var(--shadow-xs));
+}
+
+html[data-style]:not([data-style="default"]) [data-attachment-caption] {
+  background: var(--sb-surface, var(--card));
+  color: inherit;
+}
+
+html[data-style="y2k"] [data-profile-header] {
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+}
+
+html[data-style="y2k"] [data-profile-header] :is(h1, p) {
+  color: var(--w98-face-text);
 }
 
 html[data-style="handdrawn"] [data-page-panel] {

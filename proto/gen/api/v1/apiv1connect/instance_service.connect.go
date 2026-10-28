@@ -34,6 +34,12 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// InstanceServicePreviewStylePackProcedure is the fully-qualified name of the InstanceService's
+	// PreviewStylePack RPC.
+	InstanceServicePreviewStylePackProcedure = "/memos.api.v1.InstanceService/PreviewStylePack"
+	// InstanceServiceValidateStylePackProcedure is the fully-qualified name of the InstanceService's
+	// ValidateStylePack RPC.
+	InstanceServiceValidateStylePackProcedure = "/memos.api.v1.InstanceService/ValidateStylePack"
 	// InstanceServiceListStylePacksProcedure is the fully-qualified name of the InstanceService's
 	// ListStylePacks RPC.
 	InstanceServiceListStylePacksProcedure = "/memos.api.v1.InstanceService/ListStylePacks"
@@ -71,6 +77,10 @@ const (
 
 // InstanceServiceClient is a client for the memos.api.v1.InstanceService service.
 type InstanceServiceClient interface {
+	// Creates a one-hour administrator preview without enabling the pack.
+	PreviewStylePack(context.Context, *connect.Request[v1.PreviewStylePackRequest]) (*connect.Response[v1.PreviewStylePackResponse], error)
+	// Checks an archive without installing it. Errors include a file and line.
+	ValidateStylePack(context.Context, *connect.Request[v1.ValidateStylePackRequest]) (*connect.Response[v1.ValidateStylePackResponse], error)
 	// Lists enabled community styles. Disabled metadata is administrator-only.
 	ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error)
 	// Installs a validated style ZIP, initially disabled.
@@ -106,6 +116,18 @@ func NewInstanceServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 	baseURL = strings.TrimRight(baseURL, "/")
 	instanceServiceMethods := v1.File_api_v1_instance_service_proto.Services().ByName("InstanceService").Methods()
 	return &instanceServiceClient{
+		previewStylePack: connect.NewClient[v1.PreviewStylePackRequest, v1.PreviewStylePackResponse](
+			httpClient,
+			baseURL+InstanceServicePreviewStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("PreviewStylePack")),
+			connect.WithClientOptions(opts...),
+		),
+		validateStylePack: connect.NewClient[v1.ValidateStylePackRequest, v1.ValidateStylePackResponse](
+			httpClient,
+			baseURL+InstanceServiceValidateStylePackProcedure,
+			connect.WithSchema(instanceServiceMethods.ByName("ValidateStylePack")),
+			connect.WithClientOptions(opts...),
+		),
 		listStylePacks: connect.NewClient[v1.ListStylePacksRequest, v1.ListStylePacksResponse](
 			httpClient,
 			baseURL+InstanceServiceListStylePacksProcedure,
@@ -177,6 +199,8 @@ func NewInstanceServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 
 // instanceServiceClient implements InstanceServiceClient.
 type instanceServiceClient struct {
+	previewStylePack         *connect.Client[v1.PreviewStylePackRequest, v1.PreviewStylePackResponse]
+	validateStylePack        *connect.Client[v1.ValidateStylePackRequest, v1.ValidateStylePackResponse]
 	listStylePacks           *connect.Client[v1.ListStylePacksRequest, v1.ListStylePacksResponse]
 	installStylePack         *connect.Client[v1.InstallStylePackRequest, v1.StylePack]
 	updateStylePack          *connect.Client[v1.UpdateStylePackRequest, v1.StylePack]
@@ -188,6 +212,16 @@ type instanceServiceClient struct {
 	updateInstanceSetting    *connect.Client[v1.UpdateInstanceSettingRequest, v1.InstanceSetting]
 	testInstanceEmailSetting *connect.Client[v1.TestInstanceEmailSettingRequest, emptypb.Empty]
 	getInstanceStats         *connect.Client[v1.GetInstanceStatsRequest, v1.InstanceStats]
+}
+
+// PreviewStylePack calls memos.api.v1.InstanceService.PreviewStylePack.
+func (c *instanceServiceClient) PreviewStylePack(ctx context.Context, req *connect.Request[v1.PreviewStylePackRequest]) (*connect.Response[v1.PreviewStylePackResponse], error) {
+	return c.previewStylePack.CallUnary(ctx, req)
+}
+
+// ValidateStylePack calls memos.api.v1.InstanceService.ValidateStylePack.
+func (c *instanceServiceClient) ValidateStylePack(ctx context.Context, req *connect.Request[v1.ValidateStylePackRequest]) (*connect.Response[v1.ValidateStylePackResponse], error) {
+	return c.validateStylePack.CallUnary(ctx, req)
 }
 
 // ListStylePacks calls memos.api.v1.InstanceService.ListStylePacks.
@@ -247,6 +281,10 @@ func (c *instanceServiceClient) GetInstanceStats(ctx context.Context, req *conne
 
 // InstanceServiceHandler is an implementation of the memos.api.v1.InstanceService service.
 type InstanceServiceHandler interface {
+	// Creates a one-hour administrator preview without enabling the pack.
+	PreviewStylePack(context.Context, *connect.Request[v1.PreviewStylePackRequest]) (*connect.Response[v1.PreviewStylePackResponse], error)
+	// Checks an archive without installing it. Errors include a file and line.
+	ValidateStylePack(context.Context, *connect.Request[v1.ValidateStylePackRequest]) (*connect.Response[v1.ValidateStylePackResponse], error)
 	// Lists enabled community styles. Disabled metadata is administrator-only.
 	ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error)
 	// Installs a validated style ZIP, initially disabled.
@@ -278,6 +316,18 @@ type InstanceServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	instanceServiceMethods := v1.File_api_v1_instance_service_proto.Services().ByName("InstanceService").Methods()
+	instanceServicePreviewStylePackHandler := connect.NewUnaryHandler(
+		InstanceServicePreviewStylePackProcedure,
+		svc.PreviewStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("PreviewStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
+	instanceServiceValidateStylePackHandler := connect.NewUnaryHandler(
+		InstanceServiceValidateStylePackProcedure,
+		svc.ValidateStylePack,
+		connect.WithSchema(instanceServiceMethods.ByName("ValidateStylePack")),
+		connect.WithHandlerOptions(opts...),
+	)
 	instanceServiceListStylePacksHandler := connect.NewUnaryHandler(
 		InstanceServiceListStylePacksProcedure,
 		svc.ListStylePacks,
@@ -346,6 +396,10 @@ func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.Handl
 	)
 	return "/memos.api.v1.InstanceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case InstanceServicePreviewStylePackProcedure:
+			instanceServicePreviewStylePackHandler.ServeHTTP(w, r)
+		case InstanceServiceValidateStylePackProcedure:
+			instanceServiceValidateStylePackHandler.ServeHTTP(w, r)
 		case InstanceServiceListStylePacksProcedure:
 			instanceServiceListStylePacksHandler.ServeHTTP(w, r)
 		case InstanceServiceInstallStylePackProcedure:
@@ -376,6 +430,14 @@ func NewInstanceServiceHandler(svc InstanceServiceHandler, opts ...connect.Handl
 
 // UnimplementedInstanceServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedInstanceServiceHandler struct{}
+
+func (UnimplementedInstanceServiceHandler) PreviewStylePack(context.Context, *connect.Request[v1.PreviewStylePackRequest]) (*connect.Response[v1.PreviewStylePackResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.PreviewStylePack is not implemented"))
+}
+
+func (UnimplementedInstanceServiceHandler) ValidateStylePack(context.Context, *connect.Request[v1.ValidateStylePackRequest]) (*connect.Response[v1.ValidateStylePackResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.ValidateStylePack is not implemented"))
+}
 
 func (UnimplementedInstanceServiceHandler) ListStylePacks(context.Context, *connect.Request[v1.ListStylePacksRequest]) (*connect.Response[v1.ListStylePacksResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.InstanceService.ListStylePacks is not implemented"))

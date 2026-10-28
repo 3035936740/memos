@@ -13,8 +13,10 @@
 | `updateStylePack` | `{id, enabled?: boolean, zip?: Uint8Array}` | `StylePack`；仅管理员。新 ZIP 的 manifest ID 必须相同 |
 | `deleteStylePack` | `{id}` | 空响应；仅管理员 |
 | `exportStylePack` | `{id}` | `{zip: Uint8Array}` 原始 ZIP；仅管理员 |
+| `previewStylePack` | `{id}` | `{cssUrl, expiresAt}`；仅管理员，停用包也可预览，有效期 1 小时 |
+| `validateStylePack` | `{zip: Uint8Array}` | `{manifest?, errors: [{file, line, message}], compiledSize}`；仅管理员，只检查，不写库 |
 
-`StylePack` 包含 `id`、多语言 `name`、`reactsLike`、`colorScheme`、`version`、`cssUrl`、`enabled`。匿名列表只返回启用包，不包含原始 CSS、资源内容或安装人。
+`StylePack` 包含 `id`、多语言 `name`、`reactsLike`、`colorScheme`、`version`、`cssUrl`、`enabled`，以及可选的多语言 `description`、`previewUrl`、`minVersion`。匿名列表只返回启用包，不包含原始 CSS、资源内容或安装人。
 
 选中包时加载 `cssUrl`，并在 `<html>` 设置 `data-style="<id>"`。不要把包 ID 塞进只接受内置值的 `isBlogStyle()`。需扩展 `blog-style.ts`、`post-look.ts`、`appearance-pack.ts`、`ViewContext`、选择器/向导/图鉴等消费处。`reactsLike` 只借用内置反应规则；未填写时不增加反应。
 
@@ -22,13 +24,35 @@
 
 CSS 地址 `/style-packs/<id>/<version>.css`，资源地址 `/style-packs/<id>/<version>/assets/<name>`，同版本内容不可变。更新保留旧版本资源；停用/删除后服务端不再提供这些资源。已被浏览器缓存的字节无法远程撤回，因此列表回退逻辑必须接入。
 
+### 管理员预览和只检查
+
+`POST /api/v1/style-packs/<id>:preview` 返回一小时有效的 `cssUrl` 和 protobuf Timestamp `expiresAt`（JSON 中为 RFC3339）。样式地址形如 `/style-packs/preview/<token>/<id>/<version>.css`，CSS 内资源地址自动改为 `/style-packs/preview/<token>/<id>/<version>/assets/<name>`。浏览器无需 Authorization 即可加载这些签名地址；持有地址的人都能在到期前查看，勿公开分享。
+
+令牌使用实例密钥 HMAC-SHA256，绑定 ID、版本和到期时间，无须存库。过期、篡改、版本更换或删除包均返回 404。预览与正常地址遵循相同 SVG/资源安全头，并固定使用 `Cache-Control: private, no-store`。预览不会启用包、更改初访默认或进入匿名列表。停用包的正式 CSS、预览图、其他正式资源地址仍为 404。
+
+`POST /api/v1/style-packs:validate` 接收 `{zip: <base64>}`。内容不合法时 HTTP/RPC 调用本身成功，`errors` 返回至少第一个 `{file, line, message}`，行号从 1 开始；ZIP 结构问题记为 `archive.zip` 第 1 行。鉴权失败仍返回权限错误。合法时 `errors` 为空，`manifest` 是与 `StylePack` 相同结构的摘要，带编译哈希版本和 `compiledSize` 字节数；没有安装，因此摘要的 `cssUrl`、`previewUrl` 为空。验证成功和失败均不会写库。
+
+离线检查：`memos stylepack check file.zip`，不需要配置或启动数据库。通过打印 ID、多语言名字和编译 CSS 大小，退出 0；失败打印文件、行号和原因，退出非 0。
+
 ### ZIP 格式与限制
 
-根目录 `style.json`、`style.css`，可选 `assets/`。manifest 遵循需求文件的 version 1。ZIP 上限 3 MiB，CSS 200 KiB，资源最多 20 个、合计 2 MiB；仅 PNG/JPG/WebP/GIF/SVG/WOFF2，校验实际类型。
+根目录 `style.json`、`style.css`，可选 `assets/`。manifest `version` 仍为 1，未知字段拒绝。ZIP 上限 20 MiB、最多 160 项（含目录），解压总量上限为 16 MiB 字体 + 2 MiB 图片 + 200 KiB CSS + 128 KiB 清单。WOFF2 独立计额：最多 128 个、单个 8 MiB、合计 16 MiB；其余资源最多 20 个、合计 2 MiB。CSS 200 KiB，清单 128 KiB；实际解压字节也会检查，拒绝路径穿越、重复路径和特殊文件。
 
-安全编译使用 `tdewolff/parse/v2`，检查 CSS 转义后的含义。`:root` 改写为风格门控，普通选择器逐项加门控；支持 `:is()` / `:where()` 和 `@media` 等嵌套条件。动画名及字体名增加包前缀，避免污染其他风格。
+新增可选清单字段：`description` 格式同 `name`，最多 32 个语言键、每条 500 个 Unicode 字符；`preview` 是 `assets/` 内图片的相对文件名（不带 `assets/`，可含子目录），允许 png/jpg/webp/gif/svg，必须存在，不能是字体；`minVersion` 为完整语义版本，与 `internal/version.PlusVersion` 比较（不是上游 Version），不满足或格式错误时拒绝安装及更新。预发布版本按 SemVer 规则比较，例如 `1.0.0-dev` 低于 `1.0.0`。简介及正式预览图 URL 会出现在启用包的匿名列表中。
 
-仅允许 `asset:` 和不超过 64 KiB 的 base64 PNG/JPEG/GIF/WebP data URL；禁止外网 URL、`@import`、`@namespace`、未知 at-rule、脚本函数、非自定义属性的 `!important`。字体 `src` 必须使用包内 WOFF2，含空格的字体名须加引号。SVG 只允许背景使用；拒绝脚本、事件、外部引用、foreignObject 等，响应带 CSP / nosniff。
+安全编译使用 `tdewolff/parse/v2`，检查 CSS 转义后的含义。`:root` 和开头的 `html`（大小写不限）合并到门控，例如 `html[data-theme$="-dark"] .x` → `html[data-style="id"][data-theme$="-dark"] .x`；出现在选择器中间或 `:is()` / `:where()` / `:not()` 内则报错。普通选择器逐项加门控。动画名和字体名加包前缀。
+
+允许 `@media`、`@supports`、`@container`、`@layer`、`@starting-style`、`@keyframes`、`@font-face` 以及 UTF-8 charset。`@property` 只接受以 `--<包 ID>-` 开头的名字，描述符仅 `syntax`、`inherits`、`initial-value`，初始值经过相同资源安全校验。`@font-face` 支持 `unicode-range`、`font-display` 和 `font-weight: 100 900`；src 只能是包内 WOFF2，不能 local() 或外链。
+
+SVG 可用于背景、mask/mask-image（含 WebKit）、mask-border/source、-webkit-mask-box-image、border-image/source、list-style/image、content、cursor 和自定义变量；其他属性仍拒绝。内联 SVG 同时支持 base64 与 URL 编码 `data:image/svg+xml,…`，解码后最多 64 KiB，仍严格拒绝脚本、事件、style 属性、外部引用和 foreignObject。PNG/JPEG/GIF/WebP data URL 仍须 base64，解码后最多 64 KiB并核对类型。
+
+`attr()` 仅允许未转义的 `content: attr(data-sb-…)` 单属性名字符串形式，可以与文字拼接。类型、回退参数、其他属性（包括变量）、其他属性名和转义函数名全部拒绝。仍禁止外网 URL、@import、@namespace、脚本/paint/image-set 等函数、CSS 嵌套及非变量的 !important。
+
+### 数据库和传输
+
+三种数据库新增 `0005__style_pack_chunks.sql`，并同步 `LATEST.sql`。旧资源原地保留；大于 1 MiB 的资源（含原始 ZIP、编译 CSS、字体）保存到 `style_pack_resource_chunk`，每块最多 1 MiB，每次 SQL 单独插入一块，读取有序拼回。大的编译结果不再重复写入旧 `css_compiled` 列，避免元数据 UPDATE 超过 MySQL 旧版默认 4 MiB `max_allowed_packet`；其余存储方式不变。分块和包版本同事务提交，删包同时清理分块，旧版本正式资源继续保留。
+
+Connect 与 REST 网关均使用 `MaxAPIRequestBytes = 256 MiB`；20 MiB ZIP 以 JSON base64 上传约 26.7 MiB，应用中没有更小的请求限制。反向代理如另设上传限制，需要部署者同步调大。这里不新增 Go 依赖。
 
 ## 博客导入
 

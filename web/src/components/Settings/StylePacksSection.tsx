@@ -13,11 +13,11 @@ import { getErrorMessage } from "@/lib/error";
 import type { StylePack } from "@/types/proto/api/v1/instance_service_pb";
 import { blogStyleLabelKey, isBlogStyle } from "@/utils/blog-style";
 import { useTranslate } from "@/utils/i18n";
-import { stylePackLabel } from "@/utils/style-packs";
+import { stylePackLabel, stylePackScheme } from "@/utils/style-packs";
 import SettingSection from "./SettingSection";
 
 /** Where the pack format (style.json, style.css, assets/) and its limits are written down. */
-const FORMAT_DOC_URL = `${MEMOS_PLUS_REPOSITORY}/blob/main/docs/style-packs-and-import-api.md#社区风格包`;
+const FORMAT_DOC_URL = `${MEMOS_PLUS_REPOSITORY}/blob/main/docs/style-pack-authoring.md`;
 
 const readZip = async (event: ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];
@@ -30,6 +30,7 @@ const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePa
   const updateStylePack = useUpdateStylePack();
   const fileRef = useRef<HTMLInputElement>(null);
   const label = stylePackLabel(pack, i18n.language);
+  const scheme = stylePackScheme(pack);
 
   const run = async (action: () => Promise<unknown>, done: string) => {
     try {
@@ -73,6 +74,11 @@ const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePa
             ? t("style-packs.reacts-like", { style: t(blogStyleLabelKey(pack.reactsLike)) })
             : t("style-packs.no-reactions")}
         </p>
+        {scheme && (
+          <p className="text-xs leading-5 text-muted-foreground">
+            {t(scheme === "dark" ? "style-packs.scheme-dark" : "style-packs.scheme-light")}
+          </p>
+        )}
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         <Switch
