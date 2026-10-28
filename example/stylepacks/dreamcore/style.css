@@ -1,0 +1,375 @@
+/* 梦核 Dreamcore — a Memos Plus style pack.
+   A pastel sky you seem to remember, pearly panels that glow at the edges, a faint eye in the clouds, film grain,
+   and a pool-room under the composer. Light themes get the afternoon sky, dark themes the violet Milky Way. The sky
+   photographs and the tile texture are CC0 from Poly Haven; the drawings and the grain are this pack's own (see
+   README.md). Low-power mode drops the blur, grain and motion. */
+
+:root {
+  --dc-ink: color-mix(in oklch, var(--foreground) 82%, #3b3266);
+  --dc-glow: rgb(255 182 232 / 60%);
+  --dc-glow-2: rgb(176 160 255 / 55%);
+  --dc-milk: rgb(255 255 255 / 76%);
+  --dc-milk-edge: rgb(255 255 255 / 92%);
+  --dc-pearl: conic-gradient(from 200deg, #ffd3ee, #d9ccff, #c6ecff, #dcffe4, #fff3c4, #ffd3ee);
+  --dc-sky: url(asset:sky-day.webp);
+  --dc-eye-opacity: 0.1;
+  --dc-grain-opacity: 0.07;
+  --sidebar: rgb(255 255 255 / 42%);
+  --sidebar-accent: rgb(255 255 255 / 60%);
+  --sb-surface: linear-gradient(var(--dc-milk), var(--dc-milk)) padding-box, var(--dc-pearl) border-box;
+  --sb-border: 1.5px solid transparent;
+  --sb-radius: 22px;
+  --sb-shadow: 0 0 0 1px rgb(255 255 255 / 35%), 0 12px 38px -14px var(--dc-glow-2), 0 0 46px -18px var(--dc-glow);
+  --sb-shadow-hover: 0 0 0 1px rgb(255 255 255 / 55%), 0 16px 46px -14px var(--dc-glow-2), 0 0 60px -14px var(--dc-glow);
+  --sb-blur: blur(10px) saturate(130%);
+  --sb-lift: translateY(-2px);
+  --sb-cover-radius: 16px;
+  --sb-pill-radius: 999px;
+  --sb-control-radius: 999px;
+  --sb-font-display: Quicksand, "Varela Round", Nunito, "Yuanti SC", YouYuan, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --sb-field-border: 1px solid var(--dc-milk-edge);
+  --sb-field-radius: 14px;
+  --sb-field-fill: rgb(255 255 255 / 72%);
+  --sb-field-shadow: 0 0 0 3px rgb(255 255 255 / 18%), inset 0 1px 2px rgb(120 90 200 / 12%);
+  --sb-button-shadow: 0 0 16px -4px var(--dc-glow);
+  --sb-share-backdrop: var(--dc-sky) center / cover, #e9e0ff;
+  scrollbar-color: #d6c6ff transparent;
+}
+
+:root[data-theme$="-dark"] {
+  --dc-ink: color-mix(in oklch, var(--foreground) 85%, #efe6ff);
+  --dc-glow: rgb(255 120 220 / 45%);
+  --dc-glow-2: rgb(140 110 255 / 55%);
+  --dc-milk: rgb(36 24 74 / 66%);
+  --dc-milk-edge: rgb(214 196 255 / 30%);
+  --dc-pearl: conic-gradient(from 200deg, #7a4f9e, #4f4fa8, #3c7aa6, #4f8f86, #9a8350, #7a4f9e);
+  --dc-sky: url(asset:sky-night.webp);
+  --dc-eye-opacity: 0.08;
+  --dc-grain-opacity: 0.11;
+  --sidebar: rgb(24 16 52 / 55%);
+  --sidebar-accent: rgb(255 255 255 / 10%);
+  --sb-field-fill: rgb(30 20 62 / 70%);
+  --sb-field-shadow: 0 0 0 3px rgb(255 255 255 / 4%), inset 0 1px 2px rgb(0 0 0 / 35%);
+  --sb-share-backdrop: var(--dc-sky) center / cover, #1b1240;
+  scrollbar-color: #6b56b8 transparent;
+}
+
+/* The sky, held still behind everything, a little washed toward the theme's own colour. Sparkles hang in it. */
+body {
+  background:
+    url(asset:sparkle.svg) 12% 18% / 18px no-repeat,
+    url(asset:sparkle.svg) 86% 12% / 26px no-repeat,
+    url(asset:sparkle.svg) 72% 64% / 14px no-repeat,
+    url(asset:sparkle.svg) 24% 78% / 20px no-repeat,
+    url(asset:sparkle.svg) 50% 38% / 10px no-repeat,
+    linear-gradient(180deg, color-mix(in oklch, var(--primary) 16%, transparent), transparent 60%),
+    var(--dc-sky) center bottom / cover no-repeat,
+    #e9e0ff;
+  background-attachment: fixed;
+}
+
+:root[data-theme$="-dark"] body {
+  background-color: #1b1240;
+}
+
+/* An eye in the clouds, so faint you are never sure it is there; it opens and closes very slowly. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 9vh;
+  left: 50%;
+  z-index: -1;
+  width: min(46vw, 520px);
+  aspect-ratio: 64 / 44;
+  background: url(asset:eye-open.svg) center / contain no-repeat;
+  opacity: var(--dc-eye-opacity);
+  filter: blur(1.5px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: dc-breathe 14s ease-in-out infinite;
+}
+
+@keyframes dc-breathe {
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.04, 0.92);
+  }
+}
+
+/* Film grain over the whole page. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 57;
+  background: url(asset:grain.png) 0 0 / 160px;
+  opacity: var(--dc-grain-opacity);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Text sits soft on the milk glass. */
+[data-styled-blog] {
+  color: var(--dc-ink);
+}
+
+[data-styled-blog] :is([data-sb-title], [data-sb-widget-title]) {
+  color: var(--dc-ink);
+  letter-spacing: 0.01em;
+}
+
+/* The site title glows like sunlight through a window, with two sparkles that come and go. */
+[data-styled-blog] [data-sb-hero-title] {
+  position: relative;
+  width: fit-content;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-shadow:
+    0 1px 2px rgb(110 80 190 / 45%),
+    0 0 6px rgb(255 255 255 / 90%),
+    0 0 18px var(--dc-glow),
+    0 0 42px var(--dc-glow-2);
+}
+
+[data-styled-blog] [data-sb-hero-title]::after {
+  content: "";
+  position: absolute;
+  inset: -14px -30px -10px auto;
+  width: 34px;
+  background:
+    url(asset:sparkle.svg) right top / 18px no-repeat,
+    url(asset:sparkle.svg) left bottom / 11px no-repeat;
+  pointer-events: none;
+  animation: dc-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes dc-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(12deg);
+  }
+}
+
+/* On the pale afternoon sky the tagline is ink with a white halo; at night it is white. */
+[data-styled-blog] [data-sb-hero-desc] {
+  color: var(--dc-ink);
+  text-shadow: 0 0 10px rgb(255 255 255 / 90%);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-sb-hero-desc] {
+  color: #ffffff;
+  text-shadow: 0 0 10px var(--dc-glow-2);
+}
+
+/* A whisper under the title. */
+[data-styled-blog] [data-sb-hero]::after {
+  content: "you have been here before.";
+  content: "you have been here before." / "";
+  display: block;
+  margin-top: 10px;
+  color: rgb(255 255 255 / 88%);
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-shadow:
+    0 0 2px rgb(110 80 190 / 55%),
+    0 0 8px var(--dc-glow);
+}
+
+:root[lang|="zh"] [data-styled-blog] [data-sb-hero]::after {
+  content: "你以前来过这里。";
+  content: "你以前来过这里。" / "";
+}
+
+:root[lang="zh-Hant"] [data-styled-blog] [data-sb-hero]::after {
+  content: "你以前來過這裡。";
+  content: "你以前來過這裡。" / "";
+}
+
+/* The composer floats over a pool room: white mosaic under still water. */
+[data-styled-blog] :is([data-memo-editor]:not(.fixed), [data-blog-composer]) {
+  background:
+    linear-gradient(rgb(255 255 255 / 66%), rgb(255 255 255 / 66%)) padding-box,
+    url(asset:tiles.webp) 0 0 / 160px padding-box,
+    var(--dc-pearl) border-box;
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] :is([data-memo-editor]:not(.fixed), [data-blog-composer]) {
+  background:
+    linear-gradient(rgb(16 26 52 / 76%), rgb(16 26 52 / 76%)) padding-box,
+    url(asset:tiles.webp) 0 0 / 160px padding-box,
+    var(--dc-pearl) border-box;
+}
+
+/* The side panel and the top bar are frosted milk glass. */
+[data-app-sidebar] {
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+[data-app-sidebar-frame] {
+  border-inline-end: 1px solid var(--dc-milk-edge);
+}
+
+[data-app-toolbar] {
+  border-bottom: 1px solid var(--dc-milk-edge);
+  background: rgb(255 255 255 / 34%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+:root[data-theme$="-dark"] [data-app-toolbar] {
+  background: rgb(24 16 52 / 45%);
+}
+
+[data-blog-nav] a {
+  border-radius: 999px;
+}
+
+[data-blog-nav] a[aria-current="page"] {
+  background: rgb(255 255 255 / 72%);
+  box-shadow: 0 0 18px -2px var(--dc-glow);
+}
+
+:root[data-theme$="-dark"] [data-blog-nav] a[aria-current="page"] {
+  background: rgb(255 255 255 / 14%);
+}
+
+/* Buttons are soft candy pills. */
+[data-ui-button]:is([data-variant="default"], [data-variant="outline"], [data-variant="secondary"]) {
+  border-radius: 999px;
+}
+
+[data-ui-button][data-variant="default"] {
+  border: 1px solid rgb(255 255 255 / 70%);
+  background: linear-gradient(135deg, color-mix(in oklch, var(--primary) 55%, #ffb8e6), color-mix(in oklch, var(--primary) 55%, #a9b8ff));
+  color: #ffffff;
+  text-shadow: 0 0 6px rgb(120 60 160 / 35%);
+}
+
+/* Chips, tags and page numbers are little bubbles. */
+[data-styled-blog] [data-sb-chip] {
+  border-radius: 999px;
+}
+
+[data-styled-blog] :is([data-sb-cloud-tag], [data-memo-pagination] button) {
+  border: 1px solid var(--dc-milk-edge);
+  background: linear-gradient(135deg, rgb(255 230 246 / 80%), rgb(228 224 255 / 80%));
+  color: var(--dc-ink);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] :is([data-sb-cloud-tag], [data-memo-pagination] button) {
+  background: linear-gradient(135deg, rgb(120 70 150 / 45%), rgb(70 70 160 / 45%));
+}
+
+[data-styled-blog] :is([data-sb-cloud-tag][aria-pressed="true"], [data-memo-pagination] button[aria-current="page"]) {
+  border-color: rgb(255 255 255 / 90%);
+  background: linear-gradient(135deg, color-mix(in oklch, var(--primary) 55%, #ffb8e6), color-mix(in oklch, var(--primary) 55%, #a9b8ff));
+  box-shadow: 0 0 14px -2px var(--dc-glow);
+  color: #ffffff;
+}
+
+[data-styled-blog] [data-sb-tag] {
+  color: color-mix(in oklch, var(--primary) 70%, #c25fae);
+}
+
+/* Covers look like photographs from a camera that no longer exists: warm, soft and glowing. */
+[data-styled-blog] [data-sb-cover] {
+  box-shadow: 0 0 22px -4px var(--dc-glow);
+}
+
+[data-styled-blog] [data-sb-cover] :is(img, video) {
+  filter: saturate(1.15) contrast(0.94) brightness(1.06);
+}
+
+/* Inner blocks, the day card and the daily question share the pearly glass. */
+[data-styled-blog] [data-sb-subcard] {
+  border: 1px solid var(--dc-milk-edge);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 40%);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-sb-subcard] {
+  background: rgb(255 255 255 / 6%);
+}
+
+:is([data-home-today], [data-daily-question]) {
+  border: 1.5px solid transparent;
+  border-radius: 20px;
+  background:
+    linear-gradient(var(--dc-milk), var(--dc-milk)) padding-box,
+    var(--dc-pearl) border-box;
+  box-shadow: 0 0 36px -14px var(--dc-glow);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+[data-daily-question] {
+  background:
+    url(asset:sparkle.svg) right 14px top 10px / 12px no-repeat padding-box,
+    linear-gradient(var(--dc-milk), var(--dc-milk)) padding-box,
+    var(--dc-pearl) border-box;
+}
+
+/* Batch picking: a pearly thread with an eye that is shut until you pick the post, then opens. */
+[data-memo-pick-rail],
+[data-memo-selectable]:hover > [data-memo-pick-rail] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 70%), rgb(220 210 255 / 40%));
+  box-shadow: 0 0 10px -2px var(--dc-glow);
+}
+
+[data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: linear-gradient(180deg, #ffd3ee, #d9ccff, #c6ecff);
+}
+
+[data-memo-pick-mark],
+[data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  width: 24px;
+  border: 0;
+  border-radius: 0;
+  background: url(asset:eye-closed.svg) center / contain no-repeat;
+  box-shadow: none;
+}
+
+[data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  background-image: url(asset:eye-open.svg);
+  filter: drop-shadow(0 0 6px rgb(255 160 230 / 90%));
+}
+
+[data-memo-pick-check] {
+  display: none;
+}
+
+[data-memo-selection-wash] {
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgb(255 190 235 / 16%), rgb(180 170 255 / 16%), rgb(170 230 255 / 16%));
+}
+
+::selection {
+  background: rgb(255 182 232 / 55%);
+}
+
+/* Low-power mode: no grain over the page, and the eye and sparkles hold still. Frosting is dropped by the app. */
+:root[data-effects="lite"] body::after {
+  display: none;
+}
+
+:root[data-effects="lite"] body::before,
+:root[data-effects="lite"] [data-styled-blog] [data-sb-hero-title]::after {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  [data-styled-blog] [data-sb-hero-title]::after {
+    animation: none;
+  }
+}

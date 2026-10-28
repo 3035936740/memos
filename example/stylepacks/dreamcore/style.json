@@ -1,0 +1,19 @@
+{
+  "kind": "memos-plus.style",
+  "version": 1,
+  "id": "dreamcore",
+  "name": {
+    "en": "Dreamcore",
+    "zh-Hans": "梦核",
+    "zh-Hant": "夢核"
+  },
+  "description": {
+    "en": "A pastel sky you seem to remember, pearly glowing panels, an eye in the clouds, film grain and a pool room under the composer.",
+    "zh-Hans": "似曾相识的粉彩天空、发光的珍珠面板、云里的眼睛、胶片颗粒，编辑器下面是一间泳池房。",
+    "zh-Hant": "似曾相識的粉彩天空、發光的珍珠面板、雲裡的眼睛、膠片顆粒，編輯器下面是一間泳池房。"
+  },
+  "author": "Memos Plus",
+  "homepage": "https://github.com/3035936740/memos/tree/main/example/stylepacks/dreamcore",
+  "license": "CC0-1.0",
+  "preview": "preview.webp"
+}

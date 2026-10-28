@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 82" width="34" height="82">
+  <defs>
+    <linearGradient id="wire" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7d848e"/>
+      <stop offset="0.35" stop-color="#f5f7f9"/>
+      <stop offset="0.6" stop-color="#a3aab3"/>
+      <stop offset="1" stop-color="#e4e7eb"/>
+    </linearGradient>
+  </defs>
+  <path d="M12.5 26V61A5 5 0 0 0 22.5 61V13A8 8 0 0 0 6.5 13V65A11 11 0 0 0 28.5 65V21" fill="none" stroke="#000000" stroke-opacity="0.22" stroke-width="2.8" stroke-linecap="round" transform="translate(1.4 1.8)"/>
+  <path d="M12.5 26V61A5 5 0 0 0 22.5 61V13A8 8 0 0 0 6.5 13V65A11 11 0 0 0 28.5 65V21" fill="none" stroke="url(#wire)" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M12.5 26V61A5 5 0 0 0 22.5 61V13A8 8 0 0 0 6.5 13V65A11 11 0 0 0 28.5 65V21" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.7" stroke-linecap="round" transform="translate(-0.5 -0.4)"/>
+</svg>

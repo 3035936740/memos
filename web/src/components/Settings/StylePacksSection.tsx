@@ -1,4 +1,5 @@
-import { DownloadIcon, PaletteIcon, RefreshCwIcon, Trash2Icon, UploadIcon } from "lucide-react";
+import { timestampDate } from "@bufbuild/protobuf/wkt";
+import { DownloadIcon, EyeIcon, EyeOffIcon, PaletteIcon, RefreshCwIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { instanceServiceClient } from "@/connect";
+import { useView } from "@/contexts/ViewContext";
 import { useAllStylePacks, useDeleteStylePack, useInstallStylePack, useUpdateStylePack } from "@/hooks/useStylePackQueries";
 import i18n from "@/i18n";
 import { getErrorMessage } from "@/lib/error";
@@ -28,9 +30,11 @@ const readZip = async (event: ChangeEvent<HTMLInputElement>) => {
 const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePack) => void }) => {
   const t = useTranslate();
   const updateStylePack = useUpdateStylePack();
+  const { packPreview, startPackPreview, endPackPreview } = useView();
   const fileRef = useRef<HTMLInputElement>(null);
   const label = stylePackLabel(pack, i18n.language);
   const scheme = stylePackScheme(pack);
+  const previewing = packPreview?.pack.id === pack.id;
 
   const run = async (action: () => Promise<unknown>, done: string) => {
     try {
@@ -44,6 +48,21 @@ const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePa
   const handleUpdate = async (event: ChangeEvent<HTMLInputElement>) => {
     const zip = await readZip(event);
     if (zip) await run(() => updateStylePack.mutateAsync({ id: pack.id, zip }), t("style-packs.updated", { name: label }));
+  };
+
+  // The server hands out a private copy of the stylesheet, served for an hour even while the pack is off; this tab
+  // wears it until the preview ends (StylePackPreviewBar).
+  const handlePreview = async () => {
+    if (previewing) {
+      endPackPreview();
+      return;
+    }
+    try {
+      const { cssUrl, expiresAt } = await instanceServiceClient.previewStylePack({ id: pack.id });
+      startPackPreview({ pack: { ...pack, cssUrl }, expiresAt: expiresAt ? timestampDate(expiresAt) : undefined });
+    } catch (error) {
+      toast.error(getErrorMessage(error, t("style-packs.failed")));
+    }
   };
 
   const handleExport = () =>
@@ -92,6 +111,10 @@ const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePa
             )
           }
         />
+        <Button variant="outline" size="sm" aria-pressed={previewing} onClick={() => void handlePreview()}>
+          {previewing ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
+          {t(previewing ? "style-packs.end-preview" : "style-packs.preview")}
+        </Button>
         <Button variant="outline" size="sm" disabled={updateStylePack.isPending} onClick={() => fileRef.current?.click()}>
           <RefreshCwIcon className="size-4" />
           {t("style-packs.update")}
@@ -111,9 +134,10 @@ const PackRow = ({ pack, onDelete }: { pack: StylePack; onDelete: (pack: StylePa
 };
 
 /**
- * Settings → Style packs (admins): install community styles from ZIP files, turn them on for everyone, replace them
- * with a newer version, export the original ZIP, or remove them. A new pack starts switched off; once on, it shows in
- * every visitor's style picker and a post can name it with #style/<id>.
+ * Settings → Style packs (admins): install community styles from ZIP files, preview one in this tab before anyone
+ * else sees it, turn them on for everyone, replace them with a newer version, export the original ZIP, or remove
+ * them. A new pack starts switched off; once on, it shows in every visitor's style picker and a post can name it
+ * with #style/<id>.
  */
 const StylePacksSection = () => {
   const t = useTranslate();

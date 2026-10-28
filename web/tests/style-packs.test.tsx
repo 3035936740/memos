@@ -118,6 +118,30 @@ describe("ViewContext with style packs", () => {
     expect(document.documentElement.dataset.theme).toBe("paper");
   });
 
+  it("previews a pack in this tab only, in Blog 2, without saving anything", () => {
+    localStorage.setItem("memos-view-setting", JSON.stringify({ feedLayout: "memo" }));
+    mount();
+    act(() => view.startPackPreview({ pack: pack("night-ink", "pixel"), expiresAt: new Date(Date.now() + 60_000) }));
+    expect(view.feedLayout).toBe("blog2");
+    expect(view.styleId).toBe("night-ink");
+    expect(view.blogStyle).toBe("pixel");
+    expect(view.sceneStyle).toBe("default");
+    expect(document.documentElement.dataset.style).toBe("night-ink");
+    expect(JSON.parse(localStorage.getItem("memos-view-setting") ?? "{}").feedLayout).toBe("memo");
+
+    act(() => view.endPackPreview());
+    expect(view.feedLayout).toBe("memo");
+    expect(document.documentElement.dataset.style).toBeUndefined();
+  });
+
+  it("ends a preview when a style is picked by hand", () => {
+    mount();
+    act(() => view.startPackPreview({ pack: pack("night-ink") }));
+    act(() => view.setBlogStyle("glass"));
+    expect(view.packPreview).toBeUndefined();
+    expect(view.styleId).toBe("glass");
+  });
+
   it("keeps a saved pack until the list arrives, then falls back if it is gone", () => {
     localStorage.setItem("memos-view-setting", JSON.stringify({ feedLayout: "blog2", blogStyle: "glass", stylePack: "old-pack" }));
     mount();

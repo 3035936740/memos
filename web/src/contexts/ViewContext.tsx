@@ -25,6 +25,14 @@ interface ViewState {
   stylePack?: string;
 }
 
+/** A style pack an admin is trying out (Settings → Style packs → Preview), shown in this tab only until it ends. */
+export interface PackPreview {
+  /** The pack, with its stylesheet swapped for the private preview copy that works while the pack is off. */
+  pack: StylePack;
+  /** When the preview copy stops being served. */
+  expiresAt?: Date;
+}
+
 interface ViewContextValue {
   orderByTimeAsc: boolean;
   timeBasis: MemoTimeBasis;
@@ -54,6 +62,10 @@ interface ViewContextValue {
   setStylePacks: (packs: StylePack[]) => void;
   /** Wears a style pack, the way setBlogStyle wears a built-in style. */
   setStylePack: (id: string) => void;
+  /** The pack being previewed, which shows over every other choice, in Blog 2, without saving anything. */
+  packPreview?: PackPreview;
+  startPackPreview: (preview: PackPreview) => void;
+  endPackPreview: () => void;
   /** The look the open post's author chose, while it is showing. */
   postLook?: PostLook;
   /** Shows a post's look without saving it; undefined goes back to the visitor's own. */
@@ -138,21 +150,31 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   const [viewState, setViewState] = useState(getInitialState);
   const [postLook, setPostLookState] = useState<PostLook>();
   const [loadedStylePacks, setLoadedStylePacks] = useState<StylePack[]>();
+  const [packPreview, setPackPreview] = useState<PackPreview>();
   const stylePacks = loadedStylePacks ?? NO_STYLE_PACKS;
   const findPack = (id: string | undefined) => (id ? stylePacks.find((pack) => pack.id === id) : undefined);
 
   // Styles only dress Blog 2, the visitor's own and a post's alike; a post's theme applies in every layout. A post's
   // built-in style or pack comes first, then the visitor's pack, then their built-in style. Until the packs have
-  // loaded, a saved pack keeps its place on <html> so the page does not flash another style first.
-  const blog2 = viewState.feedLayout === "blog2";
+  // loaded, a saved pack keeps its place on <html> so the page does not flash another style first. A pack being
+  // previewed comes before all of them, and shows in Blog 2 whatever layout is saved.
+  const preview = packPreview?.pack;
+  const feedLayout = preview ? "blog2" : viewState.feedLayout;
+  const blog2 = feedLayout === "blog2";
   const postPack = blog2 && !postLook?.style ? findPack(postLook?.stylePack) : undefined;
   const savedPackId =
     blog2 && !postLook?.style && !postPack && viewState.stylePack && (!loadedStylePacks || findPack(viewState.stylePack))
       ? viewState.stylePack
       : undefined;
-  const stylePack = postPack ?? findPack(savedPackId);
-  const styleId = blog2 && postLook?.style ? postLook.style : (stylePack?.id ?? savedPackId ?? viewState.blogStyle);
-  const blogStyle = blog2 && postLook?.style ? postLook.style : savedPackId || postPack ? stylePackBase(stylePack) : viewState.blogStyle;
+  const stylePack = preview ?? postPack ?? findPack(savedPackId);
+  const styleId = preview ? preview.id : blog2 && postLook?.style ? postLook.style : (stylePack?.id ?? savedPackId ?? viewState.blogStyle);
+  const blogStyle = preview
+    ? stylePackBase(preview)
+    : blog2 && postLook?.style
+      ? postLook.style
+      : savedPackId || postPack
+        ? stylePackBase(stylePack)
+        : viewState.blogStyle;
   const sceneStyle = isBlogStyle(styleId) ? styleId : DEFAULT_BLOG_STYLE;
   const packScheme = stylePackScheme(stylePack);
   // Whether this browser had saved view settings when the app started; first-visit defaults only apply when not.
@@ -162,9 +184,9 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   // The style also dresses the app frame (rail, top bar, page background), which sits outside the
   // feed, so it is mirrored onto <html>. It only applies to Blog 2; other layouts, Blog 1 included, keep the default.
   useLayoutEffect(() => {
-    if (viewState.feedLayout === "blog2") document.documentElement.dataset.style = styleId;
+    if (blog2) document.documentElement.dataset.style = styleId;
     else delete document.documentElement.dataset.style;
-  }, [styleId, viewState.feedLayout]);
+  }, [styleId, blog2]);
 
   // A pack is marked on <html> as well, so the page shells step aside for the background it paints on body.
   const wearingPack = blog2 && !isBlogStyle(styleId);
@@ -214,17 +236,24 @@ export function ViewProvider({ children }: { children: ReactNode }) {
   const setCompactMode = (value: boolean) => updateState({ compactMode: value });
   const setLinkPreview = (value: boolean) => updateState({ linkPreview: value });
   const setMaxColumns = (value: MemoMaxColumns) => updateState({ maxColumns: value });
-  const setFeedLayout = (value: MemoFeedLayout) =>
+  // Choosing a layout or style by hand ends a pack preview, so the choice shows.
+  const setFeedLayout = (value: MemoFeedLayout) => {
+    setPackPreview(undefined);
     updateState(value === "blog2" ? { feedLayout: value } : { feedLayout: value, blogStyle: DEFAULT_BLOG_STYLE, stylePack: undefined });
+  };
   // Picking a style is taking the look back from the post.
   const setBlogStyle = (value: BlogStyle) => {
+    setPackPreview(undefined);
     setPostLook(undefined);
     updateState({ blogStyle: value, stylePack: undefined });
   };
   const setStylePack = (id: string) => {
+    setPackPreview(undefined);
     setPostLook(undefined);
     updateState({ stylePack: id });
   };
+  const startPackPreview = useCallback((value: PackPreview) => setPackPreview(value), []);
+  const endPackPreview = useCallback(() => setPackPreview(undefined), []);
   const setStylePacks = useCallback((packs: StylePack[]) => setLoadedStylePacks(packs), []);
 
   // A saved pack the admin has since disabled or removed gives way to the default style. Only a choice this
@@ -237,6 +266,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
     // updateState is recreated every render; the check above keeps this to once per vanished pack.
   }, [loadedStylePacks, viewState.stylePack]);
   const resetToDefaults = () => {
+    setPackPreview(undefined);
     setPostLook(undefined);
     try {
       localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -264,7 +294,7 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         compactMode: viewState.compactMode,
         linkPreview: viewState.linkPreview,
         maxColumns: viewState.maxColumns,
-        feedLayout: viewState.feedLayout,
+        feedLayout,
         blogStyle,
         sceneStyle,
         styleId,
@@ -272,6 +302,9 @@ export function ViewProvider({ children }: { children: ReactNode }) {
         stylePacks,
         setStylePacks,
         setStylePack,
+        packPreview,
+        startPackPreview,
+        endPackPreview,
         postLook,
         setPostLook,
         setOrderByTimeAsc,

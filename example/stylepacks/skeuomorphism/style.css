@@ -1,0 +1,476 @@
+/* 拟物化 Skeuomorphism — a Memos Plus style pack.
+   Light themes: posts are sheets of paper on a linen-covered desk. Dark themes: stitched leather folios on a
+   rosewood desk. Either way the side panel is a leather cover, the top bar brushed aluminium, the site title a
+   screwed-on brass nameplate, and buttons are glossy gel. Textures are grey so they take the theme's colour
+   (multiply blend); the photographic ones are CC0 from Poly Haven (see README.md). */
+
+:root {
+  --sk-desk: color-mix(in oklch, var(--background) 86%, #8f897f);
+  --sk-paper: color-mix(in oklch, var(--card) 45%, #fffaf0);
+  --sk-paper-edge: rgb(80 60 30 / 16%);
+  --sk-leather: color-mix(in oklch, var(--primary) 22%, #6a4024);
+  --sk-leather-text: #f7ead8;
+  --sk-stitch: rgb(255 236 205 / 50%);
+  --sk-metal: #d7dade;
+  --sk-metal-edge: #8d929a;
+  --sk-gloss-top: rgb(255 255 255 / 55%);
+  --sk-drop: 0 1px 1px rgb(0 0 0 / 12%), 0 2px 4px rgb(0 0 0 / 8%), 0 14px 26px -12px rgb(60 40 20 / 45%);
+  --sk-drop-hover: 0 1px 1px rgb(0 0 0 / 12%), 0 4px 8px rgb(0 0 0 / 10%), 0 22px 36px -14px rgb(60 40 20 / 50%);
+  --sidebar: var(--sk-leather);
+  --sidebar-foreground: var(--sk-leather-text);
+  --sidebar-accent: rgb(0 0 0 / 22%);
+  --sidebar-accent-foreground: #ffffff;
+  --sb-surface: var(--sk-paper);
+  --sb-border: 1px solid var(--sk-paper-edge);
+  --sb-radius: 4px;
+  --sb-shadow: var(--sk-drop);
+  --sb-shadow-hover: var(--sk-drop-hover);
+  --sb-lift: translateY(-1px);
+  --sb-cover-radius: 3px;
+  --sb-pill-radius: 6px;
+  --sb-control-radius: 6px;
+  --sb-control-shadow: inset 0 1px 0 var(--sk-gloss-top), 0 1px 1px rgb(0 0 0 / 22%);
+  --sb-font-display: Baskerville, "Baskerville Old Face", "Palatino Linotype", "Book Antiqua", Georgia, "Songti SC",
+    "STSong", "Noto Serif CJK SC", SimSun, serif;
+  --sb-field-border: 1px solid #a8adb4;
+  --sb-field-radius: 5px;
+  --sb-field-fill: #ffffff;
+  --sb-field-shadow: inset 0 1px 2px rgb(0 0 0 / 18%), 0 1px 0 rgb(255 255 255 / 70%);
+  --sb-button-shadow: inset 0 1px 0 var(--sk-gloss-top), 0 1px 1px rgb(0 0 0 / 20%);
+  --sb-share-backdrop: url(asset:linen.webp) 0 0 / 300px, var(--sk-desk);
+}
+
+:root[data-theme$="-dark"] {
+  --sk-paper: color-mix(in oklch, var(--card) 55%, #3a2a1f);
+  --sk-paper-edge: rgb(0 0 0 / 55%);
+  --sk-leather: color-mix(in oklch, var(--primary) 14%, #3b2416);
+  --sk-stitch: rgb(255 228 190 / 34%);
+  --sk-metal: #6a6f77;
+  --sk-metal-edge: #24272b;
+  --sk-gloss-top: rgb(255 255 255 / 18%);
+  --sk-drop: 0 1px 1px rgb(0 0 0 / 50%), 0 14px 28px -12px rgb(0 0 0 / 80%);
+  --sk-drop-hover: 0 1px 1px rgb(0 0 0 / 50%), 0 22px 38px -14px rgb(0 0 0 / 85%);
+  --sb-field-border: 1px solid #1f2125;
+  --sb-field-fill: #2b2e33;
+  --sb-field-shadow: inset 0 1px 3px rgb(0 0 0 / 55%), 0 1px 0 rgb(255 255 255 / 8%);
+  --sb-share-backdrop: url(asset:wood.webp) 0 0 / 512px, #2a160d;
+}
+
+/* The desk. Light: linen in the theme's colour with a lamp's pool of light. Dark: rosewood, tinted toward the
+   theme's background and lit from above. */
+body {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 0%, rgb(255 255 255 / 45%), transparent 70%),
+    url(asset:linen.webp) 0 0 / 300px,
+    var(--sk-desk);
+  background-blend-mode: soft-light, multiply;
+  background-attachment: fixed;
+}
+
+:root[data-theme$="-dark"] body {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% -5%, rgb(255 214 160 / 16%), transparent 70%),
+    linear-gradient(color-mix(in oklch, var(--background) 45%, transparent), color-mix(in oklch, var(--background) 45%, transparent)),
+    url(asset:wood.webp) 0 0 / 512px,
+    #2a160d;
+  background-blend-mode: normal;
+  background-attachment: fixed;
+}
+
+/* Sheets of paper: fine grain multiplied into the paper colour, a hairline edge and a soft shadow on the desk. */
+[data-styled-blog] :is([data-sb-card], [data-sb-widget], [data-memo-editor]:not(.fixed), [data-blog-composer]),
+[data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *),
+[data-page-panel] {
+  background: url(asset:paper.webp) 0 0 / 256px, var(--sk-paper);
+  background-blend-mode: multiply;
+}
+
+/* Dark: the sheets are leather folios with a stitched inner edge. */
+:root[data-theme$="-dark"]
+  [data-styled-blog]
+  :is([data-sb-card], [data-sb-widget], [data-memo-editor]:not(.fixed), [data-blog-composer]),
+:root[data-theme$="-dark"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *),
+:root[data-theme$="-dark"] [data-page-panel] {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 7%), transparent 35%),
+    url(asset:leather.webp) 0 0 / 360px,
+    var(--sk-paper);
+  background-blend-mode: normal, multiply;
+  outline: 1px dashed var(--sk-stitch);
+  outline-offset: -7px;
+}
+
+/* The composer is a yellow legal pad bound in red at the top (light themes). */
+[data-styled-blog] :is([data-memo-editor]:not(.fixed), [data-blog-composer]) {
+  border-top: 14px solid #8a2f21;
+  border-radius: 4px 4px 3px 3px;
+  background: url(asset:paper.webp) 0 0 / 256px, color-mix(in oklch, #fff3a8 85%, var(--card));
+  background-blend-mode: multiply;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 30%),
+    var(--sk-drop);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] :is([data-memo-editor]:not(.fixed), [data-blog-composer]) {
+  border-top-color: #1d120b;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 7%), transparent 35%),
+    url(asset:leather.webp) 0 0 / 360px,
+    var(--sk-paper);
+  background-blend-mode: normal, multiply;
+}
+
+/* A paper clip holds each pinned post. */
+[data-styled-blog] [data-sb-card][data-sb-pinned]::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 20px;
+  z-index: 2;
+  width: 17px;
+  height: 41px;
+  background: url(asset:paperclip.svg) center / contain no-repeat;
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+/* Widgets are cards taped to the desk (light themes). */
+[data-styled-blog] [data-sb-widget]::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  z-index: 1;
+  width: 78px;
+  height: 22px;
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 18%) 0 2px, transparent 2px 5px),
+    rgb(250 244 214 / 62%);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 14%);
+  clip-path: polygon(3% 0, 97% 0, 100% 20%, 97% 40%, 100% 60%, 97% 80%, 100% 100%, 3% 100%, 0 80%, 3% 60%, 0 40%, 3% 20%, 0 0);
+  transform: translateX(-50%) rotate(-2deg);
+  pointer-events: none;
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-sb-widget]::before {
+  display: none;
+}
+
+[data-styled-blog] [data-sb-widget-title] {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--sk-paper-edge);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 55%);
+  letter-spacing: 0.02em;
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-sb-widget-title] {
+  box-shadow: 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+[data-styled-blog] :is([data-sb-title], [data-sb-widget-title]) {
+  text-shadow: 0 1px 0 rgb(255 255 255 / 75%);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] :is([data-sb-title], [data-sb-widget-title]) {
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 70%);
+}
+
+/* The site title is a brass nameplate, screwed on at the corners, with the name engraved. */
+[data-styled-blog] [data-sb-hero] {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding: 18px 34px 16px;
+  border: 1px solid #7d5f24;
+  border-radius: 6px;
+  background:
+    radial-gradient(circle closest-side, #fbefc7 0 25%, #a8843b 62%, #5a4214 90%, transparent 100%) left 8px top 8px / 11px 11px no-repeat,
+    radial-gradient(circle closest-side, #fbefc7 0 25%, #a8843b 62%, #5a4214 90%, transparent 100%) right 8px top 8px / 11px 11px no-repeat,
+    radial-gradient(circle closest-side, #fbefc7 0 25%, #a8843b 62%, #5a4214 90%, transparent 100%) left 8px bottom 8px / 11px 11px no-repeat,
+    radial-gradient(circle closest-side, #fbefc7 0 25%, #a8843b 62%, #5a4214 90%, transparent 100%) right 8px bottom 8px / 11px 11px no-repeat,
+    linear-gradient(#4a3510, #4a3510) left 10px top 12.75px / 7px 1.5px no-repeat,
+    linear-gradient(#4a3510, #4a3510) right 10px top 12.75px / 7px 1.5px no-repeat,
+    linear-gradient(#4a3510, #4a3510) left 10px bottom 12.75px / 7px 1.5px no-repeat,
+    linear-gradient(#4a3510, #4a3510) right 10px bottom 12.75px / 7px 1.5px no-repeat,
+    url(asset:brushed.webp) 0 0 / 512px 128px,
+    linear-gradient(180deg, #f3dd9c 0%, #d8b565 46%, #bf9542 54%, #e6ca82 100%);
+  background-blend-mode: normal, normal, normal, normal, normal, normal, normal, normal, multiply, normal;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 225 / 75%),
+    inset 0 -1px 0 rgb(0 0 0 / 25%),
+    0 1px 0 rgb(255 255 255 / 35%),
+    0 8px 16px -8px rgb(0 0 0 / 55%);
+}
+
+[data-styled-blog] [data-sb-hero-title] {
+  color: #4a3712;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 1px 0 rgb(255 246 214 / 80%),
+    0 -1px 0 rgb(0 0 0 / 22%);
+}
+
+[data-styled-blog] [data-sb-hero-desc] {
+  color: #5d4718;
+  text-shadow: 0 1px 0 rgb(255 246 214 / 70%);
+}
+
+/* The side panel is a leather cover with a stitched edge; the current page is pressed into it. */
+[data-app-sidebar] {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 6%), transparent 30%, rgb(0 0 0 / 18%)),
+    url(asset:leather.webp) 0 0 / 360px,
+    var(--sk-leather);
+  background-blend-mode: normal, multiply;
+  box-shadow: inset -7px 0 0 -6px var(--sk-stitch);
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 45%);
+  /* The theme's text colours turn to cream inside the cover so they read on the dark hide. */
+  --foreground: var(--sk-leather-text);
+  --muted-foreground: rgb(247 234 216 / 68%);
+  --muted: rgb(0 0 0 / 18%);
+  --accent: rgb(0 0 0 / 22%);
+  --accent-foreground: #ffffff;
+  --border: rgb(0 0 0 / 30%);
+}
+
+[data-app-sidebar-frame] {
+  border-inline-end: 1px solid rgb(0 0 0 / 45%);
+}
+
+[data-blog-nav] a {
+  border-radius: 6px;
+}
+
+[data-blog-nav] a[aria-current="page"] {
+  background: rgb(0 0 0 / 24%);
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 50%),
+    0 1px 0 rgb(255 255 255 / 12%);
+  color: #ffffff;
+}
+
+/* The top bar is brushed aluminium with a bevelled lower edge. */
+[data-app-toolbar] {
+  border-bottom: 1px solid var(--sk-metal-edge);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 45%), rgb(255 255 255 / 0%) 55%, rgb(0 0 0 / 8%)),
+    url(asset:brushed.webp) 0 0 / 512px 128px,
+    var(--sk-metal);
+  background-blend-mode: normal, multiply;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 65%),
+    0 1px 3px rgb(0 0 0 / 22%);
+  color: #2c3036;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 60%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-theme$="-dark"] [data-app-toolbar] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    0 1px 3px rgb(0 0 0 / 50%);
+  color: #eef0f3;
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 60%);
+}
+
+/* Gel buttons: a glossy upper half over a deeper lower one, pressed in while held. */
+[data-ui-button]:is([data-variant="default"], [data-variant="destructive"], [data-variant="outline"], [data-variant="secondary"]) {
+  border: 1px solid #9ca2aa;
+  background: linear-gradient(180deg, #ffffff 0%, #eef0f2 50%, #dfe2e6 51%, #f1f2f4 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    0 1px 1px rgb(0 0 0 / 15%);
+  color: #2b2f36;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 80%);
+}
+
+[data-ui-button][data-variant="default"] {
+  border-color: color-mix(in oklch, var(--primary) 70%, black);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary) 45%, white) 0%,
+    color-mix(in oklch, var(--primary) 85%, white) 50%,
+    var(--primary) 51%,
+    color-mix(in oklch, var(--primary) 80%, white) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 45%),
+    0 1px 1px rgb(0 0 0 / 25%);
+  color: var(--primary-foreground);
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 30%);
+}
+
+[data-ui-button][data-variant="destructive"] {
+  border-color: color-mix(in oklch, var(--destructive) 70%, black);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--destructive) 45%, white) 0%,
+    color-mix(in oklch, var(--destructive) 85%, white) 50%,
+    var(--destructive) 51%,
+    color-mix(in oklch, var(--destructive) 80%, white) 100%
+  );
+  color: var(--destructive-foreground);
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 30%);
+}
+
+:root[data-theme$="-dark"] [data-ui-button]:is([data-variant="outline"], [data-variant="secondary"]) {
+  border-color: #1d1f23;
+  background: linear-gradient(180deg, #5d626a 0%, #474b52 50%, #3b3f45 51%, #4b4f56 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 1px 1px rgb(0 0 0 / 50%);
+  color: #f0f2f5;
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 60%);
+}
+
+[data-ui-button]:is([data-variant="default"], [data-variant="destructive"], [data-variant="outline"], [data-variant="secondary"]):hover {
+  filter: brightness(1.04);
+}
+
+[data-ui-button]:is([data-variant="default"], [data-variant="destructive"], [data-variant="outline"], [data-variant="secondary"]):active {
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 30%);
+  filter: brightness(0.96);
+}
+
+/* Status chips are small enamel badges. */
+[data-styled-blog] [data-sb-chip] {
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 40%),
+    0 1px 1px rgb(0 0 0 / 20%);
+}
+
+/* The tag cloud: manila luggage tags with a punched, ringed hole. */
+[data-styled-blog] [data-sb-cloud-tag] {
+  padding-inline-start: 18px;
+  border: 1px solid #b59a62;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 8px 50%, transparent 0 3px, #8f7746 3px 4px, transparent 4.5px),
+    linear-gradient(180deg, #f3e6c4, #e6d3a3);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 18%);
+  color: #4c3c1c;
+  clip-path: polygon(6px 0, 100% 0, 100% 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  -webkit-mask: radial-gradient(circle at 8px 50%, transparent 0 3px, #000000 3.4px);
+  mask: radial-gradient(circle at 8px 50%, transparent 0 3px, #000000 3.4px);
+}
+
+[data-styled-blog] [data-sb-cloud-tag][aria-pressed="true"] {
+  background:
+    radial-gradient(circle at 8px 50%, transparent 0 3px, #6a5226 3px 4px, transparent 4.5px),
+    linear-gradient(180deg, #d9bf84, #ccae6c);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 30%);
+  color: #2e2309;
+}
+
+/* Page numbers are gel buttons; the current one stays pressed in. */
+[data-styled-blog] [data-memo-pagination] button {
+  border: 1px solid #9ca2aa;
+  background: linear-gradient(180deg, #ffffff 0%, #eef0f2 50%, #dfe2e6 51%, #f1f2f4 100%);
+  color: #2b2f36;
+}
+
+[data-styled-blog] [data-memo-pagination] button[aria-current="page"] {
+  border-color: color-mix(in oklch, var(--primary) 70%, black);
+  background: color-mix(in oklch, var(--primary) 88%, black);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 40%);
+  color: var(--primary-foreground);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-memo-pagination] button:not([aria-current="page"]) {
+  border-color: #1d1f23;
+  background: linear-gradient(180deg, #5d626a 0%, #474b52 50%, #3b3f45 51%, #4b4f56 100%);
+  color: #f0f2f5;
+}
+
+/* Nested blocks and the home cards: the daily question is a sticky note, the rest sit inset in the sheet. */
+[data-styled-blog] [data-sb-subcard] {
+  border: 1px solid var(--sk-paper-edge);
+  background: rgb(255 255 255 / 45%);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 10%);
+}
+
+:root[data-theme$="-dark"] [data-styled-blog] [data-sb-subcard] {
+  background: rgb(0 0 0 / 22%);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 45%);
+}
+
+[data-home-today] {
+  border: 1px solid var(--sk-paper-edge);
+  background: url(asset:paper.webp) 0 0 / 256px, var(--sk-paper);
+  background-blend-mode: multiply;
+  box-shadow: var(--sk-drop);
+}
+
+[data-daily-question] {
+  border: 0;
+  border-radius: 2px;
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 5%), transparent 18%),
+    url(asset:paper.webp) 0 0 / 256px,
+    #fdf0a0;
+  background-blend-mode: normal, multiply;
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 12%),
+    0 10px 14px -10px rgb(70 55 0 / 55%);
+  color: #3d3510;
+}
+
+:root[data-theme$="-dark"] [data-home-today] {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 7%), transparent 35%),
+    url(asset:leather.webp) 0 0 / 360px,
+    var(--sk-paper);
+  background-blend-mode: normal, multiply;
+}
+
+/* Batch picking: a thin leather strap down the side with a brass stud that becomes a glossy jewel when picked. */
+[data-memo-pick-rail],
+[data-memo-selectable]:hover > [data-memo-pick-rail] {
+  border-radius: 4px;
+  background: url(asset:leather.webp) 0 0 / 200px, var(--sk-leather);
+  background-blend-mode: multiply;
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 45%);
+}
+
+[data-memo-selectable][data-selected] > [data-memo-pick-rail] {
+  background: url(asset:leather.webp) 0 0 / 200px, color-mix(in oklch, var(--primary) 45%, var(--sk-leather));
+  background-blend-mode: multiply;
+}
+
+[data-memo-pick-mark] {
+  border: 1px solid #5a4214;
+  background: radial-gradient(circle at 35% 30%, #fff4cf 0%, #d9b766 40%, #8f6c25 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 60%),
+    0 1px 2px rgb(0 0 0 / 45%);
+  color: #ffffff;
+}
+
+[data-memo-selectable][data-selected] [data-memo-pick-mark] {
+  border-color: color-mix(in oklch, var(--primary) 60%, black);
+  background: radial-gradient(circle at 35% 28%, color-mix(in oklch, var(--primary) 30%, white) 0%, var(--primary) 55%, color-mix(in oklch, var(--primary) 70%, black) 100%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 55%),
+    0 0 0 2px rgb(255 255 255 / 25%),
+    0 1px 3px rgb(0 0 0 / 50%);
+}
+
+[data-memo-selection-wash] {
+  border-radius: 4px;
+  background: rgb(255 214 110 / 14%);
+}
+
+/* Covers are photos mounted with a thin white border. */
+[data-styled-blog] [data-sb-cover] {
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-button] {
+    transition: none;
+  }
+}

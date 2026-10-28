@@ -11,6 +11,7 @@ import AppSidebar, {
 } from "@/components/AppSidebar";
 import SetupWizard from "@/components/SetupWizard";
 import SpaceDocumentBrand from "@/components/SpaceDocumentBrand";
+import StylePackPreviewBar from "@/components/StylePackPreviewBar";
 import SketchFilters from "@/components/StyledBlog/SketchFilters";
 import StyleEasterEggs from "@/components/StyledBlog/StyleEasterEggs";
 import StyleReactionEngine from "@/components/StyledBlog/StyleReactionEngine";
@@ -113,6 +114,7 @@ const RootLayoutContent = () => {
       <SetupWizard />
       <StyleEasterEggs />
       <StyleReactionEngine />
+      <StylePackPreviewBar />
     </div>
   );
 };

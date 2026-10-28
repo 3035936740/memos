@@ -1,0 +1,19 @@
+{
+  "kind": "memos-plus.style",
+  "version": 1,
+  "id": "skeuomorphism",
+  "name": {
+    "en": "Skeuomorphism",
+    "zh-Hans": "拟物化",
+    "zh-Hant": "擬物化"
+  },
+  "description": {
+    "en": "Paper on a linen desk, leather folios on rosewood at night, a brass nameplate, brushed aluminium and gel buttons.",
+    "zh-Hans": "亚麻桌面上的纸张，夜里是红木桌上的缝线皮革；黄铜铭牌、拉丝铝顶栏和果冻按钮。",
+    "zh-Hant": "亞麻桌面上的紙張，夜裡是紅木桌上的縫線皮革；黃銅銘牌、拉絲鋁頂欄和果凍按鈕。"
+  },
+  "author": "Memos Plus",
+  "homepage": "https://github.com/3035936740/memos/tree/main/example/stylepacks/skeuomorphism",
+  "license": "CC0-1.0",
+  "preview": "preview.webp"
+}
