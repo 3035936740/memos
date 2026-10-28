@@ -37,7 +37,8 @@ html[data-style="aero"] [data-share-image] {
 }
 
 html[data-style="y2k"] [data-share-image] {
-  --sb-share-backdrop: var(--sb-y2k-silver);
+  border-radius: 0;
+  --sb-share-backdrop: var(--w98-desktop);
 }
 
 html[data-style="vaporwave"] [data-share-image] {

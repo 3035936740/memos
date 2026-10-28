@@ -567,6 +567,7 @@ const CosmicBackground = () => {
       height={1}
       hidden
       aria-hidden="true"
+      data-cosmic-background=""
       className="pointer-events-none fixed inset-0 size-full"
       style={{ zIndex: 0 }}
     />

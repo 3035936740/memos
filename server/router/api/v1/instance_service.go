@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/usememos/memos/internal/dailyquestion"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/server/notification"
@@ -309,6 +310,15 @@ func (s *APIV1Service) UpdateInstanceSetting(ctx context.Context, request *v1pb.
 		}
 	case storepb.InstanceSettingKey_GENERAL:
 		if general := updateSetting.GetGeneralSetting(); general != nil {
+			_, questions, err := dailyquestion.NormalizeQuestions(general.DailyQuestionsJson)
+			if err != nil {
+				return nil, status.Error(codes.InvalidArgument, err.Error())
+			}
+			if len(questions) > 0 {
+				if err = s.validateTextContent(ctx, questions...); err != nil {
+					return nil, err
+				}
+			}
 			sanitized, err := s.prepareMemoCategoriesForGeneralUpdate(ctx, general.MemoCategoriesJson)
 			if err != nil {
 				return nil, status.Errorf(codes.Internal, "failed to sync memo categories: %v", err)

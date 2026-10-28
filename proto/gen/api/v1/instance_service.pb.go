@@ -1473,8 +1473,14 @@ type InstanceSetting_GeneralSetting struct {
 	DisableFestivalEffects bool `protobuf:"varint,26,opt,name=disable_festival_effects,json=disableFestivalEffects,proto3" json:"disable_festival_effects,omitempty"`
 	// Hide the built-in About navigation entry. False (including older settings) shows it.
 	HideAboutNavigation bool `protobuf:"varint,27,opt,name=hide_about_navigation,json=hideAboutNavigation,proto3" json:"hide_about_navigation,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Public instance seed for the frontend's yearly question shuffle.
+	DailyQuestionSeed string `protobuf:"bytes,28,opt,name=daily_question_seed,json=dailyQuestionSeed,proto3" json:"daily_question_seed,omitempty"`
+	// JSON question array: strings, built-in references or translated custom questions; empty uses the localized default bank.
+	DailyQuestionsJson string `protobuf:"bytes,29,opt,name=daily_questions_json,json=dailyQuestionsJson,proto3" json:"daily_questions_json,omitempty"`
+	// Disable the daily writing prompt. Default is false.
+	DisableDailyQuestion bool `protobuf:"varint,30,opt,name=disable_daily_question,json=disableDailyQuestion,proto3" json:"disable_daily_question,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1685,6 +1691,27 @@ func (x *InstanceSetting_GeneralSetting) GetDisableFestivalEffects() bool {
 func (x *InstanceSetting_GeneralSetting) GetHideAboutNavigation() bool {
 	if x != nil {
 		return x.HideAboutNavigation
+	}
+	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDailyQuestionSeed() string {
+	if x != nil {
+		return x.DailyQuestionSeed
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDailyQuestionsJson() string {
+	if x != nil {
+		return x.DailyQuestionsJson
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDisableDailyQuestion() bool {
+	if x != nil {
+		return x.DisableDailyQuestion
 	}
 	return false
 }
@@ -2963,7 +2990,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\vaccess_mode\x18\n" +
 	" \x01(\x0e2 .memos.api.v1.InstanceAccessModeR\n" +
 	"accessMode\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\xea1\n" +
+	"\x19GetInstanceProfileRequest\"\x823\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -2973,7 +3000,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
 	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x12T\n" +
-	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xcf\f\n" +
+	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xe7\r\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -3001,7 +3028,10 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x0fsetup_completed\x18\x18 \x01(\bR\x0esetupCompleted\x12+\n" +
 	"\x0fshow_powered_by\x18\x19 \x01(\bH\x02R\rshowPoweredBy\x88\x01\x01\x128\n" +
 	"\x18disable_festival_effects\x18\x1a \x01(\bR\x16disableFestivalEffects\x122\n" +
-	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x1ab\n" +
+	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x12.\n" +
+	"\x13daily_question_seed\x18\x1c \x01(\tR\x11dailyQuestionSeed\x120\n" +
+	"\x14daily_questions_json\x18\x1d \x01(\tR\x12dailyQuestionsJson\x124\n" +
+	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x1ab\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

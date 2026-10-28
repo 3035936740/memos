@@ -31,6 +31,10 @@ func (s *Store) ResetDemo(ctx context.Context) error {
 		return err
 	}
 	defer tx.Rollback()
+	dailySeed, err := ensureDailyQuestionSeedSQL(ctx, tx, "sqlite")
+	if err != nil {
+		return errors.Wrap(err, "preserve demo daily question seed")
+	}
 	// Persist cleanup metadata before removing rows, including objects whose deletion fails.
 	rows, err := tx.QueryContext(ctx, "SELECT id,uid,storage_type,reference,payload FROM attachment")
 	if err != nil {
@@ -94,6 +98,9 @@ func (s *Store) ResetDemo(ctx context.Context) error {
 		return err
 	}
 	if err := s.seedTx(ctx, tx, files); err != nil {
+		return err
+	}
+	if err := retainDemoDailyQuestionSeed(ctx, tx, dailySeed); err != nil {
 		return err
 	}
 	if _, err := tx.ExecContext(ctx, "UPDATE attachment SET blob=? WHERE uid='plus-demo-loop'", DemoLoopWAV()); err != nil {

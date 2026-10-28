@@ -27,11 +27,13 @@ import {
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
 import { BLOG_STYLE_OPTIONS, DEFAULT_BLOG_STYLE, isBlogStyle, SECRET_BLOG_STYLES } from "@/utils/blog-style";
+import { dailyQuestionBankIssue } from "@/utils/daily-question";
 import { isValidLocale, useTranslate } from "@/utils/i18n";
 import { stylePackLabel } from "@/utils/style-packs";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import AppearancePackGroup from "./AppearancePackGroup";
+import DailyQuestionEditor from "./DailyQuestionEditor";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
 import InstanceMusicEditor from "./InstanceMusicEditor";
@@ -145,6 +147,15 @@ const InstanceSection = () => {
   };
 
   const handleSaveSettings = async () => {
+    if (instanceGeneralSetting.dailyQuestionSeed && !/^[A-Za-z0-9_-]{1,64}$/.test(instanceGeneralSetting.dailyQuestionSeed)) {
+      toast.error(t("daily-question-admin.error-seed"));
+      return;
+    }
+    const questionIssue = dailyQuestionBankIssue(instanceGeneralSetting.dailyQuestionsJson);
+    if (questionIssue) {
+      toast.error(t(`daily-question-admin.error-${questionIssue}`));
+      return;
+    }
     const generalSettingChanged = !isEqual(instanceGeneralSetting, normalizedOriginalGeneralSetting);
     const accessSettingChanged = !isEqual(instanceAccessSetting, originalAccessSetting);
 
@@ -314,6 +325,7 @@ const InstanceSection = () => {
 
       {advancedOpen && (
         <div id="instance-advanced-settings" className="flex min-w-0 flex-col gap-5">
+          <DailyQuestionEditor setting={instanceGeneralSetting} onChange={updatePartialSetting} disabled={profile.demo} />
           <SettingGroup title={t("setting.system.more-title")} description={t("setting.system.more-description")} showSeparator>
             <SettingList>
               <SettingListItem

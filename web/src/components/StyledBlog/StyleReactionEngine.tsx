@@ -1,5 +1,5 @@
 import { BatteryLowIcon, MoonIcon, RotateCcwIcon, TrophyIcon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMusicEffects } from "@/contexts/MusicPlayerContext";
@@ -35,6 +35,9 @@ import {
 import PixelBoss from "./PixelBoss";
 import ReactionCanvas, { type ParticleLook } from "./ReactionCanvas";
 import useStylePackLoader from "./useStylePackLoader";
+
+// The detailed scene is only downloaded and parsed while this style is active.
+const VaporwaveSkyline = lazy(() => import("./VaporwaveSkyline"));
 
 const LOOKS: Record<string, ParticleLook> = {
   pixel: "pixel",
@@ -261,6 +264,11 @@ const StyleReactionEngine = () => {
 
   return (
     <>
+      {styled && activeStyle === "vaporwave" && fusion.legendary?.id !== "outrun" && (
+        <Suspense fallback={null}>
+          <VaporwaveSkyline />
+        </Suspense>
+      )}
       {styled && (
         <>
           <ReactionCanvas layer="back" kinds={kinds} look={look} density={mastered ? 2 : 1} getEnergy={getEnergy} />

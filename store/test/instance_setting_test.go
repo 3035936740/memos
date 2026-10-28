@@ -566,7 +566,15 @@ func TestInstanceSettingListAll(t *testing.T) {
 	// Count initial settings
 	initialList, err := ts.ListInstanceSettings(ctx, &store.FindInstanceSetting{})
 	require.NoError(t, err)
-	initialCount := len(initialList)
+	expectedKeys := make(map[storepb.InstanceSettingKey]bool, len(initialList)+3)
+	for _, setting := range initialList {
+		expectedKeys[setting.Key] = true
+	}
+	for _, key := range []storepb.InstanceSettingKey{
+		storepb.InstanceSettingKey_GENERAL, storepb.InstanceSettingKey_STORAGE, storepb.InstanceSettingKey_NOTIFICATION,
+	} {
+		expectedKeys[key] = true
+	}
 
 	// Create multiple settings
 	_, err = ts.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{
@@ -593,10 +601,15 @@ func TestInstanceSettingListAll(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// List all - should have 3 more than initial
+	// Upserts add missing keys without duplicating initialized settings.
 	list, err := ts.ListInstanceSettings(ctx, &store.FindInstanceSetting{})
 	require.NoError(t, err)
-	require.Equal(t, initialCount+3, len(list))
+	require.Len(t, list, len(expectedKeys))
+	for _, setting := range list {
+		require.True(t, expectedKeys[setting.Key])
+		delete(expectedKeys, setting.Key)
+	}
+	require.Empty(t, expectedKeys)
 
 	ts.Close()
 }

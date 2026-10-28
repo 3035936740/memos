@@ -12,7 +12,8 @@ const SPARKLE_PATHS = [
   "M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z",
   "m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3L5.8 21 7 14.2 2 9.3l6.9-1Z",
 ];
-const Y2K_COLORS = ["#ff4fd8", "#2fc8ff", "#ffe66b", "#8a5cff"];
+// Windows 98 mouse trails in the 16-colour palette: navy, teal, yellow and white.
+const Y2K_COLORS = ["#000080", "#008080", "#ffff00", "#ffffff"];
 const GOLD_COLORS = ["#ffd76a", "#f5b942", "#fff1b8"];
 const MAX_SPARKLES = 24;
 
@@ -21,7 +22,7 @@ const isTypingTarget = (target: EventTarget | null) =>
 
 const prefersReducedMotion = isMotionReduced;
 
-/** The sparkle colour: rainbow in the Y2K × cosmic legend, gold for regulars, Y2K candy otherwise. */
+/** The sparkle colour: rainbow in the Y2K × cosmic legend, gold for regulars, Windows 98 colours otherwise. */
 const sparkleColor = (gold: boolean) => {
   if (document.documentElement.dataset.legend === "cyber") return `hsl(${Math.floor(Math.random() * 360)} 95% 65%)`;
   const colors = gold ? GOLD_COLORS : Y2K_COLORS;

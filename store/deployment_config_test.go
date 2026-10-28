@@ -317,7 +317,9 @@ func TestAuthenticationConfigurationMutationsAreSafe(t *testing.T) {
 
 	t.Run("rejects disabling regular password auth without an IdP", func(t *testing.T) {
 		stores := newDeploymentConfigurationTestStore(t)
-		_, err := stores.UpsertInstanceGeneralSettingSafely(ctx, &storepb.InstanceSetting{
+		before, err := stores.GetStoredInstanceSetting(ctx, &store.FindInstanceSetting{Name: storepb.InstanceSettingKey_GENERAL.String()})
+		require.NoError(t, err)
+		_, err = stores.UpsertInstanceGeneralSettingSafely(ctx, &storepb.InstanceSetting{
 			Key: storepb.InstanceSettingKey_GENERAL,
 			Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: &storepb.InstanceGeneralSetting{
 				DisallowPasswordAuth: true,
@@ -326,7 +328,7 @@ func TestAuthenticationConfigurationMutationsAreSafe(t *testing.T) {
 		require.ErrorIs(t, err, store.ErrUnsafeAuthenticationConfiguration)
 		stored, getErr := stores.GetStoredInstanceSetting(ctx, &store.FindInstanceSetting{Name: storepb.InstanceSettingKey_GENERAL.String()})
 		require.NoError(t, getErr)
-		assert.Nil(t, stored)
+		assert.Equal(t, before, stored)
 	})
 
 	t.Run("rejects deleting the last effective IdP", func(t *testing.T) {

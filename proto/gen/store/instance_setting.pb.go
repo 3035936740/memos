@@ -626,8 +626,14 @@ type InstanceGeneralSetting struct {
 	DisableFestivalEffects bool `protobuf:"varint,26,opt,name=disable_festival_effects,json=disableFestivalEffects,proto3" json:"disable_festival_effects,omitempty"`
 	// Hide the built-in About navigation entry. False (including older settings) shows it.
 	HideAboutNavigation bool `protobuf:"varint,27,opt,name=hide_about_navigation,json=hideAboutNavigation,proto3" json:"hide_about_navigation,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Public instance seed for the frontend's yearly question shuffle.
+	DailyQuestionSeed string `protobuf:"bytes,28,opt,name=daily_question_seed,json=dailyQuestionSeed,proto3" json:"daily_question_seed,omitempty"`
+	// JSON question array: strings, built-in references or translated custom questions; empty uses the localized default bank.
+	DailyQuestionsJson string `protobuf:"bytes,29,opt,name=daily_questions_json,json=dailyQuestionsJson,proto3" json:"daily_questions_json,omitempty"`
+	// Disable the daily writing prompt. Default is false.
+	DisableDailyQuestion bool `protobuf:"varint,30,opt,name=disable_daily_question,json=disableDailyQuestion,proto3" json:"disable_daily_question,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -838,6 +844,27 @@ func (x *InstanceGeneralSetting) GetDisableFestivalEffects() bool {
 func (x *InstanceGeneralSetting) GetHideAboutNavigation() bool {
 	if x != nil {
 		return x.HideAboutNavigation
+	}
+	return false
+}
+
+func (x *InstanceGeneralSetting) GetDailyQuestionSeed() string {
+	if x != nil {
+		return x.DailyQuestionSeed
+	}
+	return ""
+}
+
+func (x *InstanceGeneralSetting) GetDailyQuestionsJson() string {
+	if x != nil {
+		return x.DailyQuestionsJson
+	}
+	return ""
+}
+
+func (x *InstanceGeneralSetting) GetDisableDailyQuestion() bool {
+	if x != nil {
+		return x.DisableDailyQuestion
 	}
 	return false
 }
@@ -1934,7 +1961,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xdb\v\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xf3\f\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -1962,7 +1989,10 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x0fsetup_completed\x18\x18 \x01(\bR\x0esetupCompleted\x12+\n" +
 	"\x0fshow_powered_by\x18\x19 \x01(\bH\x02R\rshowPoweredBy\x88\x01\x01\x128\n" +
 	"\x18disable_festival_effects\x18\x1a \x01(\bR\x16disableFestivalEffects\x122\n" +
-	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigationB\x17\n" +
+	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x12.\n" +
+	"\x13daily_question_seed\x18\x1c \x01(\tR\x11dailyQuestionSeed\x120\n" +
+	"\x14daily_questions_json\x18\x1d \x01(\tR\x12dailyQuestionsJson\x124\n" +
+	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestionB\x17\n" +
 	"\x15_trash_retention_daysB\x16\n" +
 	"\x14_memo_revision_limitB\x12\n" +
 	"\x10_show_powered_by\"j\n" +

@@ -12,7 +12,6 @@ import { chooseTheme } from "@/utils/theme";
 import LocaleSelect from "../LocaleSelect";
 import ThemeSelect from "../ThemeSelect";
 import VisibilityIcon from "../VisibilityIcon";
-import BookmarkletLink from "./BookmarkletLink";
 import SettingGroup from "./SettingGroup";
 import { SettingList, SettingListItem } from "./SettingList";
 import SettingSection from "./SettingSection";
@@ -170,14 +169,6 @@ const PreferencesSection = () => {
               disabled={isUpdatingGeneralSetting}
               onCheckedChange={handleSaveMediaMetadataChange}
             />
-          </SettingListItem>
-        </SettingList>
-      </SettingGroup>
-
-      <SettingGroup title={t("setting.preference.share-title")} description={t("setting.preference.share-description")} showSeparator>
-        <SettingList>
-          <SettingListItem label={t("setting.preference.bookmarklet")} description={t("setting.preference.bookmarklet-description")}>
-            <BookmarkletLink />
           </SettingListItem>
         </SettingList>
       </SettingGroup>

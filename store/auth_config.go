@@ -33,6 +33,10 @@ func (s *Store) UpsertInstanceGeneralSettingSafely(ctx context.Context, setting 
 	if setting == nil || setting.Key != storepb.InstanceSettingKey_GENERAL || setting.GetGeneralSetting() == nil {
 		return nil, errors.New("GENERAL instance setting is required")
 	}
+	setting = cloneInstanceSetting(setting)
+	if err := prepareDailyQuestionSetting(setting.GetGeneralSetting()); err != nil {
+		return nil, err
+	}
 	value, err := protojson.Marshal(setting.GetGeneralSetting())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal GENERAL instance setting")

@@ -33,6 +33,8 @@ func TestDemoSeedUsesDeploymentAuthenticationPolicy(t *testing.T) {
 	generalSetting, err := stores.GetInstanceGeneralSetting(ctx)
 	require.NoError(t, err)
 	require.False(t, generalSetting.DisallowPasswordAuth, "authentication policy must come from deployment configuration")
+	dailySeed := generalSetting.DailyQuestionSeed
+	require.Regexp(t, `^[0-9a-f]{16}$`, dailySeed)
 	require.False(t, generalSetting.DisallowUserRegistration, "SSO first-login provisioning must remain enabled")
 
 	secretDir := t.TempDir()
@@ -42,6 +44,7 @@ func TestDemoSeedUsesDeploymentAuthenticationPolicy(t *testing.T) {
 	generalSetting, err = stores.GetInstanceGeneralSetting(ctx)
 	require.NoError(t, err)
 	require.True(t, generalSetting.DisallowPasswordAuth)
+	require.Equal(t, dailySeed, generalSetting.DailyQuestionSeed, "deployment defaults must inherit the persistent seed")
 	require.False(t, generalSetting.DisallowUserRegistration, "SSO first-login provisioning must remain enabled")
 	provider, err := stores.GetIdentityProvider(ctx, &store.FindIdentityProvider{UID: ptr("primary-sso")})
 	require.NoError(t, err)
@@ -101,4 +104,11 @@ func TestDemoSeedUsesDeploymentAuthenticationPolicy(t *testing.T) {
 	attachments, err := stores.ListAttachments(ctx, &store.FindAttachment{HasRelatedMemo: true})
 	require.NoError(t, err)
 	require.NotEmpty(t, attachments, "demo should include a memo attachment")
+	require.NoError(t, stores.ResetDemo(ctx))
+	resetGeneral, err := stores.GetStoredInstanceSetting(ctx, &store.FindInstanceSetting{Name: "GENERAL"})
+	require.NoError(t, err)
+	require.Equal(t, dailySeed, resetGeneral.GetGeneralSetting().DailyQuestionSeed, "demo resets must retain the stored seed")
+	effectiveGeneral, err := stores.GetInstanceGeneralSetting(ctx)
+	require.NoError(t, err)
+	require.Equal(t, dailySeed, effectiveGeneral.DailyQuestionSeed)
 }

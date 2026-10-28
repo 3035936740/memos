@@ -118,6 +118,11 @@ func (s *Store) applyPlusMigrations(ctx context.Context) error {
 				return errors.Wrapf(err, "Plus migration %s failed; pre-upgrade backup is in %s", path, s.profile.Data)
 			}
 		}
+		if filepath.Base(path) == "0004__daily_question.sql" {
+			if err := s.initializeDailyQuestionSeed(ctx); err != nil {
+				return err
+			}
+		}
 		if _, err := s.driver.GetDB().ExecContext(ctx, BindSQL(s.profile.Driver, `INSERT INTO memos_plus_migration(version, applied_ts) VALUES (?, ?)`), filepath.Base(path), time.Now().Unix()); err != nil {
 			return err
 		}

@@ -25,6 +25,7 @@
 - **风格 × 配色会起反应**：二十多套配色各带属性（花、海、雨、夜、宇宙……），和风格碰在一起会出现不同的粒子和场景，还有 10 个传说组合、图鉴和成就。
 - **为读者着想的阅读体验**：阅读进度、预计阅读时间、系列文章目录、旧文提醒、继续阅读、像 Twitter 一样挂住的右边栏。
 - **每篇文章可以有自己的外观**：用 `#style/...` 和 `#theme/...` 标签给单篇文章指定风格和配色，比如让一篇深夜随笔用蒸汽波配霓虹雨，见[给文章指定外观](#给文章指定外观)。
+- **主页的“今天”**：连续写作天数、那年今日、新消息一眼看到；每天一个“每日一问”，365 天不重样，每个站点的出题顺序都不同，点一下就带着话题开写。
 - **背景音乐**：顶栏播放器，每种风格都有自己的音乐可视化。
 - **分享图跟着风格走**：文章的分享图会用当前的风格和配色，底部带上站名和网址，适合发朋友圈、微博和小红书。
 - **空间（小圈子）**：每个空间是一个独立的小站，有自己的地址 `/space/<别名>`，可以设为公开、登录可见或仅邀请；空间再多也能搜索、排序和随机逛。
@@ -55,7 +56,7 @@
 | `#style/glass` | 玻璃拟态 |
 | `#style/neumorphism` | 新拟物 |
 | `#style/aero` | Frutiger Aero |
-| `#style/y2k` | Y2K Web |
+| `#style/y2k` | Y2K（Windows 98） |
 | `#style/vaporwave` | 蒸汽波 |
 | `#style/pixel` | 像素复古 |
 | `#style/handdrawn` | 手绘涂鸦 |
@@ -209,6 +210,7 @@ Memos Plus 基于 [usememos/memos](https://github.com/usememos/memos) 开发，�
 - Styles react to color themes with particles, scenes, legendary combinations, a codex and achievements.
 - Reader comforts: reading progress, series, old-post notes, resume reading and a sticky sidebar.
 - Give a single post its own look with `#style/<name>` and `#theme/<name>` tags, for example `#style/vaporwave #theme/neon-rain`. Readers can switch back to their own look at any time. Names are listed in the tables above.
+- A “today” card on Home (writing streak, this day in past years, new notifications) and a question of the day: 365 a year, in an order each site shuffles for itself.
 - Background music with a visualizer per style.
 - Share images that wear the current style and theme, with the site name and address at the bottom.
 - Community style packs: admins install them under Settings → Style packs; once switched on, everyone can wear them.

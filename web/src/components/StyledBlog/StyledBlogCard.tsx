@@ -91,6 +91,8 @@ const StyledBlogCard = ({ memo, showCreator = false, parentPage, navigationScope
       data-sb-pinned={pinnedNote}
       data-sb-items={items.length > 0 ? items.join(" ") : undefined}
       data-sb-shiny={shiny || undefined}
+      // Y2K draws this into each post's Notepad title bar.
+      data-sb-window-title={t("y2k.notepad-title", { name: title || t("memo.blog-untitled") })}
       onClickCapture={() => {
         if (!shiny) return;
         bumpCounter("shinies");

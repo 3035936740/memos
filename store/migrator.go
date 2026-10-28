@@ -136,6 +136,11 @@ func (s *Store) Migrate(ctx context.Context) error {
 	if err := s.applyPlusMigrations(ctx); err != nil {
 		return errors.Wrap(err, "failed to migrate Memos Plus")
 	}
+	// Fresh databases record all Plus migrations from LATEST; this also covers
+	// first initialization without changing seeds already assigned to a site.
+	if err := s.initializeDailyQuestionSeed(ctx); err != nil {
+		return err
+	}
 
 	if s.profile.Demo {
 		// In demo mode, we should seed the database.

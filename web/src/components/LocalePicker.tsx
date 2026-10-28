@@ -15,10 +15,11 @@ interface LocaleSearchListProps {
   value: Locale;
   onChange: (locale: Locale) => void;
   className?: string;
+  emptyOption?: { label: string; onSelect: () => void };
 }
 
 export const LocaleSearchList = (props: LocaleSearchListProps) => {
-  const { value, onChange, className } = props;
+  const { value, onChange, className, emptyOption } = props;
   const t = useTranslate();
   const { i18n } = useTranslation();
   const [query, setQuery] = useState("");
@@ -50,13 +51,30 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
         role="listbox"
         aria-label={t("common.language")}
       >
+        {emptyOption && !query && (
+          <button
+            type="button"
+            data-slot="select-item"
+            data-picker-item=""
+            role="option"
+            aria-selected={!value}
+            className="flex min-h-8 w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:bg-accent"
+            onClick={emptyOption.onSelect}
+          >
+            {emptyOption.label}
+            {!value && <CheckIcon className="size-4 shrink-0 text-primary" />}
+          </button>
+        )}
         {filteredLocales.map((locale) => (
-          <div
+          <button
+            type="button"
             key={locale}
+            data-slot="select-item"
+            data-picker-item=""
             role="option"
             aria-selected={value === locale}
             className={cn(
-              "flex h-8 w-full cursor-pointer items-center gap-2 rounded-sm px-2 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+              "relative flex min-h-8 w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground",
               value === locale && "bg-accent/60",
             )}
             onClick={() => onChange(locale)}
@@ -66,7 +84,7 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
               <span className="shrink-0 text-xs text-muted-foreground">{locale}</span>
             </span>
             {value === locale ? <CheckIcon className="size-4 shrink-0 text-primary" /> : <span className="size-4 shrink-0" />}
-          </div>
+          </button>
         ))}
         {filteredLocales.length === 0 && (
           <div className="px-2 py-6 text-center text-sm">
@@ -90,12 +108,14 @@ interface LocalePickerProps {
   onChange: (locale: Locale) => void;
   className?: string;
   iconOnly?: boolean;
+  disabled?: boolean;
+  emptyOption?: LocaleSearchListProps["emptyOption"];
 }
 
 const LocalePicker = (props: LocalePickerProps) => {
-  const { value, onChange, className, iconOnly = false } = props;
+  const { value, onChange, className, iconOnly = false, disabled, emptyOption } = props;
   const [open, setOpen] = useState(false);
-  const displayName = getLocaleDisplayName(value);
+  const displayName = !value && emptyOption ? emptyOption.label : getLocaleDisplayName(value);
 
   const handleChange = (locale: Locale) => {
     onChange(locale);
@@ -108,6 +128,8 @@ const LocalePicker = (props: LocalePickerProps) => {
         render={
           <Button
             type="button"
+            disabled={disabled}
+            data-picker-trigger={iconOnly ? undefined : ""}
             variant={iconOnly ? "ghost" : "outline"}
             size={iconOnly ? "icon" : undefined}
             aria-label={iconOnly ? `Language: ${displayName}` : undefined}
@@ -134,7 +156,19 @@ const LocalePicker = (props: LocalePickerProps) => {
         )}
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[max(12rem,var(--anchor-width,12rem))] p-1.5" viewportClassName="overflow-hidden">
-        <LocaleSearchList value={value} onChange={handleChange} />
+        <LocaleSearchList
+          value={value}
+          onChange={handleChange}
+          emptyOption={
+            emptyOption && {
+              label: emptyOption.label,
+              onSelect: () => {
+                emptyOption.onSelect();
+                setOpen(false);
+              },
+            }
+          }
+        />
       </PopoverContent>
     </Popover>
   );

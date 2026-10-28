@@ -13,6 +13,7 @@ import (
 	colorpb "google.golang.org/genproto/googleapis/type/color"
 
 	"github.com/usememos/memos/internal/ai"
+	"github.com/usememos/memos/internal/dailyquestion"
 	v1pb "github.com/usememos/memos/proto/gen/api/v1"
 	storepb "github.com/usememos/memos/proto/gen/store"
 	"github.com/usememos/memos/store"
@@ -66,6 +67,14 @@ func validateInstanceGeneralSetting(setting *v1pb.InstanceSetting_GeneralSetting
 	if setting == nil {
 		return errors.New("general setting is required")
 	}
+	if err := dailyquestion.ValidateSeed(setting.DailyQuestionSeed); err != nil {
+		return err
+	}
+	normalized, _, err := dailyquestion.NormalizeQuestions(setting.DailyQuestionsJson)
+	if err != nil {
+		return err
+	}
+	setting.DailyQuestionsJson = normalized
 	if setting.TrashRetentionDays != nil && (*setting.TrashRetentionDays < 0 || *setting.TrashRetentionDays > 3650) {
 		return errors.New("trash retention days must be between 0 and 3650")
 	}

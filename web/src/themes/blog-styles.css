@@ -841,176 +841,206 @@ html[data-style="aero"][data-theme$="-dark"] [data-blog-nav] a[aria-current="pag
 }
 
 /* ---------------------------------------------------------------------------
-   Y2K Web: every card a little XP-era window (glossy title bar, three buttons, bevelled frame), gel buttons,
-   WordArt site title, Aqua pinstripes, and a sparkly sky behind it all
+   Y2K: Windows 98. A teal desktop; every post a Notepad window and the article page Internet Explorer
+   (Win98BrowserChrome); grey faces lit from the top left with the four-line bevel, navy title bars that light up
+   on the window under the pointer, Tahoma and SimSun. The legendary Y2K × cosmic upgrades it all to Windows XP.
    --------------------------------------------------------------------------- */
 
 html[data-style="y2k"] {
-  --sb-y2k-bar: linear-gradient(90deg, #ff4fd8 0%, #8a5cff 50%, #2fc8ff 100%);
-  --sb-y2k-gloss: linear-gradient(180deg, rgb(255 255 255 / 55%) 0%, rgb(255 255 255 / 18%) 48%, transparent 52%);
-  --sb-y2k-gel: linear-gradient(180deg, #a6ecff 0%, #36b4ff 48%, #0b8ae6 52%, #66d2ff 100%);
-  --sb-y2k-silver: linear-gradient(180deg, #ffffff 0%, #eceff9 48%, #d6dcf0 52%, #f4f6fd 100%);
-  --sb-y2k-ink: #23205a;
-  --sb-bevel-light: color-mix(in oklch, white 90%, var(--card));
-  --sb-bevel-dark: color-mix(in oklch, #4b4a8a 70%, var(--card));
-  --sb-surface: var(--card);
-  --sb-border: 2px solid var(--sb-bevel-dark);
-  --sb-radius: 9px 9px 4px 4px;
-  --sb-shadow: 4px 4px 0 rgb(43 18 110 / 28%);
-  --sb-shadow-hover: 6px 6px 0 rgb(255 79 216 / 38%);
-  --sb-lift: translate(-2px, -2px);
-  --sb-cover-radius: 4px;
-  --sb-pill-radius: 999px;
-  --sb-control-radius: 999px;
-  --sb-font-display: "Trebuchet MS", Verdana, "Microsoft YaHei", "PingFang SC", sans-serif;
-  --sb-font-body: Tahoma, Verdana, "Microsoft YaHei", "PingFang SC", sans-serif;
+  --w98-desktop: #008080;
+  --w98-face: #c0c0c0;
+  --w98-face-text: #000000;
+  --w98-hilight: #ffffff;
+  --w98-light: #dfdfdf;
+  --w98-shadow: #808080;
+  --w98-dark: #0a0a0a;
+  --w98-window: #ffffff;
+  --w98-window-text: #000000;
+  --w98-title: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+  --w98-title-text: #ffffff;
+  --w98-title-inactive: linear-gradient(90deg, var(--w98-shadow) 0%, color-mix(in oklch, var(--w98-shadow) 45%, var(--w98-face)) 100%);
+  --w98-title-text-inactive: var(--w98-light);
+  --w98-select: #000080;
+  --w98-select-text: #ffffff;
+  --w98-link: #0000ff;
+  --w98-font: Tahoma, "Microsoft Sans Serif", SimSun, "Songti SC", sans-serif;
+  --w98-raised:
+    inset -1px -1px var(--w98-dark), inset 1px 1px var(--w98-hilight), inset -2px -2px var(--w98-shadow), inset 2px 2px var(--w98-light);
+  --w98-sunken:
+    inset -1px -1px var(--w98-hilight), inset 1px 1px var(--w98-shadow), inset -2px -2px var(--w98-light), inset 2px 2px var(--w98-dark);
+  --w98-pressed:
+    inset -1px -1px var(--w98-hilight), inset 1px 1px var(--w98-dark), inset -2px -2px var(--w98-light), inset 2px 2px var(--w98-shadow);
+  --w98-thin-raised: inset -1px -1px var(--w98-shadow), inset 1px 1px var(--w98-hilight);
+  --w98-thin-sunken: inset -1px -1px var(--w98-hilight), inset 1px 1px var(--w98-shadow);
+  --w98-window-frame:
+    inset 1px 1px var(--w98-light), inset -1px -1px var(--w98-dark), inset 2px 2px var(--w98-hilight), inset -2px -2px var(--w98-shadow),
+    inset 0 0 0 4px var(--w98-face);
+  --w98-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='14' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Crect x='0' y='0' width='15' height='1' fill='%23ffffff'/%3E%3Crect x='0' y='0' width='1' height='13' fill='%23ffffff'/%3E%3Crect x='0' y='13' width='16' height='1' fill='%230a0a0a'/%3E%3Crect x='15' y='0' width='1' height='14' fill='%230a0a0a'/%3E%3Crect x='1' y='12' width='14' height='1' fill='%23808080'/%3E%3Crect x='14' y='1' width='1' height='12' fill='%23808080'/%3E%3Crect x='16' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Crect x='16' y='0' width='15' height='1' fill='%23ffffff'/%3E%3Crect x='16' y='0' width='1' height='13' fill='%23ffffff'/%3E%3Crect x='16' y='13' width='16' height='1' fill='%230a0a0a'/%3E%3Crect x='31' y='0' width='1' height='14' fill='%230a0a0a'/%3E%3Crect x='17' y='12' width='14' height='1' fill='%23808080'/%3E%3Crect x='30' y='1' width='1' height='12' fill='%23808080'/%3E%3Crect x='34' y='0' width='16' height='14' fill='%23c0c0c0'/%3E%3Crect x='34' y='0' width='15' height='1' fill='%23ffffff'/%3E%3Crect x='34' y='0' width='1' height='13' fill='%23ffffff'/%3E%3Crect x='34' y='13' width='16' height='1' fill='%230a0a0a'/%3E%3Crect x='49' y='0' width='1' height='14' fill='%230a0a0a'/%3E%3Crect x='35' y='12' width='14' height='1' fill='%23808080'/%3E%3Crect x='48' y='1' width='1' height='12' fill='%23808080'/%3E%3Crect x='4' y='9' width='6' height='2' fill='%23000000'/%3E%3Cpath d='M19.5 3.5h7v6h-7z' fill='none' stroke='%23000000'/%3E%3Crect x='19' y='3' width='8' height='2' fill='%23000000'/%3E%3Cpath d='M38 3l7 7M45 3l-7 7' stroke='%23000000' stroke-width='1.6'/%3E%3C/svg%3E");
+  --w98-icon-page: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M3.5 1.5h7l3 3v10h-10z' fill='%23fff' stroke='%23000'/%3E%3Cpath d='M10.5 1.5v3h3' fill='%23c0c0c0' stroke='%23000'/%3E%3Cpath d='M5 7h6M5 9h6M5 11h6' stroke='%23000080'/%3E%3C/svg%3E");
+  --w98-icon-computer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' shape-rendering='crispEdges'%3E%3Crect x='4' y='3' width='24' height='18' fill='%23c0c0c0' stroke='%23000'/%3E%3Crect x='7' y='6' width='18' height='12' fill='%23008080' stroke='%23808080'/%3E%3Crect x='10' y='21' width='12' height='3' fill='%23c0c0c0' stroke='%23000'/%3E%3Crect x='3' y='24' width='26' height='5' fill='%23c0c0c0' stroke='%23000'/%3E%3Crect x='20' y='26' width='6' height='1' fill='%23008000'/%3E%3C/svg%3E");
+  --w98-icon-globe: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='8' cy='8' r='6.5' fill='%233a8ee6' stroke='%2300307a'/%3E%3Cpath d='M1.5 8h13M8 1.5c-3 3.5-3 9.5 0 13M8 1.5c3 3.5 3 9.5 0 13' fill='none' stroke='%23cfe6ff'/%3E%3C/svg%3E");
+  --w98-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 5l-4 4h8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 11l-4-4h8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M5 8l4-4v8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M11 8l-4-4v8z' fill='%23000'/%3E%3C/svg%3E");
+  --sb-bevel-light: var(--w98-hilight);
+  --sb-bevel-dark: var(--w98-shadow);
+  --sb-y2k-silver: var(--w98-face);
+  --sb-surface: var(--w98-window);
+  --sb-border: 0;
+  --sb-radius: 0;
+  --sb-shadow: var(--w98-window-frame);
+  --sb-shadow-hover: var(--w98-window-frame);
+  --sb-lift: none;
+  --sb-cover-radius: 0;
+  --sb-pill-radius: 0;
+  --sb-control-radius: 0;
+  --sb-font-display: var(--w98-font);
+  --sb-font-body: var(--w98-font);
 }
 
 html[data-style="y2k"][data-theme$="-dark"] {
-  --sb-bevel-light: color-mix(in oklch, white 35%, var(--card));
-  --sb-bevel-dark: color-mix(in oklch, black 55%, var(--card));
-  --sb-shadow: 4px 4px 0 rgb(0 0 0 / 55%);
-  --sb-shadow-hover: 6px 6px 0 rgb(255 79 216 / 45%);
+  --w98-desktop: #0f2e2e;
+  --w98-face: #323232;
+  --w98-face-text: #e6e6e6;
+  --w98-hilight: #6a6a6a;
+  --w98-light: #4a4a4a;
+  --w98-shadow: #1c1c1c;
+  --w98-dark: #000000;
+  --w98-window: #1e1e1e;
+  --w98-window-text: #e8e8e8;
+  --w98-link: #7fb0ff;
+  --w98-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='14' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='16' height='14' fill='%23323232'/%3E%3Crect x='0' y='0' width='15' height='1' fill='%236a6a6a'/%3E%3Crect x='0' y='0' width='1' height='13' fill='%236a6a6a'/%3E%3Crect x='0' y='13' width='16' height='1' fill='%23000000'/%3E%3Crect x='15' y='0' width='1' height='14' fill='%23000000'/%3E%3Crect x='1' y='12' width='14' height='1' fill='%231c1c1c'/%3E%3Crect x='14' y='1' width='1' height='12' fill='%231c1c1c'/%3E%3Crect x='16' y='0' width='16' height='14' fill='%23323232'/%3E%3Crect x='16' y='0' width='15' height='1' fill='%236a6a6a'/%3E%3Crect x='16' y='0' width='1' height='13' fill='%236a6a6a'/%3E%3Crect x='16' y='13' width='16' height='1' fill='%23000000'/%3E%3Crect x='31' y='0' width='1' height='14' fill='%23000000'/%3E%3Crect x='17' y='12' width='14' height='1' fill='%231c1c1c'/%3E%3Crect x='30' y='1' width='1' height='12' fill='%231c1c1c'/%3E%3Crect x='34' y='0' width='16' height='14' fill='%23323232'/%3E%3Crect x='34' y='0' width='15' height='1' fill='%236a6a6a'/%3E%3Crect x='34' y='0' width='1' height='13' fill='%236a6a6a'/%3E%3Crect x='34' y='13' width='16' height='1' fill='%23000000'/%3E%3Crect x='49' y='0' width='1' height='14' fill='%23000000'/%3E%3Crect x='35' y='12' width='14' height='1' fill='%231c1c1c'/%3E%3Crect x='48' y='1' width='1' height='12' fill='%231c1c1c'/%3E%3Crect x='4' y='9' width='6' height='2' fill='%23e6e6e6'/%3E%3Cpath d='M19.5 3.5h7v6h-7z' fill='none' stroke='%23e6e6e6'/%3E%3Crect x='19' y='3' width='8' height='2' fill='%23e6e6e6'/%3E%3Cpath d='M38 3l7 7M45 3l-7 7' stroke='%23e6e6e6' stroke-width='1.6'/%3E%3C/svg%3E");
+  --w98-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 5l-4 4h8z' fill='%23e6e6e6'/%3E%3C/svg%3E");
+  --w98-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 11l-4-4h8z' fill='%23e6e6e6'/%3E%3C/svg%3E");
+  --w98-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M5 8l4-4v8z' fill='%23e6e6e6'/%3E%3C/svg%3E");
+  --w98-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M11 8l-4-4v8z' fill='%23e6e6e6'/%3E%3C/svg%3E");
 }
 
-/* A sparkly sky: star tiles over a cyan-lilac-pink sweep. */
+/* On the stock light and dark themes, the system colours follow too; other themes get theirs in Fusion below. */
+
+html[data-style="y2k"]:not([data-fusion="fused"]) {
+  --primary: var(--w98-select);
+  --primary-foreground: var(--w98-select-text);
+  --ring: var(--w98-face-text);
+  --border: var(--w98-shadow);
+  --popover: var(--w98-face);
+  --popover-foreground: var(--w98-face-text);
+}
+
 html[data-style="y2k"][data-style] body {
-  background-color: #cbe9ff;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cpath d='M18 6l2.2 9.8L30 18l-9.8 2.2L18 30l-2.2-9.8L6 18l9.8-2.2z' fill='white' fill-opacity='.85'/%3E%3Cpath d='M54 44l1.1 4.9L60 50l-4.9 1.1L54 56l-1.1-4.9L48 50l4.9-1.1z' fill='white' fill-opacity='.7'/%3E%3Ccircle cx='44' cy='14' r='1.3' fill='white'/%3E%3Ccircle cx='12' cy='56' r='1' fill='white'/%3E%3C/svg%3E"),
-    radial-gradient(circle at 12% 18%, rgb(255 140 236 / 70%) 0, transparent 32%),
-    radial-gradient(circle at 88% 12%, rgb(120 240 255 / 75%) 0, transparent 30%),
-    linear-gradient(160deg, #b5f0ff 0%, #d8c4ff 48%, #ffc4ec 100%);
-  background-size:
-    72px 72px,
-    auto,
-    auto,
-    auto;
-  background-attachment: fixed;
+  background: var(--w98-desktop);
 }
 
-html[data-style="y2k"][data-theme$="-dark"][data-style] body {
-  background-color: #0b0630;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cpath d='M18 6l2.2 9.8L30 18l-9.8 2.2L18 30l-2.2-9.8L6 18l9.8-2.2z' fill='white' fill-opacity='.85'/%3E%3Cpath d='M54 44l1.1 4.9L60 50l-4.9 1.1L54 56l-1.1-4.9L48 50l4.9-1.1z' fill='white' fill-opacity='.7'/%3E%3Ccircle cx='44' cy='14' r='1.3' fill='white'/%3E%3Ccircle cx='12' cy='56' r='1' fill='white'/%3E%3C/svg%3E"),
-    radial-gradient(circle at 12% 18%, rgb(255 60 200 / 40%) 0, transparent 34%),
-    radial-gradient(circle at 88% 12%, rgb(40 200 255 / 35%) 0, transparent 30%),
-    linear-gradient(160deg, #0b1450 0%, #1d0b4a 50%, #3a0b45 100%);
+html[data-style="y2k"] ::selection {
+  background: var(--w98-select);
+  color: var(--w98-select-text);
 }
 
-/* Bevelled frames: lit from the top left like a 2000s desktop. */
-html[data-style="y2k"] [data-styled-blog]
-  :is([data-sb-card], [data-sb-widget], [data-memo-editor]:not(.fixed), [data-blog-composer], [data-sb-nav-link]),
-html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *) {
-  border-color: var(--sb-bevel-light) var(--sb-bevel-dark) var(--sb-bevel-dark) var(--sb-bevel-light);
+/* Windows: posts, widgets, the composer. The shared rule above draws the frame from --sb-shadow; a title bar
+   sits in its top edge, grey until the pointer is on the window. */
+
+html[data-style="y2k"] [data-styled-blog] [data-sb-card] {
+  padding-top: calc(22px + 0.75rem);
+  color: var(--w98-window-text);
 }
 
-/* Window title bars on posts and on the article, with minimise / maximise / close buttons. */
-html[data-style="y2k"] [data-styled-blog] [data-sb-card],
-html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *) {
-  padding-top: calc(24px + 0.875rem);
-}
-
-html[data-style="y2k"] [data-styled-blog] [data-sb-card]::before,
-html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *)::before {
-  content: "post.htm";
+html[data-style="y2k"] [data-styled-blog] [data-sb-card]::before {
+  content: attr(data-sb-window-title);
   position: absolute;
-  inset: 0 0 auto;
-  display: flex;
-  align-items: center;
-  height: 24px;
-  padding: 0 10px 0 28px;
-  border-radius: 7px 7px 0 0;
+  inset: 4px 4px auto;
+  display: block;
+  height: 18px;
+  padding: 0 58px 0 22px;
+  overflow: hidden;
   background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z' fill='white'/%3E%3C/svg%3E")
-    10px center / 11px 11px no-repeat,
-    var(--sb-y2k-gloss),
-    var(--sb-y2k-bar);
-  color: #fff;
-  font:
-    bold 11px / 1 Tahoma,
-    Verdana,
-    sans-serif;
-  letter-spacing: 0.02em;
-  text-shadow: 1px 1px 0 rgb(0 0 0 / 35%);
+    var(--w98-icon-page) 3px center / 16px 16px no-repeat,
+    var(--w98-title-inactive);
+  color: var(--w98-title-text-inactive);
+  font-family: var(--w98-font);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
 
-html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *)::before {
-  content: "article.htm";
+html[data-style="y2k"] [data-styled-blog] [data-sb-card]:is(:hover, :focus-within)::before {
+  background:
+    var(--w98-icon-page) 3px center / 16px 16px no-repeat,
+    var(--w98-title);
+  color: var(--w98-title-text);
 }
 
-html[data-style="y2k"] [data-styled-blog] :is([data-sb-card], [data-sb-widget-title])::after,
-html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *)::after {
+html[data-style="y2k"] [data-styled-blog] :is([data-sb-card], [data-sb-widget-title])::after {
   content: "";
   position: absolute;
-  top: 5px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   width: 50px;
   height: 14px;
-  border-radius: 3px;
-  background:
-    linear-gradient(180deg, #ffb0b0, #e3303e) 36px 0 / 14px 14px no-repeat,
-    linear-gradient(180deg, #ffffff, #c9d2ff) 18px 0 / 14px 14px no-repeat,
-    linear-gradient(180deg, #ffffff, #c9d2ff) 0 0 / 14px 14px no-repeat;
-  box-shadow: 0 1px 0 rgb(0 0 0 / 20%);
+  background: var(--w98-buttons) center / 50px 14px no-repeat;
   pointer-events: none;
 }
 
-/* Widget titles become the same glossy bar across the top of each widget window. */
+/* Widget titles are the title bars of little windows. */
+
 html[data-style="y2k"] [data-styled-blog] [data-sb-widget-title] {
   position: relative;
-  margin: -16px -18px 12px;
-  padding: 6px 66px 6px 10px;
-  border-radius: 7px 7px 0 0;
-  background: var(--sb-y2k-gloss), var(--sb-y2k-bar);
-  color: #fff;
-  font-size: 12px;
-  text-shadow: 1px 1px 0 rgb(0 0 0 / 35%);
+  margin: -12px -14px 10px;
+  padding: 2px 58px 2px 4px;
+  min-height: 18px;
+  background: var(--w98-title);
+  color: var(--w98-title-text);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+html[data-style="y2k"] [data-styled-blog] [data-sb-widget-title] :is(svg, a) {
+  color: inherit;
 }
 
 html[data-style="y2k"] [data-styled-blog] [data-sb-widget-title]::after {
-  top: 50%;
-  translate: 0 -50%;
+  top: 2px;
+  right: 2px;
 }
 
-/* WordArt site title. */
-html[data-style="y2k"] [data-styled-blog] [data-sb-hero-title] {
-  font:
-    italic 900 2.75rem / 1.15 "Arial Black",
-    "Trebuchet MS",
-    "Microsoft YaHei",
-    sans-serif;
-  background-image: linear-gradient(180deg, #ffffff 0%, #9ff3ff 28%, #ff5ad9 62%, #ffe66b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1.5px #3b1a8f;
-  filter: drop-shadow(3px 3px 0 #2fc8ff) drop-shadow(3px 3px 0 rgb(59 26 143 / 40%));
+/* The article: Internet Explorer. Its chrome (title, menus, toolbar, address and status bars) is real markup in
+   Win98BrowserChrome; the page itself sits sunken inside. */
+
+html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-sb-browser] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: var(--w98-face);
+  box-shadow: var(--w98-window-frame);
+  color: var(--w98-face-text);
 }
 
-html[data-style="y2k"] [data-styled-blog] [data-sb-hero-title]::after {
+html[data-style="y2k"] [data-styled-blog][data-memo-detail] [data-memo-view]:not([data-memo-comment-section] *) {
+  box-shadow: var(--w98-sunken);
+  color: var(--w98-window-text);
+}
+
+/* The desktop's own label: the site title, white on teal like an icon caption. */
+
+html[data-style="y2k"] [data-styled-blog] :is([data-sb-hero-title], [data-sb-hero-desc]) {
+  color: #ffffff;
+  font-family: var(--w98-font);
+  text-shadow: 1px 1px 0 #000000;
+}
+
+html[data-style="y2k"] [data-styled-blog] [data-sb-hero-title]::before {
   content: "";
   display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
-  margin-inline-start: 0.25em;
-  background: #ffe66b;
-  -webkit-mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  mask:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  -webkit-text-stroke: 0;
-}
-
-html[data-style="y2k"] [data-styled-blog] [data-sb-hero-desc]::before {
-  content: "~*~ ";
-}
-
-html[data-style="y2k"] [data-styled-blog] [data-sb-hero-desc]::after {
-  content: " ~*~";
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.35em;
+  vertical-align: -0.12em;
+  background: var(--w98-icon-computer) center / contain no-repeat;
+  image-rendering: pixelated;
 }
 
 html[data-style="y2k"] [data-styled-blog] [data-sb-title] {
@@ -1018,77 +1048,354 @@ html[data-style="y2k"] [data-styled-blog] [data-sb-title] {
 }
 
 html[data-style="y2k"] [data-styled-blog] [data-sb-card]:hover [data-sb-title] a {
-  color: #1f4fd6;
+  color: var(--w98-link);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 2px;
 }
 
-html[data-style="y2k"][data-theme$="-dark"] [data-styled-blog] [data-sb-card]:hover [data-sb-title] a {
-  color: #8cf6ff;
+/* Chips, tags, pagination and blog nav: push buttons, pressed in while on. */
+
+html[data-style="y2k"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-tag], [data-sb-nav-link], [data-memo-pagination] button) {
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+  box-shadow: var(--w98-raised);
+  text-shadow: none;
 }
 
-/* Gel buttons: blue gel for status chips and picked tags, silver gel for the rest. */
-html[data-style="y2k"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-tag][aria-pressed="true"]) {
-  border: 1px solid #0a6cc0;
-  background: var(--sb-y2k-gel);
-  color: #fff;
-  text-shadow: 0 1px 0 rgb(0 0 0 / 30%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
-}
-
-html[data-style="y2k"] [data-styled-blog] [data-sb-cloud-tag]:not([aria-pressed="true"]),
-html[data-style="y2k"] [data-styled-blog] [data-memo-pagination] :is(button, input) {
-  border: 1px solid #9aa3c7;
-  background: var(--sb-y2k-silver);
-  color: var(--sb-y2k-ink);
-  box-shadow:
-    inset 0 1px 0 #fff,
-    0 1px 2px rgb(35 32 90 / 25%);
-}
-
-html[data-style="y2k"] [data-styled-blog] [data-sb-cloud-tag]:not([aria-pressed="true"]):hover {
-  border-color: #0a6cc0;
-  background: var(--sb-y2k-gel);
-  color: #fff;
-}
-
+html[data-style="y2k"] [data-styled-blog] [data-sb-cloud-tag][aria-pressed="true"],
 html[data-style="y2k"] [data-styled-blog] [data-memo-pagination] button[aria-current="page"] {
-  border-color: #0a6cc0;
-  background: var(--sb-y2k-gel);
-  color: #fff;
+  background: repeating-conic-gradient(var(--w98-hilight) 0 25%, var(--w98-face) 0 50%) 0 0 / 2px 2px;
+  box-shadow: var(--w98-pressed);
+}
+
+html[data-style="y2k"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-tag], [data-memo-pagination] button):active {
+  box-shadow: var(--w98-pressed);
+}
+
+html[data-style="y2k"] [data-styled-blog] [data-memo-pagination] input {
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-window);
+  box-shadow: var(--w98-sunken);
 }
 
 html[data-style="y2k"] [data-styled-blog] [data-sb-cover] {
-  border: 3px solid #fff;
-  outline: 1px solid #9aa3c7;
-  box-shadow: 3px 3px 0 rgb(43 18 110 / 28%);
+  padding: 2px;
+  background: var(--w98-window);
+  box-shadow: var(--w98-sunken);
 }
 
-/* The app frame: Aqua pinstripes and a glossy toolbar. */
+/* The app frame: a grey Explorer bar on the left, a toolbar along the top. */
+
 html[data-style="y2k"] [data-app-sidebar] {
-  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 88%) 0 2px, rgb(232 236 250 / 88%) 2px 4px);
+  background: var(--w98-face);
+  color: var(--w98-face-text);
 }
 
 html[data-style="y2k"] [data-app-sidebar-frame] {
-  border-inline-end: 1px solid #9aa3c7;
+  border-inline-end: 0;
+  box-shadow:
+    inset -1px 0 var(--w98-dark),
+    inset -2px 0 var(--w98-shadow);
 }
 
 html[data-style="y2k"] [data-app-toolbar] {
-  border-bottom: 1px solid #9aa3c7;
-  background: var(--sb-y2k-silver);
+  border-bottom: 0;
+  background: var(--w98-face);
+  box-shadow:
+    inset 0 1px var(--w98-hilight),
+    inset 0 -1px var(--w98-shadow);
 }
 
-html[data-style="y2k"][data-theme$="-dark"] [data-app-sidebar] {
-  background: repeating-linear-gradient(180deg, rgb(255 255 255 / 7%) 0 2px, rgb(255 255 255 / 3%) 2px 4px), rgb(12 8 40 / 80%);
+/* Push buttons everywhere; toolbar (ghost) buttons stay flat until the pointer raises them. */
+
+html[data-style="y2k"] [data-ui-button]:not([data-variant="ghost"], [data-variant="link"]) {
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+  box-shadow: var(--w98-raised);
+  font-family: var(--w98-font);
 }
 
-html[data-style="y2k"][data-theme$="-dark"] [data-app-toolbar] {
-  border-color: rgb(255 255 255 / 15%);
-  background: linear-gradient(180deg, #2b2a5c 0%, #1c1a48 50%, #14123a 52%, #22205a 100%);
+/* The default button wears the extra black outline it had in every dialog. */
+
+html[data-style="y2k"] [data-ui-button][data-variant="default"] {
+  box-shadow:
+    inset 0 0 0 1px var(--w98-dark),
+    inset -2px -2px var(--w98-shadow),
+    inset 2px 2px var(--w98-hilight);
 }
 
-html[data-style="y2k"][data-theme$="-dark"] [data-app-sidebar-frame] {
-  border-color: rgb(255 255 255 / 15%);
+html[data-style="y2k"] [data-ui-button][data-variant="destructive"] {
+  color: var(--destructive);
+}
+
+html[data-style="y2k"] [data-ui-button]:not([data-variant="ghost"], [data-variant="link"]):not(:disabled):active {
+  box-shadow: var(--w98-pressed);
+}
+
+/* Disabled captions are etched into the face. */
+
+html[data-style="y2k"] [data-ui-button]:disabled {
+  color: var(--w98-shadow);
+  text-shadow: 1px 1px 0 var(--w98-hilight);
+  opacity: 1;
+}
+
+html[data-style="y2k"] [data-ui-button][data-variant="ghost"]:not(:disabled):hover {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: var(--w98-thin-raised);
+}
+
+html[data-style="y2k"] [data-ui-button]:focus-visible {
+  outline: 1px dotted var(--w98-face-text);
+  outline-offset: -4px;
+}
+
+/* Combo boxes: a sunken white field with a raised drop-down button at its end. */
+
+html[data-style="y2k"] :is([data-slot="select-trigger"], [data-picker-trigger]):not([class~="border-0"]) {
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-window);
+  color: var(--w98-window-text);
+  box-shadow: var(--w98-sunken);
+}
+
+html[data-style="y2k"] :is([data-slot="select-trigger"], [data-picker-trigger]):not([class~="border-0"]) > svg:last-child {
+  width: 16px;
+  height: 16px;
+  margin-inline-end: -5px;
+  padding: 2px;
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+  opacity: 1;
+  box-shadow: var(--w98-raised);
+}
+
+/* Classic scroll bars: a dithered track, a raised thumb and arrow buttons. */
+
+/* Chrome drops the ::-webkit-scrollbar parts once scrollbar-color is set, so only browsers without them get it. */
+@supports not selector(::-webkit-scrollbar) {
+  html[data-style="y2k"] * {
+    scrollbar-color: var(--w98-face) var(--w98-light);
+  }
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-track {
+  background: repeating-conic-gradient(var(--w98-hilight) 0 25%, var(--w98-face) 0 50%) 0 0 / 2px 2px;
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-thumb,
+html[data-style="y2k"] ::-webkit-scrollbar-button:single-button {
+  background-color: var(--w98-face);
+  box-shadow: var(--w98-raised);
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-button:single-button:vertical:decrement {
+  display: block;
+  background:
+    var(--w98-arrow-up) center / 16px 16px no-repeat,
+    var(--w98-face);
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-button:single-button:vertical:increment {
+  display: block;
+  background:
+    var(--w98-arrow-down) center / 16px 16px no-repeat,
+    var(--w98-face);
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-button:single-button:horizontal:decrement {
+  display: block;
+  background:
+    var(--w98-arrow-left) center / 16px 16px no-repeat,
+    var(--w98-face);
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-button:single-button:horizontal:increment {
+  display: block;
+  background:
+    var(--w98-arrow-right) center / 16px 16px no-repeat,
+    var(--w98-face);
+}
+
+html[data-style="y2k"] ::-webkit-scrollbar-corner {
+  background: var(--w98-face);
+}
+
+/* Internet Explorer's chrome around the article (Win98BrowserChrome). */
+
+html[data-style="y2k"] [data-w98-chrome],
+html[data-style="y2k"] [data-w98-statusbar] {
+  color: var(--w98-face-text);
+  font-family: var(--w98-font);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+html[data-style="y2k"] [data-w98-chrome] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+html[data-style="y2k"] [data-w98-titlebar] {
+  position: relative;
+  height: 18px;
+  padding: 2px 58px 2px 22px;
+  overflow: hidden;
+  background:
+    var(--w98-icon-globe) 3px center / 16px 16px no-repeat,
+    var(--w98-title);
+  color: var(--w98-title-text);
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+html[data-style="y2k"] [data-w98-window-buttons] {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 50px;
+  height: 14px;
+  background: var(--w98-buttons) center / 50px 14px no-repeat;
+}
+
+html[data-style="y2k"] [data-w98-menubar] {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1px 0;
+}
+
+html[data-style="y2k"] [data-w98-menubar] span {
+  padding: 1px 7px;
+}
+
+html[data-style="y2k"] :is([data-w98-toolbar], [data-w98-address]) {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px 2px;
+  box-shadow:
+    inset 0 1px var(--w98-shadow),
+    inset 0 2px var(--w98-hilight);
+}
+
+html[data-style="y2k"] [data-w98-toolbar] button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 48px;
+  padding: 2px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+html[data-style="y2k"] [data-w98-toolbar] button:hover {
+  box-shadow: var(--w98-thin-raised);
+}
+
+html[data-style="y2k"] [data-w98-toolbar] button:active {
+  box-shadow: var(--w98-thin-sunken);
+}
+
+html[data-style="y2k"] [data-w98-toolbar] button:focus-visible {
+  outline: 1px dotted var(--w98-face-text);
+  outline-offset: -3px;
+}
+
+html[data-style="y2k"] [data-w98-toolbar] svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* The spinning-logo box at the end of the toolbar, here a still globe. */
+
+html[data-style="y2k"] [data-w98-throbber] {
+  width: 38px;
+  height: 30px;
+  margin-inline-start: auto;
+  background:
+    var(--w98-icon-globe) center / 22px 22px no-repeat,
+    #000000;
+  box-shadow: var(--w98-thin-sunken);
+}
+
+html[data-style="y2k"] [data-w98-field] {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  height: 20px;
+  padding: 0 4px;
+  background: var(--w98-window);
+  color: var(--w98-window-text);
+  box-shadow: var(--w98-sunken);
+}
+
+html[data-style="y2k"] [data-w98-field]::before {
+  content: "";
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: var(--w98-icon-globe) center / 16px 16px no-repeat;
+}
+
+html[data-style="y2k"] [data-w98-go] {
+  padding: 0 8px;
+  line-height: 20px;
+  box-shadow: var(--w98-raised);
+}
+
+html[data-style="y2k"] [data-w98-statusbar] {
+  display: flex;
+  gap: 2px;
+}
+
+html[data-style="y2k"] [data-w98-statusbar] span {
+  flex: 1;
+  padding: 1px 4px;
+  box-shadow: var(--w98-thin-sunken);
+}
+
+html[data-style="y2k"] [data-w98-statusbar] [data-w98-zone] {
+  flex: 0 0 120px;
+  padding-inline-start: 22px;
+  background: var(--w98-icon-globe) 3px center / 14px 14px no-repeat;
+}
+
+/* Under the XP legend the browser wears Luna's taller, rounded title bar. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-w98-titlebar] {
+  height: 24px;
+  margin: -4px -4px 0;
+  padding-block: 5px;
+  border-radius: 7px 7px 0 0;
+  font-size: 12px;
+  text-shadow: 1px 1px 0 rgb(10 24 131 / 60%);
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-w98-window-buttons] {
+  top: 4px;
+  right: 5px;
+  width: 52px;
+  height: 16px;
+  background-size: 52px 16px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1629,7 +1936,7 @@ html[data-style="pixel"] :is(h1, h2, h3, [data-sb-title]) {
 
 /* Buttons: framed blocks with a shaded bottom edge and a hard drop; pressing pushes them in. */
 html[data-style="pixel"]
-[data-slot="button"]:is([data-variant="default"], [data-variant="destructive"], [data-variant="outline"], [data-variant="secondary"]) {
+[data-ui-button]:is([data-variant="default"], [data-variant="destructive"], [data-variant="outline"], [data-variant="secondary"]) {
   border: 0;
   box-shadow:
     0 -2px 0 0 var(--sb-px-ink),
@@ -1640,11 +1947,11 @@ html[data-style="pixel"]
     4px 4px 0 0 var(--sb-px-drop);
 }
 
-html[data-style="pixel"] [data-slot="button"][data-variant]:not([data-variant="link"]):active {
+html[data-style="pixel"] [data-ui-button][data-variant]:not([data-variant="link"]):active {
   translate: 2px 2px;
 }
 
-html[data-style="pixel"] [data-slot="button"][data-variant="ghost"]:hover {
+html[data-style="pixel"] [data-ui-button][data-variant="ghost"]:hover {
   box-shadow:
     0 -2px 0 0 var(--sb-px-ink),
     0 2px 0 0 var(--sb-px-ink),
@@ -1653,20 +1960,20 @@ html[data-style="pixel"] [data-slot="button"][data-variant="ghost"]:hover {
 }
 
 /* Fields are sunk into the page: a thick ink edge with the shade on the inside top-left. */
-html[data-style="pixel"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+html[data-style="pixel"] :is([data-slot="input"], [data-slot="textarea"], :is([data-slot="select-trigger"], [data-picker-trigger])) {
   border: 2px solid var(--sb-px-ink);
   background: var(--card);
   box-shadow: inset 2px 2px 0 0 var(--sb-px-shade);
 }
 
 /* The HUD bar's icon pickers (theme, style) are plain icon buttons, not fields. */
-html[data-style="pixel"] [data-app-toolbar] [data-slot="select-trigger"] {
+html[data-style="pixel"] [data-app-toolbar] :is([data-slot="select-trigger"], [data-picker-trigger]) {
   border: 0;
   background: transparent;
   box-shadow: none;
 }
 
-html[data-style="pixel"] [data-app-toolbar] [data-slot="select-trigger"]:hover {
+html[data-style="pixel"] [data-app-toolbar] :is([data-slot="select-trigger"], [data-picker-trigger]):hover {
   background: var(--accent);
 }
 
@@ -1989,17 +2296,20 @@ html[data-style="aero"][data-theme$="-dark"]
   box-shadow: none;
 }
 
-/* Y2K: inner boxes are sunken like a classic list box; rows are raised like buttons. */
+/* Y2K: inner boxes are sunken white list boxes; rows are raised like buttons. */
+
 html[data-style="y2k"] [data-styled-blog] :is([data-sb-subcard], [data-memo-comment-section] [data-memo-view]) {
-  border: 2px solid;
-  border-color: var(--sb-bevel-dark) var(--sb-bevel-light) var(--sb-bevel-light) var(--sb-bevel-dark);
-  border-radius: 2px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-window);
+  box-shadow: var(--w98-sunken);
 }
 
 html[data-style="y2k"] [data-styled-blog] [data-sb-subitem] {
-  border: 2px solid;
-  border-color: var(--sb-bevel-light) var(--sb-bevel-dark) var(--sb-bevel-dark) var(--sb-bevel-light);
-  border-radius: 3px;
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-face);
+  box-shadow: var(--w98-thin-raised);
 }
 
 html[data-style="pixel"] [data-styled-blog] :is([data-sb-subcard], [data-memo-comment-section] [data-memo-view], [data-sb-subitem]) {
@@ -2094,40 +2404,143 @@ html[data-style="vaporwave"] {
 /* Its own palette, only on the stock themes; any other theme colours it (fusion). */
 html[data-style="vaporwave"]:not([data-fusion="fused"]) {
   color-scheme: light;
-  --background: #cfe3f7;
-  --foreground: #16152a;
-  --card: #ececf0;
-  --card-foreground: #16152a;
-  --popover: #ececf0;
-  --popover-foreground: #16152a;
-  --primary: #1677d6;
+  --background: #f3edfb;
+  --foreground: #2a1d47;
+  --card: #fbf8ff;
+  --card-foreground: #2a1d47;
+  --popover: #fbf8ff;
+  --popover-foreground: #2a1d47;
+  --primary: #7a4fe0;
   --primary-foreground: #ffffff;
-  --secondary: #f7b6dc;
-  --secondary-foreground: #16152a;
-  --muted: #dadae2;
-  --muted-foreground: #4f4d66;
-  --accent: #f9c3e3;
-  --accent-foreground: #16152a;
-  --border: #111111;
-  --input: #111111;
-  --ring: #1677d6;
-  --sidebar: #f7b0d8;
-  --sidebar-foreground: #33205e;
-  --sidebar-accent: #fbd0e9;
-  --sidebar-accent-foreground: #33205e;
+  --secondary: #fbe0ef;
+  --secondary-foreground: #2a1d47;
+  --muted: #ebe3f7;
+  --muted-foreground: #685a86;
+  --accent: #f3dcf2;
+  --accent-foreground: #2a1d47;
+  --border: #2f2152;
+  --input: #2f2152;
+  --ring: #7a4fe0;
+  --sidebar: #f8f4fe;
+  --sidebar-foreground: #3a2a63;
+  --sidebar-accent: #ece2fb;
+  --sidebar-accent-foreground: #2a1d47;
+  --sb-vw-ink: #2f2152;
+  --sb-vw-window: #fbf8ff;
+  --sb-vw-pink: #f9cfe6;
+  --sb-vw-lavender: #cdbaf6;
+  --sb-vw-lavender-deep: #8a67e3;
+  --sb-vw-drop: rgb(122 79 224 / 32%);
+  --sb-vw-stripes: repeating-linear-gradient(180deg, #cbbde8 0 1px, #fbf8ff 1px 3px);
+  --vw-sky: linear-gradient(180deg, #e3dcfa 0%, #ead6f6 36%, #f6d3e6 56%, #ffdccf 66%, #ffe6d6 80%, #f8dfe6 100%);
+  --vw-building-distant: #d0b5de;
+  --vw-building-top: #b99ad6;
+  --vw-building-bottom: #9171b2;
+  --vw-building-shade: #73588f;
+  --vw-window-warm: #ffedcb;
+  --vw-window-cool: #f6d3ec;
+  --vw-sun-core: #fff2c8;
+  --vw-sun-edge: #ffcaad;
+  --vw-sun-opacity: 0.85;
+  --vw-palm: #8d78d0;
 }
 
-/* A white square grid over the pastel sweep, pinned to the window. */
+/* Eight city planes meet a promenade. Foreground palms are anchored inside
+   the visible content area, so the fixed sidebar cannot hide the left group. */
+html[data-style="vaporwave"] {
+  --vw-midground: color-mix(in oklch, var(--vw-building-distant) 65%, var(--vw-building-top));
+  --vw-haze: color-mix(in oklch, var(--vw-sun-edge) 40%, var(--vw-building-distant));
+  --vw-rear-0: color-mix(in oklch, var(--vw-haze) 85%, var(--vw-building-distant));
+  --vw-rear-1: color-mix(in oklch, var(--vw-haze) 72%, var(--vw-building-distant));
+  --vw-rear-2: color-mix(in oklch, var(--vw-haze) 54%, var(--vw-building-distant));
+  --vw-rear-3: color-mix(in oklch, var(--vw-haze) 30%, var(--vw-building-distant));
+  --vw-road: color-mix(in oklch, var(--vw-palm) 82%, var(--vw-building-shade));
+}
+
 html[data-style="vaporwave"][data-style] body {
-  background-color: #cfe3f7;
-  background-image:
-    linear-gradient(rgb(255 255 255 / 70%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 70%) 1px, transparent 1px),
-    linear-gradient(180deg, #7fd0f5 0%, #a8c6f2 38%, #d6b8ee 68%, #f5b3d8 100%);
-  background-size:
-    56px 56px,
-    56px 56px,
-    100% 100%;
+  background-color: var(--background);
+  background-image: var(--vw-sky);
   background-attachment: fixed;
+}
+
+[data-vaporwave-skyline] {
+  display: none;
+}
+
+html[data-style="vaporwave"] [data-vaporwave-skyline] {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  opacity: var(--vw-scene-opacity, 1);
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  html[data-style="vaporwave"] [data-vaporwave-skyline] {
+    inset-inline-start: var(--app-sidebar-width, 14rem);
+  }
+}
+
+[data-vw-city],
+[data-vw-ground] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The disc keeps a circular aspect ratio independently of the city panorama.
+   Its faint broad haze has no bright rim or blur filter. */
+[data-vw-sunset] {
+  position: absolute;
+  left: 50%;
+  top: 20%;
+  translate: -50% 0;
+  width: clamp(270px, 34vw, 560px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: var(--vw-sun-opacity, 1);
+}
+
+[data-vw-palms] {
+  position: absolute;
+  bottom: 10.5%;
+  width: min(43%, 580px);
+  height: 85%;
+  fill: var(--vw-palm);
+}
+
+[data-vw-palms="left"] {
+  left: -6%;
+}
+
+[data-vw-palms="right"] {
+  right: -7%;
+  transform: scaleX(-1);
+}
+
+@media (max-width: 767px) {
+  [data-vw-palms] {
+    width: 62%;
+    height: 77%;
+  }
+  [data-vw-palms="left"] {
+    left: -13%;
+  }
+  [data-vw-palms="right"] {
+    right: -14%;
+  }
+  [data-vw-sunset] {
+    top: 41%;
+    width: 75%;
+  }
+}
+
+/* Outrun keeps its existing grid composition. */
+html[data-style="vaporwave"][data-legend="outrun"] [data-vaporwave-skyline] {
+  display: none;
 }
 
 html[data-style="vaporwave"] *::-webkit-scrollbar-thumb {
@@ -2202,10 +2615,10 @@ html[data-style="vaporwave"] [data-styled-blog][data-memo-detail] [data-memo-vie
   height: 24px;
   border-bottom: 2px solid var(--sb-vw-ink);
   background:
-    linear-gradient(#ececf0, #ececf0) right 27px center / 10px 10px no-repeat,
-    linear-gradient(#111, #111) right 25px center / 14px 14px no-repeat,
-    linear-gradient(#ececf0, #ececf0) right 7px center / 10px 10px no-repeat,
-    linear-gradient(#111, #111) right 5px center / 14px 14px no-repeat,
+    linear-gradient(var(--sb-vw-window), var(--sb-vw-window)) right 27px center / 10px 10px no-repeat,
+    linear-gradient(var(--sb-vw-ink), var(--sb-vw-ink)) right 25px center / 14px 14px no-repeat,
+    linear-gradient(var(--sb-vw-window), var(--sb-vw-window)) right 7px center / 10px 10px no-repeat,
+    linear-gradient(var(--sb-vw-ink), var(--sb-vw-ink)) right 5px center / 14px 14px no-repeat,
     var(--sb-vw-stripes);
   pointer-events: none;
 }
@@ -2273,6 +2686,11 @@ html[data-style="vaporwave"] [data-styled-blog] [data-sb-hero-title] {
     6px 6px 0 var(--sb-vw-lavender-deep);
 }
 
+/* On the pale dawn sky the white title needs an edge. */
+html[data-style="vaporwave"]:not([data-fusion="fused"]):not([data-theme$="-dark"]) [data-styled-blog] [data-sb-hero-title] {
+  -webkit-text-stroke: 1px var(--sb-vw-lavender-deep);
+}
+
 html[data-style="vaporwave"] [data-styled-blog] [data-sb-hero-desc] {
   display: inline-block;
   margin-top: 12px;
@@ -2303,7 +2721,7 @@ html[data-style="vaporwave"] [data-styled-blog] [data-sb-chip] {
 html[data-style="vaporwave"] [data-styled-blog] [data-sb-cloud-tag],
 html[data-style="vaporwave"] [data-styled-blog] [data-memo-pagination] :is(button, input) {
   border: 2px solid var(--sb-vw-ink);
-  background: #ffffff;
+  background: var(--card);
   box-shadow: 2px 2px 0 0 var(--sb-vw-drop);
   color: var(--foreground);
 }
@@ -2322,14 +2740,14 @@ html[data-style="vaporwave"]
 html[data-style="vaporwave"] [data-styled-blog] :is([data-sb-subcard], [data-memo-comment-section] [data-memo-view]) {
   border: 2px solid var(--sb-vw-ink);
   border-radius: 0;
-  background: #dcdce4;
+  background: color-mix(in oklch, var(--muted) 70%, var(--card));
   box-shadow: none;
 }
 
 html[data-style="vaporwave"] [data-styled-blog] [data-sb-subitem] {
   border: 2px solid var(--sb-vw-ink);
   border-radius: 0;
-  background: #ffffff;
+  background: var(--card);
 }
 
 /* ---------------------------------------------------------------------------
@@ -2394,26 +2812,21 @@ html[data-style="aero"][data-theme$="-dark"] [data-app-sidebar] [class*="hover:b
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 20%);
 }
 
-/* Y2K: an XP task-pane hover, a blue gel for the current page. */
+/* Y2K: the item under the pointer turns menu-highlight navy; the current page is pressed in. */
+
 html[data-style="y2k"] [data-app-sidebar] [class*="hover:bg-sidebar-accent"]:hover {
-  border-radius: 3px;
-  background: #dbe7ff;
-  box-shadow: inset 0 0 0 1px #7da2ce;
-  color: #10306b;
+  border-radius: 0;
+  background: var(--w98-select);
+  box-shadow: none;
+  color: var(--w98-select-text);
 }
 
 html[data-style="y2k"] [data-app-sidebar] :is([class~="bg-sidebar-accent"], [data-blog-nav] a[aria-current="page"]) {
-  border-radius: 3px;
-  background: var(--sb-y2k-gel);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
-  color: #fff;
-  text-shadow: 0 1px 0 rgb(0 0 0 / 30%);
-}
-
-html[data-style="y2k"][data-theme$="-dark"] [data-app-sidebar] [class*="hover:bg-sidebar-accent"]:hover {
-  background: rgb(120 160 255 / 18%);
-  box-shadow: inset 0 0 0 1px rgb(140 180 255 / 45%);
-  color: #e6eeff;
+  border-radius: 0;
+  background: repeating-conic-gradient(var(--w98-hilight) 0 25%, var(--w98-face) 0 50%) 0 0 / 2px 2px;
+  box-shadow: var(--w98-thin-sunken);
+  color: var(--w98-face-text);
+  text-shadow: none;
 }
 
 html[data-style="vaporwave"] [data-app-sidebar] [class*="hover:bg-sidebar-accent"]:hover {
@@ -2502,7 +2915,7 @@ html[data-style="glass"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: color-mix(in oklch, var(--card) 75%, transparent);
   box-shadow: inset 0 0 0 1px var(--sb-glass-edge);
 }
@@ -2538,7 +2951,7 @@ html[data-style="neumorphism"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: var(--sb-neu-base);
   box-shadow: var(--sb-neu-raised-sm);
   color: var(--primary);
@@ -2587,7 +3000,7 @@ html[data-style="aero"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: var(--sb-aero-jelly);
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 95%),
@@ -2614,7 +3027,7 @@ html[data-style="aero"][data-theme$="-dark"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: linear-gradient(
     180deg,
     rgb(140 210 255 / 40%) 0%,
@@ -2625,7 +3038,8 @@ html[data-style="aero"][data-theme$="-dark"]
   color: #fff;
 }
 
-/* Y2K: an XP context menu, with the blue gel on the hovered item. */
+/* Y2K: menus and dialogs are raised grey windows; the highlighted item is navy. */
+
 html[data-style="y2k"]
 :is(
   [data-slot="dropdown-menu-content"],
@@ -2633,10 +3047,11 @@ html[data-style="y2k"]
   [data-slot="select-content"],
   [role="dialog"]:not([data-slot="sheet-content"])
 ) {
-  border: 1px solid #8a8aa6;
-  border-radius: 3px;
-  background: var(--card);
-  box-shadow: 4px 4px 0 rgb(43 18 110 / 25%);
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+  box-shadow: var(--w98-raised);
 }
 
 html[data-style="y2k"]
@@ -2647,7 +3062,7 @@ html[data-style="y2k"]
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
   ) {
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 html[data-style="y2k"]
@@ -2657,14 +3072,17 @@ html[data-style="y2k"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
-  background: var(--sb-y2k-gel);
-  color: #fff;
-  text-shadow: 0 1px 0 rgb(0 0 0 / 30%);
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
+  background: var(--w98-select);
+  color: var(--w98-select-text);
+  text-shadow: none;
 }
 
 html[data-style="y2k"] :is([data-slot="dropdown-menu-separator"], [data-slot="select-separator"]) {
-  background: #b9b9cc;
+  height: 0;
+  border-top: 1px solid var(--w98-shadow);
+  border-bottom: 1px solid var(--w98-hilight);
+  background: none;
 }
 
 /* Vaporwave: a desktop menu window; the hovered item turns menu-bar blue. */
@@ -2700,7 +3118,7 @@ html[data-style="vaporwave"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: var(--primary);
   color: var(--primary-foreground);
 }
@@ -2746,7 +3164,7 @@ html[data-style="terminal"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: var(--accent);
   box-shadow: inset 2px 0 0 var(--primary);
   color: var(--accent-foreground);
@@ -2788,7 +3206,7 @@ html[data-style="handdrawn"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: color-mix(in oklch, var(--sb-blob-peach) 60%, transparent);
   color: var(--foreground);
 }
@@ -2800,7 +3218,7 @@ html[data-style="handdrawn"][data-theme$="-dark"]
     [data-slot="dropdown-menu-checkbox-item"],
     [data-slot="dropdown-menu-radio-item"],
     [data-slot="select-item"]
-  ):is([data-highlighted], [data-popup-open]) {
+  ):is([data-highlighted], [data-popup-open], [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"])) {
   background: #3a2b22;
 }
 
@@ -2857,12 +3275,14 @@ html[data-style="aero"] [data-reading-progress-fill] {
 }
 
 html[data-style="y2k"] [data-reading-progress] {
-  height: 6px;
-  border-bottom: 1px solid #fff;
+  height: 10px;
+  padding: 2px;
+  background: var(--w98-face);
+  box-shadow: var(--w98-thin-sunken);
 }
 
 html[data-style="y2k"] [data-reading-progress-fill] {
-  background: var(--sb-y2k-gloss), var(--sb-y2k-bar);
+  background: repeating-linear-gradient(90deg, var(--w98-select) 0 7px, transparent 7px 9px);
 }
 
 /* Vaporwave and pixel: a blocky progress bar of separate segments. */
@@ -2980,24 +3400,27 @@ html[data-style="y2k"] [data-music-lcd] * {
 }
 
 html[data-style="y2k"] [data-music-lcd] {
-  border: 2px solid;
-  border-color: #4a4a6a #d0d0e0 #d0d0e0 #4a4a6a;
+  border: 0;
+  box-shadow: var(--w98-sunken);
 }
 
 html[data-style="y2k"] [data-music-progress-fill] {
-  background: var(--sb-y2k-gloss), var(--sb-y2k-bar);
+  background: repeating-linear-gradient(90deg, var(--w98-select) 0 5px, transparent 5px 7px);
 }
 
 html[data-style="y2k"] [data-music-button] {
-  border: 1px solid #9aa3c7;
-  background: var(--sb-y2k-silver);
-  color: var(--sb-y2k-ink);
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-face);
+  color: var(--w98-face-text);
+  box-shadow: var(--w98-raised);
 }
 
 html[data-style="y2k"] [data-music-button][data-music-main] {
-  border-color: #0a6cc0;
-  background: var(--sb-y2k-gel);
-  color: #fff;
+  box-shadow:
+    inset 0 0 0 1px var(--w98-dark),
+    inset -2px -2px var(--w98-shadow),
+    inset 2px 2px var(--w98-hilight);
 }
 
 html[data-style="pixel"] [data-music-lcd] * {
@@ -3384,17 +3807,37 @@ html[data-style="vaporwave"][data-fusion="fused"] {
   --sb-vw-stripes: repeating-linear-gradient(180deg, color-mix(in oklch, var(--foreground) 40%, var(--card)) 0 1px, var(--card) 1px 3px);
 }
 
-html[data-style="vaporwave"][data-fusion="fused"][data-style] body {
-  background-color: var(--background);
-  background-image:
-    linear-gradient(color-mix(in oklch, var(--card) 55%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklch, var(--card) 55%, transparent) 1px, transparent 1px),
-    linear-gradient(
-      180deg,
-      color-mix(in oklch, var(--primary) 45%, var(--background)) 0%,
-      color-mix(in oklch, var(--primary) 22%, var(--background)) 50%,
-      color-mix(in oklch, var(--accent) 40%, var(--background)) 100%
-    );
+/* Other themes: the same city in the theme's colours; faint on light themes, dark silhouettes on dark ones. */
+
+html[data-style="vaporwave"][data-fusion="fused"] {
+  --vw-sky: linear-gradient(
+    180deg,
+    var(--background) 0%,
+    color-mix(in oklch, var(--primary) 20%, var(--background)) 42%,
+    color-mix(in oklch, var(--accent) 55%, var(--background)) 64%,
+    color-mix(in oklch, var(--primary) 40%, var(--background)) 84%,
+    color-mix(in oklch, var(--primary) 26%, var(--background)) 100%
+  );
+  --vw-building-distant: color-mix(in oklch, var(--primary) 24%, var(--background));
+  --vw-building-top: color-mix(in oklch, var(--primary) 42%, var(--background));
+  --vw-building-bottom: color-mix(in oklch, var(--primary) 36%, var(--foreground));
+  --vw-building-shade: var(--foreground);
+  --vw-window-warm: color-mix(in oklch, var(--accent) 50%, white);
+  --vw-window-cool: color-mix(in oklch, var(--primary) 30%, white);
+  --vw-sun-core: color-mix(in oklch, var(--accent) 45%, white);
+  --vw-sun-edge: var(--primary);
+  --vw-sun-opacity: 0.6;
+  --vw-palm: color-mix(in oklch, var(--primary) 30%, var(--foreground));
+  --vw-scene-opacity: 0.5;
+}
+
+html[data-style="vaporwave"][data-fusion="fused"][data-theme$="-dark"] {
+  --vw-building-distant: color-mix(in oklch, var(--primary) 28%, var(--background));
+  --vw-building-top: color-mix(in oklch, var(--primary) 22%, var(--background));
+  --vw-building-bottom: color-mix(in oklch, var(--background) 55%, black);
+  --vw-building-shade: color-mix(in oklch, var(--background) 25%, black);
+  --vw-palm: color-mix(in oklch, var(--background) 25%, black);
+  --vw-scene-opacity: 1;
 }
 
 html[data-style="vaporwave"][data-fusion="fused"] [data-styled-blog] [data-sb-hero-title] {
@@ -3418,68 +3861,29 @@ html[data-style="vaporwave"][data-fusion="fused"] :is([data-music-lcd], [data-to
   background: var(--card);
 }
 
+/* Y2K on any other theme: the window colours come from the theme, the way Display Properties let you pick an
+   appearance scheme. */
+
 html[data-style="y2k"][data-fusion="fused"] {
-  --sb-y2k-bar: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--primary) 65%, #ff4fd8) 0%,
-    var(--primary) 50%,
-    color-mix(in oklch, var(--primary) 60%, #2fc8ff) 100%
-  );
-  --sb-y2k-gel: linear-gradient(
-    180deg,
-    color-mix(in oklch, var(--primary) 30%, white) 0%,
-    color-mix(in oklch, var(--primary) 80%, white) 48%,
-    var(--primary) 52%,
-    color-mix(in oklch, var(--primary) 55%, white) 100%
-  );
-  --sb-y2k-silver: linear-gradient(
-    180deg,
-    var(--card) 0%,
-    color-mix(in oklch, var(--muted) 70%, var(--card)) 48%,
-    var(--muted) 52%,
-    var(--card) 100%
-  );
-  --sb-y2k-ink: var(--foreground);
+  --w98-desktop: var(--background);
+  --w98-face: color-mix(in oklch, var(--muted) 60%, var(--card));
+  --w98-face-text: var(--foreground);
+  --w98-hilight: color-mix(in oklch, var(--w98-face) 45%, white);
+  --w98-light: color-mix(in oklch, var(--w98-face) 75%, white);
+  --w98-shadow: color-mix(in oklch, var(--w98-face) 55%, black);
+  --w98-dark: color-mix(in oklch, var(--w98-face) 15%, black);
+  --w98-window: var(--card);
+  --w98-window-text: var(--card-foreground);
+  --w98-title: linear-gradient(90deg, var(--primary) 0%, color-mix(in oklch, var(--primary) 70%, var(--card)) 100%);
+  --w98-title-text: var(--primary-foreground);
+  --w98-select: var(--primary);
+  --w98-select-text: var(--primary-foreground);
+  --w98-link: var(--primary);
 }
 
-html[data-style="y2k"][data-fusion="fused"][data-style] body {
-  background-color: var(--background);
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Cpath d='M18 6l2.2 9.8L30 18l-9.8 2.2L18 30l-2.2-9.8L6 18l9.8-2.2z' fill='white' fill-opacity='.85'/%3E%3Cpath d='M54 44l1.1 4.9L60 50l-4.9 1.1L54 56l-1.1-4.9L48 50l4.9-1.1z' fill='white' fill-opacity='.7'/%3E%3Ccircle cx='44' cy='14' r='1.3' fill='white'/%3E%3Ccircle cx='12' cy='56' r='1' fill='white'/%3E%3C/svg%3E"),
-    radial-gradient(circle at 12% 18%, color-mix(in oklch, var(--primary) 45%, transparent) 0, transparent 32%),
-    radial-gradient(circle at 88% 12%, color-mix(in oklch, var(--accent) 60%, transparent) 0, transparent 30%),
-    linear-gradient(
-      160deg,
-      color-mix(in oklch, var(--primary) 20%, var(--background)) 0%,
-      var(--background) 48%,
-      color-mix(in oklch, var(--primary) 30%, var(--background)) 100%
-    );
-}
-
-html[data-style="y2k"][data-fusion="fused"] [data-app-sidebar] {
-  background: repeating-linear-gradient(
-    180deg,
-    color-mix(in oklch, var(--card) 92%, transparent) 0 2px,
-    color-mix(in oklch, var(--muted) 85%, transparent) 2px 4px
-  );
-}
-
-html[data-style="y2k"][data-fusion="fused"] :is([data-app-toolbar], [data-app-sidebar-frame]) {
-  border-color: var(--border);
-}
-
-html[data-style="y2k"][data-fusion="fused"] [data-app-toolbar] {
-  background: var(--sb-y2k-silver);
-}
-
-html[data-style="y2k"][data-fusion="fused"] [data-styled-blog] [data-sb-card]:hover [data-sb-title] a {
-  color: var(--primary);
-}
-
-html[data-style="y2k"][data-fusion="fused"] [data-app-sidebar] [class*="hover:bg-sidebar-accent"]:hover {
-  background: color-mix(in oklch, var(--primary) 15%, var(--card));
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--primary) 50%, transparent);
+html[data-style="y2k"][data-fusion="fused"] [data-styled-blog] :is([data-sb-hero-title], [data-sb-hero-desc]) {
   color: var(--foreground);
+  text-shadow: 1px 1px 0 var(--background);
 }
 
 html[data-style="aero"][data-fusion="fused"] {
@@ -3744,20 +4148,187 @@ html[data-legend="aquarium"] body::after {
   }
 }
 
-/* Millennium cyber: a holographic sheen slides across every window. */
-html[data-legend="cyber"] [data-styled-blog] [data-sb-card] {
-  background:
-    linear-gradient(
-      115deg,
-      rgb(255 79 216 / 16%),
-      rgb(47 200 255 / 16%),
-      rgb(255 230 107 / 16%),
-      rgb(138 92 255 / 16%),
-      rgb(255 79 216 / 16%)
-    )
-    0 0 / 300% 300%,
-    var(--card);
-  animation: sb-holo 8s linear infinite;
+/* Windows XP, the Y2K × cosmic legend: Luna windows over a meadow at blue hour. The famous hill and sky are
+   drawn here in gradients and kept dim and hazy, so the bright windows stay the brightest thing on screen; a few
+   stars stay up for the cosmic half of the pair. The theme's colours give way to Luna's light ones. */
+
+html[data-style="y2k"][data-legend="cyber"] {
+  /* theme.ts sets the scheme inline for dark themes; XP is a light one. */
+  color-scheme: light !important;
+  --background: #ece9d8;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --muted: #ece9d8;
+  --muted-foreground: #5d5b52;
+  --accent: #c1d2ee;
+  --accent-foreground: #000000;
+  --secondary: #ece9d8;
+  --secondary-foreground: #000000;
+  --primary: #316ac5;
+  --primary-foreground: #ffffff;
+  --border: #aca899;
+  --input: #7f9db9;
+  --ring: #316ac5;
+  --w98-face: #ece9d8;
+  --w98-face-text: #000000;
+  --w98-hilight: #ffffff;
+  --w98-light: #f5f4ee;
+  --w98-shadow: #aca899;
+  --w98-dark: #716f64;
+  --w98-window: #ffffff;
+  --w98-window-text: #000000;
+  --w98-title: linear-gradient(180deg, #3d95ff 0%, #0058ee 12%, #0055e5 60%, #0b61ff 90%, #003dd7 100%);
+  --w98-title-inactive: linear-gradient(180deg, #a0b8ef 0%, #7a96df 15%, #7b97e0 85%, #6a87d8 100%);
+  --w98-title-text: #ffffff;
+  --w98-title-text-inactive: #dce6fa;
+  --w98-select: #316ac5;
+  --w98-select-text: #ffffff;
+  --w98-link: #0b5bd6;
+  --w98-buttons: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='52' height='16'%3E%3Cdefs%3E%3ClinearGradient id='b' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%236d9bff'/%3E%3Cstop offset='1' stop-color='%231c50e0'/%3E%3C/linearGradient%3E%3ClinearGradient id='r' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f19a7a'/%3E%3Cstop offset='1' stop-color='%23d33b10'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='0.5' y='.5' width='15' height='15' rx='3' fill='url%28%23b%29' stroke='%23fff'/%3E%3Crect x='18.5' y='.5' width='15' height='15' rx='3' fill='url%28%23b%29' stroke='%23fff'/%3E%3Crect x='36.5' y='.5' width='15' height='15' rx='3' fill='url%28%23r%29' stroke='%23fff'/%3E%3Crect x='4' y='10' width='6' height='2' fill='%23fff'/%3E%3Cpath d='M22.5 4.5h7v7h-7z' fill='none' stroke='%23fff'/%3E%3Crect x='22' y='4' width='8' height='2' fill='%23fff'/%3E%3Cpath d='M40.5 4.5l7 7M47.5 4.5l-7 7' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  --w98-arrow-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 5l-4 4h8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M8 11l-4-4h8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-left: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M5 8l4-4v8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-arrow-right: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' shape-rendering='crispEdges'%3E%3Cpath d='M11 8l-4-4v8z' fill='%23000'/%3E%3C/svg%3E");
+  --w98-window-frame: inset 0 0 0 3px #0b4fd8, 0 6px 18px rgb(0 20 60 / 35%);
+  --sb-radius: 8px 8px 3px 3px;
+}
+
+html[data-style="y2k"][data-legend="cyber"][data-style] body {
+  background-color: #22406b;
+  background-image:
+    linear-gradient(180deg, rgb(8 16 40 / 30%) 0%, transparent 35%, rgb(10 30 20 / 35%) 100%),
+    radial-gradient(ellipse 150% 52% at 32% 100%, #3f6b29 0%, #557f35 48%, #6a9340 56%, #7a9f4a 57.6%, transparent 58%),
+    radial-gradient(ellipse 120% 46% at 88% 104%, #40653a 0%, #4f7546 55%, transparent 55.5%),
+    radial-gradient(ellipse 34% 7% at 22% 30%, rgb(235 240 250 / 22%) 0%, transparent 70%),
+    radial-gradient(ellipse 26% 5% at 70% 22%, rgb(235 240 250 / 16%) 0%, transparent 70%),
+    radial-gradient(1.5px 1.5px at 14% 9%, rgb(255 255 255 / 80%) 0%, transparent 100%),
+    radial-gradient(1px 1px at 46% 5%, rgb(255 255 255 / 70%) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 78% 11%, rgb(255 255 255 / 75%) 0%, transparent 100%),
+    radial-gradient(1px 1px at 91% 4%, rgb(255 255 255 / 60%) 0%, transparent 100%),
+    linear-gradient(180deg, #141f45 0%, #26407a 38%, #5c7fb4 64%, #a9bfd4 74%, #c6d3d8 79%);
+  background-attachment: fixed;
+}
+
+/* The cosmic theme's star canvas would sprinkle stars over the grass. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-cosmic-background] {
+  display: none;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-sb-card] {
+  padding-top: calc(24px + 0.75rem);
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-sb-card]::before {
+  inset: 0 0 auto;
+  height: 24px;
+  border-radius: 7px 7px 0 0;
+  padding-inline-start: 26px;
+  background-position:
+    6px center,
+    0 0;
+  font-size: 12px;
+  line-height: 24px;
+  text-shadow: 1px 1px 0 rgb(10 24 131 / 60%);
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] :is([data-sb-card], [data-sb-widget-title])::after {
+  top: 4px;
+  right: 5px;
+  width: 52px;
+  height: 16px;
+  background-size: 52px 16px;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-sb-widget-title] {
+  margin: -16px -18px 10px;
+  padding: 4px 62px 4px 8px;
+  border-radius: 7px 7px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-sb-widget-title]::after {
+  top: 4px;
+  right: 5px;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog][data-memo-detail] [data-sb-browser] {
+  border-radius: 8px 8px 3px 3px;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] :is([data-sb-hero-title], [data-sb-hero-desc]) {
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+/* XP push buttons: rounded, softly shaded, with the amber glow under the pointer. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-ui-button]:not([data-variant="ghost"], [data-variant="link"]),
+html[data-style="y2k"][data-legend="cyber"] [data-music-button] {
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f2ec 60%, #e3e0d2 100%);
+  box-shadow: none;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-tag], [data-sb-nav-link]),
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-memo-pagination] button {
+  border: 1px solid #003c74;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f2ec 60%, #e3e0d2 100%);
+  box-shadow: none;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-ui-button]:not([data-variant="ghost"], [data-variant="link"]):not(:disabled):hover,
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] :is([data-sb-chip], [data-sb-cloud-tag]):hover,
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-memo-pagination] button:not(:disabled):hover {
+  box-shadow: inset 0 0 0 2px #fbc85c;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-sb-cloud-tag][aria-pressed="true"],
+html[data-style="y2k"][data-legend="cyber"] [data-styled-blog] [data-memo-pagination] button[aria-current="page"] {
+  background: linear-gradient(180deg, #e3e2da 0%, #efeee8 100%);
+  box-shadow: inset 1px 1px 2px rgb(0 0 0 / 25%);
+}
+
+/* The top bar becomes the taskbar, with its own white type. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-app-toolbar] {
+  --foreground: #ffffff;
+  --muted-foreground: #dfe9ff;
+  background: linear-gradient(180deg, #3f8cf3 0%, #245edb 10%, #2257d5 85%, #1941a5 100%);
+  box-shadow: none;
+  color: #ffffff;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-app-toolbar] [data-ui-button][data-variant="ghost"]:not(:disabled):hover {
+  background: rgb(255 255 255 / 18%);
+  box-shadow: none;
+}
+
+/* The sidebar is the Start menu: white fading into pale blue, behind a blue edge. */
+
+html[data-style="y2k"][data-legend="cyber"] [data-app-sidebar] {
+  background: linear-gradient(90deg, #ffffff 0%, #f1f6fd 60%, #d3e5fa 100%);
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-app-sidebar-frame] {
+  box-shadow: inset -2px 0 #3a6fd8;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-reading-progress] {
+  padding: 2px 3px;
+  border-radius: 0 0 3px 3px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #686868;
+}
+
+html[data-style="y2k"][data-legend="cyber"] [data-reading-progress-fill] {
+  background: repeating-linear-gradient(90deg, #2ec633 0 7px, transparent 7px 9px);
 }
 
 @keyframes sb-holo {
@@ -4264,7 +4835,6 @@ html[data-style="golden"] [data-reaction-banner] [data-reaction-title] {
   html[data-elements~="aurora"] #root::before,
   html[data-legend="crt"] body::after,
   html[data-legend="aquarium"] body::after,
-  html[data-legend="cyber"] [data-styled-blog] [data-sb-card],
   html[data-glitch] [data-styled-blog],
   html[data-style] [data-styled-blog] [data-sb-card][data-sb-shiny],
   html[data-style="golden"] [data-styled-blog] [data-sb-hero-title],
@@ -4308,14 +4878,12 @@ html[data-style="handdrawn"] [data-reaction-banner]:not([data-legendary]) [data-
 }
 
 html[data-style="y2k"] [data-reaction-banner]:not([data-legendary]) [data-reaction-title] {
-  font-style: italic;
-  background-image: linear-gradient(180deg, #ffffff 0%, #9ff3ff 28%, #ff5ad9 62%, #ffe66b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1.5px #3b1a8f;
+  padding: 1px 6px;
+  background: var(--w98-title);
+  color: var(--w98-title-text);
+  font-family: var(--w98-font);
+  font-style: normal;
   text-shadow: none;
-  filter: drop-shadow(3px 3px 0 #2fc8ff);
 }
 
 html[data-style="vaporwave"] [data-reaction-banner]:not([data-legendary]) [data-reaction-title] {
@@ -4352,10 +4920,6 @@ html:is([data-style]:not([data-style="default"]), [data-particles]) [data-page-p
   box-shadow: var(--sb-shadow, var(--shadow-xs));
   -webkit-backdrop-filter: var(--sb-blur, none);
   backdrop-filter: var(--sb-blur, none);
-}
-
-html[data-style="y2k"] [data-page-panel] {
-  border-color: var(--sb-bevel-light) var(--sb-bevel-dark) var(--sb-bevel-dark) var(--sb-bevel-light);
 }
 
 html[data-style="handdrawn"] [data-page-panel] {
@@ -4406,7 +4970,7 @@ html[data-style="aero"] [data-settings-surface] {
 
 html[data-style="aero"]
   :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
-  :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], select) {
+  :is([data-slot="input"], [data-slot="textarea"], :is([data-slot="select-trigger"], [data-picker-trigger]), select) {
   border-color: var(--input);
   border-radius: 6px;
   background: var(--sb-settings-control);
@@ -4447,9 +5011,7 @@ html[data-style="aero"] :is([data-settings-section], body:has([data-settings-sec
   box-shadow: 0 1px 2px rgb(0 40 70 / 35%);
 }
 
-html[data-style="aero"]
-  :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
-  [data-slot="button"]:is([data-variant="outline"], [data-variant="secondary"]),
+html[data-style="aero"] [data-ui-button]:is([data-variant="outline"], [data-variant="secondary"]),
 html[data-style="aero"] :is([data-settings-section], body:has([data-settings-section]) [role="dialog"]) [role="tab"][aria-selected="true"] {
   border: 1px solid var(--border);
   background: var(--sb-settings-button);
@@ -4459,9 +5021,7 @@ html[data-style="aero"] :is([data-settings-section], body:has([data-settings-sec
     0 1px 2px rgb(0 35 65 / 12%);
 }
 
-html[data-style="aero"]
-  :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
-  [data-slot="button"][data-variant="default"] {
+html[data-style="aero"] [data-ui-button][data-variant="default"] {
   border: 1px solid color-mix(in oklch, var(--primary) 60%, transparent);
   background: var(--sb-aero-aqua);
   color: var(--sb-aero-ink);
@@ -4472,7 +5032,7 @@ html[data-style="aero"]
 
 html[data-style="aero"]
   :is([data-settings-section], body:has([data-settings-section]) [role="dialog"])
-  :is([data-slot="button"], [role="tab"]):hover:not(:disabled) {
+  :is([data-ui-button], [role="tab"]):hover:not(:disabled) {
   filter: brightness(1.1);
 }
 
@@ -4520,11 +5080,19 @@ html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"] {
   --sb-vw-stripes: repeating-linear-gradient(180deg, #4a4268 0 1px, #26203f 1px 3px);
 }
 
-html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"][data-style] body {
-  background-color: #171230;
-  background-image:
-    linear-gradient(rgb(255 255 255 / 9%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 9%) 1px, transparent 1px),
-    linear-gradient(180deg, #0e1838 0%, #261451 50%, #4a1a4f 100%);
+/* Night: the reference's dusk, a violet sky burning to coral at the waterline behind near-black towers and palms. */
+html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"] {
+  --vw-sky: linear-gradient(180deg, #160f3f 0%, #2f1d6a 28%, #6a338f 50%, #c8568f 62%, #f08a6e 70%, #d9677f 84%, #7a2f6c 100%);
+  --vw-building-distant: #864879;
+  --vw-building-top: #64355e;
+  --vw-building-bottom: #20162f;
+  --vw-building-shade: #120d22;
+  --vw-window-warm: #ffd9ad;
+  --vw-window-cool: #e5a0d6;
+  --vw-sun-core: #fff9d7;
+  --vw-sun-edge: #ffd49c;
+  --vw-sun-opacity: 0.95;
+  --vw-palm: #0b0616;
 }
 
 html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"] [data-styled-blog] [data-sb-subitem],

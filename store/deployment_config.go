@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/usememos/memos/internal/base"
+	"github.com/usememos/memos/internal/dailyquestion"
 	storepb "github.com/usememos/memos/proto/gen/store"
 )
 
@@ -93,6 +94,13 @@ func (s *Store) LoadDeploymentConfigurationDir(ctx context.Context, dir string) 
 		}
 	}
 
+	if configured := config.instanceSettings[storepb.InstanceSettingKey_GENERAL]; configured != nil && configured.GetGeneralSetting().DailyQuestionSeed == "" {
+		seed, err := ensureDailyQuestionSeedSQL(ctx, s.driver.GetDB(), s.profile.Driver)
+		if err != nil {
+			return errors.Wrap(err, "inherit instance daily question seed for deployment configuration")
+		}
+		configured.GetGeneralSetting().DailyQuestionSeed = seed
+	}
 	if err := s.validateDeploymentAuthenticationState(ctx, config); err != nil {
 		return err
 	}
@@ -225,6 +233,15 @@ func validateAndNormalizeDeploymentInstanceSetting(setting *storepb.InstanceSett
 		if setting.GetGeneralSetting() == nil {
 			return errors.New("generalSetting must be populated for key GENERAL")
 		}
+		general := setting.GetGeneralSetting()
+		if err := dailyquestion.ValidateSeed(general.DailyQuestionSeed); err != nil {
+			return err
+		}
+		questions, _, err := dailyquestion.NormalizeQuestions(general.DailyQuestionsJson)
+		if err != nil {
+			return err
+		}
+		general.DailyQuestionsJson = questions
 		if offset := setting.GetGeneralSetting().WeekStartDayOffset; offset < -1 || offset > 6 {
 			return errors.New("generalSetting.weekStartDayOffset must be between -1 and 6")
 		}

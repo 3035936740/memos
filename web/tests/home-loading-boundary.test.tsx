@@ -15,6 +15,11 @@ vi.mock("@/components/MemoEditor", () => ({
   },
 }));
 
+vi.mock("@/components/HomeToday", () => ({
+  DailyQuestion: () => null,
+  TodayCard: () => null,
+}));
+
 vi.mock("@/components/MemoView", () => ({
   default: () => <div data-testid="memo-view" />,
 }));

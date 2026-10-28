@@ -166,6 +166,10 @@ func (s *Store) ClearInstanceBlockedWordsSetting(ctx context.Context) error {
 
 func (s *Store) UpsertInstanceSetting(ctx context.Context, upsert *storepb.InstanceSetting) (*storepb.InstanceSetting, error) {
 	if upsert.Key == storepb.InstanceSettingKey_GENERAL {
+		upsert = cloneInstanceSetting(upsert)
+		if err := prepareDailyQuestionSetting(upsert.GetGeneralSetting()); err != nil {
+			return nil, err
+		}
 		s.stylePackMu.Lock()
 		defer s.stylePackMu.Unlock()
 		valid, err := s.IsStyleEnabled(ctx, upsert.GetGeneralSetting().GetFirstVisitDefaultStyle())

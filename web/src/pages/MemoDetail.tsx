@@ -2,6 +2,7 @@ import { Code, ConnectError } from "@connectrpc/connect";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowUpLeftFromCircleIcon, FolderIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo as useReactMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { deriveBlogMemoText } from "@/components/BlogMemoView";
 import BlogSidebar from "@/components/BlogSidebar";
 import MemoAgeNotice from "@/components/MemoAgeNotice";
 import MemoCommentSection, { type CommentSortOrder } from "@/components/MemoCommentSection";
@@ -13,6 +14,7 @@ import PostLookNotice from "@/components/PostLookNotice";
 import ResumeReading from "@/components/ResumeReading";
 import ReadingProgress from "@/components/StyledBlog/ReadingProgress";
 import StyledBlogSidebar from "@/components/StyledBlog/StyledBlogSidebar";
+import { Win98BrowserChrome, Win98StatusBar } from "@/components/StyledBlog/Win98BrowserChrome";
 import { Button } from "@/components/ui/button";
 import { useAppSidebar } from "@/contexts/AppSidebarContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -103,7 +105,7 @@ const MemoDetail = () => {
   const { isInitialized: authInitialized } = useAuth();
   const { isInitialized: instanceInitialized, generalSetting } = useInstance();
   const currentUser = useCurrentUser();
-  const { feedLayout, blogStyle } = useView();
+  const { feedLayout, blogStyle, styleId } = useView();
   // Blog 1 keeps the earlier Blog 2 article frame; Blog 2 uses the styled layout's widths and widget cards.
   const isBlog2 = feedLayout === "blog2" || feedLayout === "blog-classic";
   const styledBlog = isStyledBlog(feedLayout);
@@ -242,6 +244,9 @@ const MemoDetail = () => {
     return null;
   }
   const mentionResolutionContents = [displayMemo.content, ...comments.map((comment) => comment.content)];
+  // Y2K (Windows 98) opens the article in Internet Explorer.
+  const win98 = styledBlog && styleId === "y2k";
+  const browserTitle = deriveBlogMemoText(displayMemo.content, displayMemo.property?.title).title || t("memo.blog-untitled");
   const userResolutionNames = Array.from(
     new Set([displayMemo, ...comments].flatMap((item) => [item.creator, ...(item.reactions ?? []).map((reaction) => reaction.creator)])),
   );
@@ -313,28 +318,32 @@ const MemoDetail = () => {
               )}
               {!displayMemo.parent && <MemoAgeNotice memo={displayMemo} />}
               {!displayMemo.parent && <PostLookNotice memoName={displayMemo.name} tags={displayMemo.tags} />}
-              <div ref={readingArticleRef}>
-                <MemoView
-                  key={displayMemo.name}
-                  memo={displayMemo}
-                  compact={false}
-                  parentPage={resolvedParentPage}
-                  navigationScope={navigationScope}
-                  parentScope={parentScope}
-                  shareImageDialogOpen={shareImageDialogOpen}
-                  showCreator
-                  showVisibility
-                  showPinned
-                  showSpace
-                  className={
-                    styledBlog
-                      ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                      : isBlog2
-                        ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
-                        : undefined
-                  }
-                  onShareImageDialogOpenChange={setShareImageDialogOpen}
-                />
+              <div data-sb-browser={win98 ? "" : undefined}>
+                {win98 && <Win98BrowserChrome title={browserTitle} />}
+                <div ref={readingArticleRef}>
+                  <MemoView
+                    key={displayMemo.name}
+                    memo={displayMemo}
+                    compact={false}
+                    parentPage={resolvedParentPage}
+                    navigationScope={navigationScope}
+                    parentScope={parentScope}
+                    shareImageDialogOpen={shareImageDialogOpen}
+                    showCreator
+                    showVisibility
+                    showPinned
+                    showSpace
+                    className={
+                      styledBlog
+                        ? "mb-0 px-5 py-5 sm:px-7 sm:py-6 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                        : isBlog2
+                          ? "mb-0 rounded-md border-0 px-3 py-3 shadow-xs sm:px-4 sm:py-4 [&_[data-memo-content]]:text-base [&_[data-memo-content]]:leading-7 sm:[&_[data-memo-content]]:text-[1.025rem] sm:[&_[data-memo-content]]:leading-8"
+                          : undefined
+                    }
+                    onShareImageDialogOpenChange={setShareImageDialogOpen}
+                  />
+                </div>
+                {win98 && <Win98StatusBar />}
               </div>
               {!isShareMode && !displayMemo.parent && (
                 <MemoSeries memo={displayMemo} parentPage={resolvedParentPage} parentScope={parentScope} />

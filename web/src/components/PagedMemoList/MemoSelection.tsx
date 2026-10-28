@@ -1,5 +1,5 @@
-import { CheckIcon, ListChecksIcon } from "lucide-react";
-import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { CheckIcon } from "lucide-react";
+import { createContext, type PointerEvent, type ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import PrivacyCheckDialog from "@/components/MemoEditor/components/PrivacyCheckDialog";
@@ -17,6 +17,10 @@ import { isSuperUser } from "@/utils/user";
 
 /** Requests sent at once while a batch runs, so a large selection does not flood a small server. */
 const BATCH_CONCURRENCY = 3;
+/** On touch screens, holding a card this long starts picking with it. */
+const LONG_PRESS_MS = 500;
+/** A finger that wanders further than this is scrolling, not holding. */
+const LONG_PRESS_SLOP_PX = 10;
 
 const VISIBILITY_CHOICES = [
   { value: Visibility.PUBLIC, labelKey: "memo.visibility.public" },
@@ -25,7 +29,10 @@ const VISIBILITY_CHOICES = [
 ] as const;
 
 interface MemoSelectionValue {
+  enabled: boolean;
   active: boolean;
+  /** Starts picking with this memo already picked. */
+  start: (name: string) => void;
   selected: ReadonlySet<string>;
   canSelect: (memo: Memo) => boolean;
   toggle: (name: string) => void;
@@ -84,7 +91,12 @@ export const MemoSelectionProvider = ({ memos, enabled, children }: ProviderProp
   );
   const selection = useMemo<MemoSelectionValue>(
     () => ({
+      enabled,
       active: batch.active,
+      start: (name) => {
+        setSelected(new Set([name]));
+        setActive(true);
+      },
       selected,
       canSelect: batch.canSelect,
       toggle: (name) =>
@@ -94,7 +106,7 @@ export const MemoSelectionProvider = ({ memos, enabled, children }: ProviderProp
           return next;
         }),
     }),
-    [batch.active, batch.canSelect, selected],
+    [batch.active, batch.canSelect, enabled, selected],
   );
 
   return (
@@ -104,16 +116,76 @@ export const MemoSelectionProvider = ({ memos, enabled, children }: ProviderProp
   );
 };
 
-/** Wraps one memo card; while picking, a click on the card picks it instead of opening it. */
+/**
+ * Wraps one memo card. Before picking starts, a check circle shows in the card's corner on hover (or keyboard focus)
+ * and holding the card on a touch screen does the same: either starts picking with this card. While picking, a click
+ * on the card picks it instead of opening it.
+ */
 export const SelectableMemo = ({ memo, children }: { memo: Memo; children: ReactNode }) => {
   const t = useTranslate();
   const selection = useContext(MemoSelectionContext);
-  if (!selection?.active || !selection.canSelect(memo)) return children;
+  const press = useRef<{ timer: number; x: number; y: number }>(undefined);
+  // Set when a long press started picking, so the click that ends the press does not also open the card.
+  const pressStarted = useRef(false);
+  if (!selection?.enabled || !selection.canSelect(memo)) return children;
   const picked = selection.selected.has(memo.name);
   const title = memo.property?.title || memo.snippet || memo.name;
 
+  if (!selection.active) {
+    const cancelPress = () => {
+      if (press.current) window.clearTimeout(press.current.timer);
+      press.current = undefined;
+    };
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== "touch") return;
+      pressStarted.current = false;
+      cancelPress();
+      const timer = window.setTimeout(() => {
+        pressStarted.current = true;
+        press.current = undefined;
+        navigator.vibrate?.(10);
+        selection.start(memo.name);
+      }, LONG_PRESS_MS);
+      press.current = { timer, x: event.clientX, y: event.clientY };
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      const start = press.current;
+      if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > LONG_PRESS_SLOP_PX) cancelPress();
+    };
+
+    return (
+      <div
+        data-memo-selectable=""
+        className="group/select relative"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        // A held finger would otherwise also open the browser's link menu.
+        onContextMenu={(event) => pressStarted.current && event.preventDefault()}
+        onClickCapture={(event) => {
+          if (!pressStarted.current) return;
+          pressStarted.current = false;
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+      >
+        {children}
+        <button
+          type="button"
+          data-memo-select-start=""
+          data-memo-selection-indicator=""
+          title={t("memo.batch.start")}
+          aria-label={t("memo.batch.start-with", { title })}
+          onClick={() => selection.start(memo.name)}
+          className="absolute end-3 top-3 z-10 flex size-5 items-center justify-center rounded-md border-2 border-muted-foreground/60 bg-background opacity-0 transition-opacity group-hover/select:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [@media(hover:none)]:hidden"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div data-memo-selectable="" data-selected={picked || undefined} className="relative">
+    <div data-memo-selectable="" data-memo-selection-active="" data-selected={picked || undefined} className="relative">
       {children}
       <button
         data-memo-selection-overlay=""
@@ -152,8 +224,8 @@ const runInBatches = async <T,>(items: T[], action: (item: T) => Promise<unknown
 };
 
 /**
- * The batch bar above a list: a button that starts picking, then, while picking, the count, select-all for the
- * page and the actions. Renders nothing on lists without batch tidying.
+ * The batch bar above a list while picking: the count, select-all for the page and the actions. Renders nothing
+ * before picking starts or on lists without batch tidying.
  */
 export const MemoBatchBar = ({ className }: { className?: string }) => {
   const batch = useContext(BatchStateContext);
@@ -177,17 +249,8 @@ const BatchBar = ({ batch, className }: { batch: BatchState; className?: string 
   const allPicked = pickable.length > 0 && picked.length === pickable.length;
   const archived = picked.length > 0 && picked.every((memo) => memo.state === State.ARCHIVED);
 
-  if (!active) {
-    if (pickable.length === 0) return null;
-    return (
-      <div data-memo-batch-entry="" className={cn("flex justify-start", className)}>
-        <Button variant="outline" size="sm" className="text-muted-foreground" onClick={() => setActive(true)}>
-          <ListChecksIcon className="size-4" />
-          {t("memo.batch.start")}
-        </Button>
-      </div>
-    );
-  }
+  // Picking starts from a card itself (SelectableMemo), so there is no bar until then.
+  if (!active) return null;
 
   const finish = () => {
     setSelected(new Set());

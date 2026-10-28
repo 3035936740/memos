@@ -4081,6 +4081,15 @@ components:
                 hideAboutNavigation:
                     type: boolean
                     description: Hide the built-in About navigation entry. False (including older settings) shows it.
+                dailyQuestionSeed:
+                    type: string
+                    description: Public instance seed for the frontend's yearly question shuffle.
+                dailyQuestionsJson:
+                    type: string
+                    description: 'JSON question array: strings, built-in references or translated custom questions; empty uses the localized default bank.'
+                disableDailyQuestion:
+                    type: boolean
+                    description: Disable the daily writing prompt. Default is false.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object

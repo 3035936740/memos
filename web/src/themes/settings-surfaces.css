@@ -9,13 +9,84 @@ html[data-style]:not([data-style="default"]) :where(
     [data-slot="dropdown-menu-content"],
     [data-slot="select-content"]
   )
-  :where([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [contenteditable="true"][role="textbox"]):not(
-    [class~="border-0"]
-  ) {
+  :where(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    :is([data-slot="select-trigger"], [data-picker-trigger]),
+    [contenteditable="true"][role="textbox"]
+  ):not([class~="border-0"]) {
   border: var(--sb-field-border, 1px solid var(--border));
   border-radius: var(--sb-field-radius, 6px);
   background: var(--sb-field-fill, var(--card));
   box-shadow: var(--sb-field-shadow, none);
+}
+
+/* A trigger rendered through Base UI may replace data-slot. The button marker
+   survives composition, so language, profile and other picker buttons retain
+   the same skin as ordinary buttons. Icon-only triggers stay flat. */
+:where(html[data-style]:not([data-style="default"])) :where([data-ui-button]):not([data-variant="ghost"], [data-variant="link"]) {
+  border: var(--sb-field-border, 1px solid var(--border));
+  border-radius: var(--sb-field-radius, 6px);
+  box-shadow: var(--sb-button-shadow, none);
+}
+
+:where(html[data-style]:not([data-style="default"])) :where([data-ui-button]):is([data-variant="outline"], [data-variant="secondary"]) {
+  background: var(--sb-field-fill, var(--card));
+}
+
+html[data-style="vaporwave"] {
+  --sb-button-shadow: 2px 2px 0 var(--sb-vw-drop);
+}
+
+html[data-style="glass"] {
+  --sb-button-shadow: inset 0 1px 0 var(--sb-glass-sheen);
+}
+
+html[data-style="neumorphism"] {
+  --sb-button-shadow: var(--sb-neu-raised-sm);
+}
+
+/* Language names and locale codes share the menu's selected foreground. */
+html[data-style]:not([data-style="default"]) [data-picker-item]:is(:hover, :focus-visible, [aria-selected="true"]) :is(span, svg) {
+  color: inherit;
+}
+
+/* Square desktop styles need square switches too. Keep the native checked and
+   disabled semantics; only the track and thumb materials change. */
+html:is([data-style="y2k"], [data-style="vaporwave"], [data-style="terminal"], [data-style="pixel"]) [data-slot="switch"] {
+  width: 2.25rem;
+  height: 1.25rem;
+  padding: 1px;
+  border: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: var(--sb-field-shadow, none);
+}
+
+html:is([data-style="y2k"], [data-style="vaporwave"], [data-style="terminal"], [data-style="pixel"]) [data-slot="switch-thumb"] {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 0;
+  background: var(--foreground);
+}
+
+html:is([data-style="y2k"], [data-style="vaporwave"], [data-style="terminal"], [data-style="pixel"])
+  [data-slot="switch-thumb"][data-checked] {
+  transform: translateX(1rem);
+  background: var(--primary-foreground);
+}
+
+html[dir="rtl"]:is([data-style="y2k"], [data-style="vaporwave"], [data-style="terminal"], [data-style="pixel"])
+  [data-slot="switch-thumb"][data-checked] {
+  transform: translateX(-1rem);
+}
+
+html[data-style="y2k"] [data-slot="switch"] {
+  border-color: var(--w98-shadow) var(--w98-hilight) var(--w98-hilight) var(--w98-shadow);
+}
+
+html[data-style="y2k"] [data-slot="switch-thumb"] {
+  background: var(--w98-face);
+  box-shadow: var(--w98-raised);
 }
 
 html[data-style]:not([data-style="default"]) input:is([type="datetime-local"], [type="date"], [type="time"]) {
@@ -46,11 +117,13 @@ html[data-style="aero"] {
   --sb-field-shadow: inset 0 1px 2px rgb(0 35 65 / 15%), 0 1px 0 rgb(255 255 255 / 12%);
 }
 
+/* Windows 98 fields: white, sunk two lines deep (the outer pair from the border colours below, the inner pair here). */
 html[data-style="y2k"] {
-  --sb-field-border: 2px solid var(--sb-bevel-dark);
-  --sb-field-radius: 2px;
-  --sb-checkbox-radius: 2px;
-  --sb-field-shadow: inset 1px 1px 0 var(--sb-bevel-dark), inset -1px -1px 0 var(--sb-bevel-light);
+  --sb-field-border: 2px solid var(--w98-shadow);
+  --sb-field-fill: var(--w98-window);
+  --sb-field-radius: 0;
+  --sb-checkbox-radius: 0;
+  --sb-field-shadow: inset 1px 1px 0 var(--w98-dark), inset -1px -1px 0 var(--w98-hilight);
 }
 
 html[data-style="pixel"] {
@@ -101,8 +174,10 @@ html[data-style="y2k"]
     [data-slot="dropdown-menu-content"],
     [data-slot="select-content"]
   )
-  :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="checkbox"]):not([class~="border-0"]) {
-  border-color: var(--sb-bevel-dark) var(--sb-bevel-light) var(--sb-bevel-light) var(--sb-bevel-dark);
+  :is([data-slot="input"], [data-slot="textarea"], :is([data-slot="select-trigger"], [data-picker-trigger]), [data-slot="checkbox"]):not(
+    [class~="border-0"]
+  ) {
+  border-color: var(--w98-shadow) var(--w98-hilight) var(--w98-hilight) var(--w98-shadow);
 }
 
 /* Native input/textarea elements cannot own an outline pseudo-element. A sliced
@@ -177,8 +252,11 @@ html[data-style]:not([data-style="default"]) [data-settings-surface] {
   box-shadow: var(--sb-control-shadow, none);
 }
 
+/* Panels in settings are sunken list boxes. */
 html[data-style="y2k"] [data-settings-surface] {
-  border-color: var(--sb-bevel-light) var(--sb-bevel-dark) var(--sb-bevel-dark) var(--sb-bevel-light);
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--w98-sunken);
 }
 
 html[data-style="pixel"] [data-settings-surface] {
@@ -258,7 +336,7 @@ html[data-style="handdrawn"]
             [data-settings-surface],
             [data-slot="input"],
             [data-slot="textarea"],
-            [data-slot="select-trigger"],
+            :is([data-slot="select-trigger"], [data-picker-trigger]),
             [data-slot="checkbox"]
           ):hover
       )
@@ -296,7 +374,7 @@ html[data-style="handdrawn"] :is([data-slot="dropdown-menu-content"], [data-slot
   isolation: isolate;
 }
 
-html[data-style="handdrawn"] :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"]) {
+html[data-style="handdrawn"] :is([data-slot="input"], [data-slot="textarea"], :is([data-slot="select-trigger"], [data-picker-trigger])) {
   border-radius: 3px 5px 2px 4px / 4px 2px 5px 3px;
   border-color: color-mix(in oklch, var(--sb-ink, var(--foreground)) 60%, transparent);
   box-shadow: none;
@@ -311,7 +389,9 @@ html[data-style="handdrawn"] :is([data-slot="dropdown-menu-separator"], [data-sl
 /* Buttons and select triggers support an independent ink layer. Keep the real
    frame transparent so the outline is drawn exactly once, above its background. */
 html[data-style="handdrawn"]
-:is([data-slot="select-trigger"], [data-slot="button"]:not([data-variant="ghost"], [data-variant="link"])):not([class~="border-0"]) {
+:is(:is([data-slot="select-trigger"], [data-picker-trigger]), [data-ui-button]:not([data-variant="ghost"], [data-variant="link"])):not(
+  [class~="border-0"]
+) {
   position: relative;
   isolation: isolate;
   border: 1.5px solid transparent;
@@ -321,7 +401,7 @@ html[data-style="handdrawn"]
 }
 
 html[data-style="handdrawn"]
-  :is([data-slot="select-trigger"], [data-slot="button"]:not([data-variant="ghost"], [data-variant="link"])):not(
+  :is(:is([data-slot="select-trigger"], [data-picker-trigger]), [data-ui-button]:not([data-variant="ghost"], [data-variant="link"])):not(
     [class~="border-0"]
   )::after {
   content: "";
@@ -342,9 +422,9 @@ html[data-style="handdrawn"][data-style]
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   html[data-style="handdrawn"]
-    :is([data-slot="select-trigger"], [data-slot="button"]:not([data-variant="ghost"], [data-variant="link"])):not([class~="border-0"]):not(
-      :disabled
-    ):not([data-disabled]):is(:hover, :focus-visible)::after {
+    :is(:is([data-slot="select-trigger"], [data-picker-trigger]), [data-ui-button]:not([data-variant="ghost"], [data-variant="link"])):not(
+      [class~="border-0"]
+    ):not(:disabled):not([data-disabled]):is(:hover, :focus-visible)::after {
     animation: sb-sketch-boil 450ms steps(1) infinite;
   }
 }
@@ -376,7 +456,7 @@ html[data-style]:not([data-style="default"]) [data-memo-selection-overlay]:focus
   outline-offset: 3px;
 }
 
-html[data-style]:not([data-style="default"]):not([data-style="handdrawn"])
+html[data-style]:not([data-style="default"], [data-style="handdrawn"], [data-style="y2k"], [data-style="vaporwave"])
   [data-memo-selectable][data-selected]
   > :is([data-sb-card], [data-memo-view]) {
   border-color: var(--primary);
@@ -390,12 +470,14 @@ html[data-style]:not([data-style="default"]) [data-memo-selection-indicator] {
 /* Tint the existing ink frame instead of drawing a straight selection ring over it. */
 html[data-style="handdrawn"] [data-memo-selectable][data-selected] > [data-sb-card]::before {
   border-color: var(--primary);
-  border-width: 2px;
+  border-width: 1.5px;
 }
 
 html[data-style="handdrawn"] [data-memo-selection-indicator] {
   border-color: transparent;
   border-radius: 2px 4px 3px 2px;
+  background: var(--card);
+  color: var(--primary);
 }
 
 html[data-style="handdrawn"] [data-memo-selection-indicator]::before {
@@ -406,6 +488,67 @@ html[data-style="handdrawn"] [data-memo-selection-indicator]::before {
   border-radius: inherit;
   pointer-events: none;
   filter: url(#sb-sketch-2);
+}
+
+/* Window frames already contain several borders and fake caption buttons.
+   Selection uses a separate checkbox gutter instead of piling another frame
+   and checkmark over the title bar. Other card styles retain their placement. */
+html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) {
+  padding-inline-start: 2rem;
+}
+
+html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) > [data-memo-selection-overlay] {
+  background: transparent;
+}
+
+html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selection-active]:has(> [data-sb-card]) [data-memo-selection-indicator] {
+  inset-inline-start: 3px;
+  inset-inline-end: auto;
+  top: 50%;
+  translate: 0 -50%;
+  width: 18px;
+  height: 18px;
+}
+
+/* Even the hover-only entry sits below a decorated caption. */
+html:is([data-style="y2k"], [data-style="vaporwave"]) [data-memo-selectable]:has(> [data-sb-card]) > [data-memo-select-start] {
+  top: 2.5rem;
+}
+
+html[data-style="y2k"] [data-memo-selection-indicator] {
+  border: 0;
+  border-radius: 0;
+  background: var(--w98-window);
+  color: var(--w98-window-text);
+  box-shadow: var(--w98-sunken);
+}
+
+html[data-style="y2k"] [data-memo-selectable][data-selected] > [data-sb-card]::before {
+  background:
+    var(--w98-icon-page) 3px center / 16px 16px no-repeat,
+    var(--w98-title);
+  color: var(--w98-title-text);
+}
+
+html[data-style="y2k"] [data-memo-batch-bar][data-settings-surface] {
+  background: var(--w98-face);
+  box-shadow: var(--w98-raised);
+}
+
+html[data-style="vaporwave"] [data-memo-selection-indicator] {
+  border: 2px solid var(--sb-vw-ink);
+  border-radius: 0;
+  background: var(--sb-vw-window);
+  color: var(--sb-vw-ink);
+  box-shadow: 2px 2px 0 var(--sb-vw-drop);
+}
+
+html[data-style="vaporwave"] [data-memo-selection-overlay][aria-pressed="true"] [data-memo-selection-indicator] {
+  background: var(--sb-vw-lavender);
+}
+
+html[data-style="vaporwave"] [data-memo-batch-bar][data-settings-surface] {
+  box-shadow: 2px 2px 0 var(--sb-vw-drop);
 }
 
 /* The entry stays on the left, leaving the upper-right note in its usual place.

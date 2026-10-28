@@ -35,6 +35,7 @@ const Button = React.forwardRef<HTMLElement, ButtonPrimitive.Props & VariantProp
     <ButtonPrimitive
       ref={ref}
       data-slot="button"
+      data-ui-button=""
       data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
