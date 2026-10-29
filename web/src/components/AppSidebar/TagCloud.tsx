@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { replaceFiltersByFactor, stringifyFilters, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
@@ -66,14 +67,15 @@ const TagCloud = ({ tagCount, navigationTarget }: Props) => {
         })}
       </div>
       {tags.length > FOLDED_COUNT && (
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}
-          className="mt-2.5 rounded-md text-xs text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="mt-2.5 h-auto px-1 py-1 text-xs text-muted-foreground hover:text-primary"
         >
           {expanded ? t("common.collapse") : `${t("common.expand")} (${tags.length})`}
-        </button>
+        </Button>
       )}
     </>
   );

@@ -84,6 +84,11 @@ html [data-styled-blog] [data-sb-cloud-tag] {
   border-radius: var(--sb-pill-radius, 999px);
 }
 
+html [data-styled-blog] [data-sb-cloud-tag]:focus-visible {
+  outline: 2px solid var(--ring, var(--primary));
+  outline-offset: 3px;
+}
+
 html [data-styled-blog] [data-memo-pagination] :is(button, input) {
   border: var(--sb-border, 0);
   border-radius: var(--sb-control-radius, 10px);
@@ -467,6 +472,29 @@ html[data-style="handdrawn"] [data-styled-blog] [data-memo-pagination] :is(butto
   background: transparent;
 }
 
+/* Tags own their ink layer too: keep the label sharp and draw exactly one
+   irregular outline, including when the selected tag fills with clay. */
+html[data-style="handdrawn"] [data-styled-blog] [data-sb-cloud-tag][aria-pressed] {
+  position: relative;
+  isolation: isolate;
+  border-color: transparent;
+  border-radius: 4px 8px 5px 7px / 7px 4px 8px 5px;
+}
+
+html[data-style="handdrawn"] [data-styled-blog] [data-sb-cloud-tag]::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border: 1.25px solid var(--sb-ink);
+  border-radius: inherit;
+  filter: url(#sb-sketch-1);
+  pointer-events: none;
+}
+
+html[data-style="handdrawn"] [data-styled-blog] [data-sb-cloud-tag][aria-pressed="true"]::before {
+  border-color: var(--primary);
+}
+
 /* Sketched outlines: the ink line is drawn on a layer of its own and roughened by the SVG filters in
    SketchFilters.tsx, so it wobbles like a pen line while the text stays crisp. A hovered card's line
    "boils", flicking between three roughenings the way hand-drawn animation does. */
@@ -518,6 +546,7 @@ html[data-style="handdrawn"][data-theme$="-dark"] [data-styled-blog] [data-sb-ca
       [data-sb-card],
       [data-sb-widget],
       [data-sb-nav-link],
+      [data-sb-cloud-tag],
       [data-memo-editor]:not(.fixed),
       [data-blog-composer],
       [data-sb-subcard],
@@ -529,6 +558,7 @@ html[data-style="handdrawn"][data-theme$="-dark"] [data-styled-blog] [data-sb-ca
             [data-sb-card],
             [data-sb-widget],
             [data-sb-nav-link],
+            [data-sb-cloud-tag],
             [data-memo-editor]:not(.fixed),
             [data-blog-composer],
             [data-sb-subcard],
