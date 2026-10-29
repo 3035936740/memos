@@ -40,3 +40,18 @@ html[data-effects="lite"] *::after {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+/* Vaporwave's tape filter (scanlines, grade, grain), the city's glow and the titles' colour bleed are decoration;
+   low-power mode shows the plain scene. */
+html[data-effects="lite"][data-style="vaporwave"] body::before,
+html[data-effects="lite"][data-style="vaporwave"] body::after {
+  display: none;
+}
+
+html[data-effects="lite"] [data-vaporwave-skyline] [data-vw-glow] {
+  filter: none;
+}
+
+html[data-effects="lite"][data-style="vaporwave"] [data-styled-blog] [data-sb-title] {
+  text-shadow: none;
+}

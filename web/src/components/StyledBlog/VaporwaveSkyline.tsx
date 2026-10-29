@@ -19,7 +19,11 @@ const CLOUDS = [
   [711, 271, 110, 15],
 ] as const;
 
-/** A static illustrated scene: atmospheric city layers, a promenade and framing palms. */
+/**
+ * A static illustrated scene: atmospheric city layers, a promenade and framing palms. The near towers wear neon
+ * outlines and their lit windows bloom against a glowing horizon; blog-styles.css colours the glow per palette and
+ * low-power mode drops the blur.
+ */
 const VaporwaveSkyline = () => {
   const id = useId();
   const tones = [
@@ -72,6 +76,21 @@ const VaporwaveSkyline = () => {
             <stop offset="0.5" stopColor="var(--vw-haze)" stopOpacity="0.14" />
             <stop offset="1" stopColor="var(--vw-haze)" stopOpacity="0" />
           </radialGradient>
+          <radialGradient id={`${id}-horizon`} cx="0.5" cy="0.78" r="0.5">
+            <stop offset="0" stopColor="var(--vw-horizon)" stopOpacity="0.9" />
+            <stop offset="0.45" stopColor="var(--vw-horizon)" stopOpacity="0.35" />
+            <stop offset="1" stopColor="var(--vw-horizon)" stopOpacity="0" />
+          </radialGradient>
+          {/* A tight halo and a wide one over the source: neon tubes and lit windows seen through haze. */}
+          <filter id={`${id}-glow`} x="-2%" y="-10%" width="104%" height="120%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="halo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="bloom" />
+            <feMerge>
+              <feMergeNode in="bloom" />
+              <feMergeNode in="halo" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <g id={`${id}-palm`}>
             <path d={VAPORWAVE_PALM} />
           </g>
@@ -81,13 +100,25 @@ const VaporwaveSkyline = () => {
             <ellipse key={`${x}-${y}`} cx={x} cy={y} rx={rx} ry={ry} />
           ))}
         </g>
+        <rect data-vw-horizon="" y="430" width="1600" height="370" fill={`url(#${id}-horizon)`} />
         {VAPORWAVE_LAYERS.map((layer, i) => (
           <g key={i} transform="translate(0 28)" opacity={[0.3, 0.38, 0.46, 0.54, 0.6, 0.8, 1, 1][i]}>
             <path d={layer.facades} fill={`url(#${id}-city-${i})`} />
             <path d={layer.sides} fill="var(--vw-building-shade)" opacity={i < 6 ? 0.18 : 0.5} />
             <path d={layer.edges} fill="var(--vw-window-cool)" opacity={i < 6 ? 0.08 : 0.16} />
-            <path d={layer.lights} fill="var(--vw-window-warm)" opacity={[0, 0.1, 0.12, 0.16, 0.22, 0.4, 0.72, 0.62][i]} />
-            <path d={layer.coolLights} fill="var(--vw-window-cool)" opacity={[0, 0.08, 0.1, 0.12, 0.18, 0.3, 0.55, 0.5][i]} />
+            <g data-vw-glow="" filter={i >= 4 ? `url(#${id}-glow)` : undefined}>
+              <path d={layer.lights} fill="var(--vw-window-warm)" opacity={[0, 0.1, 0.12, 0.16, 0.22, 0.4, 0.72, 0.62][i]} />
+              <path d={layer.coolLights} fill="var(--vw-window-cool)" opacity={[0, 0.08, 0.1, 0.12, 0.18, 0.3, 0.55, 0.5][i]} />
+              {i >= 5 && (
+                <path
+                  data-vw-neon={i === 7 ? "near" : "far"}
+                  d={layer.facades}
+                  fill="none"
+                  strokeWidth="1.2"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
+            </g>
             {i === 5 && <rect y="545" width="1600" height="225" fill={`url(#${id}-haze)`} />}
           </g>
         ))}

@@ -2035,10 +2035,27 @@ html[data-style="pixel"] [data-toolbar-clock] {
 /* ---------------------------------------------------------------------------
    新拟物 Neumorphism: a cool, pale blue-grey world where panes barely rise out of the surface on a faint white
    highlight and a soft blue-grey shade. Picked items rise rather than sink, icon buttons are round studs, dividers
-   are shallow grooves, and the text is a quiet navy. It brings its own palette.
+   are shallow grooves, and the text is a quiet navy. It brings its own palette on the stock themes; any other
+   theme lends its colours, and the highlight and shade are mixed from its background.
    --------------------------------------------------------------------------- */
 
 html[data-style="neumorphism"] {
+  --sb-neu-base: var(--background);
+  --sb-neu-raised: 10px 10px 24px var(--sb-neu-dark), -10px -10px 24px var(--sb-neu-light);
+  --sb-neu-raised-sm: 4px 4px 10px var(--sb-neu-dark), -4px -4px 10px var(--sb-neu-light);
+  --sb-neu-pressed: inset 3px 3px 7px var(--sb-neu-dark), inset -3px -3px 7px var(--sb-neu-light);
+  --sb-neu-groove: inset 1px 0 0 var(--sb-neu-dark), 1px 0 0 var(--sb-neu-light);
+  --sb-surface: var(--sb-neu-base);
+  --sb-border: 0;
+  --sb-radius: 20px;
+  --sb-shadow: var(--sb-neu-raised);
+  --sb-shadow-hover: 12px 12px 28px var(--sb-neu-dark), -12px -12px 28px var(--sb-neu-light);
+  --sb-cover-radius: 16px;
+  --sb-pill-radius: 999px;
+  --sb-control-radius: 12px;
+}
+
+html[data-style="neumorphism"][data-theme="default"] {
   color-scheme: light;
   --background: #e9edf3;
   --foreground: #1f3354;
@@ -2061,24 +2078,13 @@ html[data-style="neumorphism"] {
   --sidebar-foreground: #1f3354;
   --sidebar-accent: #e9edf3;
   --sidebar-accent-foreground: #1f3354;
-  --sb-neu-base: var(--background);
   --sb-neu-light: rgb(255 255 255 / 80%);
   --sb-neu-dark: rgb(163 177 198 / 42%);
-  --sb-neu-raised: 10px 10px 24px var(--sb-neu-dark), -10px -10px 24px var(--sb-neu-light);
-  --sb-neu-raised-sm: 4px 4px 10px var(--sb-neu-dark), -4px -4px 10px var(--sb-neu-light);
-  --sb-neu-pressed: inset 3px 3px 7px var(--sb-neu-dark), inset -3px -3px 7px var(--sb-neu-light);
   --sb-neu-groove: inset 1px 0 0 rgb(163 177 198 / 35%), 1px 0 0 rgb(255 255 255 / 70%);
-  --sb-surface: var(--sb-neu-base);
-  --sb-border: 0;
-  --sb-radius: 20px;
-  --sb-shadow: var(--sb-neu-raised);
   --sb-shadow-hover: 12px 12px 28px rgb(163 177 198 / 50%), -12px -12px 28px var(--sb-neu-light);
-  --sb-cover-radius: 16px;
-  --sb-pill-radius: 999px;
-  --sb-control-radius: 12px;
 }
 
-html[data-style="neumorphism"][data-theme$="-dark"] {
+html[data-style="neumorphism"][data-theme="default-dark"] {
   color-scheme: dark;
   --background: #272d37;
   --foreground: #dbe3ef;
@@ -2106,6 +2112,26 @@ html[data-style="neumorphism"][data-theme$="-dark"] {
   --sb-neu-groove: inset 1px 0 0 rgb(0 0 0 / 35%), 1px 0 0 rgb(255 255 255 / 4%);
 }
 
+/* Any other theme: the surface is the theme's background moved a step toward its text colour, so even a near-white
+   or near-black theme leaves room for a highlight above it and a shade below it. Panes, menus and the shelf share
+   that surface, and the shade is mixed from it, so a pink theme casts pink shadows and a green one green. */
+html[data-style="neumorphism"]:not([data-theme="default"], [data-theme="default-dark"]) {
+  --sb-neu-base: color-mix(in oklch, var(--background) 95%, var(--foreground));
+  --card: var(--sb-neu-base);
+  --popover: var(--sb-neu-base);
+  --sidebar: color-mix(in oklch, var(--sb-neu-base) 97%, black);
+  --sidebar-accent: var(--sb-neu-base);
+  --sb-neu-light: rgb(255 255 255 / 72%);
+  --sb-neu-dark: color-mix(in oklch, color-mix(in oklch, var(--sb-neu-base), black 32%) 55%, transparent);
+}
+
+html[data-style="neumorphism"][data-theme$="-dark"]:not([data-theme="default-dark"]) {
+  --sb-neu-base: color-mix(in oklch, var(--background) 88%, var(--foreground));
+  --sidebar: color-mix(in oklch, var(--sb-neu-base) 90%, black);
+  --sb-neu-light: color-mix(in oklch, color-mix(in oklch, var(--sb-neu-base), white 35%) 25%, transparent);
+  --sb-neu-dark: color-mix(in oklch, color-mix(in oklch, var(--sb-neu-base), black 65%) 85%, transparent);
+}
+
 html[data-style="neumorphism"][data-style] body {
   background: linear-gradient(180deg, color-mix(in oklch, var(--sb-neu-base) 70%, white) 0%, var(--sb-neu-base) 40%);
   background-attachment: fixed;
@@ -2115,13 +2141,20 @@ html[data-style="neumorphism"][data-theme$="-dark"][data-style] body {
   background: var(--sb-neu-base);
 }
 
+/* On any other theme the whole page is that one surface: body hands the surface down as the background every
+   shell, menu and dialog paints, in place of the theme's own and over its backdrop pictures. */
+html[data-style="neumorphism"]:not([data-theme="default"], [data-theme="default-dark"])[data-style] body {
+  --background: var(--sb-neu-base);
+  background: var(--sb-neu-base);
+}
+
 /* The side panel is a slightly deeper shelf divided off by a groove; the top bar floats just above the page. */
 html[data-style="neumorphism"] [data-app-sidebar-frame] {
   border-color: transparent;
 }
 
 html[data-style="neumorphism"] [data-app-sidebar] {
-  box-shadow: inset -1px 0 0 rgb(163 177 198 / 30%);
+  box-shadow: inset -1px 0 0 var(--sb-neu-dark);
 }
 
 html[data-style="neumorphism"] [data-app-toolbar] {
@@ -2445,6 +2478,11 @@ html[data-style="vaporwave"]:not([data-fusion="fused"]) {
   --vw-sun-edge: #ffcaad;
   --vw-sun-opacity: 0.85;
   --vw-palm: #8d78d0;
+  --vw-neon-near: #ff6ec7;
+  --vw-neon-far: #6fd8ff;
+  --vw-neon-opacity: 0.55;
+  --vw-horizon: #ffb3c8;
+  --vw-horizon-opacity: 0.55;
 }
 
 /* Eight city planes meet a promenade. Foreground palms are anchored inside
@@ -2537,6 +2575,75 @@ html[data-style="vaporwave"] [data-vaporwave-skyline] {
   [data-vw-sunset] {
     top: 41%;
     width: 75%;
+  }
+}
+
+/* Neon tubes along the near towers and the horizon glowing behind them (VaporwaveSkyline). */
+[data-vw-neon] {
+  stroke: var(--vw-neon-far);
+  opacity: var(--vw-neon-opacity, 0.6);
+}
+
+[data-vw-neon="near"] {
+  stroke: var(--vw-neon-near);
+}
+
+[data-vw-horizon] {
+  opacity: var(--vw-horizon-opacity, 0.6);
+}
+
+/* The 80s tape over the whole page: fine scanlines, a violet vignette, a magenta-to-cyan grade and grain, with a
+   worn cassette's flicker now and then. Stronger at night; low-power mode takes it off (lite-effects.css). */
+html[data-style="vaporwave"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 57;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--vw-grain, 0.07);
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+html[data-style="vaporwave"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 58;
+  background:
+    repeating-linear-gradient(0deg, rgb(25 0 45 / var(--vw-scanlines, 5%)) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgb(45 0 75 / var(--vw-vignette, 16%)) 100%),
+    linear-gradient(
+      180deg,
+      rgb(255 60 190 / var(--vw-grade, 6%)) 0%,
+      transparent 42%,
+      transparent 58%,
+      rgb(50 220 255 / var(--vw-grade, 6%)) 100%
+    );
+  pointer-events: none;
+  animation: sb-vw-tape 11s steps(1) infinite;
+}
+
+@keyframes sb-vw-tape {
+  0%,
+  93%,
+  100% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 0.82;
+  }
+  95% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-style="vaporwave"] body::after {
+    animation: none;
   }
 }
 
@@ -2686,6 +2793,23 @@ html[data-style="vaporwave"] [data-styled-blog] [data-sb-hero-title] {
     2px 2px 0 #cdbcfa,
     4px 4px 0 var(--sb-vw-lavender),
     6px 6px 0 var(--sb-vw-lavender-deep);
+}
+
+/* At night the site title glows like a sign over the strip. */
+html[data-style="vaporwave"][data-theme$="-dark"] [data-styled-blog] [data-sb-hero-title] {
+  text-shadow:
+    2px 2px 0 #cdbcfa,
+    4px 4px 0 var(--sb-vw-lavender),
+    6px 6px 0 var(--sb-vw-lavender-deep),
+    0 0 18px color-mix(in oklch, var(--vw-neon-near) 70%, transparent),
+    0 0 46px color-mix(in oklch, var(--vw-neon-near) 45%, transparent);
+}
+
+/* Post titles bleed a little magenta and cyan, the way colour smeared on tape. */
+html[data-style="vaporwave"] [data-styled-blog] [data-sb-title] {
+  text-shadow:
+    -1px 0 rgb(255 40 170 / 32%),
+    1px 0 rgb(40 220 255 / 32%);
 }
 
 /* On the pale dawn sky the white title needs an edge. */
@@ -3831,6 +3955,10 @@ html[data-style="vaporwave"][data-fusion="fused"] {
   --vw-sun-opacity: 0.6;
   --vw-palm: color-mix(in oklch, var(--primary) 30%, var(--foreground));
   --vw-scene-opacity: 0.5;
+  --vw-neon-near: color-mix(in oklch, var(--primary) 65%, white);
+  --vw-neon-far: color-mix(in oklch, var(--accent) 45%, white);
+  --vw-horizon: var(--primary);
+  --vw-horizon-opacity: 0.4;
 }
 
 html[data-style="vaporwave"][data-fusion="fused"][data-theme$="-dark"] {
@@ -3840,6 +3968,12 @@ html[data-style="vaporwave"][data-fusion="fused"][data-theme$="-dark"] {
   --vw-building-shade: color-mix(in oklch, var(--background) 25%, black);
   --vw-palm: color-mix(in oklch, var(--background) 25%, black);
   --vw-scene-opacity: 1;
+  --vw-neon-opacity: 0.85;
+  --vw-horizon-opacity: 0.7;
+  --vw-scanlines: 9%;
+  --vw-vignette: 34%;
+  --vw-grade: 9%;
+  --vw-grain: 0.12;
 }
 
 html[data-style="vaporwave"][data-fusion="fused"] [data-styled-blog] [data-sb-hero-title] {
@@ -5119,6 +5253,15 @@ html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"] {
   --vw-sun-edge: #ffd49c;
   --vw-sun-opacity: 0.95;
   --vw-palm: #0b0616;
+  --vw-neon-near: #ff4fd8;
+  --vw-neon-far: #3ce8ff;
+  --vw-neon-opacity: 0.9;
+  --vw-horizon: #ff6f91;
+  --vw-horizon-opacity: 0.8;
+  --vw-scanlines: 9%;
+  --vw-vignette: 34%;
+  --vw-grade: 9%;
+  --vw-grain: 0.12;
 }
 
 html[data-style="vaporwave"]:not([data-fusion="fused"])[data-theme$="-dark"] [data-styled-blog] [data-sb-subitem],
