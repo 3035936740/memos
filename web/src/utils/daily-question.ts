@@ -183,6 +183,14 @@ export const loadBuiltInQuestions = async (language: string) => (await BANKS[ban
 /** The tag that gathers a day's answers; English like the style tags, so it reads the same on every site. */
 export const dailyQuestionTag = (dayKey: string) => `daily/${dayKey}`;
 
+/** Keep the question visible in the published answer, with room below to respond. */
+export const buildDailyAnswerDraft = (content: string, heading: string, dayKey: string) => {
+  const before = content.trim() ? `${content.trimEnd()}\n\n` : "";
+  const quotedHeading = heading.replace(/\r?\n/g, "\n> ");
+  const opening = `${before}> ${quotedHeading}\n\n`;
+  return { content: `${opening}\n\n#${dailyQuestionTag(dayKey)}`, cursor: opening.length };
+};
+
 /**
  * Starts an answer in the draft of the editor with `cacheKey`: the question quoted, room to write, the day's tag at
  * the end, and the cursor in the room. Anything already in the draft stays above it. The editor reads its draft
@@ -191,8 +199,7 @@ export const dailyQuestionTag = (dayKey: string) => `daily/${dayKey}`;
 export const startDailyAnswer = (username: string, cacheKey: string, heading: string, dayKey: string) => {
   const key = cacheService.key(username, cacheKey);
   const draft = cacheService.loadDraft(key);
-  const before = draft.content.trim() ? `${draft.content.trimEnd()}\n\n` : "";
-  const opening = `${before}> ${heading}\n\n`;
-  cacheService.saveNow(key, `${opening}\n\n#${dailyQuestionTag(dayKey)}`, draft.attachments);
-  cacheService.saveCursor(key, opening.length);
+  const answer = buildDailyAnswerDraft(draft.content, heading, dayKey);
+  cacheService.saveNow(key, answer.content, draft.attachments);
+  cacheService.saveCursor(key, answer.cursor);
 };

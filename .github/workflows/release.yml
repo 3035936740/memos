@@ -183,21 +183,10 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           GOARM: ${{ matrix.goarm }}
         run: |
-          cd build
-
-          package_name="${ARTIFACT_PREFIX}_${VERSION}_${GOOS}_${GOARCH}"
-          if [ -n "$GOARM" ]; then
-            package_name="${package_name}v${GOARM}"
-          fi
-
-          if [ "$GOOS" = "windows" ]; then
-            artifact_name="${package_name}.zip"
-            zip -q "${artifact_name}" memos.exe
-          else
-            artifact_name="${package_name}.tar.gz"
-            tar czf "${artifact_name}" memos
-          fi
-
+          python3 -B scripts/test_package_release.py
+          artifact_name="$(python3 scripts/package_release.py \
+            --build-dir build --version "$VERSION" --goos "$GOOS" \
+            --goarch "$GOARCH" --goarm "$GOARM" --prefix "$ARTIFACT_PREFIX")"
           echo "artifact_name=${artifact_name}" >> "$GITHUB_ENV"
 
       - name: Upload binary artifact

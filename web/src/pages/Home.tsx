@@ -1,6 +1,7 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DailyQuestion, TodayCard } from "@/components/HomeToday";
 import MemoEditor from "@/components/MemoEditor";
+import type { EditorController } from "@/components/MemoEditor/types/editorController";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
 import { takeSharedNote } from "@/components/MemoEditor/utils/sharedNote";
 import MemoView from "@/components/MemoView";
@@ -14,7 +15,7 @@ import useCurrentUser from "@/hooks/useCurrentUser";
 import { spaceScopedCacheKey } from "@/lib/resource-names";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { Memo } from "@/types/proto/api/v1/memo_service_pb";
-import { startDailyAnswer } from "@/utils/daily-question";
+import { buildDailyAnswerDraft } from "@/utils/daily-question";
 import { useTranslate } from "@/utils/i18n";
 
 const Home = () => {
@@ -28,12 +29,20 @@ const Home = () => {
   // has to be rebuilt for the new Space rather than just re-pointed at another cache.
   const editorCacheKey = spaceScopedCacheKey("home-memo-editor", selectedSpaceName);
 
-  // Bumped to remount the editor after something is written into its saved draft (the daily question).
-  const [composerRound, setComposerRound] = useState(0);
+  const editorRef = useRef<EditorController | null>(null);
+  const [editorReady, setEditorReady] = useState(false);
+  const bindEditor = useCallback((controller: EditorController | null) => {
+    editorRef.current = controller;
+    setEditorReady(Boolean(controller));
+  }, []);
   const answerDailyQuestion = (heading: string, day: string) => {
-    if (!user) return;
-    startDailyAnswer(user.name, editorCacheKey, heading, day);
-    setComposerRound((round) => round + 1);
+    const editor = editorRef.current;
+    if (!user || !editor) return;
+    const answer = buildDailyAnswerDraft(editor.getMarkdown(), heading, day);
+    editor.setMarkdown(answer.content);
+    editor.setCursor(answer.cursor);
+    editor.focus();
+    editor.scrollToCursor();
   };
 
   // A page shared to Memos joins the draft here; a layout effect runs before the editor's mount effect reads it.
@@ -78,15 +87,15 @@ const Home = () => {
             return (
               <>
                 <TodayCard />
-                <DailyQuestion onAnswer={answerDailyQuestion} />
+                <DailyQuestion onAnswer={answerDailyQuestion} disabled={!editorReady} />
                 <MemoEditor
-                  key={`${editorCacheKey}:${composerRound}`}
+                  key={editorCacheKey}
                   className={useGrid ? undefined : "mb-2"}
                   cacheKey={editorCacheKey}
                   placeholder={t("editor.any-thoughts")}
                   defaultCreateTime={defaultCreateTime}
                   defaultSpace={selectedSpaceName}
-                  autoFocus={composerRound > 0}
+                  onEditorReady={bindEditor}
                 />
               </>
             );

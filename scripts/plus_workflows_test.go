@@ -14,7 +14,8 @@ func TestPlusWorkflowAndComposeSyntax(t *testing.T) {
 		".github/workflows/build-canary-image.yml", ".github/workflows/release.yml",
 		".github/workflows/verify-public-image.yml", ".github/workflows/backend-tests.yml", ".github/workflows/frontend-tests.yml",
 		".github/workflows/upgrade-smoke.yml", ".github/workflows/release-please.yml",
-		".github/workflows/demo-deploy.yml", "deploy/docker-compose.yml", "deploy/docker-compose.demo.yml",
+		".github/workflows/demo-deploy.yml", "deploy/docker-compose.yml", "deploy/docker-compose.demo.yml", "scripts/compose.yaml",
+		".github/ISSUE_TEMPLATE/config.yml", ".github/ISSUE_TEMPLATE/bug_report.yml", ".github/ISSUE_TEMPLATE/feature_request.yml",
 	} {
 		t.Run(path, func(t *testing.T) {
 			data, err := os.ReadFile(filepath.Join("..", filepath.FromSlash(path)))

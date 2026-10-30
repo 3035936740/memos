@@ -404,7 +404,9 @@
 [data-museum-mini="y2k"] [data-mini-card] {
   padding: 18px 10px 10px;
   border-radius: 0;
-  background: linear-gradient(90deg, #000080, #1084d0) 3px 3px / calc(100% - 6px) 11px no-repeat, #ffffff;
+  background:
+    linear-gradient(90deg, #000080, #1084d0) 3px 3px / calc(100% - 6px) 11px no-repeat,
+    #ffffff;
   box-shadow:
     inset 1px 1px #dfdfdf,
     inset -1px -1px #0a0a0a,

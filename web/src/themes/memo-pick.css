@@ -138,7 +138,9 @@ html[data-style="aero"] [data-memo-selectable][data-selected] > [data-memo-pick-
 
 html[data-style="aero"] [data-memo-pick-mark] {
   border: 1px solid rgb(255 255 255 / 90%);
-  background: var(--sb-aero-bubble) center / contain no-repeat, rgb(255 255 255 / 25%);
+  background:
+    var(--sb-aero-bubble) center / contain no-repeat,
+    rgb(255 255 255 / 25%);
   color: #ffffff;
 }
 

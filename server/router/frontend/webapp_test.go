@@ -52,9 +52,12 @@ func TestWebAppManifestFollowsSavedBrand(t *testing.T) {
 		require.Equal(t, initial["id"], updated["id"])
 		require.Equal(t, initial["start_url"], updated["start_url"])
 		require.Equal(t, initial["share_target"], updated["share_target"])
-		icons := updated["icons"].([]any)
+		icons, ok := updated["icons"].([]any)
+		require.True(t, ok, "manifest icons must be a JSON array")
 		require.Len(t, icons, 1)
-		require.Equal(t, logo, icons[0].(map[string]any)["src"])
+		icon, ok := icons[0].(map[string]any)
+		require.True(t, ok, "manifest icon must be a JSON object")
+		require.Equal(t, logo, icon["src"])
 	}
 }
 

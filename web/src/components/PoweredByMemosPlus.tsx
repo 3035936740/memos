@@ -2,7 +2,7 @@ import { useInstance } from "@/contexts/InstanceContext";
 import { useTranslate } from "@/utils/i18n";
 
 /** Where Memos Plus lives; the README and the "powered by" link point here. */
-export const MEMOS_PLUS_REPOSITORY = "https://github.com/3035936740/memos";
+export const MEMOS_PLUS_REPOSITORY = "https://github.com/3035936740/memos-plus";
 
 /**
  * A small "powered by Memos Plus" line under the blog sidebar, the way self-hosted blogs have always told readers

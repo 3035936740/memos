@@ -23,7 +23,7 @@ vi.mock("@/utils/i18n", () => ({
   useTranslate: () => (key: string) => key,
 }));
 
-const REPOSITORY = "https://github.com/3035936740/memos";
+const REPOSITORY = "https://github.com/3035936740/memos-plus";
 
 // The odd pages at the bottom are router links.
 const render = (ui: ReactElement) => renderBase(<MemoryRouter>{ui}</MemoryRouter>);

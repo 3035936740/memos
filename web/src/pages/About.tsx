@@ -18,7 +18,7 @@ import { useTranslate } from "@/utils/i18n";
 import { ODDITY_PAGES } from "@/utils/oddities";
 import { parsePlusVersion } from "@/utils/plus-version";
 
-const PROJECT_REPOSITORY = "https://github.com/3035936740/memos";
+const PROJECT_REPOSITORY = "https://github.com/3035936740/memos-plus";
 const UPSTREAM_REPOSITORY = "https://github.com/usememos/memos";
 const DEMO_SITE = "https://memos.bing.tomato-universe.tech/";
 

@@ -1,8 +1,8 @@
 services:
   memos:
-    image: neosmemo/memos:stable
+    image: ghcr.io/3035936740/memos-plus:latest
     container_name: memos
     volumes:
-      - ~/.memos/:/var/opt/memos
+      - ~/.memos-plus/:/var/opt/memos
     ports:
       - 5230:5230

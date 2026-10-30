@@ -53,6 +53,7 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
   onConfirm,
   onCancel,
   onSavingChange,
+  onEditorReady,
 }) => {
   const t = useTranslate();
   const currentUser = useCurrentUser();
@@ -104,6 +105,12 @@ const MemoEditorImpl: React.FC<MemoEditorProps> = ({
     initialContent,
   });
   const isDraftCacheEnabled = !memo;
+
+  useEffect(() => {
+    if (!isInitialized || !onEditorReady) return;
+    onEditorReady(editorRef.current);
+    return () => onEditorReady(null);
+  }, [isInitialized, onEditorReady]);
 
   useEffect(() => {
     onSavingChange?.(isSaving);

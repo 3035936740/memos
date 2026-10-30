@@ -20,6 +20,7 @@ import { useTranslate } from "@/utils/i18n";
 interface Props {
   /** Starts an answer in the composer with this heading, tagged for the day. */
   onAnswer: (heading: string, day: string) => void;
+  disabled?: boolean;
 }
 
 /**
@@ -27,7 +28,7 @@ interface Props {
  * the site gets the same one on the same day; "Answer" starts a draft tagged for the day and "See answers" lists
  * the day's tag on Explore.
  */
-const DailyQuestion = ({ onAnswer }: Props) => {
+const DailyQuestion = ({ onAnswer, disabled = false }: Props) => {
   const t = useTranslate();
   const { generalSetting } = useInstance();
   const settings = useMemo(() => readDailyQuestionSettings(generalSetting), [generalSetting]);
@@ -81,7 +82,13 @@ const DailyQuestion = ({ onAnswer }: Props) => {
         {question}
       </p>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="h-7" onClick={() => onAnswer(t("daily-question.heading", { question }), day)}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7"
+          disabled={disabled}
+          onClick={() => onAnswer(t("daily-question.heading", { question }), day)}
+        >
           {t("daily-question.answer")}
         </Button>
         <Link to={answers} className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">

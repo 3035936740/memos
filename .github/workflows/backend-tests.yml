@@ -62,6 +62,11 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
+      - name: Stage public manifest for backend tests
+        # A clean checkout only tracks the HTML stub in the embedded dist.
+        # Manifest tests need this source asset; a full frontend build is not required.
+        run: cp web/public/site.webmanifest server/router/frontend/dist/site.webmanifest
+
       - name: Run tests
         run: |
           case "${{ matrix.test-group }}" in

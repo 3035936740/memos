@@ -327,7 +327,7 @@ html[data-style="handdrawn"]
   html[data-style="handdrawn"]
     :is(
       [data-page-panel],
-    [data-attachment-card],
+      [data-attachment-card],
       [data-settings-surface],
       [data-slot="dropdown-menu-content"],
       [data-slot="popover-content"],
@@ -427,7 +427,7 @@ html[data-style="handdrawn"] [data-slot="select-viewport"] {
 }
 
 html[data-style="handdrawn"][data-style]
-:is([data-slot="select-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"])::before {
+  :is([data-slot="select-content"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"])::before {
   inset: 2px;
 }
 

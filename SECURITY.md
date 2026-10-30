@@ -1,41 +1,31 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Scope and supported versions
 
-Memos is currently a `0.x` project. Security fixes are only provided for the latest release. Older releases are not supported for security updates, and fixes are not backported.
+This policy covers [Memos Plus](https://github.com/3035936740/memos-plus), an independently maintained, unofficial derivative of Memos. Upstream Memos maintainers are not the security contacts for this project.
 
-If you run Memos in production, keep your instance updated to the latest release.
+Memos Plus has its own release versions. The upstream schema version embedded in the application is not its release version. There is currently no published multi-version support window or backport guarantee. Before upgrading, review release notes, back up your database and files, and verify the upgrade on a separate copy.
 
-## Reporting a Vulnerability
+## Private reporting channel: maintainer setup required
 
-Please report security issues privately by email: `dev@usememos.com`
+As of October 30, 2026, this repository's private reporting channel has not been verified. No project security email address has been established in this policy, and GitHub private vulnerability reporting has not been confirmed as enabled.
 
-Do not open public GitHub issues, discussions, or pull requests for suspected vulnerabilities.
+The maintainer, [@3035936740](https://github.com/3035936740), needs to enable and verify **Settings → Code security → Private vulnerability reporting**, or publish another verified private reporting channel, then update this policy with the working contact instructions.
 
-Please include:
+Until a private channel is available, do not publish vulnerability details, exploit instructions, credentials, or sensitive logs. Public issues, pull requests, and discussions are not private reporting alternatives. The upstream security email is not a Memos Plus reporting channel.
 
-- A clear description of the issue
-- Steps to reproduce
-- Affected version or commit
-- Deployment details that matter to reproduction
-- Your assessment of impact
+Once a verified private channel is listed here, please include:
 
-We will review reports as time permits and fix valid issues in regular releases.
+- The Memos Plus version or commit and deployment method.
+- A clear description, affected component, and reproduction steps.
+- Expected and actual behavior, impact, and sanitized logs.
+- Any suggested mitigation or fix.
 
-## Disclosure and CVEs
+This policy does not promise a response deadline, a CVE assignment, or a fixed disclosure schedule.
 
-Memos is self-hosted software and is still in the `0.x` stage. At this stage, we do not run a formal disclosure program, publish separate security advisories for every issue, or request CVE IDs.
+## Deployment precautions
 
-Security fixes may be shipped directly in normal releases or noted briefly in release notes and changelogs.
-
-## Self-Hosted Deployment Notes
-
-The security posture of a Memos instance depends heavily on how it is deployed and operated. In particular:
-
-- Keep Memos updated
-- Put it behind a properly configured reverse proxy when exposed to the internet
-- Require authentication for any non-public deployment
-- Use TLS in production
-- Limit access to trusted users and administrators
-
-Reports that depend entirely on intentionally unsafe deployment choices, unsupported local patches, or administrator actions may be treated as deployment issues rather than product vulnerabilities.
+- Restrict access to trusted administrators and protect AI provider credentials and custom scripts.
+- Use HTTPS and appropriate authentication when exposing the service to the internet.
+- Keep consistent database and attachment backups, and test recovery separately.
+- Use separate data for resettable demo mode; never point it at production data.

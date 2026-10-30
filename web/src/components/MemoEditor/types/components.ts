@@ -2,6 +2,7 @@ import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import type { Location, Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import type { AudioRecorderStatus } from "../hooks/useAudioRecorder";
 import type { LocalFile } from "./attachment";
+import type { EditorController } from "./editorController";
 
 export interface MemoEditorProps {
   className?: string;
@@ -34,6 +35,8 @@ export interface MemoEditorProps {
   onCancel?: () => void;
   /** Reports save activity so external presentations can prevent dismissal mid-transaction. */
   onSavingChange?: (isSaving: boolean) => void;
+  /** Lets the host insert into the live draft without replacing the editor. */
+  onEditorReady?: (controller: EditorController | null) => void;
 }
 
 export interface EditorContentProps {

@@ -1,5 +1,7 @@
 # 隔离的演示模式
 
+[中文项目文档](../README.md) · [English deployment and demo instructions](../README.en.md#disposable-demo-mode)
+
 现有演示地址是 <https://memos.bing.tomato-universe.tech/>。这个地址本身不意味着允许删除站点数据：普通部署继续使用默认的生产模式。
 
 只有显式设置 `MEMOS_DEMO=true` 才会在启动时和之后每隔 24 小时重置演示数据库。必须使用单独的数据卷，不能挂载生产数据目录或生产数据库 DSN。演示模式只支持 SQLite。
