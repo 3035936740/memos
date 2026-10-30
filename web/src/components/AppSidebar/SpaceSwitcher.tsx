@@ -1,5 +1,6 @@
 import { CheckIcon, ChevronsUpDownIcon, LoaderCircleIcon, type LucideIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { type ReactNode, useRef, useState } from "react";
+import BrandImage from "@/components/BrandImage";
 import CreateSpaceDialog from "@/components/CreateSpaceDialog";
 import MemosLogo from "@/components/MemosLogo";
 import SpaceDirectoryDialog from "@/components/SpaceDirectoryDialog";
@@ -19,6 +20,7 @@ import { extractSpaceUidFromName, formatSpaceUidForDisplay } from "@/lib/space-d
 import { cn } from "@/lib/utils";
 import type { Space } from "@/types/proto/api/v1/space_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { spaceAvatarUrl } from "@/utils/space-avatar";
 import { pickSwitcherSpaces, readRecentSpaces, SWITCHER_LIST_LIMIT } from "@/utils/space-directory";
 
 // Icons in action and status rows sit in a glyph-width slot so every label in the menu
@@ -77,12 +79,12 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
   const currentSpaceName = activeSpaceName || selectedSpaceName;
   const selectedSpaceIdentity = currentSpace?.name || currentSpaceName || "";
   const selectedSpaceUid = selectedSpaceIdentity ? extractSpaceUidFromName(selectedSpaceIdentity) : "";
-  const showSelectedSpaceUid = currentSpace ? duplicateSpaceTitles.has(currentSpace.title) : Boolean(currentSpaceName);
+  const showSelectedSpaceUid = currentSpace ? duplicateSpaceTitles.has(currentSpace.title) : false;
   // Past SWITCHER_LIST_LIMIT the menu lists only the current and recent Spaces; the directory has the rest.
   const crowded = totalSpaces > SWITCHER_LIST_LIMIT;
   const listedSpaces = crowded ? pickSwitcherSpaces(spaceByName, readRecentSpaces(currentUser?.name ?? ""), currentSpaceName) : spaces;
   const currentContextLabel = currentSpaceName
-    ? `${currentSpace?.title || t("space.current")}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
+    ? `${currentSpace?.title || "Memos Plus"}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
     : t("common.memos");
 
   const handleMenuOpenChange = (open: boolean) => {
@@ -116,10 +118,14 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
           <span className="flex min-w-0 flex-1 items-center overflow-hidden">
             {currentSpaceName ? (
               <>
-                <SpaceMark avatarUrl={currentSpace?.avatarUrl} />
+                {currentSpace ? (
+                  <SpaceMark key={currentSpaceName} avatarUrl={spaceAvatarUrl(currentSpace)} />
+                ) : (
+                  <BrandImage src="/logo.svg" className="size-7 shrink-0" />
+                )}
                 <span className="ms-1.5 flex min-w-0 flex-1 flex-col justify-center overflow-hidden">
                   <span className="block truncate text-[14px] font-medium leading-4 tracking-[-0.01em] text-foreground">
-                    {currentSpace?.title || t("space.current")}
+                    {currentSpace?.title || "Memos Plus"}
                   </span>
                   {showSelectedSpaceUid && selectedSpaceUid ? (
                     <span

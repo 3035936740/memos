@@ -414,7 +414,22 @@
       "more-title": "More site options",
       "more-description": "Feed size, background, festival effects and the calendar's first day.",
       "accounts-title": "Accounts and sign-in",
-      "accounts-description": "How people sign in, what they may change on their profile, and media metadata."
+      "accounts-description": "How people sign in, what they may change on their profile, and media metadata.",
+      "default-avatar": "Default user avatar",
+      "default-avatar-description": "Upload a PNG, JPEG, GIF or WebP image (up to 10 MiB), or enter an image link. Used for users without an avatar; leave empty for a neutral user icon. Save to apply.",
+      "default-avatar-upload": "Upload image",
+      "default-avatar-uploaded": "Image uploaded. Confirm and save settings to apply.",
+      "default-avatar-invalid-file": "Choose a PNG, JPEG, GIF or WebP image up to 10 MiB.",
+      "default-avatar-summary": "Used for users without a personal avatar. Leave empty for the neutral user icon.",
+      "default-avatar-source": "Upload method",
+      "default-avatar-file": "File upload",
+      "default-avatar-url": "URL upload",
+      "background-image-upload-description": "Upload a PNG, JPEG, GIF or WebP image (up to 10 MiB), or use an image URL. Restore clears the custom background and uses the current theme. Save settings to apply.",
+      "default-background-image-description": "Upload a background image or use an image URL. Leave empty to use the current theme background.",
+      "logo-label": "Site icon",
+      "logo-invalid-file": "Choose a PNG, JPEG, GIF, WebP or SVG image up to 10 MiB.",
+      "customize-server-description": "Set the site name, icon and description. Icons support file uploads or image URLs; save to update the website and Web App install information.",
+      "image-restore-default": "Restore default"
     },
     "import": {
       "label": "Import"

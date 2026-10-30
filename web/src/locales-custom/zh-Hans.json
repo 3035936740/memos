@@ -412,7 +412,22 @@
       "more-title": "更多站点选项",
       "more-description": "每页数量、背景图片、节日特效和日历的一周起始日。",
       "accounts-title": "账号与登录",
-      "accounts-description": "登录方式、用户能否修改资料，以及是否保存照片的拍摄信息。"
+      "accounts-description": "登录方式、用户能否修改资料，以及是否保存照片的拍摄信息。",
+      "default-avatar": "默认用户头像",
+      "default-avatar-description": "可上传 PNG、JPEG、GIF 或 WebP 图片（最大 10 MiB），也可填写图片链接。用于未设置头像的用户；留空使用通用用户图标。保存后生效。",
+      "default-avatar-upload": "上传图片",
+      "default-avatar-uploaded": "图片已上传，确认并保存设置后生效。",
+      "default-avatar-invalid-file": "请选择不超过 10 MiB 的 PNG、JPEG、GIF 或 WebP 图片。",
+      "default-avatar-summary": "未设置个人头像的用户使用此图片。留空则使用通用用户图标。",
+      "default-avatar-source": "上传方式",
+      "default-avatar-file": "文件上传",
+      "default-avatar-url": "URL 上传",
+      "background-image-upload-description": "可上传 PNG、JPEG、GIF 或 WebP 图片（最大 10 MiB），也可填写图片链接。恢复默认会清空自定义背景，使用当前主题背景。保存设置后生效。",
+      "default-background-image-description": "可上传背景图片或填写图片链接；留空使用当前主题自带的背景。",
+      "logo-label": "站点图标",
+      "logo-invalid-file": "请选择不超过 10 MiB 的 PNG、JPEG、GIF、WebP 或 SVG 图片。",
+      "customize-server-description": "设置站点名称、图标和描述。图标支持文件上传或图片链接，保存后同步更新网站和 Web App 安装信息。",
+      "image-restore-default": "恢复默认"
     },
     "import": {
       "label": "导入"

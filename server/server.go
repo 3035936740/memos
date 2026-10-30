@@ -67,7 +67,7 @@ func NewServer(ctx context.Context, profile *profile.Profile, store *store.Store
 	})
 
 	// Serve frontend static files.
-	frontend.NewFrontendService(profile, store).Serve(ctx, echoServer)
+	frontend.NewFrontendService(profile, store, secret).Serve(ctx, echoServer)
 
 	apiV1Service := apiv1.NewAPIV1Service(s.Secret, profile, store)
 	s.apiV1Service = apiV1Service

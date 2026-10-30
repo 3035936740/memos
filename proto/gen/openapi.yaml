@@ -3819,6 +3819,9 @@ components:
                     type: string
                 logoUrl:
                     type: string
+                defaultAvatarUrl:
+                    type: string
+                    description: Fallback image for users without a personal avatar.
             description: Custom profile configuration for instance branding.
         GenerateTextRequest:
             required:

@@ -242,6 +242,8 @@ message InstanceSetting {
       string title = 1;
       string description = 2;
       string logo_url = 3;
+      // Fallback image for users without a personal avatar.
+      string default_avatar_url = 4;
     }
   }
 

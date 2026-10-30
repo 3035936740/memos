@@ -412,7 +412,22 @@
       "more-title": "更多站點選項",
       "more-description": "每頁數量、背景圖片、節日特效和日曆的一週起始日。",
       "accounts-title": "帳號與登入",
-      "accounts-description": "登入方式、使用者能否修改資料，以及是否保存照片的拍攝資訊。"
+      "accounts-description": "登入方式、使用者能否修改資料，以及是否保存照片的拍攝資訊。",
+      "default-avatar": "預設使用者頭像",
+      "default-avatar-description": "可上傳 PNG、JPEG、GIF 或 WebP 圖片（最大 10 MiB），也可填寫圖片連結。用於未設定頭像的使用者；留空使用通用使用者圖示。儲存後生效。",
+      "default-avatar-upload": "上傳圖片",
+      "default-avatar-uploaded": "圖片已上傳，確認並儲存設定後生效。",
+      "default-avatar-invalid-file": "請選擇不超過 10 MiB 的 PNG、JPEG、GIF 或 WebP 圖片。",
+      "default-avatar-summary": "未設定個人頭像的使用者使用此圖片。留空則使用通用使用者圖示。",
+      "default-avatar-source": "上傳方式",
+      "default-avatar-file": "檔案上傳",
+      "default-avatar-url": "URL 上傳",
+      "background-image-upload-description": "可上傳 PNG、JPEG、GIF 或 WebP 圖片（最大 10 MiB），也可填寫圖片連結。恢復預設會清空自訂背景，使用目前主題背景。儲存設定後生效。",
+      "default-background-image-description": "可上傳背景圖片或填寫圖片連結；留空使用目前主題內建的背景。",
+      "logo-label": "網站圖示",
+      "logo-invalid-file": "請選擇不超過 10 MiB 的 PNG、JPEG、GIF、WebP 或 SVG 圖片。",
+      "customize-server-description": "設定網站名稱、圖示與描述。圖示支援檔案上傳或圖片連結，儲存後同步更新網站和 Web App 安裝資訊。",
+      "image-restore-default": "恢復預設"
     },
     "import": {
       "label": "匯入"

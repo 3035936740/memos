@@ -870,12 +870,13 @@ func (x *InstanceGeneralSetting) GetDisableDailyQuestion() bool {
 }
 
 type InstanceCustomProfile struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	LogoUrl       string                 `protobuf:"bytes,3,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Title            string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description      string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	LogoUrl          string                 `protobuf:"bytes,3,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
+	DefaultAvatarUrl string                 `protobuf:"bytes,4,opt,name=default_avatar_url,json=defaultAvatarUrl,proto3" json:"default_avatar_url,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *InstanceCustomProfile) Reset() {
@@ -925,6 +926,13 @@ func (x *InstanceCustomProfile) GetDescription() string {
 func (x *InstanceCustomProfile) GetLogoUrl() string {
 	if x != nil {
 		return x.LogoUrl
+	}
+	return ""
+}
+
+func (x *InstanceCustomProfile) GetDefaultAvatarUrl() string {
+	if x != nil {
+		return x.DefaultAvatarUrl
 	}
 	return ""
 }
@@ -1995,11 +2003,12 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestionB\x17\n" +
 	"\x15_trash_retention_daysB\x16\n" +
 	"\x14_memo_revision_limitB\x12\n" +
-	"\x10_show_powered_by\"j\n" +
+	"\x10_show_powered_by\"\x98\x01\n" +
 	"\x15InstanceCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +
-	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\"\xa2\x01\n" +
+	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\x12,\n" +
+	"\x12default_avatar_url\x18\x04 \x01(\tR\x10defaultAvatarUrl\"\xa2\x01\n" +
 	"\aStorage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12,\n" +

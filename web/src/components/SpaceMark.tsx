@@ -12,9 +12,10 @@ interface Props {
   size?: keyof typeof MARK_SCALE;
   className?: string;
   avatarUrl?: string;
+  loading?: boolean;
 }
 
-const SpaceMark = ({ size = "md", className, avatarUrl }: Props) => {
+const SpaceMark = ({ size = "md", className, avatarUrl, loading = false }: Props) => {
   const scale = MARK_SCALE[size];
 
   return (
@@ -22,13 +23,13 @@ const SpaceMark = ({ size = "md", className, avatarUrl }: Props) => {
       aria-hidden
       className={cn(
         "flex shrink-0 items-center justify-center",
-        avatarUrl ? "bg-transparent" : "bg-sidebar-accent text-sidebar-accent-foreground",
+        loading || avatarUrl ? "bg-transparent" : "bg-sidebar-accent text-sidebar-accent-foreground",
         scale.mark,
         className,
       )}
     >
-      {avatarUrl ? (
-        <img src={avatarUrl} alt="" className="size-full rounded-[inherit] object-cover" />
+      {loading ? null : avatarUrl ? (
+        <img key={avatarUrl} src={avatarUrl} alt="" className="size-full rounded-[inherit] object-cover" />
       ) : (
         <AstroidIcon className={scale.icon} strokeWidth={1.8} />
       )}

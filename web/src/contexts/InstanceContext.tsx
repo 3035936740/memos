@@ -19,7 +19,9 @@ import {
   InstanceSetting_NotificationSettingSchema,
   InstanceSetting_StorageSetting,
   InstanceSetting_StorageSettingSchema,
+  InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
+import { initialBranding } from "@/utils/initial-branding";
 import { setManagedAttachmentInstanceUrl } from "@/utils/managed-attachment";
 
 const instanceSettingNamePrefix = "instance/settings/";
@@ -60,7 +62,17 @@ const InstanceContext = createContext<InstanceContextValue | null>(null);
 export function InstanceProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<InstanceState>({
     profile: create(InstanceProfileSchema, {}),
-    settings: [],
+    settings: initialBranding
+      ? [
+          create(InstanceSettingSchema, {
+            name: "instance/settings/GENERAL",
+            value: {
+              case: "generalSetting",
+              value: { customProfile: initialBranding },
+            },
+          }),
+        ]
+      : [],
     isProfileInitialized: false,
     isInitialized: false,
     isLoading: true,
@@ -277,3 +289,5 @@ export function useInstance() {
   }
   return context;
 }
+
+export const useOptionalInstance = () => useContext(InstanceContext);

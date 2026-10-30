@@ -22,6 +22,7 @@ import {
   InstanceSetting_AccessSetting,
   InstanceSetting_AccessSettingSchema,
   InstanceSetting_GeneralSetting,
+  InstanceSetting_GeneralSetting_CustomProfileSchema,
   InstanceSetting_GeneralSettingSchema,
   InstanceSetting_Key,
   InstanceSettingSchema,
@@ -40,6 +41,7 @@ import InstanceMusicEditor from "./InstanceMusicEditor";
 import SettingGroup from "./SettingGroup";
 import { SettingCodeEditor, SettingList, SettingListItem } from "./SettingList";
 import SettingSection from "./SettingSection";
+import SiteImageInput from "./SiteImageInput";
 import useInstanceSettingUpdater, { buildInstanceSettingName } from "./useInstanceSettingUpdater";
 
 /** Whether this browser keeps the advanced system settings open; a per-viewer convenience. */
@@ -70,6 +72,7 @@ const InstanceSection = () => {
   const [instanceGeneralSetting, setInstanceGeneralSetting] = useState<InstanceSetting_GeneralSetting>(normalizedOriginalGeneralSetting);
   const [identityProviderList, setIdentityProviderList] = useState<IdentityProvider[]>([]);
   const [advancedOpen, setAdvancedOpen] = useState(readAdvancedOpen);
+  const [siteImageUploading, setSiteImageUploading] = useState(false);
 
   const toggleAdvanced = (open: boolean) => {
     setAdvancedOpen(open);
@@ -146,7 +149,22 @@ const InstanceSection = () => {
     setInstanceAccessSetting(create(InstanceSetting_AccessSettingSchema, { accessMode }));
   };
 
+  const updateDefaultAvatar = (defaultAvatarUrl: string) => {
+    setInstanceGeneralSetting((current) =>
+      create(InstanceSetting_GeneralSettingSchema, {
+        ...current,
+        customProfile: create(InstanceSetting_GeneralSetting_CustomProfileSchema, {
+          ...create(InstanceSetting_GeneralSetting_CustomProfileSchema, current.customProfile),
+          title: current.customProfile?.title || "Memos Plus",
+          logoUrl: current.customProfile?.logoUrl || "/logo.svg",
+          defaultAvatarUrl,
+        }),
+      }),
+    );
+  };
+
   const handleSaveSettings = async () => {
+    if (siteImageUploading) return;
     if (instanceGeneralSetting.dailyQuestionSeed && !/^[A-Za-z0-9_-]{1,64}$/.test(instanceGeneralSetting.dailyQuestionSeed)) {
       toast.error(t("daily-question-admin.error-seed"));
       return;
@@ -199,10 +217,23 @@ const InstanceSection = () => {
     <SettingSection title={t("setting.system.label")}>
       <SettingGroup title={t("common.basic")} description={t("setting.system.essentials-description")}>
         <SettingList>
-          <SettingListItem label={t("setting.system.server-name")} description={instanceGeneralSetting.customProfile?.title || "Memos"}>
+          <SettingListItem
+            label={t("setting.system.server-name")}
+            description={instanceGeneralSetting.customProfile?.title || "Memos Plus"}
+          >
             <Button variant="outline" onClick={customizeDialog.open}>
               {t("common.edit")}
             </Button>
+          </SettingListItem>
+
+          <SettingListItem label={t("setting.system.default-avatar")} description={t("setting.system.default-avatar-summary")}>
+            <SiteImageInput
+              kind="avatar"
+              disabled={profile.demo}
+              value={instanceGeneralSetting.customProfile?.defaultAvatarUrl || ""}
+              onChange={updateDefaultAvatar}
+              onUploadingChange={setSiteImageUploading}
+            />
           </SettingListItem>
 
           <SettingListItem
@@ -357,12 +388,12 @@ const InstanceSection = () => {
                 label={t("setting.system.default-background-image")}
                 description={t("setting.system.default-background-image-description")}
               >
-                <Input
-                  type="url"
-                  className="w-80 max-w-full"
+                <SiteImageInput
+                  kind="background"
+                  disabled={profile.demo}
                   value={instanceGeneralSetting.defaultBackgroundImageUrl}
-                  placeholder="https://example.com/background.webp"
-                  onChange={(event) => updatePartialSetting({ defaultBackgroundImageUrl: event.target.value.trim() })}
+                  onChange={(defaultBackgroundImageUrl) => updatePartialSetting({ defaultBackgroundImageUrl })}
+                  onUploadingChange={setSiteImageUploading}
                 />
               </SettingListItem>
 
@@ -516,7 +547,7 @@ const InstanceSection = () => {
       )}
 
       <div className="w-full flex justify-end">
-        <Button disabled={!hasUnsavedChanges} onClick={handleSaveSettings}>
+        <Button disabled={!hasUnsavedChanges || siteImageUploading} onClick={handleSaveSettings}>
           {t("common.save")}
         </Button>
       </div>

@@ -2833,12 +2833,14 @@ func (x *InstanceSetting_AccessSetting) GetAccessMode() InstanceAccessMode {
 
 // Custom profile configuration for instance branding.
 type InstanceSetting_GeneralSetting_CustomProfile struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	LogoUrl       string                 `protobuf:"bytes,3,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Title       string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	LogoUrl     string                 `protobuf:"bytes,3,opt,name=logo_url,json=logoUrl,proto3" json:"logo_url,omitempty"`
+	// Fallback image for users without a personal avatar.
+	DefaultAvatarUrl string `protobuf:"bytes,4,opt,name=default_avatar_url,json=defaultAvatarUrl,proto3" json:"default_avatar_url,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting_CustomProfile) Reset() {
@@ -2888,6 +2890,13 @@ func (x *InstanceSetting_GeneralSetting_CustomProfile) GetDescription() string {
 func (x *InstanceSetting_GeneralSetting_CustomProfile) GetLogoUrl() string {
 	if x != nil {
 		return x.LogoUrl
+	}
+	return ""
+}
+
+func (x *InstanceSetting_GeneralSetting_CustomProfile) GetDefaultAvatarUrl() string {
+	if x != nil {
+		return x.DefaultAvatarUrl
 	}
 	return ""
 }
@@ -3274,7 +3283,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\vaccess_mode\x18\n" +
 	" \x01(\x0e2 .memos.api.v1.InstanceAccessModeR\n" +
 	"accessMode\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\x823\n" +
+	"\x19GetInstanceProfileRequest\"\xb13\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -3284,7 +3293,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
 	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x12T\n" +
-	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xe7\r\n" +
+	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\x96\x0e\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -3315,11 +3324,12 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x12.\n" +
 	"\x13daily_question_seed\x18\x1c \x01(\tR\x11dailyQuestionSeed\x120\n" +
 	"\x14daily_questions_json\x18\x1d \x01(\tR\x12dailyQuestionsJson\x124\n" +
-	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x1ab\n" +
+	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x1a\x90\x01\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +
-	"\blogo_url\x18\x03 \x01(\tR\alogoUrlB\x17\n" +
+	"\blogo_url\x18\x03 \x01(\tR\alogoUrl\x12,\n" +
+	"\x12default_avatar_url\x18\x04 \x01(\tR\x10defaultAvatarUrlB\x17\n" +
 	"\x15_trash_retention_daysB\x16\n" +
 	"\x14_memo_revision_limitB\x12\n" +
 	"\x10_show_powered_by\x1a\xd2\x03\n" +

@@ -9,6 +9,7 @@ import {
   ScissorsIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import BrandImage from "@/components/BrandImage";
 import { Badge } from "@/components/ui/badge";
 import { useInstance } from "@/contexts/InstanceContext";
 import { WEB_CLIPPER_URL } from "@/lib/constants";
@@ -22,7 +23,7 @@ const UPSTREAM_REPOSITORY = "https://github.com/usememos/memos";
 const DEMO_SITE = "https://memos.bing.tomato-universe.tech/";
 
 const DEFAULT_TITLE = "Memos Plus";
-const DEFAULT_LOGO = "/logo.webp";
+const DEFAULT_LOGO = "/logo.svg";
 
 const isCommitSha = (commit: string) => /^[0-9a-f]{7,40}$/i.test(commit);
 
@@ -69,11 +70,9 @@ const About = () => {
     <section className="min-h-full w-full">
       <div data-page-panel="" className="mx-auto w-full max-w-2xl py-6 sm:py-8">
         <header className="flex flex-col items-center gap-4 text-center sm:flex-row sm:gap-5 sm:text-left">
-          <img
+          <BrandImage
             className="size-16 shrink-0 select-none rounded-2xl bg-card object-cover shadow-sm ring-1 ring-border"
             src={instanceLogo}
-            alt=""
-            draggable={false}
           />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">

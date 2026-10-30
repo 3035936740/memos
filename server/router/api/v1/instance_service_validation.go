@@ -67,6 +67,16 @@ func validateInstanceGeneralSetting(setting *v1pb.InstanceSetting_GeneralSetting
 	if setting == nil {
 		return errors.New("general setting is required")
 	}
+	if p := setting.CustomProfile; p != nil && p.DefaultAvatarUrl != "" {
+		raw := p.DefaultAvatarUrl
+		u, err := url.Parse(raw)
+		local := strings.HasPrefix(raw, "/") && !strings.HasPrefix(raw, "//")
+		remote := u != nil && (u.Scheme == "https" || u.Scheme == "http") && u.Host != "" && u.User == nil
+		if err != nil || len(raw) > 8192 || strings.ContainsAny(raw, "\\\r\n\t") ||
+			(!local && !remote) {
+			return errors.New("default avatar must be a local image path or an http(s) URL (maximum 8192 bytes)")
+		}
+	}
 	if err := dailyquestion.ValidateSeed(setting.DailyQuestionSeed); err != nil {
 		return err
 	}

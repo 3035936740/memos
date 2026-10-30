@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/usememos/memos/internal/profile"
+	"github.com/usememos/memos/server/auth"
 	"github.com/usememos/memos/store"
 )
 
@@ -27,14 +28,20 @@ const (
 )
 
 type FrontendService struct {
-	Profile *profile.Profile
-	Store   *store.Store
+	Profile       *profile.Profile
+	Store         *store.Store
+	authenticator *auth.Authenticator
 }
 
-func NewFrontendService(profile *profile.Profile, store *store.Store) *FrontendService {
+func NewFrontendService(profile *profile.Profile, store *store.Store, secrets ...string) *FrontendService {
+	secret := ""
+	if len(secrets) > 0 {
+		secret = secrets[0]
+	}
 	return &FrontendService{
-		Profile: profile,
-		Store:   store,
+		Profile:       profile,
+		Store:         store,
+		authenticator: auth.NewAuthenticator(store, secret),
 	}
 }
 
@@ -47,7 +54,7 @@ func (s *FrontendService) Serve(_ context.Context, e *echo.Echo) {
 		}
 
 		setFrontendCacheHeaders(c, requestPath)
-		return false
+		return shouldServeFrontendHTML(requestPath)
 	}
 
 	// Route to serve the frontend static assets.
@@ -56,11 +63,15 @@ func (s *FrontendService) Serve(_ context.Context, e *echo.Echo) {
 		Skipper:    skipper,
 	}))
 
-	e.Use(spaFallbackMiddleware(frontendFS))
+	e.Use(spaFallbackMiddleware(frontendFS, s.serveIndex(frontendFS)))
+	e.GET("/", s.serveIndex(frontendFS))
+	e.GET("/index.html", s.serveIndex(frontendFS))
+	e.HEAD("/", s.serveIndex(frontendFS))
+	e.HEAD("/index.html", s.serveIndex(frontendFS))
 	s.registerRoutes(e)
 }
 
-func spaFallbackMiddleware(frontendFS fs.FS) echo.MiddlewareFunc {
+func spaFallbackMiddleware(frontendFS fs.FS, render ...echo.HandlerFunc) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			err := next(c)
@@ -74,13 +85,16 @@ func spaFallbackMiddleware(frontendFS fs.FS) echo.MiddlewareFunc {
 			}
 
 			setFrontendCacheHeaders(c, requestPath)
+			if len(render) > 0 {
+				return render[0](c)
+			}
 			return c.FileFS("index.html", frontendFS)
 		}
 	}
 }
 
 func shouldSkipFrontendStatic(requestPath string) bool {
-	if requestPath == "/robots.txt" || requestPath == "/sitemap.xml" {
+	if requestPath == "/robots.txt" || requestPath == "/sitemap.xml" || requestPath == "/site.webmanifest" {
 		return true
 	}
 	return hasPathPrefix(requestPath, "/api") ||
@@ -122,6 +136,8 @@ func getFileSystem(path string) fs.FS {
 }
 
 func (s *FrontendService) registerRoutes(e *echo.Echo) {
+	e.GET("/site.webmanifest", s.serveWebAppManifest)
+	e.HEAD("/site.webmanifest", s.serveWebAppManifest)
 	e.GET("/robots.txt", s.getRobotsTXT)
 	e.GET("/sitemap.xml", s.getSitemapXML)
 }

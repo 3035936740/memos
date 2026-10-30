@@ -120,6 +120,7 @@ message InstanceCustomProfile {
   string title = 1;
   string description = 2;
   string logo_url = 3;
+  string default_avatar_url = 4;
 }
 
 enum StorageType {

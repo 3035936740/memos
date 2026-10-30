@@ -1,6 +1,6 @@
 import { DirectionProvider } from "@base-ui/react/direction-provider";
 import { useEffect, useRef } from "react";
-import { Outlet, ScrollRestoration } from "react-router-dom";
+import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
 import CosmicBackground from "./components/CosmicBackground";
 import { useAuth } from "./contexts/AuthContext";
 import { useInstance } from "./contexts/InstanceContext";
@@ -8,11 +8,14 @@ import { useView } from "./contexts/ViewContext";
 import useNavigateTo from "./hooks/useNavigateTo";
 import { useUserLocale } from "./hooks/useUserLocale";
 import { useUserTheme } from "./hooks/useUserTheme";
+import { setBrandFavicon, watchBrandFaviconTheme } from "./utils/brand-logo";
 import { cleanupExpiredOAuthState } from "./utils/oauth";
+import { setWebAppBrand } from "./utils/web-app-brand";
 
 const GUEST_VIEW_DEFAULTS_STORAGE_KEY = "memos-guest-view-defaults-v1";
 
 const App = () => {
+  const { pathname } = useLocation();
   const navigateTo = useNavigateTo();
   const { profile: instanceProfile, profileLoaded, generalSetting: instanceGeneralSetting } = useInstance();
   const { currentUser, isIdentityInitialized } = useAuth();
@@ -22,6 +25,7 @@ const App = () => {
   // Apply user preferences reactively
   const direction = useUserLocale();
   useUserTheme();
+  useEffect(watchBrandFaviconTheme, []);
 
   // Apply the instance's guest defaults once, including for browsers that still
   // carry view settings from before compact mode became the default. Afterwards
@@ -119,10 +123,15 @@ const App = () => {
       return;
     }
 
-    document.title = instanceGeneralSetting.customProfile.title;
-    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    link.href = instanceGeneralSetting.customProfile.logoUrl || "/logo.webp";
-  }, [instanceGeneralSetting.customProfile]);
+    // The root layout owns the current Space's document brand. Instance
+    // settings arriving later must not overwrite it with the main site's.
+    if (!document.documentElement.hasAttribute("data-space-brand-owner")) {
+      document.title = instanceGeneralSetting.customProfile.title || "Memos Plus";
+      void setBrandFavicon(instanceGeneralSetting.customProfile.logoUrl || "/logo.svg");
+    }
+    const brand = instanceGeneralSetting.customProfile;
+    setWebAppBrand(brand.title || "Memos Plus", brand.logoUrl || "/logo.svg", brand.description || "");
+  }, [instanceGeneralSetting.customProfile, pathname]);
 
   return (
     <DirectionProvider direction={direction}>

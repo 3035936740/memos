@@ -21,8 +21,8 @@ function MemosLogo(props: Props) {
   const { collapsed, compact, size = "md" } = props;
   const scale = COMPACT_SCALE[size];
   const { generalSetting: instanceGeneralSetting } = useInstance();
-  const title = instanceGeneralSetting.customProfile?.title || "Memos";
-  const avatarUrl = instanceGeneralSetting.customProfile?.logoUrl || "/full-logo.webp";
+  const title = instanceGeneralSetting.customProfile?.title || "Memos Plus";
+  const avatarUrl = instanceGeneralSetting.customProfile?.logoUrl || "/logo.svg";
 
   return (
     <div className={cn("relative w-full h-auto shrink-0", props.className)}>

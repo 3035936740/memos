@@ -266,7 +266,9 @@ const PagedMemoList = (props: Props) => {
               <div data-feed-layout="blog2" data-styled-blog="" className="w-full">
                 {props.blogHero && (
                   <BlogHero
-                    title={selectedSpaceName ? selectedSpace?.title || t("space.current") : generalSetting.customProfile?.title || "Memos"}
+                    title={
+                      selectedSpaceName ? selectedSpace?.title || t("space.current") : generalSetting.customProfile?.title || "Memos Plus"
+                    }
                     description={selectedSpaceName ? selectedSpace?.description : generalSetting.customProfile?.description}
                   />
                 )}

@@ -20,9 +20,8 @@ const CLOUDS = [
 ] as const;
 
 /**
- * A static illustrated scene: atmospheric city layers, a promenade and framing palms. The near towers wear neon
- * outlines and their lit windows bloom against a glowing horizon; blog-styles.css colours the glow per palette and
- * low-power mode drops the blur.
+ * A static illustrated scene: eight city layers, a promenade and framing palms. Every plane has neon edges and
+ * window bloom, with a softer, narrower halo in the distance. Palette tokens colour the glow; low-power mode drops blur.
  */
 const VaporwaveSkyline = () => {
   const id = useId();
@@ -91,6 +90,15 @@ const VaporwaveSkyline = () => {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+          <filter id={`${id}-distant-glow`} x="-1%" y="-5%" width="102%" height="110%" colorInterpolationFilters="sRGB">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="halo" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="bloom" />
+            <feMerge>
+              <feMergeNode in="bloom" />
+              <feMergeNode in="halo" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <g id={`${id}-palm`}>
             <path d={VAPORWAVE_PALM} />
           </g>
@@ -106,18 +114,17 @@ const VaporwaveSkyline = () => {
             <path d={layer.facades} fill={`url(#${id}-city-${i})`} />
             <path d={layer.sides} fill="var(--vw-building-shade)" opacity={i < 6 ? 0.18 : 0.5} />
             <path d={layer.edges} fill="var(--vw-window-cool)" opacity={i < 6 ? 0.08 : 0.16} />
-            <g data-vw-glow="" filter={i >= 4 ? `url(#${id}-glow)` : undefined}>
+            <g data-vw-glow="" filter={`url(#${id}-${i < 4 ? "distant-glow" : "glow"})`}>
               <path d={layer.lights} fill="var(--vw-window-warm)" opacity={[0, 0.1, 0.12, 0.16, 0.22, 0.4, 0.72, 0.62][i]} />
               <path d={layer.coolLights} fill="var(--vw-window-cool)" opacity={[0, 0.08, 0.1, 0.12, 0.18, 0.3, 0.55, 0.5][i]} />
-              {i >= 5 && (
-                <path
-                  data-vw-neon={i === 7 ? "near" : "far"}
-                  d={layer.facades}
-                  fill="none"
-                  strokeWidth="1.2"
-                  vectorEffect="non-scaling-stroke"
-                />
-              )}
+              <path
+                data-vw-neon={i === 7 ? "near" : i < 4 ? "distant" : "far"}
+                d={layer.facades}
+                fill="none"
+                strokeWidth={[0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.2, 1.2][i]}
+                strokeOpacity={i < 4 ? 0.65 + i * 0.1 : 1}
+                vectorEffect="non-scaling-stroke"
+              />
             </g>
             {i === 5 && <rect y="545" width="1600" height="225" fill={`url(#${id}-haze)`} />}
           </g>

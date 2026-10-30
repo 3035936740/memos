@@ -2608,7 +2608,8 @@ html[data-style="vaporwave"] [data-vaporwave-skyline] {
   }
 }
 
-/* Neon tubes along the near towers and the horizon glowing behind them (VaporwaveSkyline). */
+/* All city planes carry neon edges. Distant tubes mix into the atmospheric
+   haze and use a smaller bloom, so the foreground still has the sharpest lights. */
 [data-vw-neon] {
   stroke: var(--vw-neon-far);
   opacity: var(--vw-neon-opacity, 0.6);
@@ -2616,6 +2617,10 @@ html[data-style="vaporwave"] [data-vaporwave-skyline] {
 
 [data-vw-neon="near"] {
   stroke: var(--vw-neon-near);
+}
+
+[data-vw-neon="distant"] {
+  stroke: color-mix(in oklch, var(--vw-neon-far) 72%, var(--vw-haze));
 }
 
 [data-vw-horizon] {

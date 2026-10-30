@@ -2,16 +2,28 @@ import { createContext, type ReactNode, useCallback, useContext, useEffect, useM
 import { useLocation, useNavigate } from "react-router-dom";
 import { routeSupportsCollectionScope } from "@/components/AppSidebar/routes";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { useBatchSpaces, usePagedSpaces, useSpaces } from "@/hooks/useSpaceQueries";
+import { useBatchSpaces, usePagedSpaces, useSpace, useSpaces } from "@/hooks/useSpaceQueries";
 import { buildCollectionScopeFilter, type CollectionScope } from "@/lib/cel-filter";
 import { getDuplicateSpaceTitles } from "@/lib/space-display";
 import { getSpaceNavigationPath, getSpaceRoute, getUnscopedPath } from "@/lib/space-routes";
 import { ROUTES } from "@/router/routes";
 import type { Space } from "@/types/proto/api/v1/space_service_pb";
+import { getInitialSpace } from "@/utils/initial-space";
 import { readRecentSpaces, recordRecentSpace } from "@/utils/space-directory";
 
 const SELECTED_SPACE_STORAGE_PREFIX = "memos-selected-space:";
 const ALL_COLLECTION_SCOPE: CollectionScope = { kind: "all" };
+
+const routeSpaceID = (pathname: string): string | undefined => {
+  const route = getSpaceRoute(pathname);
+  if (!route) return undefined;
+  const encoded = route.basePath.slice("/space/".length);
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return encoded;
+  }
+};
 
 export const getSelectedSpaceStorageKey = (userName: string) => `${SELECTED_SPACE_STORAGE_PREFIX}${userName}`;
 
@@ -70,19 +82,36 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   navigateRef.current = navigate;
 
   const sessionKey = viewerName || "guest";
-  const [selectedSpaceName, setSelectedSpaceName] = useState(() => readSelectedSpaceName(sessionKey));
+  const [storedSelectedSpaceName, setSelectedSpaceName] = useState(() => readSelectedSpaceName(sessionKey));
   const [optimisticSpace, setOptimisticSpace] = useState<Space>();
+  const routeSpaceId = routeSpaceID(location.pathname);
+  const initialSpace = getInitialSpace(routeSpaceId, viewerName);
+  // The URL is authoritative from the first render, including before the page
+  // chunk and its effect load. Reuse the page's query rather than fetching twice.
+  const routeSpaceQuery = useSpace(viewerName, routeSpaceId ? `spaces/${routeSpaceId}` : undefined);
   const spacesQuery = useSpaces(viewerName);
   const summary = usePagedSpaces(viewerName, "", "", { enabled: true });
   const totalSpaces = summary.data?.totalSize ?? spacesQuery.data?.length ?? 0;
   const spaces = summary.data && totalSpaces <= 10 ? summary.data.spaces : (spacesQuery.data ?? NO_SPACES);
   const [recentNames, setRecentNames] = useState(() => readRecentSpaces(viewerName ?? ""));
-  const selectedQuery = useBatchSpaces(viewerName, selectedSpaceName ? [selectedSpaceName] : []);
+  const selectedQuery = useBatchSpaces(viewerName, storedSelectedSpaceName ? [storedSelectedSpaceName] : []);
   const recentQuery = useBatchSpaces(viewerName, recentNames);
   const hydratedSpaces = useMemo(
-    () => [...spaces, ...(recentQuery.data?.spaces ?? []), ...(selectedQuery.data?.spaces ?? [])],
-    [spaces, recentQuery.data, selectedQuery.data],
+    () => [
+      ...(initialSpace ? [initialSpace] : []),
+      ...spaces,
+      ...(recentQuery.data?.spaces ?? []),
+      ...(selectedQuery.data?.spaces ?? []),
+      ...(routeSpaceQuery.data ? [routeSpaceQuery.data] : []),
+    ],
+    [spaces, recentQuery.data, selectedQuery.data, routeSpaceQuery.data, initialSpace],
   );
+  const routeSpace = routeSpaceId
+    ? routeSpaceQuery.data ||
+      hydratedSpaces.find((space) => space.name === `spaces/${routeSpaceId}` || space.urlSlug === routeSpaceId) ||
+      (optimisticSpace?.name === `spaces/${routeSpaceId}` || optimisticSpace?.urlSlug === routeSpaceId ? optimisticSpace : undefined)
+    : undefined;
+  const selectedSpaceName = routeSpaceId ? routeSpace?.name || `spaces/${routeSpaceId}` : storedSelectedSpaceName;
   const spaceByName = useMemo(() => new Map(hydratedSpaces.map((space) => [space.name, space])), [hydratedSpaces]);
   const listedSelectedSpace = selectedSpaceName ? spaceByName.get(selectedSpaceName) : undefined;
   const selectedSpace = listedSelectedSpace ?? (optimisticSpace?.name === selectedSpaceName ? optimisticSpace : undefined);
@@ -118,12 +147,12 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   }, [listedSelectedSpace, optimisticSpace]);
 
   useEffect(() => {
-    if (selectedSpaceName && selectedQuery.isSuccess && selectedQuery.data.spaces.length === 0) {
+    if (!routeSpaceId && selectedSpaceName && selectedQuery.isSuccess && selectedQuery.data.spaces.length === 0) {
       writeSelectedSpaceName(sessionKey, undefined);
       setSelectedSpaceName(undefined);
       setOptimisticSpace(undefined);
     }
-  }, [selectedSpaceName, selectedQuery.isSuccess, selectedQuery.data, sessionKey]);
+  }, [selectedSpaceName, selectedQuery.isSuccess, selectedQuery.data, sessionKey, routeSpaceId]);
 
   const navigateAfterScopeChange = useCallback((destination?: string) => {
     if (destination) {
