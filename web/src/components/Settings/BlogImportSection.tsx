@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import i18n from "@/i18n";
 import { getErrorMessage } from "@/lib/error";
 import {
   cancelImport,
@@ -38,7 +39,7 @@ const VISIBILITIES: readonly ImportVisibility[] = ["PRIVATE", "PROTECTED", "PUBL
 const formatDate = (value: string) => {
   const date = new Date(value);
   // Posts without a date arrive as Go's zero time, year 1.
-  return Number.isNaN(date.getTime()) || date.getUTCFullYear() < 1900 ? "" : date.toLocaleDateString();
+  return Number.isNaN(date.getTime()) || date.getUTCFullYear() < 1900 ? "" : date.toLocaleDateString(i18n.language);
 };
 
 /** Admins only: the largest export file anyone may upload, kept apart from the system settings' Save. */

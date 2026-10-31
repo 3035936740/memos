@@ -312,6 +312,8 @@ docker compose -f deploy/docker-compose.demo.yml up -d
 
 ## 反馈和贡献
 
+语言选择、翻译文件结构和校验方式见[国际化说明](docs/i18n.md)。缺失译文已补充机器翻译初稿，欢迎母语使用者校对。
+
 修复或改进请提交到[本仓库 Pull requests](https://github.com/3035936740/memos-plus/pulls)，项目协调可通过[维护者主页](https://github.com/3035936740)了解公开联系入口。2026-10-30 核实时本仓库 Issues 尚未开启，不要因此把 Plus 专属问题提交给上游；维护者开启后，可在本项目 Issues 反馈非敏感问题。
 
 请说明 Plus 版本／提交、系统架构、部署方式、数据库驱动、复现步骤和脱敏日志。保持改动集中，保留现有数据／协议兼容性，并运行相关检查。不要公开 API Key、DSN、私人内容或数据库转储。漏洞报告请先阅读 [SECURITY.md](SECURITY.md)，不要在公开 PR／Issue 中披露漏洞细节。

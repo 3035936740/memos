@@ -133,7 +133,8 @@ const providerMetadata: Partial<
 
 const byokNotes = ["setting.ai.byok-key-note", "setting.ai.byok-storage-note", "setting.ai.byok-model-note"] as const;
 
-const getProviderTypeLabel = (type: InstanceSetting_AIProviderType) => {
+const getProviderTypeLabel = (type: InstanceSetting_AIProviderType, t: ReturnType<typeof useTranslate>) => {
+  if (type === InstanceSetting_AIProviderType.OPENAI_COMPATIBLE) return t("ui-extra.openai-compatible");
   return providerMetadata[type as (typeof providerTypeOptions)[number]]?.label ?? InstanceSetting_AIProviderType[type] ?? "UNKNOWN";
 };
 
@@ -143,7 +144,8 @@ const providerSupportsTranscription = (provider: LocalAIProvider) =>
 const providerRequiresAPIKey = (provider: LocalAIProvider) =>
   providerMetadata[provider.type as (typeof providerTypeOptions)[number]]?.apiKeyRequired ?? true;
 
-const providerTypeSelectOptions = providerTypeOptions.map((type) => ({ value: String(type), label: getProviderTypeLabel(type) }));
+const getProviderTypeSelectOptions = (t: ReturnType<typeof useTranslate>) =>
+  providerTypeOptions.map((type) => ({ value: String(type), label: getProviderTypeLabel(type, t) }));
 
 const toLocalProvider = (provider: InstanceSetting_AIProviderConfig): LocalAIProvider => ({
   id: provider.id,
@@ -387,7 +389,7 @@ const AISection = () => {
             {
               key: "type",
               header: t("setting.ai.provider-type"),
-              render: (_, provider: LocalAIProvider) => <span>{getProviderTypeLabel(provider.type)}</span>,
+              render: (_, provider: LocalAIProvider) => <span>{getProviderTypeLabel(provider.type, t)}</span>,
             },
             {
               key: "endpoint",
@@ -573,6 +575,7 @@ interface AIProviderDialogProps {
 
 const AIProviderDialog = ({ provider, onOpenChange, onSave }: AIProviderDialogProps) => {
   const t = useTranslate();
+  const providerTypeSelectOptions = getProviderTypeSelectOptions(t);
   const [draft, setDraft] = useState<LocalAIProvider>(() => provider ?? newProvider());
 
   useEffect(() => {

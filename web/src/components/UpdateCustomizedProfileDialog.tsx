@@ -81,7 +81,7 @@ function UpdateCustomizedProfileDialog({ open, onOpenChange, onSuccess }: Props)
   const handleSaveButtonClick = async () => {
     if (busy) return;
     if (customProfile.title === "") {
-      toast.error("Title cannot be empty.");
+      toast.error(t("ui-extra.title-required"));
       return;
     }
 
@@ -123,7 +123,13 @@ function UpdateCustomizedProfileDialog({ open, onOpenChange, onSuccess }: Props)
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="server-name">{t("setting.system.server-name")}</Label>
-            <Input id="server-name" type="text" value={customProfile.title} onChange={handleNameChanged} placeholder="Enter server name" />
+            <Input
+              id="server-name"
+              type="text"
+              value={customProfile.title}
+              onChange={handleNameChanged}
+              placeholder={t("ui-extra.server-name-placeholder")}
+            />
           </div>
 
           <div className="grid gap-2">
@@ -145,7 +151,7 @@ function UpdateCustomizedProfileDialog({ open, onOpenChange, onSuccess }: Props)
               rows={3}
               value={customProfile.description}
               onChange={handleDescriptionChanged}
-              placeholder="Enter description"
+              placeholder={t("ui-extra.description-placeholder")}
             />
           </div>
         </div>

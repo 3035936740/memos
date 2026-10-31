@@ -7,6 +7,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { userServiceClient } from "@/connect";
 import useNavigateTo from "@/hooks/useNavigateTo";
 import { userKeys } from "@/hooks/useUserQueries";
+import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import { UserNotification, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -105,11 +106,11 @@ function MemoCommentMessage({ notification }: Props) {
           <div className="flex items-center justify-between gap-3 mb-1">
             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
               <span className="font-semibold text-sm text-foreground/95">{sender?.displayName || sender?.username}</span>
-              <span className="text-sm text-muted-foreground/80">commented on your memo</span>
+              <span className="text-sm text-muted-foreground/80">{t("ui-extra.commented")}</span>
               <span className="text-xs text-muted-foreground/60">
                 {notification.createTime &&
-                  timestampDate(notification.createTime)?.toLocaleDateString([], { month: "short", day: "numeric" })}{" "}
-                at{" "}
+                  timestampDate(notification.createTime)?.toLocaleDateString(i18n.language, { month: "short", day: "numeric" })}{" "}
+                {t("ui-extra.at")}{" "}
                 {notification.createTime &&
                   timestampDate(notification.createTime)?.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
@@ -137,8 +138,8 @@ function MemoCommentMessage({ notification }: Props) {
 
           <div className="pl-3 border-l-2 border-muted-foreground/20 mb-3">
             <p className="text-sm text-foreground/60 line-clamp-1 leading-relaxed">
-              <span className="text-xs text-muted-foreground/50 font-medium mr-2 uppercase tracking-wide">Original:</span>
-              {commentPayload.relatedMemoSnippet || <span className="italic text-muted-foreground/40">Empty memo</span>}
+              <span className="text-xs text-muted-foreground/50 font-medium mr-2 uppercase tracking-wide">{t("ui-extra.original")}</span>
+              {commentPayload.relatedMemoSnippet || <span className="italic text-muted-foreground/40">{t("ui-extra.empty-memo")}</span>}
             </p>
           </div>
 
@@ -152,9 +153,11 @@ function MemoCommentMessage({ notification }: Props) {
                 <MessageCircleIcon className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-primary/60 font-semibold mb-1 uppercase tracking-wider">Comment</p>
+                <p className="text-xs text-primary/60 font-semibold mb-1 uppercase tracking-wider">
+                  {t("setting.moderation-center.comment")}
+                </p>
                 <p className="text-sm text-foreground/90 line-clamp-2">
-                  {commentPayload.memoSnippet || <span className="italic text-muted-foreground/50">Empty comment</span>}
+                  {commentPayload.memoSnippet || <span className="italic text-muted-foreground/50">{t("ui-extra.empty-comment")}</span>}
                 </p>
               </div>
             </div>

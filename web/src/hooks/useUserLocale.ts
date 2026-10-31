@@ -1,7 +1,13 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInstance } from "@/contexts/InstanceContext";
-import { getLocaleDirection, getLocaleWithFallback, type LocaleDirection, loadLocale, subscribeToLocaleDirection } from "@/utils/i18n";
+import {
+  getLocaleDirection,
+  getLocalePreferenceWithFallback,
+  type LocaleDirection,
+  loadLocale,
+  subscribeToLocaleDirection,
+} from "@/utils/i18n";
 
 /**
  * Hook that reactively applies user locale preference.
@@ -19,15 +25,14 @@ export const useUserLocale = () => {
       return;
     }
 
-    if (!currentUser) {
-      loadLocale(getLocaleWithFallback(undefined, generalSetting.firstVisitDefaultLocale));
-      return;
-    }
-
-    if (!isUserSettingsInitialized) return;
-
-    const locale = getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
-    loadLocale(locale);
+    if (currentUser && !isUserSettingsInitialized) return;
+    const apply = () =>
+      loadLocale(
+        getLocalePreferenceWithFallback(currentUser ? userGeneralSetting?.locale : undefined, generalSetting.firstVisitDefaultLocale),
+      );
+    apply();
+    window.addEventListener("languagechange", apply);
+    return () => window.removeEventListener("languagechange", apply);
   }, [
     currentUser,
     generalSetting.firstVisitDefaultLocale,

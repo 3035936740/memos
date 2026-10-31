@@ -3,6 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useTranslate } from "@/utils/i18n";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -53,26 +54,29 @@ const DialogContent = React.forwardRef<
       showCloseButton?: boolean;
       scrollContainerClassName?: string;
     }
->(({ className, children, showCloseButton = true, scrollContainerClassName, size, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Popup
-      ref={ref}
-      className={cn(dialogContentVariants({ size }), className)}
-      initialFocus={false}
-      finalFocus={false}
-      {...props}
-    >
-      <div className={cn("overflow-y-auto overflow-x-hidden flex-1 flex flex-col gap-4", scrollContainerClassName)}>{children}</div>
-      {showCloseButton && (
-        <DialogPrimitive.Close className="ring-offset-background absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
-          <XIcon />
-          <span className="sr-only">Close</span>
-        </DialogPrimitive.Close>
-      )}
-    </DialogPrimitive.Popup>
-  </DialogPortal>
-));
+>(({ className, children, showCloseButton = true, scrollContainerClassName, size, ...props }, ref) => {
+  const t = useTranslate();
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Popup
+        ref={ref}
+        className={cn(dialogContentVariants({ size }), className)}
+        initialFocus={false}
+        finalFocus={false}
+        {...props}
+      >
+        <div className={cn("overflow-y-auto overflow-x-hidden flex-1 flex flex-col gap-4", scrollContainerClassName)}>{children}</div>
+        {showCloseButton && (
+          <DialogPrimitive.Close className="ring-offset-background absolute top-4 end-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+            <XIcon />
+            <span className="sr-only">{t("common.close")}</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Popup>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = "DialogContent";
 
 const DialogHeader = React.forwardRef<React.ElementRef<"div">, React.ComponentPropsWithoutRef<"div">>(({ className, ...props }, ref) => (

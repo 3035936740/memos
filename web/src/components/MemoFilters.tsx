@@ -95,7 +95,7 @@ const MemoFilters = ({ className }: { className?: string }) => {
             {Icon && <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
             <span className="text-foreground/80 font-medium max-w-32 truncate">{getFilterDisplayText(filter)}</span>
             <span className="ml-0.5 -mr-1">
-              <Button variant="ghost" size="icon-sm" onClick={() => handleRemoveFilter(filter)} aria-label="Remove filter">
+              <Button variant="ghost" size="icon-sm" onClick={() => handleRemoveFilter(filter)} aria-label={t("ui-extra.remove-filter")}>
                 <XIcon className="w-3 h-3" />
               </Button>
             </span>

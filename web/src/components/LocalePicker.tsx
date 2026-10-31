@@ -8,18 +8,18 @@ import { locales } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { getLocaleDisplayName, localeMatchesSearch, useTranslate } from "@/utils/i18n";
 
-const MISSING_LANGUAGE_FEEDBACK_URL =
-  "https://github.com/usememos/memos/issues/new?title=Missing%20language%20support&body=Please%20add%20support%20for%20this%20language%3A%0A%0A-%20Language%3A%20";
+const MISSING_LANGUAGE_FEEDBACK_URL = "https://github.com/3035936740/memos-plus";
 
 interface LocaleSearchListProps {
   value: Locale;
   onChange: (locale: Locale) => void;
   className?: string;
   emptyOption?: { label: string; onSelect: () => void };
+  allowAutomatic?: boolean;
 }
 
 export const LocaleSearchList = (props: LocaleSearchListProps) => {
-  const { value, onChange, className, emptyOption } = props;
+  const { value, onChange, className, emptyOption, allowAutomatic = false } = props;
   const t = useTranslate();
   const { i18n } = useTranslation();
   const [query, setQuery] = useState("");
@@ -27,6 +27,9 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
     () => locales.filter((locale) => localeMatchesSearch(locale, query, i18n.language)),
     [i18n.language, query],
   );
+  const showAutomatic =
+    allowAutomatic &&
+    (!query || t("locale-picker.automatic").toLowerCase().includes(query.toLowerCase()) || "auto".includes(query.toLowerCase()));
 
   return (
     <div
@@ -51,6 +54,20 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
         role="listbox"
         aria-label={t("common.language")}
       >
+        {showAutomatic && (
+          <button
+            type="button"
+            data-slot="select-item"
+            data-picker-item=""
+            role="option"
+            aria-selected={value === "auto"}
+            className="flex min-h-8 w-full items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent focus-visible:bg-accent"
+            onClick={() => onChange("auto")}
+          >
+            <span>{t("locale-picker.automatic")}</span>
+            {value === "auto" && <CheckIcon className="size-4 shrink-0 text-primary" />}
+          </button>
+        )}
         {emptyOption && !query && (
           <button
             type="button"
@@ -86,7 +103,7 @@ export const LocaleSearchList = (props: LocaleSearchListProps) => {
             {value === locale ? <CheckIcon className="size-4 shrink-0 text-primary" /> : <span className="size-4 shrink-0" />}
           </button>
         ))}
-        {filteredLocales.length === 0 && (
+        {filteredLocales.length === 0 && !showAutomatic && (
           <div className="px-2 py-6 text-center text-sm">
             <a
               href={MISSING_LANGUAGE_FEEDBACK_URL}
@@ -110,12 +127,15 @@ interface LocalePickerProps {
   iconOnly?: boolean;
   disabled?: boolean;
   emptyOption?: LocaleSearchListProps["emptyOption"];
+  allowAutomatic?: boolean;
 }
 
 const LocalePicker = (props: LocalePickerProps) => {
-  const { value, onChange, className, iconOnly = false, disabled, emptyOption } = props;
+  const { value, onChange, className, iconOnly = false, disabled, emptyOption, allowAutomatic = false } = props;
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
-  const displayName = !value && emptyOption ? emptyOption.label : getLocaleDisplayName(value);
+  const displayName =
+    value === "auto" ? t("locale-picker.automatic") : !value && emptyOption ? emptyOption.label : getLocaleDisplayName(value);
 
   const handleChange = (locale: Locale) => {
     onChange(locale);
@@ -132,7 +152,7 @@ const LocalePicker = (props: LocalePickerProps) => {
             data-picker-trigger={iconOnly ? undefined : ""}
             variant={iconOnly ? "ghost" : "outline"}
             size={iconOnly ? "icon" : undefined}
-            aria-label={iconOnly ? `Language: ${displayName}` : undefined}
+            aria-label={iconOnly ? t("locale-picker.current", { language: displayName }) : undefined}
             title={iconOnly ? displayName : undefined}
             className={cn(
               iconOnly
@@ -157,6 +177,7 @@ const LocalePicker = (props: LocalePickerProps) => {
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[max(12rem,var(--anchor-width,12rem))] p-1.5" viewportClassName="overflow-hidden">
         <LocaleSearchList
+          allowAutomatic={allowAutomatic}
           value={value}
           onChange={handleChange}
           emptyOption={

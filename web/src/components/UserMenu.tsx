@@ -23,7 +23,7 @@ import { useNotifications, useUpdateUserGeneralSetting } from "@/hooks/useUserQu
 import { cn } from "@/lib/utils";
 import { Routes } from "@/router";
 import { UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
-import { getLocaleWithFallback, loadLocale, useTranslate } from "@/utils/i18n";
+import { getLocalePreferenceWithFallback, loadLocale, useTranslate } from "@/utils/i18n";
 import { chooseTheme, getThemeWithFallback, THEME_OPTIONS } from "@/utils/theme";
 import { LocaleSearchList } from "./LocalePicker";
 import UserAvatar from "./UserAvatar";
@@ -55,7 +55,7 @@ const UserMenu = (props: Props) => {
   const { mutate: updateUserGeneralSetting } = useUpdateUserGeneralSetting(currentUser?.name);
   const { data: notifications = [] } = useNotifications();
   const sseStatus = useSSEConnectionStatus();
-  const currentLocale = getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
+  const currentLocale = getLocalePreferenceWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale);
   const currentTheme = getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme);
   const inboxActive = Boolean(matchPath(Routes.INBOX, location.pathname));
   const archivedActive = Boolean(matchPath(Routes.ARCHIVED, location.pathname));
@@ -214,7 +214,7 @@ const UserMenu = (props: Props) => {
             {t("common.language")}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-64 max-h-[min(24rem,var(--available-height))] p-1.5" viewportClassName="overflow-hidden">
-            <LocaleSearchList value={currentLocale} onChange={handleLocaleChange} />
+            <LocaleSearchList allowAutomatic value={currentLocale} onChange={handleLocaleChange} />
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSub>

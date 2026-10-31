@@ -78,7 +78,7 @@ describe("InsertMenu", () => {
       "editor.audio-recorder.trigger",
       "editor.insert-menu.link-memo",
       "editor.insert-menu.add-location",
-      "添加投票",
+      "poll.add",
       "editor.focus-mode",
       "editor.formatting-toolbar",
     ]);

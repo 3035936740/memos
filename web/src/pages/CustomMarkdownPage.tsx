@@ -3,16 +3,19 @@ import { MemoMarkdownRenderer } from "@/components/MemoContent/MemoMarkdownRende
 import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { canAccessInstanceContent, parseInstancePages } from "@/lib/instance-content";
+import { useTranslate } from "@/utils/i18n";
 
 const CustomMarkdownPage = () => {
+  const t = useTranslate();
+
   const { slug = "" } = useParams();
   const { generalSetting } = useInstance();
   const currentUser = useCurrentUser();
   const page = parseInstancePages(generalSetting.customPagesJson).find((item) => item.slug === slug);
 
-  if (!page) return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">Page not found.</div>;
+  if (!page) return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">{t("ui-extra.page-not-found")}</div>;
   if (!canAccessInstanceContent(page.access, currentUser)) {
-    return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">You do not have access to this page.</div>;
+    return <div className="mx-auto w-full max-w-2xl py-6 text-muted-foreground sm:py-8">{t("ui-extra.page-denied")}</div>;
   }
 
   return (

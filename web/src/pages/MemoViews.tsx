@@ -40,119 +40,119 @@ import { cn } from "@/lib/utils";
 import { MemoView, MemoViewSchema } from "@/types/proto/api/v1/memo_view_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
-const memoViewExamples = [
+const getMemoViewExamples = (t: ReturnType<typeof useTranslate>) => [
   {
-    title: "Pinned",
+    title: t("views.example-1-title"),
     filter: "pinned",
-    description: "Only pinned memos.",
+    description: t("views.example-1-description"),
     icon: PinIcon,
   },
   {
-    title: "Recent notes",
+    title: t("views.example-2-title"),
     filter: 'created_ts >= now - duration("1h")',
-    description: "Memos created in the last hour.",
+    description: t("views.example-2-description"),
     icon: Clock3Icon,
   },
   {
-    title: "Public memos",
+    title: t("views.example-3-title"),
     filter: 'visibility == "PUBLIC"',
-    description: "Only public memos.",
+    description: t("views.example-3-description"),
     icon: ShieldIcon,
   },
   {
-    title: "Project tags",
+    title: t("views.example-4-title"),
     filter: 'tag in ["work", "personal"]',
-    description: "Match one or more exact tags.",
+    description: t("views.example-4-description"),
     icon: TagsIcon,
   },
   {
-    title: "Untagged",
+    title: t("views.example-5-title"),
     filter: "size(tags) == 0",
-    description: "Memos without any tags.",
+    description: t("views.example-5-description"),
     icon: TagsIcon,
   },
   {
-    title: "Archive tree",
+    title: t("views.example-6-title"),
     filter: 'tags.exists(t, t.startsWith("archive"))',
-    description: "Match hierarchical tags by prefix.",
+    description: t("views.example-6-description"),
     icon: TagsIcon,
   },
   {
-    title: "Open tasks",
+    title: t("views.example-7-title"),
     filter: "has_task_list && has_incomplete_tasks",
-    description: "Memos with unfinished tasks.",
+    description: t("views.example-7-description"),
     icon: ClipboardCheckIcon,
   },
   {
-    title: "Links or code",
+    title: t("views.example-8-title"),
     filter: "has_link || has_code",
-    description: "Memos containing links or code blocks.",
+    description: t("views.example-8-description"),
     icon: FilterIcon,
   },
   {
-    title: "No location",
+    title: t("views.example-9-title"),
     filter: "!has_location",
-    description: "Memos without an attached location.",
+    description: t("views.example-9-description"),
     icon: MapPinIcon,
   },
   {
-    title: "Content search",
+    title: t("views.example-10-title"),
     filter: 'content.contains("TODO")',
-    description: "Search text inside memo content.",
+    description: t("views.example-10-description"),
     icon: SearchIcon,
   },
   {
-    title: "Starts with",
+    title: t("views.example-11-title"),
     filter: 'content.startsWith("TODO")',
-    description: "Memos whose content begins with text (also endsWith).",
+    description: t("views.example-11-description"),
     icon: SearchIcon,
   },
   {
-    title: "Regex match",
+    title: t("views.example-12-title"),
     filter: 'content.matches("v[0-9]+")',
-    description: "Match content with a regular expression.",
+    description: t("views.example-12-description"),
     icon: FilterIcon,
   },
   {
-    title: "All tags complete",
+    title: t("views.example-13-title"),
     filter: 'tags.all(t, t.endsWith("-done"))',
-    description: "Every tag ends in -done (tagged memos only).",
+    description: t("views.example-13-description"),
     icon: TagsIcon,
   },
   {
-    title: "One project tag",
+    title: t("views.example-14-title"),
     filter: 'tags.exists_one(t, t.startsWith("project/"))',
-    description: "Exactly one tag matches the predicate.",
+    description: t("views.example-14-description"),
     icon: TagsIcon,
   },
   {
-    title: "Any of these tags",
+    title: t("views.example-15-title"),
     filter: 'sets.intersects(tags, ["work", "urgent"])',
-    description: "Tags intersect the given set.",
+    description: t("views.example-15-description"),
     icon: TagsIcon,
   },
   {
-    title: "Exactly these tags",
+    title: t("views.example-16-title"),
     filter: 'sets.equivalent(tags, ["inbox"])',
-    description: "Tagged with exactly this set, nothing more.",
+    description: t("views.example-16-description"),
     icon: TagsIcon,
   },
   {
-    title: "Memos from 2024",
+    title: t("views.example-17-title"),
     filter: "created_ts.getFullYear() == 2024",
-    description: "Filter by calendar year.",
+    description: t("views.example-17-description"),
     icon: Clock3Icon,
   },
   {
-    title: "Weekend notes",
+    title: t("views.example-18-title"),
     filter: "created_ts.getDayOfWeek() == 0 || created_ts.getDayOfWeek() == 6",
-    description: "Created on a Sunday or Saturday (0 = Sunday).",
+    description: t("views.example-18-description"),
     icon: Clock3Icon,
   },
   {
-    title: "Long notes",
+    title: t("views.example-19-title"),
     filter: "size(content) > 280",
-    description: "Memos longer than 280 characters.",
+    description: t("views.example-19-description"),
     icon: FilterIcon,
   },
 ];
@@ -180,8 +180,8 @@ const filterFields = [
   "has_location",
   'created_ts >= now - duration("24h")',
   "created_ts.getFullYear() == ...",
-  "created_ts.getMonth() == ... (0 = Jan)",
-  "created_ts.getDayOfWeek() == ... (0 = Sun)",
+  "created_ts.getMonth() == ...",
+  "created_ts.getDayOfWeek() == ...",
   "updated_ts",
   "now",
   'timestamp("2025-01-01T00:00:00Z")',
@@ -195,7 +195,7 @@ const createEmptyMemoView = () =>
   });
 
 interface MemoViewGuideProps {
-  onUseExample: (example: (typeof memoViewExamples)[number]) => void;
+  onUseExample: (example: ReturnType<typeof getMemoViewExamples>[number]) => void;
 }
 
 interface MemoViewsRouteState {
@@ -204,10 +204,12 @@ interface MemoViewsRouteState {
 }
 
 const MemoViewGuide = ({ onUseExample }: MemoViewGuideProps) => {
+  const t = useTranslate();
+  const memoViewExamples = getMemoViewExamples(t);
   return (
     <aside className="flex flex-col gap-5">
       <div className="rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold text-foreground">Expression examples</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("views.examples")}</h2>
         <div className="mt-3 flex flex-col gap-2">
           {memoViewExamples.map((example) => {
             const Icon = example.icon;
@@ -231,7 +233,7 @@ const MemoViewGuide = ({ onUseExample }: MemoViewGuideProps) => {
       </div>
 
       <div className="rounded-lg border border-border p-4">
-        <h2 className="text-sm font-semibold text-foreground">Supported fields</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("views.fields")}</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           {filterFields.map((field) => (
             <Badge key={field} variant="secondary" className="font-mono">
@@ -239,6 +241,7 @@ const MemoViewGuide = ({ onUseExample }: MemoViewGuideProps) => {
             </Badge>
           ))}
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">{t("views.field-note")}</p>
       </div>
     </aside>
   );
@@ -286,7 +289,7 @@ const MemoViews = () => {
     setDraft((current) => ({ ...current, ...state }));
   };
 
-  const handleUseExample = (example: (typeof memoViewExamples)[number]) => {
+  const handleUseExample = (example: ReturnType<typeof getMemoViewExamples>[number]) => {
     setDraft(
       create(MemoViewSchema, {
         name: draft.name,
@@ -320,11 +323,11 @@ const MemoViews = () => {
 
   const validateDraft = async () => {
     if (!draft.title || !draft.filter) {
-      toast.error("Title and filter cannot be empty");
+      toast.error(t("views.required"));
       return false;
     }
     if (!user?.name) {
-      toast.error("No current user");
+      toast.error(t("views.no-user"));
       return false;
     }
 
@@ -336,7 +339,7 @@ const MemoViews = () => {
         validateOnly: true,
       });
       validateState.setFinish();
-      toast.success("Filter expression looks valid");
+      toast.success(t("views.valid"));
       return true;
     } catch (error: unknown) {
       await handleError(error, toast.error, {
@@ -349,11 +352,11 @@ const MemoViews = () => {
 
   const handleCreateMemoView = async () => {
     if (!draft.title || !draft.filter) {
-      toast.error("Title and filter cannot be empty");
+      toast.error(t("views.required"));
       return;
     }
     if (!user?.name) {
-      toast.error("No current user");
+      toast.error(t("views.no-user"));
       return;
     }
 
@@ -367,7 +370,7 @@ const MemoViews = () => {
       createState.setFinish();
       setDraft(createEmptyMemoView());
       setIsCreateFormOpen(false);
-      toast.success("View created successfully");
+      toast.success(t("views.created"));
     } catch (error: unknown) {
       await handleError(error, toast.error, {
         context: "Create memo view",
@@ -378,7 +381,7 @@ const MemoViews = () => {
 
   const handleUpdateMemoView = async () => {
     if (!draft.title || !draft.filter) {
-      toast.error("Title and filter cannot be empty");
+      toast.error(t("views.required"));
       return;
     }
 
@@ -392,7 +395,7 @@ const MemoViews = () => {
       updateState.setFinish();
       setDraft(createEmptyMemoView());
       setIsCreateFormOpen(false);
-      toast.success("View updated successfully");
+      toast.success(t("views.updated"));
     } catch (error: unknown) {
       await handleError(error, toast.error, {
         context: "Update memo view",
@@ -435,11 +438,8 @@ const MemoViews = () => {
             <FilterIcon className="h-4 w-4" />
             <span className="text-sm font-medium">{t("common.views")}</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-normal text-foreground">Views</h1>
-          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-            Create reusable views with fields, operators, time helpers, and tag matching. Use examples as starting points, then validate
-            before saving.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-normal text-foreground">{t("common.views")}</h1>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{t("views.description")}</p>
         </div>
         <Button onClick={isCreateFormOpen ? handleCloseForm : handleOpenCreateForm}>
           {isCreateFormOpen ? <XIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
@@ -458,8 +458,8 @@ const MemoViews = () => {
             <div className="grid gap-5 p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-semibold text-foreground">{isEditing ? "Edit view" : "Create view"}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Name the view and define the memo filter expression it should apply.</p>
+                  <h2 className="text-base font-semibold text-foreground">{isEditing ? t("views.edit") : t("views.create")}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("views.form-description")}</p>
                 </div>
                 <a
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
@@ -467,7 +467,7 @@ const MemoViews = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Docs
+                  {t("views.docs")}
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
                 </a>
               </div>
@@ -478,12 +478,10 @@ const MemoViews = () => {
                   <Input
                     id="view-title"
                     value={draft.title}
-                    placeholder="Pinned, Recent notes, Work"
+                    placeholder={t("views.title-placeholder")}
                     onChange={(event) => setDraftState({ title: event.target.value })}
                   />
-                  <p className="text-xs leading-5 text-muted-foreground">
-                    Prefix the title with an emoji if you want it to appear in the sidebar.
-                  </p>
+                  <p className="text-xs leading-5 text-muted-foreground">{t("views.emoji-tip")}</p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="view-filter">{t("common.filter")}</Label>
@@ -496,12 +494,17 @@ const MemoViews = () => {
                     onChange={(event) => setDraftState({ filter: event.target.value })}
                   />
                   <p className="text-xs leading-5 text-muted-foreground">
-                    Combine expressions with <span className="font-mono">&&</span>, <span className="font-mono">||</span>, and{" "}
-                    <span className="font-mono">!</span>. Time fields are timestamps — use <span className="font-mono">now</span>,{" "}
-                    <span className="font-mono">duration("24h")</span>, <span className="font-mono">timestamp(...)</span>, and accessors
-                    like <span className="font-mono">created_ts.getFullYear()</span>. Tags support{" "}
-                    <span className="font-mono">sets.contains/intersects/equivalent</span> and{" "}
-                    <span className="font-mono">size(content)</span> measures length.
+                    {t("views.syntax", {
+                      and: "&&",
+                      or: "||",
+                      not: "!",
+                      now: "now",
+                      duration: 'duration("24h")',
+                      timestamp: "timestamp(...)",
+                      year: "created_ts.getFullYear()",
+                      sets: "sets.contains/intersects/equivalent",
+                      size: "size(content)",
+                    })}
                   </p>
                 </div>
               </div>
@@ -509,7 +512,7 @@ const MemoViews = () => {
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                 <Button variant="outline" disabled={validateState.isLoading || isSaving} onClick={validateDraft}>
                   <CheckCircle2Icon className="h-4 w-4" />
-                  Validate
+                  {t("views.validate")}
                 </Button>
                 <Button disabled={isSaving || validateState.isLoading} onClick={handleSaveMemoView}>
                   <SaveIcon className="h-4 w-4" />
@@ -521,14 +524,14 @@ const MemoViews = () => {
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-foreground">All views</h2>
+              <h2 className="text-base font-semibold text-foreground">{t("views.all")}</h2>
               <Badge variant="outline">{memoViews.length}</Badge>
             </div>
 
             {memoViews.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
-                <p className="text-sm font-medium text-foreground">No views yet</p>
-                <p className="mt-1 text-sm text-muted-foreground">Open the create form to choose an example and add your first view.</p>
+                <p className="text-sm font-medium text-foreground">{t("views.empty")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("views.empty-note")}</p>
               </div>
             ) : (
               <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">

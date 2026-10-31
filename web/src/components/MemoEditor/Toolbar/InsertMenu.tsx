@@ -203,7 +203,7 @@ const InsertMenu = (props: InsertMenuProps) => {
     { key: "audio", label: t("editor.audio-recorder.trigger"), icon: MicIcon, onClick: props.onAudioRecorderClick },
     { key: "link", label: t("editor.insert-menu.link-memo"), icon: LinkIcon, onClick: handleOpenLinkDialog },
     { key: "location", label: t("editor.insert-menu.add-location"), icon: MapPinIcon, onClick: handleLocationClick },
-    { key: "poll", label: poll ? "编辑投票" : "添加投票", icon: ListChecksIcon, onClick: () => setPollDialogOpen(true) },
+    { key: "poll", label: poll ? t("poll.edit") : t("poll.add"), icon: ListChecksIcon, onClick: () => setPollDialogOpen(true) },
   ];
   if (canUseAdminScript)
     insertItems.push({

@@ -778,7 +778,11 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
     };
 
     return (
-      <nav data-blog-nav="" aria-label="Primary" className={cn("flex flex-col gap-0.5 pt-1", SIDEBAR_HORIZONTAL_PADDING)}>
+      <nav
+        data-blog-nav=""
+        aria-label={t("ui-extra.primary-navigation")}
+        className={cn("flex flex-col gap-0.5 pt-1", SIDEBAR_HORIZONTAL_PADDING)}
+      >
         {rows.map(renderRow)}
         {categories.length > 0 && (
           <BlogNavGroup id="categories" label={t("setting.category.title")}>
@@ -801,7 +805,7 @@ const GlobalNavigation = ({ vertical = false }: { vertical?: boolean }) => {
           "flex h-10 items-start gap-1 overflow-x-auto overflow-y-hidden pt-0.5 overscroll-x-contain [scrollbar-color:var(--border)_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent",
           SIDEBAR_HORIZONTAL_PADDING,
         )}
-        aria-label="Primary"
+        aria-label={t("ui-extra.primary-navigation")}
       >
         {currentUser && (
           <DropdownMenu
@@ -1020,6 +1024,8 @@ const AppSidebar = ({ className }: { className?: string }) => {
 };
 
 export const MobileAppHeader = () => {
+  const t = useTranslate();
+
   const { setMobileOpen } = useAppSidebar();
   return (
     <header
@@ -1031,7 +1037,7 @@ export const MobileAppHeader = () => {
         size="icon-sm"
         className="size-8"
         onClick={() => setMobileOpen(true)}
-        aria-label="Open navigation"
+        aria-label={t("ui-extra.open-navigation")}
         data-mobile-navigation-trigger
       >
         <MenuIcon className="size-[18px]" />
@@ -1049,6 +1055,8 @@ export const MobileAppHeader = () => {
 };
 
 export const MobileAppSidebar = () => {
+  const t = useTranslate();
+
   const direction = useDirection();
   const { mobileOpen, setMobileOpen } = useAppSidebar();
   return (
@@ -1057,7 +1065,7 @@ export const MobileAppSidebar = () => {
         side={direction === "rtl" ? "right" : "left"}
         className="h-dvh max-h-dvh w-[min(18rem,calc(100vw-2rem))] gap-0 overflow-hidden border-border p-0 shadow-2xl [&>button]:hidden"
       >
-        <SheetTitle className="sr-only">Navigation</SheetTitle>
+        <SheetTitle className="sr-only">{t("ui-extra.navigation")}</SheetTitle>
         <AppSidebar />
       </SheetContent>
     </Sheet>

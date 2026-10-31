@@ -27,13 +27,13 @@ const YearNavigation = memo(({ selectedYear, currentYear, onPrev, onNext, onToda
     <div className="flex items-center justify-between px-1">
       <h2 className="text-xl font-semibold tracking-[-0.02em] text-foreground/90">{selectedYear}</h2>
 
-      <nav className="inline-flex items-center gap-1" aria-label="Year navigation">
+      <nav className="inline-flex items-center gap-1" aria-label={t("ui-extra.year-navigation")}>
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={onPrev}
           disabled={!canGoPrev}
-          aria-label="Previous year"
+          aria-label={t("blog-extra.previous-year")}
           className="size-7 rounded-md text-muted-foreground/65 hover:bg-muted/50 hover:text-foreground/90"
         >
           <ChevronLeftIcon className="size-[15px] rtl:rotate-180" strokeWidth={1.75} />
@@ -60,7 +60,7 @@ const YearNavigation = memo(({ selectedYear, currentYear, onPrev, onNext, onToda
           size="icon-sm"
           onClick={onNext}
           disabled={!canGoNext}
-          aria-label="Next year"
+          aria-label={t("blog-extra.next-year")}
           className="size-7 rounded-md text-muted-foreground/65 hover:bg-muted/50 hover:text-foreground/90"
         >
           <ChevronRightIcon className="size-[15px] rtl:rotate-180" strokeWidth={1.75} />
@@ -90,6 +90,7 @@ const MonthCard = memo(({ month, data, maxCount, onDateClick, timeBasis }: Month
 MonthCard.displayName = "MonthCard";
 
 export const YearCalendar = memo(({ selectedYear, data, onYearChange, onDateClick, className, timeBasis }: YearCalendarProps) => {
+  const t = useTranslate();
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const yearData = useMemo(() => filterDataByYear(data, selectedYear), [data, selectedYear]);
   const months = useMemo(() => generateMonthsForYear(selectedYear), [selectedYear]);
@@ -99,7 +100,10 @@ export const YearCalendar = memo(({ selectedYear, data, onYearChange, onDateClic
   const canGoNext = selectedYear < getMaxYear();
 
   return (
-    <section className={cn("flex w-full flex-col gap-4 px-5 py-5 select-none", className)} aria-label={`Year ${selectedYear} calendar`}>
+    <section
+      className={cn("flex w-full flex-col gap-4 px-5 py-5 select-none", className)}
+      aria-label={t("ui-extra.calendar-year", { year: selectedYear })}
+    >
       <YearNavigation
         selectedYear={selectedYear}
         currentYear={currentYear}

@@ -35,7 +35,7 @@ export const applyDocumentLocale = (locale: string): LocaleDirection => {
 const getStoredLocale = (): Locale | null => {
   try {
     const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-    return stored && locales.includes(stored) ? (stored as Locale) : null;
+    return stored && isValidLocalePreference(stored) ? (stored as Locale) : null;
   } catch {
     return null;
   }
@@ -83,7 +83,9 @@ type NestedKeyOf<T, K = keyof T> = K extends keyof T & (string | number)
   : never;
 
 // Represents the keys of nested translation objects.
-export type Translations = NestedKeyOf<typeof enTranslation> | NestedKeyOf<typeof customEnTranslation>;
+type TranslationKeys = NestedKeyOf<typeof enTranslation> | NestedKeyOf<typeof customEnTranslation>;
+type PluralKey<K> = K extends `${infer Base}_${"zero" | "one" | "two" | "few" | "many" | "other"}` ? Base : never;
+export type Translations = TranslationKeys | PluralKey<TranslationKeys>;
 
 // Represents a typed translation function.
 type TypedT = (key: Translations, params?: Record<string, unknown>) => string;
@@ -98,14 +100,38 @@ export const isValidLocale = (locale: string | undefined | null): boolean => {
   return locales.includes(locale);
 };
 
+export const isValidLocalePreference = (locale: string | undefined | null): boolean => locale === "auto" || isValidLocale(locale);
+
+/** Match browser preferences without allowing an unsupported first choice to hide a supported later choice. */
+export const getBrowserLocale = (): Locale => {
+  const preferences = typeof navigator === "undefined" ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const preference of preferences) {
+    try {
+      const [canonical] = Intl.getCanonicalLocales(preference);
+      if (isValidLocale(canonical)) return canonical;
+      if (/^zh(?:-|$)/i.test(canonical)) {
+        return /(?:Hant|TW|HK|MO)/i.test(canonical) ? "zh-Hant" : "zh-Hans";
+      }
+      const language = canonical.split("-")[0];
+      if (language === "no") return "nb";
+      if (isValidLocale(language)) return language;
+      const regional = locales.find((locale) => locale.split("-")[0] === language);
+      if (regional) return regional;
+    } catch {
+      // Ignore malformed browser preferences and continue to the next language.
+    }
+  }
+  return "en";
+};
+
 // Gets the locale to use with proper priority:
 // 1. User setting (if logged in and has preference)
 // 2. localStorage (from previous session)
 // 3. Instance first-visit default
 // 4. Backward-compatible Simplified Chinese default
-export const getLocaleWithFallback = (userLocale?: string, instanceLocale?: string): Locale => {
+export const getLocalePreferenceWithFallback = (userLocale?: string, instanceLocale?: string): Locale => {
   // Priority 1: User setting (if logged in and valid)
-  if (userLocale && isValidLocale(userLocale)) {
+  if (userLocale && isValidLocalePreference(userLocale)) {
     return userLocale as Locale;
   }
 
@@ -116,7 +142,7 @@ export const getLocaleWithFallback = (userLocale?: string, instanceLocale?: stri
   }
 
   // Priority 3: Instance default for first-time visitors
-  if (isValidLocale(instanceLocale)) {
+  if (isValidLocalePreference(instanceLocale)) {
     return instanceLocale as Locale;
   }
 
@@ -124,11 +150,17 @@ export const getLocaleWithFallback = (userLocale?: string, instanceLocale?: stri
   return DEFAULT_LOCALE;
 };
 
+export const getLocaleWithFallback = (userLocale?: string, instanceLocale?: string): Locale => {
+  const preference = getLocalePreferenceWithFallback(userLocale, instanceLocale);
+  return preference === "auto" ? getBrowserLocale() : preference;
+};
+
 // Applies and persists a locale setting
 export const loadLocale = (locale: string, options: { persist?: boolean } = {}): Locale => {
-  const validLocale = isValidLocale(locale) ? (locale as Locale) : DEFAULT_LOCALE;
+  const preference = isValidLocalePreference(locale) ? locale : DEFAULT_LOCALE;
+  const validLocale = preference === "auto" ? getBrowserLocale() : preference;
   if (options.persist !== false) {
-    setStoredLocale(validLocale);
+    setStoredLocale(preference);
   }
   applyDocumentLocale(validLocale);
   i18n.changeLanguage(validLocale);
@@ -164,6 +196,7 @@ const NATIVE_LOCALE_NAMES: Record<string, string> = {
   fi: "Suomi",
   fr: "Français",
   gl: "Galego",
+  he: "עברית",
   hi: "हिन्दी",
   hr: "Hrvatski",
   hu: "Magyar",

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { userServiceClient } from "@/connect";
 import useLoading from "@/hooks/useLoading";
+import i18n from "@/i18n";
 import { convertFileToBase64 } from "@/lib/browser";
 import { handleError } from "@/lib/error";
 import { State } from "@/types/proto/api/v1/common_pb";
@@ -257,7 +258,7 @@ function CreateUserDialog({ open, onOpenChange, user: initialUser, onSuccess }: 
                       ? banInfo?.permanent
                         ? t("setting.member.current-permanent-ban")
                         : banInfo?.active && banInfo.expiresTime > 0
-                          ? t("setting.member.banned-until", { date: new Date(banInfo.expiresTime * 1000).toLocaleString() })
+                          ? t("setting.member.banned-until", { date: new Date(banInfo.expiresTime * 1000).toLocaleString(i18n.language) })
                           : t("setting.member.account-disabled")
                       : t("setting.member.ban-description")}
                   </p>

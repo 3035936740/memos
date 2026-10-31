@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatFileSize, getFileTypeLabel } from "@/utils/format";
+import { useTranslate } from "@/utils/i18n";
 import { formatAudioTime, toggleAudioPlayback } from "./attachmentHelpers";
 
 const AUDIO_PLAYBACK_RATES = [1, 1.5, 2] as const;
@@ -24,20 +25,22 @@ interface AudioProgressBarProps {
   className?: string;
 }
 
-const AudioProgressBar = ({ filename, currentTime, duration, progressPercent, onSeek, className }: AudioProgressBarProps) => (
-  <div className={`flex items-center gap-2 ${className ?? ""}`}>
-    <div className="relative flex h-3.5 min-w-0 flex-1 items-center">
-      <div className="absolute inset-x-0 h-1 rounded-full bg-muted/75" />
-      <div className="absolute start-0 h-1 rounded-full bg-foreground/20" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
-      <input
-        type="range"
-        min={0}
-        max={duration || 1}
-        step={0.1}
-        value={Math.min(currentTime, duration || 0)}
-        onChange={(e) => onSeek(Number(e.target.value))}
-        aria-label={`Seek ${filename}`}
-        className="relative z-10 h-3.5 w-full cursor-pointer appearance-none bg-transparent outline-none disabled:cursor-default
+const AudioProgressBar = ({ filename, currentTime, duration, progressPercent, onSeek, className }: AudioProgressBarProps) => {
+  const t = useTranslate();
+  return (
+    <div className={`flex items-center gap-2 ${className ?? ""}`}>
+      <div className="relative flex h-3.5 min-w-0 flex-1 items-center">
+        <div className="absolute inset-x-0 h-1 rounded-full bg-muted/75" />
+        <div className="absolute start-0 h-1 rounded-full bg-foreground/20" style={{ width: `${Math.min(progressPercent, 100)}%` }} />
+        <input
+          type="range"
+          min={0}
+          max={duration || 1}
+          step={0.1}
+          value={Math.min(currentTime, duration || 0)}
+          onChange={(e) => onSeek(Number(e.target.value))}
+          aria-label={t("ui-extra.seek-file", { name: filename })}
+          className="relative z-10 h-3.5 w-full cursor-pointer appearance-none bg-transparent outline-none disabled:cursor-default
           [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full
           [&::-webkit-slider-runnable-track]:bg-transparent
           [&::-webkit-slider-thumb]:mt-[-2.5px] [&::-webkit-slider-thumb]:size-2 [&::-webkit-slider-thumb]:appearance-none
@@ -46,11 +49,12 @@ const AudioProgressBar = ({ filename, currentTime, duration, progressPercent, on
           [&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-transparent
           [&::-moz-range-thumb]:size-2 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border
           [&::-moz-range-thumb]:border-border/50 [&::-moz-range-thumb]:bg-background/95"
-        disabled={duration === 0}
-      />
+          disabled={duration === 0}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface AudioAttachmentItemProps {
   filename: string;
@@ -63,6 +67,7 @@ interface AudioAttachmentItemProps {
 }
 
 const AudioAttachmentItem = ({ filename, sourceUrl, mimeType, size, title, compact = false, className }: AudioAttachmentItemProps) => {
+  const t = useTranslate();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -130,7 +135,7 @@ const AudioAttachmentItem = ({ filename, sourceUrl, mimeType, size, title, compa
           variant="outline"
           size="icon-sm"
           onClick={togglePlayback}
-          aria-label={isPlaying ? `Pause ${displayTitle}` : `Play ${displayTitle}`}
+          aria-label={`${t(isPlaying ? "blog-extra.music-pause" : "blog-extra.music-play")}: ${displayTitle}`}
         >
           {isPlaying ? <PauseIcon className="size-2.5" /> : <PlayIcon className="size-2.5 translate-x-[0.5px]" />}
         </Button>
@@ -153,7 +158,7 @@ const AudioAttachmentItem = ({ filename, sourceUrl, mimeType, size, title, compa
             variant="ghost"
             size="sm"
             onClick={handlePlaybackRateChange}
-            aria-label={`Playback speed ${playbackRate}x for ${displayTitle}`}
+            aria-label={t("ui-extra.playback-speed", { speed: playbackRate, name: displayTitle })}
           >
             {playbackRate}x
           </Button>

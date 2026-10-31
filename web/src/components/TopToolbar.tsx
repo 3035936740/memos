@@ -12,7 +12,7 @@ import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useUpdateUserGeneralSetting } from "@/hooks/useUserQueries";
 import { cn } from "@/lib/utils";
-import { getLocaleWithFallback, loadLocale } from "@/utils/i18n";
+import { getLocalePreferenceWithFallback, loadLocale, useTranslate } from "@/utils/i18n";
 import { getThemeWithFallback, type Theme } from "@/utils/theme";
 
 export const ToolbarPreferences = () => {
@@ -21,12 +21,12 @@ export const ToolbarPreferences = () => {
   const { generalSetting } = useInstance();
   const { mutate: updateUserGeneralSetting } = useUpdateUserGeneralSetting(currentUser?.name);
   const [locale, setLocale] = useState<Locale>(() =>
-    getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale),
+    getLocalePreferenceWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale),
   );
   const [theme, setTheme] = useState<Theme>(() => getThemeWithFallback(userGeneralSetting?.theme, generalSetting.firstVisitDefaultTheme));
 
   useEffect(() => {
-    setLocale(getLocaleWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale));
+    setLocale(getLocalePreferenceWithFallback(userGeneralSetting?.locale, generalSetting.firstVisitDefaultLocale));
   }, [generalSetting.firstVisitDefaultLocale, userGeneralSetting?.locale]);
 
   useEffect(() => {
@@ -53,12 +53,14 @@ export const ToolbarPreferences = () => {
     <>
       <ThemeSelect value={theme} onValueChange={handleThemeChange} iconOnly />
       <StyleSelect iconOnly />
-      <LocalePicker value={locale} onChange={handleLocaleChange} iconOnly />
+      <LocalePicker allowAutomatic value={locale} onChange={handleLocaleChange} iconOnly />
     </>
   );
 };
 
 export const ToolbarClock = ({ compact = false, className }: { compact?: boolean; className?: string }) => {
+  const t = useTranslate();
+
   const { i18n } = useTranslation();
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
@@ -95,7 +97,7 @@ export const ToolbarClock = ({ compact = false, className }: { compact?: boolean
       )}
     >
       <Clock3Icon className={compact ? "size-3.5" : "size-4"} />
-      <time aria-label="Current time" dateTime={currentTime.toISOString()}>
+      <time aria-label={t("ui-extra.current-time")} dateTime={currentTime.toISOString()}>
         {formattedTime}
       </time>
     </div>

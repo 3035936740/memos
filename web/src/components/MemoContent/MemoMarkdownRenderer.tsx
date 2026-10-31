@@ -131,6 +131,8 @@ export const MemoMarkdownRendererCore = ({
   mathRemarkPlugins = [],
   mathRehypePlugins = [],
 }: MemoMarkdownRendererCoreProps) => {
+  const t = useTranslate();
+
   const { data: emojiGroups = [] } = useEmojiPacks();
   const emojis = useMemo(() => emojiGroups.flatMap((group) => group.emojis), [emojiGroups]);
   const preparedContent = useMemo(() => prepareMemoPollContent(normalizeMemoAlignmentBlocks(content)), [content]);
@@ -239,7 +241,7 @@ export const MemoMarkdownRendererCore = ({
             onMouseUp={(event) => event.stopPropagation()}
             onDoubleClick={(event) => event.stopPropagation()}
           >
-            {pollContent ?? <span className="rounded-md border px-3 py-2 text-sm text-muted-foreground">投票</span>}
+            {pollContent ?? <span className="rounded-md border px-3 py-2 text-sm text-muted-foreground">{t("poll.label")}</span>}
           </div>
         );
       }

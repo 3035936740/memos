@@ -2,9 +2,10 @@ import { create } from "@bufbuild/protobuf";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import Blog2MemoView from "@/components/Blog2MemoView";
 import BlogMemoView from "@/components/BlogMemoView";
+import i18n from "@/i18n";
 import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { MemoSchema, PollSchema, VoterType } from "@/types/proto/api/v1/memo_service_pb";
 
@@ -16,6 +17,10 @@ vi.mock("@/components/MemoContent/MentionResolutionContext", () => ({ useResolve
 function CurrentPath() {
   return <output data-testid="path">{useLocation().pathname}</output>;
 }
+
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 describe.each([
   ["blog", BlogMemoView],
@@ -48,8 +53,8 @@ describe.each([
     expect(screen.getByRole("link", { name: "List poll" })).toHaveAttribute("href", "/memos/list-poll");
     await waitFor(() => expect(api.getMemoPoll).toHaveBeenCalled());
     fireEvent.click(screen.getByRole("button", { name: "Second choice" }));
-    fireEvent.click(screen.getByRole("button", { name: "投票" }));
-    await screen.findByText("已投票");
+    fireEvent.click(screen.getByRole("button", { name: "Vote" }));
+    await screen.findByText("Voted");
     expect(api.voteMemo).toHaveBeenCalledWith(expect.objectContaining({ name: "memos/list-poll", optionIds: ["b"] }));
     expect(screen.getByTestId("path")).toHaveTextContent("/explore");
   });

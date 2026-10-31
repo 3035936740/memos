@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { PollOptionSchema, PollSchema, VoterType } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentUrl } from "@/utils/attachment";
+import { useTranslate } from "@/utils/i18n";
 import { ensureMemoPollMarker, removeMemoPollMarkers } from "@/utils/memo-poll";
 import { useEditorContext, useEditorSelector } from "../state";
 
@@ -37,6 +38,8 @@ const toInputTime = (seconds?: bigint) => {
 const fromInputTime = (value: string) => (value ? { seconds: BigInt(Math.floor(new Date(value).getTime() / 1000)), nanos: 0 } : undefined);
 
 const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
+  const t = useTranslate();
+
   const { actions, dispatch, getState } = useEditorContext();
   const currentPoll = useEditorSelector((state) => state.metadata.poll);
   const currentImageLocalURL = useEditorSelector((state) => state.metadata.pollImageLocalFileURL);
@@ -198,31 +201,36 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg">
         <DialogHeader>
-          <DialogTitle>{currentPoll ? "编辑投票" : "添加投票"}</DialogTitle>
-          <DialogDescription>设置问题、选项、投票权限和时间范围。正文中的 [[vote]] 标记表示投票位置，可单独一行移动。</DialogDescription>
+          <DialogTitle>{currentPoll ? t("poll.edit") : t("poll.add")}</DialogTitle>
+          <DialogDescription>{t("poll.description")}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
-            投票问题
-            <Textarea value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="你最喜欢哪个？" rows={2} />
+            {t("poll.question")}
+            <Textarea
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder={t("poll.question-placeholder")}
+              rows={2}
+            />
           </label>
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium">投票选项</div>
+            <div className="text-sm font-medium">{t("poll.options")}</div>
             {options.map((option, index) => (
               <div className="flex min-w-0 items-center gap-2" key={`${option.id}-${index}`}>
                 <Input
                   className="min-w-0 flex-1"
                   value={option.text}
                   onChange={(event) => updateOption(index, event.target.value)}
-                  placeholder={`选项 ${index + 1}`}
+                  placeholder={t("poll.option-number", { number: index + 1 })}
                 />
                 {option.imagePreview && <img src={option.imagePreview} alt="" className="size-9 shrink-0 rounded-md object-cover" />}
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  title="添加选项图片"
-                  aria-label={`添加选项 ${index + 1} 图片`}
+                  title={t("poll.add-option-image")}
+                  aria-label={t("poll.add-numbered-image", { number: index + 1 })}
                   onClick={() => document.getElementById(`poll-option-image-${index}`)?.click()}
                 >
                   <ImageIcon className="size-4" />
@@ -239,8 +247,8 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    title="移除选项图片"
-                    aria-label={`移除选项 ${index + 1} 图片`}
+                    title={t("poll.remove-option-image")}
+                    aria-label={t("poll.remove-numbered-image", { number: index + 1 })}
                     onClick={() => clearOptionImage(index)}
                   >
                     <Trash2Icon className="size-4" />
@@ -265,16 +273,16 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
               onClick={() => setOptions((current) => [...current, { id: "", text: "" }])}
             >
               <PlusIcon className="size-4" />
-              添加选项
+              {t("poll.add-option")}
             </Button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-center justify-between rounded-md border p-3 text-sm">
-              允许多选
+              {t("poll.multiple")}
               <Switch checked={allowMultiple} onCheckedChange={setAllowMultiple} />
             </label>
             <label className="flex items-center justify-between rounded-md border p-3 text-sm">
-              最多选择
+              {t("poll.max-selections")}
               <Input
                 className="ml-3 w-20"
                 type="number"
@@ -287,12 +295,12 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
             </label>
           </div>
           <div className="flex flex-col gap-1.5 text-sm font-medium">
-            <label htmlFor="poll-voter-type">投票权限</label>
+            <label htmlFor="poll-voter-type">{t("poll.permissions")}</label>
             <Select
               value={String(voterType)}
               items={[
-                { value: String(VoterType.AUTHENTICATED), label: "仅登录用户" },
-                { value: String(VoterType.ANYONE), label: "游客也可投票" },
+                { value: String(VoterType.AUTHENTICATED), label: t("poll.authenticated") },
+                { value: String(VoterType.ANYONE), label: t("poll.anyone") },
               ]}
               onValueChange={(value) => setVoterType(Number(value) as VoterType)}
             >
@@ -300,53 +308,52 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(VoterType.AUTHENTICATED)}>仅登录用户</SelectItem>
-                <SelectItem value={String(VoterType.ANYONE)}>游客也可投票</SelectItem>
+                <SelectItem value={String(VoterType.AUTHENTICATED)}>{t("poll.authenticated")}</SelectItem>
+                <SelectItem value={String(VoterType.ANYONE)}>{t("poll.anyone")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-3 rounded-md border p-3">
             <label className="flex items-center justify-between gap-3 text-sm">
-              投票后才显示票数
+              {t("poll.hide-results")}
               <Switch checked={hideResultsUntilVoted} onCheckedChange={setHideResultsUntilVoted} />
             </label>
-            <p className="text-xs text-muted-foreground">关闭时，所有人都能看到票数和比例；开启后，参与投票才能查看。</p>
+            <p className="text-xs text-muted-foreground">{t("poll.results-note")}</p>
             {voterType === VoterType.AUTHENTICATED && (
               <>
                 <label className="flex items-center justify-between gap-3 text-sm">
-                  投票前显示投票用户
+                  {t("poll.voters-before")}
                   <Switch checked={showVotersBeforeVoting} onCheckedChange={setShowVotersBeforeVoting} />
                 </label>
                 <label className="flex items-center justify-between gap-3 text-sm">
-                  投票后显示投票用户
+                  {t("poll.voters-after")}
                   <Switch checked={showVotersAfterVoting} onCheckedChange={setShowVotersAfterVoting} />
                 </label>
                 <label className="flex items-center justify-between gap-3 text-sm">
-                  显示用户所选选项
+                  {t("poll.show-choices")}
                   <Switch checked={showVoterChoices} onCheckedChange={setShowVoterChoices} />
                 </label>
-                <p className="text-xs text-muted-foreground">
-                  最多随机显示 10 位参与者的头像。开启选项显示后，点击头像可查看其选择；仅在投票用户可见时生效。关闭显示不会删除投票记录。
-                </p>
+                <p className="text-xs text-muted-foreground">{t("poll.voters-note")}</p>
               </>
             )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1.5 text-sm font-medium">
-              开始时间
+              {t("poll.start")}
               <Input type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} />
             </label>
             <label className="flex flex-col gap-1.5 text-sm font-medium">
-              截止时间
+              {t("poll.end")}
               <Input type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} />
             </label>
           </div>
           <div className="flex flex-col gap-2 text-sm font-medium">
-            投票图片{imagePreview && <img src={imagePreview} alt="" className="max-h-48 w-fit max-w-full rounded-md object-contain" />}
+            {t("poll.image")}
+            {imagePreview && <img src={imagePreview} alt="" className="max-h-48 w-fit max-w-full rounded-md object-contain" />}
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" onClick={() => document.getElementById("poll-image-input")?.click()}>
                 <ImageIcon className="size-4" />
-                {imagePreview ? "更换图片" : "选择图片"}
+                {imagePreview ? t("poll.change-image") : t("poll.choose-image")}
               </Button>
               {imagePreview && (
                 <Button
@@ -358,7 +365,7 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
                     setImageCleared(true);
                   }}
                 >
-                  移除
+                  {t("ui-extra.remove")}
                 </Button>
               )}
               <input
@@ -386,14 +393,14 @@ const PollDialog = ({ open, onOpenChange }: PollDialogProps) => {
               }}
             >
               <Trash2Icon className="size-4" />
-              删除投票
+              {t("poll.delete")}
             </Button>
           )}
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            取消
+            {t("common.cancel")}
           </Button>
           <Button type="button" disabled={!canConfirm} onClick={handleConfirm}>
-            {currentPoll ? "保存投票" : "添加投票"}
+            {currentPoll ? t("poll.save") : t("poll.add")}
           </Button>
         </DialogFooter>
       </DialogContent>

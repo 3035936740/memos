@@ -679,11 +679,11 @@ describe("App sidebar logo", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("button", { name: "Open navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "ui-extra.open-navigation" })).toBeInTheDocument();
     expect(screen.getByRole("combobox", { name: /Theme:/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Language:/ })).toBeInTheDocument();
-    expect(screen.getByLabelText("Current time")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open navigation" })).toHaveAttribute("data-mobile-navigation-trigger");
+    expect(screen.getByRole("button", { name: "locale-picker.current" })).toBeInTheDocument();
+    expect(screen.getByLabelText("ui-extra.current-time")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "ui-extra.open-navigation" })).toHaveAttribute("data-mobile-navigation-trigger");
     expect(screen.getByRole("link", { name: "Memos logo" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("button", { name: /^space\.switch:/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "common.search" })).not.toBeInTheDocument();

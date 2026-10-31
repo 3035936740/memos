@@ -15,34 +15,21 @@ import { ROUTES } from "@/router/routes";
 import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { BLOG_STYLES, isBlogStyle } from "@/utils/blog-style";
+import { useTranslate } from "@/utils/i18n";
 
-const BANNER = ["memos tty  —  type `help` for commands, Esc to leave", ""];
-
-const HELP = [
-  "ls                 list the latest posts",
-  "ls tags            list tags by use",
-  "ls cats            list categories",
-  "cat <n>            open post n from `ls`",
-  "cd ~ | explore     go home or to explore",
-  "cd <category>      open a category",
-  "cd ..              go back",
-  "grep <words>       search posts",
-  "style <name>       switch the Blog 2 style",
-  "whoami | date      who and when",
-  "clear | exit       wipe the screen | leave",
-];
-
-const titleOf = (memo: Memo) => deriveBlogMemoText(memo.content, memo.property?.title).title || "(untitled)";
+const titleOf = (memo: Memo, fallback: string) => deriveBlogMemoText(memo.content, memo.property?.title).title || fallback;
 
 /** A pretend shell for the developer style: browse posts, tags and categories with a few commands. */
 const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
+  const t = useTranslate();
+
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
   const { generalSetting } = useInstance();
   const { setBlogStyle, setStylePack, stylePacks } = useView();
   const { data: recentData } = useMemos({ state: State.NORMAL, orderBy: "create_time desc", pageSize: 10 });
   const { data: stats = [] } = useAllUserStats({ state: State.NORMAL });
-  const [lines, setLines] = useState<string[]>(BANNER);
+  const [lines, setLines] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [historyCursor, setHistoryCursor] = useState<number | undefined>(undefined);
@@ -74,22 +61,34 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
       case "":
         break;
       case "help":
-        output.push(...HELP);
+        output.push(
+          `ls                 ${t("terminal.list")}`,
+          `ls tags            ${t("terminal.tags")}`,
+          `ls cats            ${t("terminal.categories")}`,
+          `cat <n>            ${t("terminal.open")}`,
+          `cd ~ | explore     ${t("terminal.home")}`,
+          `cd <category>      ${t("terminal.category")}`,
+          `cd ..              ${t("terminal.back")}`,
+          `grep <words>       ${t("terminal.search")}`,
+          `style <name>       ${t("terminal.style")}`,
+          `whoami | date      ${t("terminal.who")}`,
+          `clear | exit       ${t("terminal.exit")}`,
+        );
         break;
       case "ls": {
         if (args[0] === "tags") {
           const tags = Object.entries(mergeTagCounts(...stats.map((item) => item.tagCount))).sort((a, b) => b[1] - a[1]);
-          output.push(...(tags.length > 0 ? tags.slice(0, 40).map(([tag, count]) => `#${tag}  (${count})`) : ["(no tags)"]));
+          output.push(...(tags.length > 0 ? tags.slice(0, 40).map(([tag, count]) => `#${tag}  (${count})`) : [t("terminal.no-tags")]));
         } else if (args[0] === "cats" || args[0] === "categories") {
           const rows = categories.map((category) => `${category.slug}/  ${category.title}`);
-          output.push(...(rows.length > 0 ? rows : ["(no categories)"]));
+          output.push(...(rows.length > 0 ? rows : [t("terminal.no-categories")]));
         } else if (recent.length === 0) {
-          output.push("(still loading, try again in a moment)");
+          output.push(t("terminal.loading"));
         } else {
           output.push(
             ...recent.map((memo, index) => {
               const date = memo.createTime ? dayjs(timestampDate(memo.createTime)).format("YYYY-MM-DD") : "----------";
-              return `${String(index + 1).padStart(2, "0")}  ${date}  ${titleOf(memo)}`;
+              return `${String(index + 1).padStart(2, "0")}  ${date}  ${titleOf(memo, t("memo.blog-untitled"))}`;
             }),
           );
         }
@@ -102,7 +101,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
           navigate(`/${memo.name}`);
           leave = true;
         } else {
-          output.push(`${name}: ${args[0] ?? ""}: no such post (run \`ls\` first)`);
+          output.push(t("terminal.no-post", { command: name, number: args[0] ?? "" }));
         }
         break;
       }
@@ -122,7 +121,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
           navigate(`/categories/${category.slug}`);
           leave = true;
         } else {
-          output.push(`cd: no such directory: ${target}`);
+          output.push(t("terminal.no-directory", { directory: target }));
         }
         break;
       }
@@ -133,7 +132,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
           navigate({ pathname: ROUTES.EXPLORE, search: `?filter=${stringifyFilters([{ factor: "contentSearch", value: words }])}` });
           leave = true;
         } else {
-          output.push(`usage: ${name} <words>`);
+          output.push(t("terminal.usage-search", { command: name }));
         }
         break;
       }
@@ -141,12 +140,12 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
         const styleName = args[0];
         if (isBlogStyle(styleName)) {
           setBlogStyle(styleName);
-          output.push(`style: switched to ${styleName}`);
+          output.push(t("terminal.switched", { style: styleName }));
         } else if (stylePacks.some((pack) => pack.id === styleName)) {
           setStylePack(styleName);
-          output.push(`style: switched to ${styleName} (style pack)`);
+          output.push(t("terminal.switched-pack", { style: styleName }));
         } else {
-          output.push(`usage: style <${[...BLOG_STYLES, ...stylePacks.map((pack) => pack.id)].join(" | ")}>`);
+          output.push(t("terminal.usage-style", { styles: [...BLOG_STYLES, ...stylePacks.map((pack) => pack.id)].join(" | ") }));
         }
         break;
       }
@@ -154,7 +153,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
         output.push(currentUser?.username ?? "visitor");
         break;
       case "date":
-        output.push(new Date().toString());
+        output.push(new Date().toLocaleString(document.documentElement.lang || undefined));
         break;
       case "clear":
         setLines([]);
@@ -165,7 +164,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
         onClose();
         return;
       default:
-        output.push(`${name}: command not found`);
+        output.push(t("terminal.not-found", { command: name }));
     }
 
     setLines((previous) => [...previous, `${prompt} ${command}`, ...output]);
@@ -205,17 +204,18 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Terminal"
+        aria-label={t("ui-extra.terminal")}
         data-terminal-console=""
         className="flex max-h-[70vh] w-full max-w-2xl flex-col border border-border bg-card text-[13px] text-foreground shadow-2xl"
       >
         <div className="flex items-center justify-between border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
           <span>{prompt.slice(0, -2)} tty1</span>
-          <button type="button" aria-label="Close" onClick={onClose} className="transition-colors hover:text-foreground">
+          <button type="button" aria-label={t("common.close")} onClick={onClose} className="transition-colors hover:text-foreground">
             [x]
           </button>
         </div>
         <div ref={outputRef} className="min-h-40 flex-1 overflow-y-auto whitespace-pre-wrap px-3 py-2 leading-6">
+          <div>{t("terminal.banner")}</div>
           {lines.map((line, index) => (
             <div key={`${index}-${line}`}>{line || " "}</div>
           ))}
@@ -226,7 +226,7 @@ const TerminalConsole = ({ onClose }: { onClose: () => void }) => {
             <input
               ref={inputRef}
               value={input}
-              aria-label="Command"
+              aria-label={t("ui-extra.command")}
               spellCheck={false}
               autoComplete="off"
               onChange={(event) => setInput(event.target.value)}

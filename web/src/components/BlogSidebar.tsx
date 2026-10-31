@@ -16,6 +16,7 @@ import RelativeTime from "@/components/RelativeTime";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { useAllUserStats } from "@/hooks/useUserQueries";
+import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractMemoIdFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
@@ -66,8 +67,8 @@ const BlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc", filte
   const randomNavigationScope: MemoNavigationScope = { state: State.NORMAL, orderBy: "create_time desc", filter };
 
   const statRows = [
-    { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(), icon: NotebookTextIcon },
-    { label: t("memo.blog-sidebar-comments"), value: stats.commentCount.toLocaleString(), icon: MessageCircleIcon },
+    { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(i18n.language), icon: NotebookTextIcon },
+    { label: t("memo.blog-sidebar-comments"), value: stats.commentCount.toLocaleString(i18n.language), icon: MessageCircleIcon },
     { label: t("memo.blog-sidebar-running-days"), value: t("memo.blog-sidebar-days", { n: stats.runningDays }), icon: CalendarDaysIcon },
     {
       label: t("memo.blog-sidebar-last-activity"),

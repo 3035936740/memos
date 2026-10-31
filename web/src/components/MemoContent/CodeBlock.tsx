@@ -4,6 +4,7 @@ import { CheckIcon, CopyIcon } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { useTranslate } from "@/utils/i18n";
 import { getThemeWithFallback, resolveTheme } from "@/utils/theme";
 import { ensureHighlightTheme, highlightCode, isPlainTextLanguage } from "./highlight";
 import { MermaidBlock } from "./MermaidBlock";
@@ -43,6 +44,8 @@ interface HighlightedCodeBlockProps {
 }
 
 const HighlightedCodeBlock = ({ codeContent, language }: HighlightedCodeBlockProps) => {
+  const t = useTranslate();
+
   const { userGeneralSetting } = useAuth();
   const [copied, setCopied] = useState(false);
   const [highlightedCode, setHighlightedCode] = useState<string>();
@@ -126,18 +129,18 @@ const HighlightedCodeBlock = ({ codeContent, language }: HighlightedCodeBlockPro
             "hover:bg-accent active:scale-95",
             copied ? "text-primary" : "text-muted-foreground hover:text-foreground",
           )}
-          aria-label={copied ? "Copied" : "Copy code"}
+          aria-label={copied ? t("message.copied") : "Copy code"}
           title={copied ? "Copied!" : "Copy code"}
         >
           {copied ? (
             <>
               <CheckIcon className="w-3.5 h-3.5" />
-              <span>Copied</span>
+              <span>{t("message.copied")}</span>
             </>
           ) : (
             <>
               <CopyIcon className="w-3.5 h-3.5" />
-              <span>Copy</span>
+              <span>{t("common.copy")}</span>
             </>
           )}
         </button>

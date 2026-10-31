@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { memoServiceClient } from "@/connect";
 import { memoKeys } from "@/hooks/useMemoQueries";
+import i18n from "@/i18n";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
@@ -95,7 +96,9 @@ const MemoHistoryDialog = ({ memo, open, onOpenChange }: { memo: Memo; open: boo
                         onClick={() => setSelected(revision.id)}
                         className="block w-full rounded border px-2 py-2 text-left text-xs aria-pressed:bg-accent"
                       >
-                        <span className="block">{revision.createTime && timestampDate(revision.createTime).toLocaleString()}</span>
+                        <span className="block">
+                          {revision.createTime && timestampDate(revision.createTime).toLocaleString(i18n.language)}
+                        </span>
                         <span className="block text-muted-foreground">{revision.editor}</span>
                         <span className="line-clamp-2">{revision.preview}</span>
                       </button>

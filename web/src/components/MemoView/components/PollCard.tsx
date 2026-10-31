@@ -10,11 +10,14 @@ import { usePollQueries } from "@/hooks/usePollQueries";
 import { cn } from "@/lib/utils";
 import { type Memo, VoterType } from "@/types/proto/api/v1/memo_service_pb";
 import { getAttachmentUrl } from "@/utils/attachment";
+import { useTranslate } from "@/utils/i18n";
 import { buildAuthRoute } from "@/utils/redirect-safety";
 
 const dateValue = (seconds?: bigint) => (seconds ? new Date(Number(seconds) * 1000) : undefined);
 
 const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) => {
+  const t = useTranslate();
+
   const currentUser = useCurrentUser();
   const location = useLocation();
   const { poll: activePoll, vote } = usePollQueries(memo, currentUser?.name);
@@ -77,18 +80,18 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
     <section
       data-sb-subcard=""
       className={cn("w-full self-center rounded-lg border border-border bg-card", compact ? "p-3" : "max-w-xl p-4")}
-      aria-label="Poll"
+      aria-label={t("poll.label")}
     >
       <div className="mb-3 flex items-center gap-2 text-sm font-medium">
         <ListChecksIcon className="size-4" />
-        投票
+        {t("poll.label")}
       </div>
       <div className="text-base font-medium">{activePoll.question}</div>
       {activePoll.image && (
         <button
           type="button"
           className="mt-3 block w-full cursor-zoom-in rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="查看投票图片"
+          aria-label={t("poll.preview-image")}
           onClick={(event) => {
             event.stopPropagation();
             setPreviewIndex(0);
@@ -127,7 +130,7 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
                 {imageURL && (
                   <button
                     type="button"
-                    aria-label={`查看选项图片：${option.text}`}
+                    aria-label={t("poll.preview-option-image", { option: option.text })}
                     className="pointer-events-auto shrink-0 cursor-zoom-in rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={(event) => {
                       event.stopPropagation();
@@ -145,28 +148,28 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
         })}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span>{activePoll.allowMultiple ? `最多选择 ${maxSelections} 项` : "单选"}</span>
+        <span>{activePoll.allowMultiple ? t("poll.choose-up-to", { count: maxSelections }) : t("poll.single")}</span>
         <span>·</span>
-        <span>{activePoll.voterType === VoterType.ANYONE ? "游客可投票" : "仅登录用户"}</span>
+        <span>{activePoll.voterType === VoterType.ANYONE ? t("poll.guests") : t("poll.authenticated")}</span>
         {status === "upcoming" && (
           <>
             <span>·</span>
             <Clock3Icon className="size-3.5" />
-            <span>尚未开始</span>
+            <span>{t("poll.upcoming")}</span>
           </>
         )}
         {status === "ended" && (
           <>
             <span>·</span>
             <CheckCircle2Icon className="size-3.5" />
-            <span>已结束</span>
+            <span>{t("poll.ended")}</span>
           </>
         )}
-        <span className="ml-auto">{activePoll.resultsHidden ? "投票后可查看票数和比例" : `${total} 票`}</span>
+        <span className="ml-auto">{activePoll.resultsHidden ? t("poll.hidden-results") : t("poll.total", { count: total })}</span>
       </div>
       {activePoll.votersVisible && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-muted-foreground">投票用户</p>
+          <p className="text-xs text-muted-foreground">{t("poll.voters")}</p>
           <div className="flex flex-wrap gap-2">
             {activePoll.voters.slice(0, 10).map((voter) => (
               <Popover key={voter.name}>
@@ -182,7 +185,7 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
                   <p className="text-xs text-muted-foreground">@{voter.username}</p>
                   {activePoll.showVoterChoices && voter.selectedOptionIds.length > 0 && (
                     <div className="mt-2 max-w-64 border-t pt-2 text-sm">
-                      <p className="mb-1 text-xs text-muted-foreground">所选选项</p>
+                      <p className="mb-1 text-xs text-muted-foreground">{t("poll.choices")}</p>
                       <ul className="list-inside list-disc break-words">
                         {activePoll.options
                           .filter((option) => voter.selectedOptionIds.includes(option.id))
@@ -198,39 +201,40 @@ const PollCard = ({ memo, compact = false }: { memo: Memo; compact?: boolean }) 
             {(activePoll.hasMoreVoters || activePoll.voters.length > 10) && (
               <span
                 className="flex size-8 items-center justify-center text-muted-foreground"
-                title="仅随机展示 10 位投票用户"
-                aria-label="还有其他投票用户，仅随机展示 10 位"
+                title={t("poll.sample")}
+                aria-label={t("poll.more-voters")}
               >
                 …
               </span>
             )}
-            {activePoll.voters.length === 0 && <span className="text-xs text-muted-foreground">暂无投票用户</span>}
+            {activePoll.voters.length === 0 && <span className="text-xs text-muted-foreground">{t("poll.no-voters")}</span>}
           </div>
         </div>
       )}
       {status === "open" && !hasVoted && needsLogin && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-muted/50 p-3">
-          <p className="text-sm text-muted-foreground">此投票仅限登录用户参与，请先登录。</p>
+          <p className="text-sm text-muted-foreground">{t("poll.login-note")}</p>
           <Button render={<Link to={buildAuthRoute({ redirect: `${location.pathname}${location.search}${location.hash}` })} />}>
             <LogInIcon className="size-4" />
-            登录后投票
+            {t("poll.login")}
           </Button>
         </div>
       )}
       {status === "open" && !hasVoted && !needsLogin && (
         <Button className="mt-3" disabled={selected.length === 0 || isVoting} onClick={() => void handleVote()}>
-          {isVoting && <Loader2Icon className="size-4 animate-spin" />}投票
+          {isVoting && <Loader2Icon className="size-4 animate-spin" />}
+          {t("poll.vote")}
         </Button>
       )}
       {hasVoted && (
         <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground">
           <CheckCircle2Icon className="size-3.5" />
-          已投票
+          {t("poll.voted")}
         </div>
       )}
       {voteError && !needsLogin && (
         <div role="alert" className="mt-2 text-xs text-destructive">
-          投票失败，请稍后重试。
+          {t("poll.failed")}
         </div>
       )}
       {previewIndex !== null && (

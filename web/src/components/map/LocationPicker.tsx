@@ -1,4 +1,5 @@
 import L, { LatLng } from "leaflet";
+import { useTranslate } from "@/utils/i18n";
 import "leaflet/dist/leaflet.css";
 import { ExternalLinkIcon, MinusIcon, PlusIcon } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -81,6 +82,8 @@ interface ControlButtonsProps {
 }
 
 const ControlButtons = ({ position, onZoomIn, onZoomOut, onOpenGoogleMaps }: ControlButtonsProps) => {
+  const t = useTranslate();
+
   return (
     <div className="flex flex-col gap-1.5">
       {position && (
@@ -88,11 +91,21 @@ const ControlButtons = ({ position, onZoomIn, onZoomOut, onOpenGoogleMaps }: Con
           icon={<ExternalLinkIcon size={16} className="text-foreground" />}
           onClick={onOpenGoogleMaps}
           ariaLabel="Open location in Google Maps"
-          title="Open in Google Maps"
+          title={t("ui-extra.map-open")}
         />
       )}
-      <GlassButton icon={<PlusIcon size={16} className="text-foreground" />} onClick={onZoomIn} ariaLabel="Zoom in" title="Zoom in" />
-      <GlassButton icon={<MinusIcon size={16} className="text-foreground" />} onClick={onZoomOut} ariaLabel="Zoom out" title="Zoom out" />
+      <GlassButton
+        icon={<PlusIcon size={16} className="text-foreground" />}
+        onClick={onZoomIn}
+        ariaLabel={t("ui-extra.zoom-in")}
+        title={t("ui-extra.zoom-in")}
+      />
+      <GlassButton
+        icon={<MinusIcon size={16} className="text-foreground" />}
+        onClick={onZoomOut}
+        ariaLabel={t("ui-extra.zoom-out")}
+        title={t("ui-extra.zoom-out")}
+      />
     </div>
   );
 };

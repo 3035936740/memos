@@ -3,6 +3,7 @@ import type { FC } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Location } from "@/types/proto/api/v1/memo_service_pb";
+import { useTranslate } from "@/utils/i18n";
 import { getLocationCoordinatesText, getLocationDisplayText } from "./locationHelpers";
 
 interface LocationDisplayEditorProps {
@@ -12,6 +13,8 @@ interface LocationDisplayEditorProps {
 }
 
 const LocationDisplayEditor: FC<LocationDisplayEditorProps> = ({ location, onRemove, className }) => {
+  const t = useTranslate();
+
   const displayText = getLocationDisplayText(location);
 
   return (
@@ -31,7 +34,7 @@ const LocationDisplayEditor: FC<LocationDisplayEditorProps> = ({ location, onRem
       </div>
 
       {onRemove && (
-        <Button variant="ghost" size="icon-sm" onClick={onRemove} title="Remove" aria-label="Remove location">
+        <Button variant="ghost" size="icon-sm" onClick={onRemove} title={t("ui-extra.remove")} aria-label={t("ui-extra.remove-location")}>
           <XIcon className="w-3 h-3 text-muted-foreground hover:text-destructive" />
         </Button>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { useTranslate } from "@/utils/i18n";
 import { getThemeWithFallback, resolveTheme, setupSystemThemeListener } from "@/utils/theme";
 import { extractCodeContent } from "./utils";
 
@@ -13,15 +14,17 @@ type MermaidTheme = "default" | "dark";
 
 const toMermaidTheme = (appTheme: string): MermaidTheme => (appTheme.includes("dark") ? "dark" : "default");
 
-const formatErrorMessage = (err: unknown): string => {
-  const msg = err instanceof Error ? err.message : "Failed to render diagram";
+const formatErrorMessage = (err: unknown, t: ReturnType<typeof useTranslate>): string => {
+  const msg = err instanceof Error ? err.message : t("ui-extra.diagram-failed");
   if (/no diagram type detected/i.test(msg)) {
-    return `${msg} — check that the diagram type is valid (e.g. sequenceDiagram, classDiagram, erDiagram)`;
+    return t("ui-extra.diagram-hint", { message: msg });
   }
   return msg;
 };
 
 export const MermaidBlock = ({ children, className }: MermaidBlockProps) => {
+  const t = useTranslate();
+
   const { userGeneralSetting } = useAuth();
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -77,7 +80,7 @@ export const MermaidBlock = ({ children, className }: MermaidBlockProps) => {
         if (cancelled) return;
         console.error("Failed to render mermaid diagram:", err);
         setSvg("");
-        setError(formatErrorMessage(err));
+        setError(formatErrorMessage(err, t));
       }
     };
 
@@ -86,12 +89,14 @@ export const MermaidBlock = ({ children, className }: MermaidBlockProps) => {
     return () => {
       cancelled = true;
     };
-  }, [codeContent, currentTheme]);
+  }, [codeContent, currentTheme, t]);
 
   if (error) {
     return (
       <div className="w-full">
-        <div className="text-sm text-destructive mb-2 whitespace-normal break-words">Mermaid Error: {error}</div>
+        <div className="text-sm text-destructive mb-2 whitespace-normal break-words">
+          {t("ui-extra.diagram-error")} {error}
+        </div>
         <code className="block language-mermaid whitespace-pre text-sm">{codeContent}</code>
       </div>
     );

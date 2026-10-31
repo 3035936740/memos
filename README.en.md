@@ -313,6 +313,8 @@ This example uses `canary`, binds **`127.0.0.1:5231`**, and stores data in a sep
 
 ## Feedback and contributions
 
+For language preferences, catalog structure and translation checks, see the [internationalization guide](docs/i18n.md). Missing translations have been supplemented with machine-translated drafts; native-language corrections are welcome.
+
 Use this repository's [pull requests](https://github.com/3035936740/memos-plus/pulls) for fixes and improvements, and the [maintainer's profile](https://github.com/3035936740) for project coordination. The issue tracker was disabled when reviewed on October 30, 2026; do not send Plus-specific bugs to upstream as a substitute. If the maintainer enables Issues, use this repository's tracker for non-sensitive bug reports.
 
 Include the Plus version/commit, OS/architecture, deployment method, database driver, reproduction steps, and sanitized logs. Keep changes focused, preserve existing data/protocol compatibility, and run the relevant checks above. Do not include API keys, DSNs, private content, or database dumps in public reports. See [SECURITY.md](SECURITY.md) for vulnerability reporting; public PRs and issues are not a channel for vulnerability details.

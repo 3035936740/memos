@@ -4,6 +4,7 @@ import { MemoPreview } from "@/components/MemoPreview";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
@@ -41,7 +42,7 @@ export const LinkMemoDialog = ({
           <DialogTitle>{t("tooltip.link-memo")}</DialogTitle>
         </VisuallyHidden>
         <VisuallyHidden>
-          <DialogDescription>Search and select a memo to link</DialogDescription>
+          <DialogDescription>{t("ui-extra.link-description")}</DialogDescription>
         </VisuallyHidden>
         <div className="flex flex-col">
           <div className="p-3">
@@ -74,7 +75,7 @@ export const LinkMemoDialog = ({
                     <div className="w-full flex flex-col gap-1">
                       <div className="flex items-center gap-1.5 text-sm text-muted-foreground select-none">
                         {alreadyLinked && <LinkIcon className="w-3 h-3 shrink-0" />}
-                        <span>{memo.createTime && timestampDate(memo.createTime).toLocaleString()}</span>
+                        <span>{memo.createTime && timestampDate(memo.createTime).toLocaleString(i18n.language)}</span>
                       </div>
                       <MemoPreview name={memo.name} content={memo.content} attachments={memo.attachments} showMemoId />
                     </div>

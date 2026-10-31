@@ -7,6 +7,7 @@ import type { Attachment } from "@/types/proto/api/v1/attachment_service_pb";
 import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
 import type { User } from "@/types/proto/api/v1/user_service_pb";
 import { getAttachmentType, isMotionAttachment } from "@/utils/attachment";
+import { useTranslate } from "@/utils/i18n";
 import { filterInlineManagedAttachments } from "@/utils/managed-attachment";
 import { buildAttachmentVisualItems, countLogicalAttachmentItems } from "@/utils/media-item";
 import MemoContent from "../MemoContent";
@@ -42,6 +43,8 @@ const STUB_CONTEXT: MemoViewContextValue = {
 };
 
 const AttachmentThumbnails = ({ attachments }: { attachments: Attachment[] }) => {
+  const t = useTranslate();
+
   const visualAttachments = attachments.filter(
     (attachment) =>
       getAttachmentType(attachment) === "image/*" || getAttachmentType(attachment) === "video/*" || isMotionAttachment(attachment),
@@ -63,7 +66,7 @@ const AttachmentThumbnails = ({ attachments }: { attachments: Attachment[] }) =>
           />
           {item.kind === "motion" && (
             <span className="absolute left-1 top-1 rounded bg-black/70 px-1 py-0.5 text-[8px] font-semibold leading-none text-white">
-              LIVE
+              {t("ui-extra.live-photo")}
             </span>
           )}
         </div>
@@ -117,6 +120,8 @@ const MemoPreview = ({
   showMemoId = false,
   truncate = false,
 }: MemoPreviewProps) => {
+  const t = useTranslate();
+
   const hasContent = content.trim().length > 0;
   const attachmentOnlyItems = useMemo(() => filterInlineManagedAttachments(content, attachments), [content, attachments]);
   const hasAttachments = attachmentOnlyItems.length > 0;
@@ -131,7 +136,7 @@ const MemoPreview = ({
     hasContent ? (
       <div className="text-sm text-muted-foreground truncate min-w-0">{content}</div>
     ) : hasAttachments ? null : (
-      <div className="text-sm text-muted-foreground truncate min-w-0">No content</div>
+      <div className="text-sm text-muted-foreground truncate min-w-0">{t("ui-extra.no-content")}</div>
     )
   ) : (
     // Previews are inert (pointer-events-none), so a static CSS bound replaces the

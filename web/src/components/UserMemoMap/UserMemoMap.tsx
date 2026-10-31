@@ -1,5 +1,7 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import L, { DivIcon } from "leaflet";
+import i18n from "@/i18n";
+import { useTranslate } from "@/utils/i18n";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import { ArrowUpRightIcon, MapPinIcon } from "lucide-react";
@@ -50,6 +52,8 @@ const MapFitBounds = ({ memos }: { memos: Memo[] }) => {
 };
 
 const UserMemoMap = ({ creator, className }: Props) => {
+  const t = useTranslate();
+
   const location = useLocation();
   const parentPage = `${location.pathname}${location.search}`;
   const creatorFilter = useMemo(() => buildMemoCreatorFilter(creator), [creator]);
@@ -81,7 +85,7 @@ const UserMemoMap = ({ creator, className }: Props) => {
         <div className="absolute inset-0 z-[1000] flex items-center justify-center pointer-events-none">
           <div className="flex flex-col items-center gap-1.5 rounded-xl border border-border bg-background/92 px-5 py-3 shadow-sm backdrop-blur-sm">
             <MapPinIcon className="h-5 w-5 text-muted-foreground opacity-70" />
-            <p className="text-xs font-medium tracking-[0.02em] text-muted-foreground">No location data found</p>
+            <p className="text-xs font-medium tracking-[0.02em] text-muted-foreground">{t("ui-extra.no-map-data")}</p>
           </div>
         </div>
       )}
@@ -92,8 +96,8 @@ const UserMemoMap = ({ creator, className }: Props) => {
             <MapPinIcon className="size-3.5" />
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Mapped memos</p>
-            <p className="text-sm font-semibold text-foreground">{memosWithLocation.length} places pinned</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("ui-extra.mapped-memos")}</p>
+            <p className="text-sm font-semibold text-foreground">{t("ui-extra.pinned-places", { count: memosWithLocation.length })}</p>
           </div>
         </div>
       </div>
@@ -142,13 +146,13 @@ const UserMemoMap = ({ creator, className }: Props) => {
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-1">
                         <span className="inline-flex rounded-full border border-border/70 bg-muted/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                          Memo
+                          {t("common.memo")}
                         </span>
                         <MemoSpaceBadge spaceName={memo.space} />
                       </div>
                       <span className="block text-[11px] font-medium text-muted-foreground">
                         {memo.createTime &&
-                          timestampDate(memo.createTime).toLocaleDateString(undefined, {
+                          timestampDate(memo.createTime).toLocaleDateString(i18n.language, {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -160,12 +164,14 @@ const UserMemoMap = ({ creator, className }: Props) => {
                       state={createMemoNavigationState(parentPage, "all")}
                       className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground transition-all hover:border-primary/40 hover:text-primary"
                     >
-                      Open
+                      {t("attachment-library.actions.open")}
                       <ArrowUpRightIcon className="h-3.5 w-3.5" />
                     </Link>
                   </div>
                   <div className="space-y-1">
-                    <div className="line-clamp-3 text-sm leading-snug font-medium text-foreground">{memo.snippet || "No content"}</div>
+                    <div className="line-clamp-3 text-sm leading-snug font-medium text-foreground">
+                      {memo.snippet || t("ui-extra.no-content")}
+                    </div>
                     <div className="text-[11px] text-muted-foreground">
                       {memo.location!.latitude.toFixed(2)}°, {memo.location!.longitude.toFixed(2)}°
                     </div>

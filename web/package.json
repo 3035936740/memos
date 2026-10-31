@@ -11,6 +11,7 @@
     "release": "vite build --mode release --outDir=../server/router/frontend/dist --emptyOutDir",
     "lint": "tsc --noEmit --skipLibCheck && biome check src tests",
     "lint:fix": "biome check --write src tests",
+    "lint:i18n": "node scripts/check-i18n.mjs",
     "format": "biome format --write src tests",
     "test": "vitest run",
     "test:watch": "vitest",

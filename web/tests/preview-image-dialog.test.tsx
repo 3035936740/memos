@@ -2,6 +2,7 @@ import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import PreviewImageDialog from "@/components/PreviewImageDialog";
+import english from "@/locales-custom/en.json";
 import {
   AttachmentSchema,
   MediaCaptureTimeSchema,
@@ -43,7 +44,15 @@ const labels: Record<string, string> = {
 
 vi.mock("@/utils/i18n", () => ({
   findNearestMatchedLanguage: (language: string) => language || "en",
-  useTranslate: () => (key: string) => labels[key] ?? key,
+  useTranslate:
+    () =>
+    (key: string, params: Record<string, unknown> = {}) => {
+      const value =
+        labels[key] ??
+        (key.startsWith("ui-extra.") ? (english["ui-extra"] as Record<string, string>)[key.slice("ui-extra.".length)] : undefined) ??
+        key;
+      return value.replace(/{{(\w+)}}/g, (_, name: string) => String(params[name] ?? `{{${name}}}`));
+    },
 }));
 
 const buildAttachmentWithPhotoMetadata = () =>
@@ -178,8 +187,8 @@ describe("<PreviewImageDialog>", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /previous item/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /next item/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^previous$/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^next$/i })).toBeInTheDocument();
   });
 
   it("shows saved media details on demand with grouped, lean facts", () => {

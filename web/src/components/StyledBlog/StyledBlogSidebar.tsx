@@ -9,6 +9,7 @@ import RelativeTime from "@/components/RelativeTime";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemos } from "@/hooks/useMemoQueries";
 import { useAllUserStats } from "@/hooks/useUserQueries";
+import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractMemoIdFromName } from "@/lib/resource-names";
 import { cn } from "@/lib/utils";
@@ -48,8 +49,8 @@ const StyledBlogSidebar = ({ state = State.NORMAL, orderBy = "create_time desc",
   const pinnedMemos = pinnedData?.memos ?? [];
 
   const statRows = [
-    { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString() },
-    { label: t("memo.blog-sidebar-comments"), value: stats.commentCount.toLocaleString() },
+    { label: t("memo.blog-sidebar-articles"), value: stats.articleCount.toLocaleString(i18n.language) },
+    { label: t("memo.blog-sidebar-comments"), value: stats.commentCount.toLocaleString(i18n.language) },
     { label: t("memo.blog-sidebar-running-days"), value: t("memo.blog-sidebar-days", { n: stats.runningDays }) },
     { label: t("memo.blog-sidebar-last-activity"), value: stats.lastActiveAt ? <RelativeTime date={stats.lastActiveAt} /> : "—" },
   ];

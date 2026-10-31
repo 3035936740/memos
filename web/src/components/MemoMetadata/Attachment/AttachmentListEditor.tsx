@@ -47,6 +47,8 @@ const AttachmentItemActions: FC<{
   canMoveUp?: boolean;
   canMoveDown?: boolean;
 }> = ({ placementAction, onRemove, onMoveUp, onMoveDown, canMoveUp = true, canMoveDown = true }) => {
+  const t = useTranslate();
+
   const stopPropagation = (event: MouseEvent) => {
     event.stopPropagation();
   };
@@ -77,8 +79,8 @@ const AttachmentItemActions: FC<{
             onMoveUp();
           }}
           disabled={!canMoveUp}
-          title="Move up"
-          aria-label="Move attachment up"
+          title={t("ui-extra.move-up")}
+          aria-label={t("ui-extra.move-attachment-up")}
         >
           <ChevronUpIcon className="h-3 w-3 text-muted-foreground" />
         </Button>
@@ -93,8 +95,8 @@ const AttachmentItemActions: FC<{
             onMoveDown();
           }}
           disabled={!canMoveDown}
-          title="Move down"
-          aria-label="Move attachment down"
+          title={t("ui-extra.move-down")}
+          aria-label={t("ui-extra.move-attachment-down")}
         >
           <ChevronDownIcon className="h-3 w-3 text-muted-foreground" />
         </Button>
@@ -108,8 +110,8 @@ const AttachmentItemActions: FC<{
             stopPropagation(event);
             onRemove();
           }}
-          title="Remove"
-          aria-label="Remove attachment"
+          title={t("ui-extra.remove")}
+          aria-label={t("ui-extra.remove-attachment")}
         >
           <XIcon className="h-3 w-3 text-muted-foreground hover:text-destructive" />
         </Button>
@@ -133,7 +135,7 @@ const AttachmentItemCard: FC<{
   const { category, filename, thumbnailUrl, mimeType, size, sourceUrl, isVoiceNote, audioMeta } = item;
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const fileTypeLabel = item.category === "motion" ? "Live Photo" : getFileTypeLabel(mimeType);
+  const fileTypeLabel = item.category === "motion" ? t("ui-extra.live-photo") : getFileTypeLabel(mimeType);
   const isPreviewable = category === "image" || category === "video" || category === "motion";
   const recordingTimeLabel = isVoiceNote ? getAudioRecordingTimeLabel(filename) : undefined;
   const titleLabel =
@@ -174,7 +176,7 @@ const AttachmentItemCard: FC<{
                 onPreview?.();
               }}
               className={cn("h-full w-full overflow-hidden", isPreviewable ? "cursor-pointer" : "cursor-default")}
-              aria-label={`Preview ${filename}`}
+              aria-label={t("ui-extra.preview-file", { name: filename })}
             >
               <img src={thumbnailUrl} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
             </div>
@@ -205,7 +207,7 @@ const AttachmentItemCard: FC<{
                 onPreview?.();
               }}
               className="flex size-full items-center justify-center rounded bg-muted/40 text-muted-foreground hover:bg-accent hover:text-foreground"
-              aria-label={`Preview ${filename}`}
+              aria-label={t("ui-extra.preview-file", { name: filename })}
             >
               <PlayIcon className="h-3.5 w-3.5 translate-x-[0.5px]" />
             </button>
@@ -216,7 +218,7 @@ const AttachmentItemCard: FC<{
           )}
           {category === "motion" && (
             <span className="absolute inset-x-0 bottom-0 bg-black/70 text-center text-[7px] font-semibold uppercase tracking-wide text-white">
-              Live
+              {t("ui-extra.live-photo")}
             </span>
           )}
         </div>
@@ -390,7 +392,12 @@ const AttachmentListEditor: FC<AttachmentListEditorProps> = ({
 
   return (
     <>
-      <MetadataSection icon={PaperclipIcon} title="Attachments" count={items.length} contentClassName="flex flex-col gap-1 p-1 sm:p-1.5">
+      <MetadataSection
+        icon={PaperclipIcon}
+        title={t("common.attachments")}
+        count={items.length}
+        contentClassName="flex flex-col gap-1 p-1 sm:p-1.5"
+      >
         {items.map((item) => {
           const itemList = item.isLocal ? localItems : attachmentItems;
           const itemIndex = itemList.findIndex((entry) => entry.id === item.id);

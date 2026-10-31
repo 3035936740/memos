@@ -20,7 +20,7 @@ const IdentityProviderButtons = ({ identityProviderList, redirectTarget }: Props
       const redirectUri = absolutifyLink(ROUTES.AUTH_CALLBACK);
       const oauth2Config = identityProvider.config?.config?.case === "oauth2Config" ? identityProvider.config.config.value : undefined;
       if (!oauth2Config) {
-        toast.error("Identity provider configuration is invalid.");
+        toast.error(t("ui-extra.invalid-provider"));
         return;
       }
 

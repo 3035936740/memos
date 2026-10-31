@@ -2,8 +2,9 @@ import { create } from "@bufbuild/protobuf";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import PollCard from "@/components/MemoView/components/PollCard";
+import i18n from "@/i18n";
 import { AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { MemoSchema, type Poll, PollSchema, PollVoterSchema, VoterType } from "@/types/proto/api/v1/memo_service_pb";
 
@@ -40,6 +41,10 @@ const renderPoll = (voterType = VoterType.AUTHENTICATED, ended = false, fields: 
   return { ...view, client };
 };
 
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
+
 describe("poll participation prompts", () => {
   beforeEach(() => {
     mocks.currentUser = undefined;
@@ -50,50 +55,50 @@ describe("poll participation prompts", () => {
 
   it("explains the login requirement before voting and links back to the current page", () => {
     renderPoll();
-    expect(screen.getByText("此投票仅限登录用户参与，请先登录。")).toBeInTheDocument();
+    expect(screen.getByText("Only signed-in users can participate in this poll. Please sign in first.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Option A/ })).toBeDisabled();
-    const login = screen.getByRole("link", { name: "登录后投票" });
+    const login = screen.getByRole("link", { name: "Sign in to vote" });
     const url = new URL(login.getAttribute("href") ?? "", "https://memos.test");
     expect(url.pathname).toBe("/auth");
     expect(url.searchParams.get("redirect")).toBe("/memos/example?from=explore#poll");
-    expect(screen.queryByRole("button", { name: "投票" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Vote" })).not.toBeInTheDocument();
     expect(mocks.voteMemo).not.toHaveBeenCalled();
   });
 
   it("still lets guests vote when the poll allows anyone", async () => {
     renderPoll(VoterType.ANYONE);
     fireEvent.click(screen.getByRole("button", { name: /Option A/ }));
-    fireEvent.click(screen.getByRole("button", { name: "投票" }));
-    await screen.findByText("已投票");
+    fireEvent.click(screen.getByRole("button", { name: "Vote" }));
+    await screen.findByText("Voted");
     expect(mocks.voteMemo).toHaveBeenCalledWith(expect.objectContaining({ optionIds: ["a"], deviceId: expect.any(String) }));
-    expect(screen.queryByText("登录后投票")).not.toBeInTheDocument();
+    expect(screen.queryByText("Sign in to vote")).not.toBeInTheDocument();
   });
 
   it("lets signed-in users vote in restricted polls", async () => {
     mocks.currentUser = { name: "users/alice" };
     renderPoll();
     fireEvent.click(screen.getByRole("button", { name: /Option A/ }));
-    fireEvent.click(screen.getByRole("button", { name: "投票" }));
+    fireEvent.click(screen.getByRole("button", { name: "Vote" }));
     await waitFor(() => expect(mocks.voteMemo).toHaveBeenCalledWith(expect.objectContaining({ optionIds: ["a"], deviceId: "" })));
-    await screen.findByText("已投票");
+    await screen.findByText("Voted");
   });
 
   it("does not invite guests to log in to vote after a poll ends", () => {
     renderPoll(VoterType.AUTHENTICATED, true);
-    expect(screen.getByText("已结束")).toBeInTheDocument();
-    expect(screen.queryByText("登录后投票")).not.toBeInTheDocument();
+    expect(screen.getByText("Ended")).toBeInTheDocument();
+    expect(screen.queryByText("Sign in to vote")).not.toBeInTheDocument();
   });
 
   it("hides counts and percentages until the viewer votes", async () => {
     mocks.currentUser = { name: "users/alice" };
     renderPoll(VoterType.AUTHENTICATED, false, { hideResultsUntilVoted: true, resultsHidden: true });
     await waitFor(() => expect(mocks.getMemoPoll).toHaveBeenCalled());
-    expect(screen.getByText("投票后可查看票数和比例")).toBeInTheDocument();
+    expect(screen.getByText("Vote to see counts and percentages")).toBeInTheDocument();
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
-    expect(screen.queryByText("0 票")).not.toBeInTheDocument();
+    expect(screen.queryByText("0 votes")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Option A/ }));
-    fireEvent.click(screen.getByRole("button", { name: "投票" }));
-    await screen.findByText("已投票");
+    fireEvent.click(screen.getByRole("button", { name: "Vote" }));
+    await screen.findByText("Voted");
     expect(screen.getAllByText("0%")).toHaveLength(2);
   });
 
@@ -129,14 +134,14 @@ describe("poll participation prompts", () => {
       ),
     });
     expect(screen.getAllByRole("button", { name: /@person/ })).toHaveLength(10);
-    expect(screen.getByLabelText("还有其他投票用户，仅随机展示 10 位")).toHaveTextContent("…");
+    expect(screen.getByLabelText("More voters; showing only 10 at random")).toHaveTextContent("…");
     fireEvent.click(screen.getByRole("button", { name: "person0 (@person0)" }));
     await screen.findByText("@person0");
     if (showVoterChoices) {
-      expect(screen.getByText("所选选项")).toBeInTheDocument();
+      expect(screen.getByText("Selected options")).toBeInTheDocument();
       expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual(["Option A", "Option B"]);
     } else {
-      expect(screen.queryByText("所选选项")).not.toBeInTheDocument();
+      expect(screen.queryByText("Selected options")).not.toBeInTheDocument();
     }
   });
 
@@ -156,11 +161,11 @@ describe("poll participation prompts", () => {
       ],
       selectedOptionIds: voted ? ["b"] : [],
     });
-    fireEvent.click(screen.getByRole("button", { name: "查看投票图片" }));
+    fireEvent.click(screen.getByRole("button", { name: "View poll image" }));
     expect(await screen.findByAltText("Preview image 1 of 2")).toHaveAttribute("src", expect.stringContaining("cover"));
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: "查看选项图片：Option A" }));
+    fireEvent.click(screen.getByRole("button", { name: "View image for option: Option A" }));
     expect(await screen.findByAltText("Preview image 2 of 2")).toHaveAttribute("src", expect.stringContaining("option"));
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());

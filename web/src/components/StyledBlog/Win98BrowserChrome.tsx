@@ -60,7 +60,7 @@ export const Win98StatusBar = () => {
   return (
     <div data-w98-statusbar="" aria-hidden>
       <span>{t("y2k.done")}</span>
-      <span data-w98-zone="">Internet</span>
+      <span data-w98-zone="">{t("ui-extra.internet")}</span>
     </div>
   );
 };

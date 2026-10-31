@@ -18,7 +18,7 @@ const LocaleSelect: FC<Props> = (props: Props) => {
     onChange(locale);
   };
 
-  return <LocalePicker value={value} onChange={handleSelectChange} className={className} />;
+  return <LocalePicker value={value} onChange={handleSelectChange} className={className} allowAutomatic />;
 };
 
 export default LocaleSelect;

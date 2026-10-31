@@ -229,7 +229,7 @@ describe("CreateSpaceDialog", () => {
 
     mocks.isPending = true;
     view.rerender(<CreateSpaceDialog open onOpenChange={mocks.onOpenChange} onCreated={mocks.onCreated} />);
-    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "common.close" }));
     expect(mocks.onOpenChange).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
 

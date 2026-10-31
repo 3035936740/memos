@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import SettingSection from "@/components/Settings/SettingSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import i18n from "@/i18n";
 import { type AdminCommentItem, listAdminComments } from "@/utils/admin-comments";
 import { useTranslate } from "@/utils/i18n";
 
@@ -76,7 +77,7 @@ const CommentsSection = () => {
                     {t("setting.comments.view-memo")}
                   </Link>
                 ) : null}
-                <span>{new Date(item.createdTs * 1000).toLocaleString()}</span>
+                <span>{new Date(item.createdTs * 1000).toLocaleString(i18n.language)}</span>
               </div>
               <Link to={`/${item.name}`} className="whitespace-pre-wrap break-words text-sm text-foreground hover:underline">
                 {item.content}

@@ -52,13 +52,13 @@ const Era1999 = ({ site, host, posts, visits }: FrameProps) => {
     <div data-era="1999">
       <div data-era-titlebar="">{`Netscape Navigator - [${site}]`}</div>
       <div data-era-toolbar="">
-        {["Back", "Forward", "Reload", "Home", "Search", "Print"].map((label) => (
+        {[t("y2k.back"), t("y2k.forward"), t("y2k.refresh"), t("y2k.home"), t("common.search"), t("ui-extra.print")].map((label) => (
           <span key={label} data-era-button="">
             {label}
           </span>
         ))}
       </div>
-      <div data-era-address="">{`Location: http://www.${host}/index.html`}</div>
+      <div data-era-address="">{`${t("y2k.address")}: http://www.${host}/index.html`}</div>
       <div data-era-page="">
         <div data-era-marquee="">
           <span>{t("oddities.time.welcome", { site })}</span>
@@ -69,7 +69,7 @@ const Era1999 = ({ site, host, posts, visits }: FrameProps) => {
         <ul>
           {posts.map((post) => (
             <li key={post.href}>
-              <Link to={post.href}>{post.title}</Link> <span data-era-new="">NEW!</span>
+              <Link to={post.href}>{post.title}</Link> <span data-era-new="">{t("ui-extra.new")}</span>
             </li>
           ))}
         </ul>
@@ -106,7 +106,7 @@ const Era2009 = ({ site, host, posts }: FrameProps) => {
       <div data-era-address="">{`http://${host}/`}</div>
       <div data-era-page="">
         <h2 data-era-heading="">
-          {site} <span data-era-beta="">Beta</span>
+          {site} <span data-era-beta="">{t("ui-extra.beta")}</span>
         </h2>
         <div className="grid gap-4 sm:grid-cols-[1fr_9rem]">
           <ul className="flex flex-col gap-3">

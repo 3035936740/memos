@@ -1,8 +1,13 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { Image } from "@/components/MemoContent/markdown/Image";
 import AudioAttachmentItem from "@/components/MemoMetadata/Attachment/AudioAttachmentItem";
 import MotionPhotoPlayer from "@/components/MotionPhotoPlayer";
+import i18n from "@/i18n";
+
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
 
 describe("media loading", () => {
   it("marks markdown images for native lazy loading", () => {
@@ -21,7 +26,7 @@ describe("media loading", () => {
     expect(audio).not.toHaveAttribute("src");
     expect(audio).toHaveAttribute("preload", "none");
 
-    fireEvent.click(screen.getByRole("button", { name: "Play recording.mp3" }));
+    fireEvent.click(screen.getByRole("button", { name: "Play: recording.mp3" }));
 
     expect(audio).toHaveAttribute("src", "/recording.mp3");
     expect(play).toHaveBeenCalledOnce();

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { useAcceptSpaceInvitation, useDeclineSpaceInvitation } from "@/hooks/useSpaceQueries";
 import { userKeys } from "@/hooks/useUserQueries";
+import i18n from "@/i18n";
 import { handleError } from "@/lib/error";
 import { cn } from "@/lib/utils";
 import type { UserNotification } from "@/types/proto/api/v1/user_service_pb";
@@ -83,7 +84,7 @@ const SpaceInvitationMessage = ({ notification }: Props) => {
             <span className="text-sm text-muted-foreground">{t("inbox.invited-you-to-space")}</span>
             <span className="text-xs text-muted-foreground/70">
               {notification.createTime
-                ? timestampDate(notification.createTime)?.toLocaleString([], {
+                ? timestampDate(notification.createTime)?.toLocaleString(i18n.language, {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",

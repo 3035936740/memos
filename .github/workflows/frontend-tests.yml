@@ -26,6 +26,9 @@ jobs:
       - name: Type and style checks
         run: pnpm lint
         working-directory: web
+      - name: Check all translation catalogs
+        run: pnpm lint:i18n
+        working-directory: web
       - name: Current frontend unit tests
         run: pnpm test
         working-directory: web

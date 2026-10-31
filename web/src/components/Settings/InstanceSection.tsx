@@ -29,7 +29,7 @@ import {
 } from "@/types/proto/api/v1/instance_service_pb";
 import { BLOG_STYLE_OPTIONS, DEFAULT_BLOG_STYLE, isBlogStyle, SECRET_BLOG_STYLES } from "@/utils/blog-style";
 import { dailyQuestionBankIssue } from "@/utils/daily-question";
-import { isValidLocale, useTranslate } from "@/utils/i18n";
+import { isValidLocalePreference, useTranslate } from "@/utils/i18n";
 import { stylePackLabel } from "@/utils/style-packs";
 import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
@@ -108,7 +108,7 @@ const InstanceSection = () => {
     ],
     [t],
   );
-  const firstVisitDefaultLocale = isValidLocale(instanceGeneralSetting.firstVisitDefaultLocale)
+  const firstVisitDefaultLocale = isValidLocalePreference(instanceGeneralSetting.firstVisitDefaultLocale)
     ? (instanceGeneralSetting.firstVisitDefaultLocale as Locale)
     : "zh-Hans";
   const firstVisitDefaultTheme = isValidTheme(instanceGeneralSetting.firstVisitDefaultTheme)
@@ -288,6 +288,7 @@ const InstanceSection = () => {
             description={t("setting.instance.first-visit-default-language-description")}
           >
             <LocalePicker
+              allowAutomatic
               value={firstVisitDefaultLocale}
               onChange={(firstVisitDefaultLocale) => updatePartialSetting({ firstVisitDefaultLocale })}
               className="w-52"

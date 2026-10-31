@@ -5,6 +5,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import i18n from "@/i18n";
 import {
   type BlockedWordsSetting,
   clearBlockedWords,
@@ -30,7 +31,9 @@ const BlockedWordsEditor = () => {
 
   const sourceDescription = (currentSetting: BlockedWordsSetting | undefined) => {
     if (!currentSetting || currentSetting.count === 0) return t("setting.blocked-words.disabled");
-    const updatedAt = currentSetting.updatedAt ? new Date(currentSetting.updatedAt).toLocaleString() : t("common.unknown-time");
+    const updatedAt = currentSetting.updatedAt
+      ? new Date(currentSetting.updatedAt).toLocaleString(i18n.language)
+      : t("common.unknown-time");
     if (currentSetting.sourceType === "url") {
       return t("setting.blocked-words.latest-source", {
         source: currentSetting.sourceUrl || t("setting.blocked-words.url-import"),

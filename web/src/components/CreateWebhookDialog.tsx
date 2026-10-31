@@ -126,7 +126,7 @@ function CreateWebhookDialog({ open, onOpenChange, webhookName, onSuccess }: Pro
     }
 
     if (!currentUser) {
-      toast.error("User not authenticated");
+      toast.error(t("ui-extra.not-authenticated"));
       return;
     }
 

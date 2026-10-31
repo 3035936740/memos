@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getShareUrl, useCreateMemoShare, useDeleteMemoShare, useMemoShares } from "@/hooks/useMemoShareQueries";
+import i18n from "@/i18n";
 import type { MemoShare } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
@@ -24,7 +25,7 @@ function getExpireDate(option: ExpiryOption): Date | undefined {
 function formatExpiry(share: MemoShare, t: ReturnType<typeof useTranslate>): string {
   if (!share.expireTime) return t("memo.share.never-expires");
   const d = timestampDate(share.expireTime);
-  return t("memo.share.expires-on", { date: d.toLocaleDateString() });
+  return t("memo.share.expires-on", { date: d.toLocaleDateString(i18n.language) });
 }
 
 interface ShareLinkRowProps {

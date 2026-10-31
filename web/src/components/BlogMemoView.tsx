@@ -97,7 +97,7 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
   const creator = useResolvedUser(memo.creator, { enabled: shouldShowCreator });
   const { title, excerpt } = useMemo(
     () => deriveBlogMemoText(memo.content, memo.property?.title, memo.poll?.question),
-    [memo.content, memo.property?.title, memo.poll?.question],
+    [memo.content, memo.property?.title, memo.poll?.question, t],
   );
   const cover = useMemo(() => {
     const pollImages = new Set([memo.poll?.image?.name, ...(memo.poll?.options.map((option) => option.image?.name) ?? [])]);
@@ -152,7 +152,7 @@ const BlogMemoView = ({ memo, showCreator = false, parentPage, navigationScope }
               {memo.poll && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   <ListChecksIcon className="size-3" />
-                  投票
+                  {t("poll.label")}
                 </span>
               )}
               {memo.tags.length === 0 && !memo.poll && (

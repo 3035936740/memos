@@ -1,12 +1,13 @@
 import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { EditorMetadata } from "@/components/MemoEditor/components/EditorMetadata";
 import PollDialog from "@/components/MemoEditor/components/PollDialog";
 import { memoService } from "@/components/MemoEditor/services/memoService";
 import { createInitialState, EditorProvider, useEditorContext } from "@/components/MemoEditor/state";
 import type { LocalFile } from "@/components/MemoEditor/types/attachment";
+import i18n from "@/i18n";
 import { type Attachment, AttachmentSchema } from "@/types/proto/api/v1/attachment_service_pb";
 import { MemoSchema, PollSchema, PollVoterSchema } from "@/types/proto/api/v1/memo_service_pb";
 
@@ -79,6 +80,10 @@ function Harness({ save }: { save: (state: ReturnType<typeof createInitialState>
   );
 }
 
+beforeAll(async () => {
+  await i18n.changeLanguage("en");
+});
+
 describe("poll editor attachments", () => {
   it("saves visibility settings independently and retains their values when reopened", () => {
     const state = { ...createInitialState(), ...memoService.fromMemo(memo) };
@@ -89,13 +94,13 @@ describe("poll editor attachments", () => {
       </EditorProvider>,
     );
     fireEvent.click(screen.getByText("Edit poll"));
-    const countSwitch = screen.getByRole("switch", { name: "投票后才显示票数" });
+    const countSwitch = screen.getByRole("switch", { name: "Show results only after voting" });
     expect(countSwitch).not.toBeChecked();
     fireEvent.click(countSwitch);
-    fireEvent.click(screen.getByRole("switch", { name: "投票后显示投票用户" }));
-    expect(screen.getByRole("switch", { name: "显示用户所选选项" })).not.toBeChecked();
-    fireEvent.click(screen.getByRole("switch", { name: "显示用户所选选项" }));
-    fireEvent.click(screen.getByText("保存投票"));
+    fireEvent.click(screen.getByRole("switch", { name: "Show voters after voting" }));
+    expect(screen.getByRole("switch", { name: "Show voters’ choices" })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("switch", { name: "Show voters’ choices" }));
+    fireEvent.click(screen.getByText("Save poll"));
     fireEvent.click(screen.getByText("Publish"));
     expect(save.mock.calls[0][0].content).toBe("Choose\n\n[[vote]]");
     expect(save.mock.calls[0][0].metadata.poll).toEqual(
@@ -107,15 +112,15 @@ describe("poll editor attachments", () => {
       }),
     );
     fireEvent.click(screen.getByText("Edit poll"));
-    expect(screen.getByRole("switch", { name: "投票后才显示票数" })).toBeChecked();
-    expect(screen.getByRole("switch", { name: "投票后显示投票用户" })).toBeChecked();
-    expect(screen.getByRole("switch", { name: "显示用户所选选项" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Show results only after voting" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Show voters after voting" })).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Show voters’ choices" })).toBeChecked();
     fireEvent.click(screen.getByRole("combobox"));
-    const guestOption = screen.getByRole("option", { name: "游客也可投票" });
+    const guestOption = screen.getByRole("option", { name: "Guests can also vote" });
     fireEvent.keyDown(guestOption, { key: "Enter" });
     fireEvent.keyUp(guestOption, { key: "Enter" });
-    expect(screen.queryByRole("switch", { name: "投票后显示投票用户" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText("保存投票"));
+    expect(screen.queryByRole("switch", { name: "Show voters after voting" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText("Save poll"));
     fireEvent.click(screen.getByText("Publish"));
     expect(save.mock.calls[1][0].metadata.poll.showVotersAfterVoting).toBe(false);
     expect(save.mock.calls[1][0].metadata.poll.showVoterChoices).toBe(false);
@@ -166,7 +171,7 @@ describe("poll editor attachments", () => {
     fireEvent.click(screen.getByText("Remove ordinary attachments"));
     fireEvent.click(screen.getByText("Remove ordinary files"));
     fireEvent.click(screen.getByText("Edit poll"));
-    fireEvent.click(screen.getByText("删除投票"));
+    fireEvent.click(screen.getByText("Delete poll"));
     expect(screen.getByTestId("attachments")).toHaveTextContent("cover.png");
     expect(screen.getByTestId("attachments")).toHaveTextContent("option.png");
     expect(screen.getByTestId("attachments")).toHaveTextContent("local-option.png");

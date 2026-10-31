@@ -14,6 +14,6 @@ describe("<LocaleSearchList>", () => {
     fireEvent.change(await screen.findByRole("textbox", { name: "Language" }), { target: { value: "klingon" } });
 
     const feedbackLink = screen.getByRole("link", { name: "Language not found? Submit feedback" });
-    expect(feedbackLink).toHaveAttribute("href", expect.stringContaining("https://github.com/usememos/memos/issues/new"));
+    expect(feedbackLink).toHaveAttribute("href", expect.stringContaining("https://github.com/3035936740/memos-plus"));
   });
 });
