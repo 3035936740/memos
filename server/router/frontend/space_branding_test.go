@@ -24,6 +24,11 @@ func TestSpaceFirstHTMLContainsAuthorizedTitleAndAvatar(t *testing.T) {
 	_, err := s.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_ACCESS,
 		Value: &storepb.InstanceSetting_AccessSetting{AccessSetting: &storepb.InstanceAccessSetting{AccessMode: storepb.InstanceAccessMode_INSTANCE_ACCESS_MODE_PUBLIC}}})
 	require.NoError(t, err)
+	_, err = s.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_GENERAL,
+		Value: &storepb.InstanceSetting_GeneralSetting{GeneralSetting: &storepb.InstanceGeneralSetting{
+			CustomProfile: &storepb.InstanceCustomProfile{Title: "Instance & brand", LogoUrl: "/storage/site.png"},
+		}}})
+	require.NoError(t, err)
 	owner, err := s.CreateUser(ctx, &store.User{Username: "brand-owner", Role: store.RoleUser})
 	require.NoError(t, err)
 	_, err = s.CreateSpace(ctx, &store.Space{UID: "public-brand", URLSlug: "sharedspace", Title: "Public & Space", AccessMode: store.SpaceAccessModePublic, AvatarURL: "data:image/png;base64,AA=="}, owner.ID)
@@ -59,10 +64,10 @@ func TestSpaceFirstHTMLContainsAuthorizedTitleAndAvatar(t *testing.T) {
 	require.Contains(t, private, "<title>Private Space</title>")
 	require.Contains(t, private, `rel="icon" href="/storage/private.png"`)
 	require.Contains(t, private, `"viewerName":"users/brand-owner"`)
-	for _, path := range []string{"/space/private-brand", "/space/missing"} {
+	for _, path := range []string{"/space/private-brand", "/space/private-brand/home", "/space/missing", "/space/missing/home"} {
 		body := read(path, false)
-		require.Contains(t, body, "<title>Memos Plus</title>")
-		require.Contains(t, body, `rel="icon" href="/favicon.ico"`)
+		require.Contains(t, body, "<title>Instance &amp; brand</title>")
+		require.Contains(t, body, `rel="icon" href="/storage/site.png"`)
 		require.NotContains(t, body, `id="memos-space-branding"`)
 		require.NotContains(t, body, "Private Space")
 		require.NotContains(t, body, "/storage/private.png")

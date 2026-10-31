@@ -6,7 +6,7 @@ import { spaceAvatarUrl } from "@/utils/space-avatar";
 
 const SpaceDocumentBrand = () => {
   const { generalSetting } = useInstance();
-  const { selectedSpace, selectedSpaceName } = useSpaceContext();
+  const { selectedSpaceBrand: selectedSpace, selectedSpaceName } = useSpaceContext();
   const instanceBrand = generalSetting?.customProfile;
 
   useLayoutEffect(() => {
@@ -17,9 +17,9 @@ const SpaceDocumentBrand = () => {
   }, []);
 
   useLayoutEffect(() => {
-    if (selectedSpaceName) {
+    if (selectedSpaceName && selectedSpace) {
       document.title = selectedSpace?.title || "Memos Plus";
-      void setBrandFavicon(selectedSpace ? spaceAvatarUrl(selectedSpace) || "/space-avatar.svg" : "/favicon.ico");
+      void setBrandFavicon(spaceAvatarUrl(selectedSpace) || "/space-avatar.svg");
     } else {
       document.title = instanceBrand?.title || "Memos Plus";
       void setBrandFavicon(instanceBrand?.logoUrl || "/logo.svg");

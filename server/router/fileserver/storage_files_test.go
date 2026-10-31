@@ -38,7 +38,10 @@ func TestResolveStoragePathStaysInRoot(t *testing.T) {
 	require.Error(t, err)
 
 	if runtime.GOOS != "windows" {
-		_, err = svc.resolveStoragePath("/etc/passwd")
-		require.Error(t, err)
+		// Storage URLs accept a leading slash (as the normalization test above
+		// requires). It must resolve inside storage, never the OS /etc directory.
+		abs, err = svc.resolveStoragePath("/etc/passwd")
+		require.NoError(t, err)
+		require.Equal(t, filepath.Join(svc.storageRoot(), "etc", "passwd"), abs)
 	}
 }

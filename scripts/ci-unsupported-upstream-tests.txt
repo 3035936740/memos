@@ -1,0 +1,18 @@
+# Unsupported upstream/legacy database conversions, not current Plus behavior.
+# Exact test names only. Current CRUD, fresh install, restart, S3 and downgrade
+# protection tests remain required. Historical test sources are retained.
+TestMigrationFromV0262PreservesLegacyData
+TestUpgradeFromPreviousStableRenamesShortcutsToMemoViews
+TestMigrationFromStableVersion
+TestMigrationMultiSpacesPreservesMemosAndRelations
+TestMigrationSpaceMemberStatusBackfillsActive
+TestMigrationStorageSetting
+TestMigrationReactionMemoID
+TestMigrationLegacyS3AttachmentMinIO
+TestMigrationMemoViewSetting
+TestMigrationCopiesInstanceTagsToUserSettings
+TestMigrationCaseSensitiveUsername
+TestMigrationRejectsPreV022Installation
+TestMigrationAcceptsMinimumSupportedVersion
+TestPlusMigrationsPreserveUpstreamSchemaVersion
+TestPlusUpgradeFrom034AcrossDrivers

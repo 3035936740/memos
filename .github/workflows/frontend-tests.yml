@@ -1,77 +1,40 @@
-name: Frontend Tests
-
+name: Plus frontend checks
 on:
   workflow_call:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    paths:
-      - "web/**"
-
-concurrency:
-  group: ${{ github.workflow }}-frontend-tests-${{ github.ref }}
-  cancel-in-progress: true
-
+  workflow_dispatch:
+permissions:
+  contents: read
 env:
   NODE_VERSION: "24"
   PNPM_VERSION: "11.0.1"
-
 jobs:
-  lint:
-    name: Lint
+  frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.2.0
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4.2.0
         with:
           version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
-
-      - name: Install dependencies
+      - run: pnpm install --frozen-lockfile
         working-directory: web
-        run: pnpm install --frozen-lockfile
-
-      - name: Run lint
-        working-directory: web
+      - name: Type and style checks
         run: pnpm lint
-
-      - name: Run unit tests
         working-directory: web
+      - name: Current frontend unit tests
         run: pnpm test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.2.0
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
-
-      - name: Install dependencies
         working-directory: web
-        run: pnpm install --frozen-lockfile
-
-      - name: Build frontend
+      - name: Build embedded production assets
+        run: pnpm release
         working-directory: web
-        run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ci-frontend-dist
+          path: server/router/frontend/dist
+          if-no-files-found: error
+          retention-days: 1

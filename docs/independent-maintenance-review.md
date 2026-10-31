@@ -1,5 +1,7 @@
 # Independent maintenance review
 
+> **Policy update, 2026-10-31:** upstream Memos database compatibility is no longer supported. The migration discussion below records the earlier 2026-10-30 review, not the current support policy. Use the current [README](../README.en.md#migrating-from-upstream-memos) and [CI guide](ci.md); CI now verifies fresh Plus databases and restart persistence.
+
 [English README](../README.en.md) · [中文 README](../README.md)
 
 Reviewed on **2026-10-30**, starting from local `main` at `8ee47d07005eaab3972ae39f98bb905f97558b78`. This records a documentation and release-packaging review, not a release, migration certification, or complete dependency-license audit.

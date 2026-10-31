@@ -47,9 +47,13 @@ func New(t *testing.T, buckets ...string) *Server {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
+	testImage := os.Getenv("MEMOS_TEST_MINIO_IMAGE")
+	if testImage == "" {
+		testImage = image
+	}
 	container, err := tcminio.Run(
 		ctx,
-		image,
+		testImage,
 		tcminio.WithUsername("memos-test-access"),
 		tcminio.WithPassword("memos-test-secret"),
 	)

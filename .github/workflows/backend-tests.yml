@@ -1,99 +1,92 @@
-name: Backend Tests
-
+name: Plus backend checks
 on:
   workflow_call:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-    paths:
-      - "go.mod"
-      - "go.sum"
-      - "**.go"
-
-concurrency:
-  group: ${{ github.workflow }}-backend-tests-${{ github.ref }}
-  cancel-in-progress: true
-
+  workflow_dispatch:
+permissions:
+  contents: read
 env:
   GO_VERSION: "1.26.2"
-
 jobs:
-  static-checks:
-    name: Static Checks
+  static:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      
-      - name: Setup Go
-        uses: actions/setup-go@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-          cache-dependency-path: go.sum
-
-      - name: Verify go.mod is tidy
+      - name: Stage public frontend resources for Go checks
+        run: cp -a web/public/. server/router/frontend/dist/
+      - name: Verify dependency lockfiles
         run: |
           go mod tidy -go=${{ env.GO_VERSION }}
-          git diff --exit-code
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v9
+          git diff --exit-code -- go.mod go.sum
+      - uses: golangci/golangci-lint-action@v9
         with:
           version: v2.11.3
-          args: --timeout=3m
-
-  tests:
-    name: Tests (${{ matrix.test-group }})
+          args: --timeout=5m
+      - name: Verify release packaging and licenses
+        run: python3 -B scripts/test_package_release.py
+  current:
+    name: Current Plus functionality (SQLite and S3)
     runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      DRIVER: sqlite
+      MEMOS_TEST_MINIO_IMAGE: memos-plus-ci-minio:local
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            go.sum
+            scripts/build_ci_minio.sh
+      - run: cp -a web/public/. server/router/frontend/dist/
+      - name: Build pinned S3 test service
+        timeout-minutes: 12
+        run: bash scripts/build_ci_minio.sh
+      - name: Verify current application behavior
+        run: bash scripts/ci_go_tests.sh -count=1 -timeout=25m -coverprofile=coverage.out ./...
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plus-backend-coverage
+          path: coverage.out
+          if-no-files-found: warn
+  race:
+    name: Current SQLite race checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DRIVER: sqlite
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - run: cp -a web/public/. server/router/frontend/dist/
+      # -short keeps the container/reaper out of the race detector. S3 is
+      # required in the full current-functionality job above, without -short.
+      - run: bash scripts/ci_go_tests.sh -short -race -count=1 -timeout=25m ./...
+  databases:
+    name: Current store (${{ matrix.driver }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        test-group: [store, server, internal, other]
+        driver: [mysql, postgres]
+    env:
+      DRIVER: ${{ matrix.driver }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-      
-      - name: Setup Go
-        uses: actions/setup-go@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
-          cache-dependency-path: go.sum
-
-      - name: Stage public manifest for backend tests
-        # A clean checkout only tracks the HTML stub in the embedded dist.
-        # Manifest tests need this source asset; a full frontend build is not required.
-        run: cp web/public/site.webmanifest server/router/frontend/dist/site.webmanifest
-
-      - name: Run tests
-        run: |
-          case "${{ matrix.test-group }}" in
-            store)
-              # Run store tests for all drivers (sqlite, mysql, postgres)
-              go test -v -coverprofile=coverage.out -covermode=atomic ./store/...
-              ;;
-            server)
-              # Includes ./server/test, which boots the real server via
-              # server.NewServer and smokes every router it mounts.
-              go test -v -race -coverprofile=coverage.out -covermode=atomic ./server/...
-              ;;
-            internal)
-              go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
-              ;;
-            other)
-              go test -v -race -coverprofile=coverage.out -covermode=atomic \
-                ./cmd/... ./internal/... ./proto/...
-              ;;
-          esac
-        env:
-          DRIVER: ${{ matrix.test-group == 'store' && '' || 'sqlite' }}
-
-      - name: Upload coverage
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.out
-          flags: ${{ matrix.test-group }}
-          fail_ci_if_error: false
+      - name: Test fresh schemas, CRUD and restart idempotency
+        run: bash scripts/ci_go_tests.sh -count=1 -timeout=25m ./store/...

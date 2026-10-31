@@ -12,47 +12,22 @@ permissions:
   contents: read
 
 jobs:
-  backend-checks:
-    uses: ./.github/workflows/backend-tests.yml
-  frontend-checks:
-    uses: ./.github/workflows/frontend-tests.yml
-  upgrade-smoke:
-    uses: ./.github/workflows/upgrade-smoke.yml
+  checks:
+    uses: ./.github/workflows/ci.yml
+
   build-frontend:
-    needs: [backend-checks, frontend-checks, upgrade-smoke]
+    needs: checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/download-artifact@v4
         with:
-          version: 11.0.1
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          cache: pnpm
-          cache-dependency-path: "web/pnpm-lock.yaml"
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-      - name: Setup pnpm cache
-        uses: actions/cache@v5
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
-      - run: pnpm install --frozen-lockfile
-        working-directory: web
-      - name: Run frontend build
-        run: pnpm release
-        working-directory: web
-
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v6
+          name: ci-frontend-dist
+          path: server/router/frontend/dist
+      - uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: server/router/frontend/dist
+          if-no-files-found: error
           retention-days: 1
 
   build-push:

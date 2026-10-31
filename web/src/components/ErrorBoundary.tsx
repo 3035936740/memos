@@ -1,6 +1,7 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { useRouteError } from "react-router-dom";
+import ErrorDocumentBrand from "./ErrorDocumentBrand";
 import { Button } from "./ui/button";
 
 interface Props {
@@ -40,6 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="flex items-center justify-center min-h-screen bg-background">
+          <ErrorDocumentBrand />
           <div className="max-w-md w-full p-6 space-y-4">
             <div className="flex items-center gap-3 text-destructive">
               <AlertCircle className="w-8 h-8" />
@@ -76,6 +78,7 @@ export function ChunkLoadErrorFallback() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
+      <ErrorDocumentBrand />
       <div className="max-w-md w-full p-6 space-y-4">
         <div className="flex items-center gap-3 text-destructive">
           <AlertCircle className="w-8 h-8" />

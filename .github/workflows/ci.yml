@@ -1,0 +1,38 @@
+name: Memos Plus CI
+# main pushes run this same gate through build-canary-image.yml. Tags run it
+# through release.yml, so each event has one complete check chain.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: plus-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  backend:
+    uses: ./.github/workflows/backend-tests.yml
+  frontend:
+    uses: ./.github/workflows/frontend-tests.yml
+  protocol:
+    uses: ./.github/workflows/proto-linter.yml
+  fresh-install:
+    needs: frontend
+    uses: ./.github/workflows/fresh-install.yml
+  checks-passed:
+    if: ${{ always() }}
+    needs: [backend, frontend, protocol, fresh-install]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every supported check
+        env:
+          BACKEND: ${{ needs.backend.result }}
+          FRONTEND: ${{ needs.frontend.result }}
+          PROTOCOL: ${{ needs.protocol.result }}
+          FRESH: ${{ needs.fresh-install.result }}
+        run: |
+          for result in "$BACKEND" "$FRONTEND" "$PROTOCOL" "$FRESH"; do
+            [ "$result" = success ] || exit 1
+          done

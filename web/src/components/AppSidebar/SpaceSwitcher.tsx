@@ -1,6 +1,5 @@
 import { CheckIcon, ChevronsUpDownIcon, LoaderCircleIcon, type LucideIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { type ReactNode, useRef, useState } from "react";
-import BrandImage from "@/components/BrandImage";
 import CreateSpaceDialog from "@/components/CreateSpaceDialog";
 import MemosLogo from "@/components/MemosLogo";
 import SpaceDirectoryDialog from "@/components/SpaceDirectoryDialog";
@@ -14,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useOptionalInstance } from "@/contexts/InstanceContext";
 import { useSpaceContext } from "@/contexts/SpaceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { extractSpaceUidFromName, formatSpaceUidForDisplay } from "@/lib/space-display";
@@ -59,12 +59,14 @@ const ContextItem = ({
 function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?: string; activeSpace?: Space; activeSpaceName?: string }) {
   const t = useTranslate();
   const currentUser = useCurrentUser();
+  const instanceTitle = useOptionalInstance()?.generalSetting.customProfile?.title || "Memos Plus";
   const {
     spaces,
     totalSpaces,
     spaceByName,
     duplicateSpaceTitles,
     selectedSpace,
+    selectedSpaceBrand,
     selectedSpaceName,
     isLoadingSpaces,
     isSpacesError,
@@ -75,7 +77,7 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [menuWidth, setMenuWidth] = useState<number>();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const currentSpace = activeSpaceName ? activeSpace : selectedSpace;
+  const currentSpace = activeSpaceName ? activeSpace : (selectedSpaceBrand ?? selectedSpace);
   const currentSpaceName = activeSpaceName || selectedSpaceName;
   const selectedSpaceIdentity = currentSpace?.name || currentSpaceName || "";
   const selectedSpaceUid = selectedSpaceIdentity ? extractSpaceUidFromName(selectedSpaceIdentity) : "";
@@ -84,7 +86,7 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
   const crowded = totalSpaces > SWITCHER_LIST_LIMIT;
   const listedSpaces = crowded ? pickSwitcherSpaces(spaceByName, readRecentSpaces(currentUser?.name ?? ""), currentSpaceName) : spaces;
   const currentContextLabel = currentSpaceName
-    ? `${currentSpace?.title || "Memos Plus"}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
+    ? `${currentSpace?.title || instanceTitle}${showSelectedSpaceUid && selectedSpaceUid ? ` (${selectedSpaceUid})` : ""}`
     : t("common.memos");
 
   const handleMenuOpenChange = (open: boolean) => {
@@ -116,16 +118,12 @@ function SpaceSwitcher({ className, activeSpace, activeSpaceName }: { className?
           }
         >
           <span className="flex min-w-0 flex-1 items-center overflow-hidden">
-            {currentSpaceName ? (
+            {currentSpaceName && currentSpace ? (
               <>
-                {currentSpace ? (
-                  <SpaceMark key={currentSpaceName} avatarUrl={spaceAvatarUrl(currentSpace)} />
-                ) : (
-                  <BrandImage src="/logo.svg" className="size-7 shrink-0" />
-                )}
+                <SpaceMark key={currentSpaceName} avatarUrl={spaceAvatarUrl(currentSpace)} />
                 <span className="ms-1.5 flex min-w-0 flex-1 flex-col justify-center overflow-hidden">
                   <span className="block truncate text-[14px] font-medium leading-4 tracking-[-0.01em] text-foreground">
-                    {currentSpace?.title || "Memos Plus"}
+                    {currentSpace.title || "Memos Plus"}
                   </span>
                   {showSelectedSpaceUid && selectedSpaceUid ? (
                     <span

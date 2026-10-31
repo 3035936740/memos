@@ -70,7 +70,9 @@ func (s *FrontendService) initialSpace(c *echo.Context) *initialSpaceBranding {
 
 func (s *FrontendService) brandSpaceHTML(c *echo.Context, source string, instance initialBranding) string {
 	// A real title and icon are always present, even for an unavailable Space.
-	document := initialBranding{Title: "Memos Plus", LogoURL: "/favicon.ico"}
+	// Missing, forbidden and failed lookups all keep the public instance brand.
+	// Never substitute inaccessible Space metadata, including from an old visit.
+	document := instance
 	initial := s.initialSpace(c)
 	if initial != nil {
 		document.Title = initial.Space.Title

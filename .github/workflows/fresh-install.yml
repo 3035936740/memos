@@ -1,0 +1,49 @@
+name: Plus fresh installation
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  image:
+    name: Build the actual runtime image once
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-frontend-dist
+          path: server/router/frontend/dist
+      - name: Build current Plus image
+        run: |
+          docker build -f scripts/Dockerfile --build-arg VERSION=ci-current --build-arg COMMIT="$GITHUB_SHA" -t memos-plus-ci:current .
+          docker save memos-plus-ci:current | gzip > plus-ci-image.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plus-ci-image
+          path: plus-ci-image.tar.gz
+          retention-days: 1
+  fresh:
+    name: Fresh install and restart (${{ matrix.driver }})
+    needs: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        driver: [sqlite, mysql, postgres]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: plus-ci-image
+      - run: gunzip -c plus-ci-image.tar.gz | docker load
+      - name: Check new database, real assets, licenses and persisted data
+        run: bash scripts/release_smoke_test.sh --candidate-image memos-plus-ci:current
+        env:
+          MEMOS_SMOKE_DRIVER: ${{ matrix.driver }}
+  entrypoint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: bash scripts/entrypoint_test.sh

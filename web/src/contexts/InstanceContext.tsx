@@ -21,10 +21,17 @@ import {
   InstanceSetting_StorageSettingSchema,
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
+import { rememberInstanceBrand } from "@/utils/brand-cache";
 import { initialBranding } from "@/utils/initial-branding";
 import { setManagedAttachmentInstanceUrl } from "@/utils/managed-attachment";
 
 const instanceSettingNamePrefix = "instance/settings/";
+
+const rememberBrandSettings = (settings: InstanceSetting[]) => {
+  for (const setting of settings) {
+    if (setting.value.case === "generalSetting") rememberInstanceBrand(setting.value.value.customProfile);
+  }
+};
 
 const buildInstanceSettingName = (key: InstanceSetting_Key): string => {
   const keyName = InstanceSetting_Key[key];
@@ -158,6 +165,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
         names: [buildInstanceSettingName(InstanceSetting_Key.GENERAL), buildInstanceSettingName(InstanceSetting_Key.MEMO_RELATED)],
       })
       .then((settingsResponse) => {
+        rememberBrandSettings(settingsResponse.settings);
         for (const setting of settingsResponse.settings) {
           fetchedSettingsRef.current.add(setting.name);
         }
@@ -192,6 +200,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await instanceServiceClient.batchGetInstanceSettings({ names });
+      rememberBrandSettings(response.settings);
       const fetchedNames = new Set(response.settings.map((setting) => setting.name));
       setState((prev) => ({
         ...prev,
@@ -218,6 +227,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     fetchedSettingsRef.current.add(name);
     try {
       const setting = await instanceServiceClient.getInstanceSetting({ name });
+      rememberBrandSettings([setting]);
       setState((prev) => ({
         ...prev,
         settings: [...prev.settings.filter((s) => s.name !== setting.name), setting],
@@ -234,6 +244,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       const updatedSetting = isAccessSetting
         ? await updateAccessSetting(setting)
         : await instanceServiceClient.updateInstanceSetting({ setting });
+      rememberBrandSettings([updatedSetting]);
       setState((prev) => ({
         ...prev,
         profile:

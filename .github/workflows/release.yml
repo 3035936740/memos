@@ -21,15 +21,8 @@ env:
   ARTIFACT_PREFIX: memos-plus
 
 jobs:
-  backend-checks:
-    uses: ./.github/workflows/backend-tests.yml
-
-  frontend-checks:
-    uses: ./.github/workflows/frontend-tests.yml
-
-  upgrade-smoke:
-    name: Verify fresh install and stable upgrade
-    uses: ./.github/workflows/upgrade-smoke.yml
+  checks:
+    uses: ./.github/workflows/ci.yml
 
   prepare:
     name: Extract Version
@@ -73,49 +66,18 @@ jobs:
 
   build-frontend:
     name: Build Frontend
-    needs: [prepare, upgrade-smoke, backend-checks, frontend-checks]
+    needs: [prepare, checks]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4.2.0
+      - uses: actions/download-artifact@v4
         with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: web/pnpm-lock.yaml
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_OUTPUT"
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('web/pnpm-lock.yaml') }}
-          restore-keys: ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        working-directory: web
-        run: pnpm install --frozen-lockfile
-
-      - name: Build frontend release assets
-        working-directory: web
-        run: pnpm release
-
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v4
+          name: ci-frontend-dist
+          path: server/router/frontend/dist
+      - uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: server/router/frontend/dist
+          if-no-files-found: error
           retention-days: 1
 
   build-binaries:

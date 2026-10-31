@@ -17,7 +17,7 @@ const SpacePage = () => {
   const currentUser = useCurrentUser();
   const { selectSpace, selectedSpaceName } = useSpaceContext();
   const spaceQuery = useSpace(currentUser?.name, uid ? `spaces/${uid}` : "");
-  const space = spaceQuery.data;
+  const space = spaceQuery.isError ? undefined : spaceQuery.data;
 
   useEffect(() => {
     if (space) {

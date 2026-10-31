@@ -30,13 +30,11 @@ const (
 	testUser     = "root"
 	testPassword = "test"
 
-	// Memos container settings for migration testing.
+	// Retained upstream containers serve historical fixtures only. They are not
+	// part of current Plus CI and do not establish database compatibility.
 	MemosDockerImage = "neosmemo/memos"
-	// StableMemosVersion is the previous stable release upgrades are tested from.
-	// Pinned rather than tracking the floating "stable" tag so a Docker Hub retag
-	// cannot change what CI verifies. Bump this when a new stable ships.
-	// scripts/release_smoke_test.sh detects the previous release from Git tags
-	// instead, so the black-box tier still follows "stable" automatically.
+	// StableMemosVersion pins the unsupported historical fixture. The current
+	// release smoke test uses only a fresh Plus database and the candidate image.
 	StableMemosVersion = "0.30.0"
 
 	mysqlNetworkAlias    = "memos-mysql"

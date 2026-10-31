@@ -8,7 +8,8 @@ import { getDuplicateSpaceTitles } from "@/lib/space-display";
 import { getSpaceNavigationPath, getSpaceRoute, getUnscopedPath } from "@/lib/space-routes";
 import { ROUTES } from "@/router/routes";
 import type { Space } from "@/types/proto/api/v1/space_service_pb";
-import { getInitialSpace } from "@/utils/initial-space";
+import { readSpaceBrand, rememberSpaceBrand, type SpaceBrand } from "@/utils/brand-cache";
+import { getInitialSpace, isInitialSpaceUnavailable } from "@/utils/initial-space";
 import { readRecentSpaces, recordRecentSpace } from "@/utils/space-directory";
 
 const SELECTED_SPACE_STORAGE_PREFIX = "memos-selected-space:";
@@ -54,6 +55,7 @@ interface SpaceContextValue {
   spaceByName: ReadonlyMap<string, Space>;
   duplicateSpaceTitles: ReadonlySet<string>;
   selectedSpace?: Space;
+  selectedSpaceBrand?: SpaceBrand;
   selectedSpaceName?: string;
   selectedSpacePath?: string;
   collectionScope: CollectionScope;
@@ -114,7 +116,19 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   const selectedSpaceName = routeSpaceId ? routeSpace?.name || `spaces/${routeSpaceId}` : storedSelectedSpaceName;
   const spaceByName = useMemo(() => new Map(hydratedSpaces.map((space) => [space.name, space])), [hydratedSpaces]);
   const listedSelectedSpace = selectedSpaceName ? spaceByName.get(selectedSpaceName) : undefined;
-  const selectedSpace = listedSelectedSpace ?? (optimisticSpace?.name === selectedSpaceName ? optimisticSpace : undefined);
+  const selectedSpace =
+    routeSpaceId && routeSpaceQuery.isError
+      ? undefined
+      : (listedSelectedSpace ?? (optimisticSpace?.name === selectedSpaceName ? optimisticSpace : undefined));
+  const cachedSpaceBrand = useMemo(
+    () => (selectedSpaceName ? readSpaceBrand(selectedSpaceName, viewerName) : undefined),
+    [selectedSpaceName, viewerName],
+  );
+  const brandUnavailable = routeSpaceId ? routeSpaceQuery.isError || isInitialSpaceUnavailable(routeSpaceId) : selectedQuery.isError;
+  const selectedSpaceBrand = selectedSpace ?? (brandUnavailable ? undefined : cachedSpaceBrand);
+  useEffect(() => {
+    if (selectedSpace) rememberSpaceBrand(selectedSpace, viewerName);
+  }, [selectedSpace, viewerName]);
   const selectedSpacePath = selectedSpaceName
     ? `/space/${encodeURIComponent(selectedSpace?.urlSlug || selectedSpaceName.split("/").at(-1) || "")}`
     : undefined;
@@ -198,6 +212,7 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
       spaceByName,
       duplicateSpaceTitles,
       selectedSpace,
+      selectedSpaceBrand,
       selectedSpaceName,
       selectedSpacePath,
       collectionScope,
@@ -215,6 +230,7 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
       selectMemos,
       selectSpace,
       selectedSpace,
+      selectedSpaceBrand,
       selectedSpaceName,
       selectedSpacePath,
       spaceByName,

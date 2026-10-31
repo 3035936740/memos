@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { instanceServiceClient } from "@/connect";
 import { InstanceSetting, InstanceSetting_AccessSetting, InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
+import { rememberInstanceBrand } from "@/utils/brand-cache";
+
+const rememberBrand = (setting: InstanceSetting) => {
+  if (setting.value.case === "generalSetting") rememberInstanceBrand(setting.value.value.customProfile);
+};
 
 // Query keys factory
 export const instanceKeys = {
@@ -47,6 +52,7 @@ export function useInstanceSetting(key: InstanceSetting_Key) {
       const setting = await instanceServiceClient.getInstanceSetting({
         name: buildInstanceSettingName(key),
       });
+      rememberBrand(setting);
       return setting;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -61,6 +67,7 @@ export function useInstanceSettings(keys: InstanceSetting_Key[]) {
       const response = await instanceServiceClient.batchGetInstanceSettings({
         names: keys.map(buildInstanceSettingName),
       });
+      response.settings.forEach(rememberBrand);
       return response.settings;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -74,6 +81,7 @@ export function useUpdateInstanceSetting() {
   return useMutation({
     mutationFn: async (setting: InstanceSetting) => instanceServiceClient.updateInstanceSetting({ setting }),
     onSuccess: async (setting) => {
+      rememberBrand(setting);
       // Update the exact setting cache from the server response. Batch caches
       // are marked stale without refetching so an active setting query does not
       // issue a duplicate request immediately after a successful mutation.

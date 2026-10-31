@@ -38,9 +38,9 @@ func brandHTML(source string, branding initialBranding, documentBrand ...initial
 		}
 		switch strings.Split(iconURL, "?")[0] {
 		case "/logo.svg", "/logo.webp", "/full-logo.webp":
-			// The frontend colours the white SVG after resolving the visitor's
-			// theme. Avoid briefly flashing the old blue icon before that.
-			iconURL = "data:,"
+			// Keep an official M+ icon even if JavaScript or the SVG request fails.
+			// The frontend replaces it with the themed SVG when ready.
+			iconURL = "/favicon.ico"
 			if rel == "apple-touch-icon" {
 				iconURL = "/apple-touch-icon.png"
 			}
@@ -76,15 +76,20 @@ func resolveInitialBranding(setting *storepb.InstanceGeneralSetting) initialBran
 func (s *FrontendService) serveIndex(files fs.FS) echo.HandlerFunc {
 	return func(c *echo.Context) error {
 		setting, err := s.Store.GetInstanceGeneralSetting(c.Request().Context())
-		if err != nil {
-			return c.NoContent(http.StatusServiceUnavailable)
+		source, readErr := fs.ReadFile(files, "index.html")
+		if readErr != nil {
+			return readErr
 		}
-		source, err := fs.ReadFile(files, "index.html")
+		setFrontendCacheHeaders(c, c.Request().URL.Path)
 		if err != nil {
-			return err
+			// Keep a real branded error document instead of an empty response.
+			// The client may reuse a successful public brand from localStorage,
+			// but must not persist this temporary default over that cached brand.
+			body := brandHTML(string(source), resolveInitialBranding(nil))
+			body = strings.Replace(body, `id="memos-branding"`, `id="memos-branding" data-unavailable`, 1)
+			return c.HTML(http.StatusServiceUnavailable, body)
 		}
 		branding := resolveInitialBranding(setting)
-		setFrontendCacheHeaders(c, c.Request().URL.Path)
 		if strings.HasPrefix(c.Request().URL.Path, "/space/") {
 			return c.HTML(http.StatusOK, s.brandSpaceHTML(c, string(source), branding))
 		}

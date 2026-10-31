@@ -8,6 +8,8 @@ Memos Plus 是基于 [Memos](https://github.com/usememos/memos) 开发的非官�
 
 **好看、能玩、可以高度自定义的自建博客与碎碎念。** 基于 [Memos](https://github.com/usememos/memos)，保留它快速记录、Markdown、数据归你所有的全部优点，再加上一整套博客外观和小圈子功能。
 
+**数据库兼容性：Memos Plus 不支持直接使用或升级原版 Memos 的数据库，不区分原版版本。请使用全新数据库和独立数据目录。** 支持的内容导入不等于数据库迁移，详见[兼容性说明](#从原版-memos-迁移)。
+
 **[在线演示](https://memos.bing.tomato-universe.tech/)** · [快速开始](#快速开始) · [给文章指定外观](#给文章指定外观) · [从原版迁移](#从原版-memos-迁移) · [部署示例](deploy/docker-compose.yml) · [English](README.en.md)
 
 [![MIT license](https://img.shields.io/github/license/3035936740/memos-plus?style=flat-square)](LICENSE)
@@ -224,17 +226,14 @@ docker compose logs --tail=100 memos-plus
 
 ## 从原版 Memos 迁移
 
-本项目保留上游 Go module、数据库驱动、数据目录习惯和协议命名空间，同时新增 Plus 的字段、表与独立迁移记录。
+**不支持从原版 Memos 直接迁移数据库。** 不要复用原版 SQLite 文件、外部数据库／DSN 或数据目录。版本号相同、仓库保留历史迁移文件，或者服务能够启动，都不代表数据库兼容。
 
-当前源码的上游数据库目标版本为 **`0.34.1`**，见 [internal/version/upstream-version.txt](internal/version/upstream-version.txt)。它不是 Plus 发布版本号，也不代表所有来源版本都已验证兼容。服务器拒绝比目标更新的数据库；早于 `0.22.0` 的旧安装会被要求先经上游 `0.25.x` 升级。其他版本和自定义数据库仍需在可丢弃副本上试迁移。
+1. 单独备份原版数据库、附件和部署配置，确保可以恢复原站。
+2. 为 Plus 使用**全新、空白的数据库和独立数据目录**。使用 MySQL／PostgreSQL 时，也要创建单独的数据库／schema 和凭据，不要连接原版数据库。
+3. 如需搬运内容，只使用适用的[内容导入格式](#从别的博客搬家)，不直接导入原版数据库。内容导入不转移原版账号、权限、设置，也不保证原版导出文件的所有特性可以无损转换。
+4. 检查导入结果前保留原站和备份。不能把已经由 Plus 修改的数据库作为原版回滚来源。
 
-1. 停止原版并制作完整可恢复备份：数据目录、实际数据库（包括外部数据库）、附件／对象存储和配置。
-2. 用选定的 Plus 构建连接**隔离副本**，保持相同数据库驱动与兼容的连接配置。核对日志、账号、文章、权限、空间和附件，并尝试新建／修改。
-3. 只有自己的实际来源版本验证成功后，才安排生产切换；切换时保持原版停止，避免并发写入。
-
-已初始化的 SQLite 数据库需要升级时，代码会在数据目录生成升级前快照，保留最新三份 `memos_prod.db.before-*.bak`；快照失败会停止迁移。自动快照只保护数据库，不含外部文件，不能代替自己的备份。MySQL／PostgreSQL 不会自动快照。
-
-**升级后不能把数据库直接交回原版 Memos。** 回退必须使用迁移前备份和匹配的原版程序。Plus 使用独立的 `1.x` 发布版本和迁移记录，同时保留上游 schema 版本，「关于」可显示两者。存在 CI 升级脚本不代表所有迁移已通过，更不能证明自己的数据库可以安全迁移。
+保留的[上游 schema 版本文件](internal/version/upstream-version.txt)、模块名、协议名用于保留实现历史，**不构成数据库兼容承诺**。当前 CI 验证 Plus 全新数据库安装和重启持久化，不再验证从原版 Memos 升级，也不代表任意旧版 Plus 都能升级；Plus 自身升级仍需遵循具体版本说明并做好备份。
 
 ## 自己构建
 
@@ -296,10 +295,10 @@ pnpm dev
 pnpm --dir web lint
 pnpm --dir web test
 pnpm --dir web release
-DRIVER=sqlite go test ./...
+DRIVER=sqlite bash scripts/ci_go_tests.sh -short ./...
 ```
 
-最后一行是 POSIX shell 写法；PowerShell 先设置 `$env:DRIVER = "sqlite"` 再运行 `go test ./...`。MySQL／PostgreSQL store 检查和 `scripts/release_smoke_test.sh` 需要相应数据库／容器环境。发布 smoke 脚本使用 Docker，默认以 schema 版本文件选择上游来源镜像，可通过 `--previous-image` 指定版本。这些是检查方法，不是已经通过的测试记录。
+最后一行使用 Bash 和当前数据库支持范围，Windows 可使用 Git Bash；short 模式不验证 Docker／S3 集成。完整业务、竞态、SQL 驱动和运行镜像检查见 [CI 说明](docs/ci.md)。发布 smoke 脚本验证 Plus 全新安装和重启持久化，不再下载或升级上游 Memos 镜像。这些是检查方法，不代表所有检查已通过。
 
 ## 搭一个演示站
 

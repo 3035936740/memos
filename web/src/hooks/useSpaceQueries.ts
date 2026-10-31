@@ -1,5 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { type QueryClient, type QueryKey, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { spaceServiceClient } from "@/connect";
 import { attachmentKeys } from "@/hooks/useAttachmentQueries";
@@ -15,6 +16,7 @@ import {
   SpaceMemberSchema,
   SpaceSchema,
 } from "@/types/proto/api/v1/space_service_pb";
+import { rememberSpaceBrand } from "@/utils/brand-cache";
 
 const SPACE_LIST_PAGE_SIZE = 1000;
 const ADMIN_SPACE_LIST_PAGE_SIZE = 10;
@@ -168,7 +170,14 @@ export function useAdminSpaces(filter: string, pageToken: string, options?: Spac
 export function useSpace(viewerName: string | undefined, spaceName: string | undefined, options?: SpaceQueryOptions) {
   return useQuery({
     queryKey: spaceKeys.space(viewerName ?? "", spaceName ?? ""),
-    queryFn: () => spaceServiceClient.getSpace({ name: spaceName! }),
+    queryFn: async () => {
+      const space = await spaceServiceClient.getSpace({ name: spaceName! });
+      rememberSpaceBrand(space, viewerName);
+      return space;
+    },
+    staleTime: 60_000,
+    retry: (attempt, error) =>
+      !(error instanceof ConnectError && [Code.NotFound, Code.PermissionDenied, Code.Unauthenticated].includes(error.code)) && attempt < 1,
     enabled: Boolean(spaceName) && (options?.enabled ?? true),
   });
 }

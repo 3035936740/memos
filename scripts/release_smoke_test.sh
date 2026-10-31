@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Black-box smoke test for a Memos release image.
+# Black-box fresh-install and restart test for the current Memos Plus image.
 #
 # By default, the script builds the current worktree as a local Docker image.
 # Pass --candidate-image to test an image that has already been built.
@@ -11,7 +11,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 candidate_image="${MEMOS_SMOKE_CANDIDATE_IMAGE:-}"
-previous_image="${MEMOS_SMOKE_PREVIOUS_IMAGE:-}"
 keep_resources="${MEMOS_SMOKE_KEEP_RESOURCES:-0}"
 smoke_driver="${MEMOS_SMOKE_DRIVER:-sqlite}"
 
@@ -19,26 +18,23 @@ usage() {
   cat <<'EOF'
 Usage: ./scripts/release_smoke_test.sh [options]
 
-Runs fresh-install and previous-stable upgrade smoke tests against a Memos
-Docker image. With no options, the current worktree is built and tested.
+Runs fresh-install and restart-persistence checks against Memos Plus.
+Uses only new databases; upstream Memos database upgrades are unsupported.
 
 Options:
   --candidate-image IMAGE  Test an existing image instead of building locally.
-  --previous-image IMAGE   Image used to seed the upgrade test. By default, the
-                           upstream compatibility version file is used.
   --keep-resources         Keep containers and volumes after the test for debugging.
   -h, --help               Show this help text.
 
 Environment equivalents:
   MEMOS_SMOKE_CANDIDATE_IMAGE
-  MEMOS_SMOKE_PREVIOUS_IMAGE
+  MEMOS_SMOKE_DRIVER=sqlite|mysql|postgres
   MEMOS_SMOKE_KEEP_RESOURCES=1
 
 Examples:
   ./scripts/release_smoke_test.sh
   ./scripts/release_smoke_test.sh \
-    --candidate-image memos-smoke:local \
-    --previous-image neosmemo/memos:0.29.1
+    --candidate-image memos-smoke:local
 EOF
 }
 
@@ -58,11 +54,6 @@ while (($# > 0)); do
       candidate_image="$2"
       shift 2
       ;;
-    --previous-image)
-      (($# >= 2)) || die "--previous-image requires a value"
-      previous_image="$2"
-      shift 2
-      ;;
     --keep-resources)
       keep_resources=1
       shift
@@ -78,7 +69,7 @@ while (($# > 0)); do
   esac
 done
 
-for command_name in curl docker git jq; do
+for command_name in curl docker git jq cmp; do
   command -v "$command_name" >/dev/null 2>&1 || die "$command_name is required"
 done
 
@@ -86,10 +77,7 @@ docker info >/dev/null 2>&1 || die "Docker is not running"
 
 run_id="${GITHUB_RUN_ID:-local}-$(date +%s)-$$"
 fresh_container="memos-smoke-fresh-$run_id"
-upgrade_old_container="memos-smoke-upgrade-old-$run_id"
-upgrade_new_container="memos-smoke-upgrade-new-$run_id"
 fresh_volume="memos-smoke-fresh-$run_id"
-upgrade_volume="memos-smoke-upgrade-$run_id"
 temp_dir="$(mktemp -d)"
 smoke_network="memos-smoke-net-$run_id"
 db_container="memos-smoke-db-$run_id"
@@ -125,7 +113,7 @@ cleanup() {
   restore_frontend_index
 
   if ((status != 0)); then
-    for container_name in "$fresh_container" "$upgrade_old_container" "$upgrade_new_container"; do
+    for container_name in "$fresh_container" "$db_container"; do
       if container_exists "$container_name"; then
         printf '\n--- docker logs: %s ---\n' "$container_name" >&2
         docker logs "$container_name" >&2 || true
@@ -135,11 +123,11 @@ cleanup() {
 
   if [[ "$keep_resources" == "1" ]]; then
     printf '\nKept smoke-test resources for debugging:\n'
-    printf '  containers: %s %s %s\n' "$fresh_container" "$upgrade_old_container" "$upgrade_new_container"
-    printf '  volumes:    %s %s\n' "$fresh_volume" "$upgrade_volume"
+    printf '  container: %s\n' "$fresh_container"
+    printf '  volume: %s\n' "$fresh_volume"
   else
-    docker rm -f "$fresh_container" "$upgrade_old_container" "$upgrade_new_container" >/dev/null 2>&1 || true
-    docker volume rm "$fresh_volume" "$upgrade_volume" >/dev/null 2>&1 || true
+    docker rm -f "$fresh_container" >/dev/null 2>&1 || true
+    docker volume rm "$fresh_volume" >/dev/null 2>&1 || true
     docker rm -f "$db_container" >/dev/null 2>&1 || true
     docker network rm "$smoke_network" >/dev/null 2>&1 || true
   fi
@@ -148,10 +136,6 @@ cleanup() {
   exit "$status"
 }
 trap cleanup EXIT
-
-detect_previous_image() {
-  printf 'neosmemo/memos:%s\n' "$(cat "$REPO_ROOT/internal/version/upstream-version.txt")"
-}
 
 build_local_candidate() {
   local commit_sha image_tag
@@ -233,7 +217,6 @@ start_container() {
   local database_options=()
   if [[ "$smoke_driver" != "sqlite" ]]; then
     local database_name="fresh"
-    [[ "$container_name" == "$fresh_container" ]] || database_name="upgraded"
     database_options=(--network "$smoke_network" --env "MEMOS_DRIVER=$smoke_driver" --env "MEMOS_DSN=${smoke_dsn//DATABASE/$database_name}")
   fi
   docker run --detach "${database_options[@]}" \
@@ -313,26 +296,19 @@ else
   ensure_image "$candidate_image"
 fi
 
-if [[ -z "$previous_image" ]]; then
-  previous_image="$(detect_previous_image)"
-fi
-ensure_image "$previous_image"
-[[ "$candidate_image" != "$previous_image" ]] || die "candidate and previous images must be different"
-
 log "Candidate image: $candidate_image"
-log "Previous image:  $previous_image"
 
 if [[ "$smoke_driver" != "sqlite" ]]; then
   docker network create "$smoke_network" >/dev/null
   case "$smoke_driver" in
     mysql)
       docker run -d --name "$db_container" --network "$smoke_network" --network-alias sql \
-        -e "MYSQL_ROOT_PASSWORD=$db_password" -e MYSQL_ROOT_HOST=% mysql:8.0 >/dev/null
+        -e "MYSQL_ROOT_PASSWORD=$db_password" -e MYSQL_ROOT_HOST=% mysql:8.4 >/dev/null
       for attempt in $(seq 1 90); do
         docker exec "$db_container" mysql -h127.0.0.1 -uroot -p"$db_password" -e 'SELECT 1' >/dev/null 2>&1 && break
         sleep 2
       done
-      docker exec "$db_container" mysql -uroot -p"$db_password" -e 'CREATE DATABASE fresh; CREATE DATABASE upgraded;'
+      docker exec "$db_container" mysql -uroot -p"$db_password" -e 'CREATE DATABASE fresh;'
       smoke_dsn="root:$db_password@tcp(sql:3306)/DATABASE"
       ;;
     postgres)
@@ -343,12 +319,17 @@ if [[ "$smoke_driver" != "sqlite" ]]; then
         sleep 2
       done
       docker exec "$db_container" createdb -U postgres fresh
-      docker exec "$db_container" createdb -U postgres upgraded
       smoke_dsn="postgresql://postgres:$db_password@sql:5432/DATABASE?sslmode=disable"
       ;;
     *) die "unsupported MEMOS_SMOKE_DRIVER: $smoke_driver" ;;
   esac
 fi
+log "Checking complete license in the actual candidate image"
+docker run --rm --entrypoint cat "$candidate_image" /usr/local/memos/LICENSE > "$temp_dir/image-LICENSE"
+cmp "$REPO_ROOT/LICENSE" "$temp_dir/image-LICENSE" || die "candidate LICENSE differs from the source"
+docker run --rm --entrypoint cat "$candidate_image" /usr/local/memos/visual-effects-NOTICES.txt > "$temp_dir/image-NOTICES"
+cmp "$REPO_ROOT/web/public/visual-effects-NOTICES.txt" "$temp_dir/image-NOTICES" || die "candidate third-party notices differ from the source"
+
 log "Running fresh-install smoke test ($smoke_driver)"
 docker volume create "$fresh_volume" >/dev/null
 start_container "$fresh_container" "$candidate_image" "$fresh_volume"
@@ -364,19 +345,4 @@ fresh_token="$(sign_in)"
 assert_memo "$fresh_token" "release-smoke" "fresh install smoke sentinel"
 docker rm -f "$fresh_container" >/dev/null
 
-log "Running $previous_image to $candidate_image upgrade smoke test"
-docker volume create "$upgrade_volume" >/dev/null
-start_container "$upgrade_old_container" "$previous_image" "$upgrade_volume"
-create_admin
-upgrade_token="$(sign_in)"
-create_memo "$upgrade_token" "pre-upgrade-smoke" "created before release upgrade"
-docker rm -f "$upgrade_old_container" >/dev/null
-
-start_container "$upgrade_new_container" "$candidate_image" "$upgrade_volume"
-assert_frontend_assets
-upgrade_token="$(sign_in)"
-assert_memo "$upgrade_token" "pre-upgrade-smoke" "created before release upgrade"
-create_memo "$upgrade_token" "post-upgrade-smoke" "created after release upgrade"
-assert_memo "$upgrade_token" "post-upgrade-smoke" "created after release upgrade"
-
-log "Release smoke tests passed"
+log "Memos Plus fresh-install and restart checks passed ($smoke_driver)"

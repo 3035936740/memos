@@ -65,10 +65,11 @@ func TestCacheEviction(t *testing.T) {
 	cache := New(config)
 	defer cache.Close()
 
-	// Add 5 items (max capacity)
+	// Earlier expirations identify the old generation even on platforms whose
+	// time.Now calls share a clock tick. Keep all entries well away from expiry.
 	for i := 0; i < 5; i++ {
 		key := fmt.Sprintf("key%d", i)
-		cache.Set(ctx, key, i)
+		cache.SetWithTTL(ctx, key, i, time.Minute)
 	}
 
 	// Verify all 5 items are in the cache

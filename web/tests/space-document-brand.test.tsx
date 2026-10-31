@@ -11,7 +11,10 @@ vi.mock("@/contexts/InstanceContext", () => ({
 }));
 
 vi.mock("@/contexts/SpaceContext", () => ({
-  useSpaceContext: () => ({ selectedSpace: state.selectedSpace }),
+  useSpaceContext: () => ({
+    selectedSpaceBrand: state.selectedSpace,
+    selectedSpaceName: state.selectedSpace ? "spaces/product" : undefined,
+  }),
 }));
 
 describe("SpaceDocumentBrand", () => {

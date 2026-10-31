@@ -13,14 +13,24 @@ let faviconRevision = 0;
 
 /** Reuse the white SVG for the browser icon; an SVG image cannot inherit page CSS. */
 export const setBrandFavicon = async (source: string) => {
-  const icon = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
-  if (!icon) return;
+  let icon = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+  if (!icon) {
+    icon = document.createElement("link");
+    icon.rel = "icon";
+    document.head.appendChild(icon);
+  }
+  const previousSource = icon.dataset.brandSource;
   const revision = ++faviconRevision;
   icon.dataset.brandSource = source;
   icon.removeAttribute("type");
   if (!isDefaultBrandLogo(source)) {
     icon.href = source;
     return;
+  }
+
+  // Error pages must not show a blank/globe icon while the themed SVG loads.
+  if (!previousSource || !isDefaultBrandLogo(previousSource) || !icon.getAttribute("href")?.startsWith("data:image/svg+xml,")) {
+    icon.href = "/favicon.ico";
   }
 
   try {

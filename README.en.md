@@ -8,6 +8,8 @@
 
 Memos Plus is an independently maintained, unofficial derivative of [Memos](https://github.com/usememos/memos), with its own versioning and release schedule. The original copyright and MIT license notices are retained. We thank the upstream authors and contributors. This project is not an official Memos release and is not endorsed by upstream.
 
+**Database compatibility:** Memos Plus does **not support directly opening or upgrading an upstream Memos database**, regardless of the upstream version. Start with a new database and a separate data directory. Supported content imports are different from database migration; see [the compatibility policy](#migrating-from-upstream-memos).
+
 [Live demo](https://memos.bing.tomato-universe.tech/) · [Get started](#get-started) · [Post appearance](#give-a-post-its-own-appearance) · [Migration](#migrating-from-upstream-memos) · [Compose file](deploy/docker-compose.yml) · [Releases](https://github.com/3035936740/memos-plus/releases)
 
 [![MIT license](https://img.shields.io/github/license/3035936740/memos-plus?style=flat-square)](LICENSE)
@@ -225,17 +227,14 @@ To roll back, stop the new instance and restore the **pre-upgrade** database, lo
 
 ## Migrating from upstream Memos
 
-This project retains the upstream Go module, database drivers, data-directory conventions, and protocol namespaces. It also adds Plus-specific tables and fields and an independent migration ledger.
+**Direct database migration from upstream Memos is unsupported.** Do not reuse an upstream SQLite file, external database/DSN, or data directory with Memos Plus. Matching version numbers, retained migration files, and a successful startup do not establish compatibility.
 
-The current source's upstream schema target is **`0.34.1`**, recorded in [internal/version/upstream-version.txt](internal/version/upstream-version.txt). This is not the Plus release number or a claim of universal migration compatibility. The server rejects databases newer than its target. Its legacy guard directs installations older than `0.22.0` through upstream `0.25.x` first. Other versions and customized databases still require a trial migration on a disposable copy.
+1. Keep a separate, restorable backup of the upstream database, uploads, and deployment configuration.
+2. Install Plus with a **new, empty database and a separate data directory**. For an external database, create a separate database/schema and credentials; do not point Plus at the upstream database.
+3. Move content only through the [supported content import formats](#import-from-another-blog), where applicable. This does not transfer the upstream database, accounts, permissions, settings, or guarantee lossless conversion of an upstream export.
+4. Keep the original installation and its backup until you have checked the imported content. Do not use an upgraded Plus database as an upstream rollback source.
 
-1. Stop the upstream instance and make a complete, restorable backup: data directory, actual database (including an external DB if used), uploads/object storage, and configuration.
-2. Start the chosen Plus build against an **isolated copy** with the same database driver and compatible connection settings. Check its logs and inspect users, posts, permissions, Spaces, attachments, and a new create/edit operation.
-3. Only schedule the production cutover after that trial succeeds for your actual source version. Keep the upstream instance stopped during cutover and avoid concurrent writers.
-
-For an initialized SQLite database that needs migration, the code takes a pre-upgrade snapshot in the data directory and retains the three most recent `memos_prod.db.before-*.bak` snapshots. Snapshot failure stops migration. This protects the database only, not external files, and does not replace your own backup. MySQL/PostgreSQL do not receive automatic snapshots.
-
-**Do not reopen the upgraded database with upstream Memos.** Returning to upstream requires the pre-migration backup and matching upstream executable. Plus uses its own `1.x` release version and migration ledger while preserving the upstream schema version; About displays both. CI includes upgrade checks, but neither their existence nor this README proves that your source version/database has passed them.
+The retained [upstream schema version file](internal/version/upstream-version.txt) and original module/protocol names document implementation history; they are **not a database compatibility promise**. Current CI checks Plus with fresh databases and restart persistence, rather than upgrades from upstream Memos releases. It does not certify upgrades from arbitrary old Plus versions either; follow the release-specific upgrade policy and backups described above.
 
 ## Build from source
 
@@ -297,10 +296,10 @@ The project's existing checks include:
 pnpm --dir web lint
 pnpm --dir web test
 pnpm --dir web release
-DRIVER=sqlite go test ./...
+DRIVER=sqlite bash scripts/ci_go_tests.sh -short ./...
 ```
 
-The last command is POSIX shell syntax; in PowerShell set `$env:DRIVER = "sqlite"` before `go test ./...`. MySQL/PostgreSQL store tests and `scripts/release_smoke_test.sh` require their configured database/container environment. The release smoke script uses Docker, defaults its upstream image to the schema target file, and accepts `--previous-image` for an explicit source image. These commands describe how to check a change; they are not a record of tests already passed.
+The last command uses Bash and the current database support policy; on Windows use Git Bash. Short mode does not exercise Docker/S3 integrations. Full current-application, race, SQL-driver and runtime-image checks are documented in [the CI guide](docs/ci.md). The release smoke script verifies fresh Plus databases and restart persistence; it never downloads or upgrades an upstream Memos image. These commands describe checks to run, not tests already passed.
 
 ## Disposable demo mode
 
