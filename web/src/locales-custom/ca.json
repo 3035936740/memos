@@ -1788,7 +1788,34 @@
     "not-found": "{{command}}: l'ordre no s'ha trobat"
   },
   "locale-picker": {
-    "automatic": "Automàtic (idioma del navegador)",
+    "automatic": "Automàtic",
     "current": "Idioma: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Configuració d'ous de Pasqua",
+    "description": "Controla sorpreses opcionals per a tothom. Totes estan habilitades per defecte. Desa per aplicar; es manté el progrés de la recollida de visitants.",
+    "disable-all": "Desactiva tots els ous de Pasqua",
+    "master-hint": "També desactiva els efectes de vacances. Les opcions individuals es conserven quan aquest interruptor es torna a apagar. Els fons d'estil normal no es veuen afectats.",
+    "individual": "Ous de Pasqua individuals",
+    "disable-one": "Desactiva {{name}}",
+    "names": {
+      "konami": "Codi Konami",
+      "cursor-trail": "el cursor brilla",
+      "terminal": "consola de desenvolupadors (/)",
+      "vim-navigation": "Tecles de navegació Vim",
+      "midnight": "salutació de mitjanit",
+      "glitch": "efecte de fallada aleatòria",
+      "pixel-boss": "cap de píxels",
+      "shiny-cards": "cartes brillants rares",
+      "achievements": "assoliments i codi de reaccions",
+      "rain": "pluja sobre vidre (#pluja)",
+      "cat": "gat caminant (#cat)",
+      "travel": "segell de viatge (#travel)",
+      "birthday": "confeti d'aniversari (#aniversari)",
+      "void": "Pàgina buida (/void)",
+      "teapot": "pàgina de la tetera (/418)",
+      "museum": "pàgina del museu (/museum)",
+      "time-machine": "pàgina de la màquina del temps (/time-machine)"
+    }
   }
 }

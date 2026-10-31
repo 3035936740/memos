@@ -1784,7 +1784,34 @@
     "not-found": "{{command}}: a parancs nem található"
   },
   "locale-picker": {
-    "automatic": "Automatikus (böngésző nyelve)",
+    "automatic": "Automatikus",
     "current": "Nyelv: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Húsvéti tojás beállítások",
+    "description": "Irányítsd az opcionális meglepetéseket mindenki számára. Alapértelmezés szerint mindegyik engedélyezve van. Mentse az alkalmazáshoz; a látogatók gyűjtése folyamatban van.",
+    "disable-all": "Tiltsa le az összes húsvéti tojást",
+    "master-hint": "Az ünnepi hatásokat is letiltja. A kapcsoló ismételt kikapcsolásakor az egyéni választások megmaradnak. A normál stílusú háttereket ez nem érinti.",
+    "individual": "Egyedi húsvéti tojások",
+    "disable-one": "Letiltás {{name}}",
+    "names": {
+      "konami": "Konami kód",
+      "cursor-trail": "kurzor csillog",
+      "terminal": "fejlesztői konzol (/)",
+      "vim-navigation": "Vim navigációs gombok",
+      "midnight": "éjféli üdvözlet",
+      "glitch": "véletlenszerű hibahatás",
+      "pixel-boss": "pixel főnök",
+      "shiny-cards": "ritka fényes kártyák",
+      "achievements": "eredmények és reakció kódex",
+      "rain": "eső az üvegen (#eső)",
+      "cat": "sétáló macska (#macska)",
+      "travel": "utazási postabélyegző (#travel)",
+      "birthday": "születésnapi konfetti (#születésnap)",
+      "void": "Érvénytelen oldal (/void)",
+      "teapot": "teáskanna oldal (/418)",
+      "museum": "múzeum oldala (/múzeum)",
+      "time-machine": "időgép oldal (/time-machine)"
+    }
   }
 }

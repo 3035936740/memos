@@ -2,9 +2,11 @@ import { Gamepad2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useView } from "@/contexts/ViewContext";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import { computeTransformations, updateProgress, useBlogProgress } from "@/utils/blog-progress";
 import { isMotionReduced } from "@/utils/effects";
 import { useTranslate } from "@/utils/i18n";
+import { ODDITY_PAGES, printOdditiesHint } from "@/utils/oddities";
 import TerminalConsole from "./TerminalConsole";
 
 const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
@@ -37,17 +39,27 @@ const sparkleColor = (gold: boolean) => {
  */
 const StyleEasterEggs = () => {
   const t = useTranslate();
+  const { isEnabled } = useEasterEggs();
+  const konamiEnabled = isEnabled("konami");
+  const terminalEnabled = isEnabled("terminal");
+  const achievementsEnabled = isEnabled("achievements");
   const { feedLayout, sceneStyle, setFeedLayout, setBlogStyle } = useView();
   const progress = useBlogProgress();
   const [terminalOpen, setTerminalOpen] = useState(false);
   const styled = feedLayout === "blog2";
   const { regular, masteredStyles } = computeTransformations(progress);
-  const sparkles = styled && (sceneStyle === "y2k" || regular);
+  const sparkles = isEnabled("cursor-trail") && styled && (sceneStyle === "y2k" || (achievementsEnabled && regular));
   const goldSparkles = sceneStyle !== "y2k";
-  const vimKeys = styled && sceneStyle === "terminal" && masteredStyles.includes("terminal");
+  const vimKeys = isEnabled("vim-navigation") && styled && sceneStyle === "terminal" && masteredStyles.includes("terminal");
+
+  useEffect(() => {
+    const pages = ODDITY_PAGES.filter((page) => isEnabled(page.id));
+    if (pages.length > 0) printOdditiesHint(pages);
+  }, [isEnabled]);
 
   // Up up down down left right left right B A, anywhere outside a text field.
   useEffect(() => {
+    if (!konamiEnabled) return;
     let step = 0;
     const onKeyDown = (event: KeyboardEvent) => {
       if (isTypingTarget(event.target)) return;
@@ -64,13 +76,13 @@ const StyleEasterEggs = () => {
         step = 0;
         setFeedLayout("blog2");
         setBlogStyle("pixel");
-        updateProgress((current) => ({ ...current, konami: true }));
+        if (achievementsEnabled) updateProgress((current) => ({ ...current, konami: true }));
         toast(t("blog-extra.konami"), { icon: <Gamepad2Icon aria-hidden className="size-5 text-primary" /> });
       }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setBlogStyle, setFeedLayout, t]);
+  }, [achievementsEnabled, konamiEnabled, setBlogStyle, setFeedLayout, t]);
 
   // A trail of sparkles drifts down behind the mouse pointer and fades out.
   useEffect(() => {
@@ -110,7 +122,7 @@ const StyleEasterEggs = () => {
 
   // Developer style: "/" opens the shell.
   useEffect(() => {
-    if (!styled || sceneStyle !== "terminal") return;
+    if (!terminalEnabled || !styled || sceneStyle !== "terminal") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return;
       event.preventDefault();
@@ -118,7 +130,11 @@ const StyleEasterEggs = () => {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [sceneStyle, styled]);
+  }, [sceneStyle, styled, terminalEnabled]);
+
+  useEffect(() => {
+    if (!terminalEnabled) setTerminalOpen(false);
+  }, [terminalEnabled]);
 
   // Developer mastery: j / k move between posts, o opens one, gg and G jump to the top and the bottom.
   useEffect(() => {
@@ -149,7 +165,9 @@ const StyleEasterEggs = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [vimKeys]);
 
-  return terminalOpen && styled && sceneStyle === "terminal" ? <TerminalConsole onClose={() => setTerminalOpen(false)} /> : null;
+  return terminalEnabled && terminalOpen && styled && sceneStyle === "terminal" ? (
+    <TerminalConsole onClose={() => setTerminalOpen(false)} />
+  ) : null;
 };
 
 export default StyleEasterEggs;

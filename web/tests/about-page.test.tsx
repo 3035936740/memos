@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import About from "@/pages/About";
 
 const mockInstance = {
+  generalSettingLoaded: true,
   profile: {
     version: "1.2.0 (based on Memos 0.34.1)",
     commit: "0123456789abcdef0123456789abcdef01234567",

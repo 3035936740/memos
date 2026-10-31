@@ -1787,7 +1787,34 @@
     "not-found": "{{command}}: komanda nav atrasta"
   },
   "locale-picker": {
-    "automatic": "Automātiski (pārlūka valoda)",
+    "automatic": "Automātiski",
     "current": "Valoda: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Lieldienu olu iestatījumi",
+    "description": "Kontrolējiet izvēles pārsteigumus ikvienam. Visi ir iespējoti pēc noklusējuma. Saglabāt, lai pieteiktos; apmeklētāju vākšanas progress tiek saglabāts.",
+    "disable-all": "Atspējojiet visas Lieldienu olas",
+    "master-hint": "Atspējo arī svētku efektus. Atkārtoti izslēdzot šo slēdzi, tiek saglabātas individuālās izvēles. Parastā stila foni netiek ietekmēti.",
+    "individual": "Atsevišķas Lieldienu olas",
+    "disable-one": "Atspējot {{name}}",
+    "names": {
+      "konami": "Konami kods",
+      "cursor-trail": "kursors mirdz",
+      "terminal": "izstrādātāja konsole (/)",
+      "vim-navigation": "Vim navigācijas taustiņi",
+      "midnight": "pusnakts sveiciens",
+      "glitch": "nejaušas kļūmes efekts",
+      "pixel-boss": "pikseļu boss",
+      "shiny-cards": "retas spīdīgas kārtis",
+      "achievements": "sasniegumi un reakcijas kodekss",
+      "rain": "lietus uz stikla (#lietus)",
+      "cat": "staigājošs kaķis (#kaķis)",
+      "travel": "ceļojumu pasta zīmogs (#travel)",
+      "birthday": "dzimšanas dienas konfeti (#birthday)",
+      "void": "Nederīga lapa (/void)",
+      "teapot": "tējkannas lapa (/418)",
+      "museum": "muzeja lapa (/muzejs)",
+      "time-machine": "laika mašīnas lapa (/time-machine)"
+    }
   }
 }

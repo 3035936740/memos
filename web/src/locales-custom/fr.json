@@ -1788,7 +1788,34 @@
     "not-found": "{{command}} : commande introuvable"
   },
   "locale-picker": {
-    "automatic": "Automatique (langue du navigateur)",
+    "automatic": "Automatique",
     "current": "Langue : {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Paramètres des œufs de Pâques",
+    "description": "Contrôlez les surprises facultatives pour tout le monde. Tous sont activés par défaut. Enregistrez pour postuler ; la progression de la collecte des visiteurs est conservée.",
+    "disable-all": "Désactivez tous les œufs de Pâques",
+    "master-hint": "Désactive également les effets de vacances. Les choix individuels sont conservés lorsque ce commutateur est à nouveau désactivé. Les arrière-plans de style normal ne sont pas affectés.",
+    "individual": "Oeufs de Pâques individuels",
+    "disable-one": "Désactiver {{name}}",
+    "names": {
+      "konami": "Code Konami",
+      "cursor-trail": "le curseur scintille",
+      "terminal": "console développeur (/)",
+      "vim-navigation": "Touches de navigation Vim",
+      "midnight": "salutation de minuit",
+      "glitch": "effet de pépin aléatoire",
+      "pixel-boss": "patron des pixels",
+      "shiny-cards": "cartes brillantes rares",
+      "achievements": "réalisations et codex de réaction",
+      "rain": "pluie sur verre (#pluie)",
+      "cat": "chat qui marche (#cat)",
+      "travel": "cachet de la poste de voyage (#travel)",
+      "birthday": "confettis d'anniversaire (#anniversaire)",
+      "void": "Page annulée (/void)",
+      "teapot": "page théière (/418)",
+      "museum": "page du musée (/musée)",
+      "time-machine": "page de la machine à voyager dans le temps (/time-machine)"
+    }
   }
 }

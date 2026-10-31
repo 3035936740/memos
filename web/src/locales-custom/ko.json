@@ -2055,7 +2055,34 @@
     "not-found": "{{command}}: 명령을 찾을 수 없습니다"
   },
   "locale-picker": {
-    "automatic": "자동(브라우저 언어)",
+    "automatic": "자동",
     "current": "언어: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "부활절 달걀 설정",
+    "description": "모두를 위한 선택적 놀라움을 제어하세요. 모두 기본적으로 활성화되어 있습니다. 적용하려면 저장하세요. 방문자 수집 진행 상황이 유지됩니다.",
+    "disable-all": "모든 부활절 달걀을 비활성화합니다.",
+    "master-hint": "또한 휴일 효과도 비활성화됩니다. 이 스위치를 다시 끄면 개별 선택이 유지됩니다. 일반 스타일 배경은 영향을 받지 않습니다.",
+    "individual": "개별 부활절 달걀",
+    "disable-one": "{{name}} 비활성화",
+    "names": {
+      "konami": "코나미 코드",
+      "cursor-trail": "커서 반짝임",
+      "terminal": "개발자 콘솔(/)",
+      "vim-navigation": "Vim 탐색 키",
+      "midnight": "자정 인사",
+      "glitch": "무작위 결함 효과",
+      "pixel-boss": "픽셀 보스",
+      "shiny-cards": "희귀한 빛나는 카드",
+      "achievements": "업적 및 반응 코덱스",
+      "rain": "유리에 비(#rain)",
+      "cat": "걷는 고양이 (#cat)",
+      "travel": "여행 소인(#travel)",
+      "birthday": "생일 색종이 조각 (#생일)",
+      "void": "무효 페이지(/void)",
+      "teapot": "티팟페이지(/418)",
+      "museum": "박물관 페이지(/museum)",
+      "time-machine": "타임머신 페이지(/time-machine)"
+    }
   }
 }

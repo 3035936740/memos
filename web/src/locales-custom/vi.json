@@ -2055,7 +2055,34 @@
     "not-found": "{{command}}: không tìm thấy lệnh"
   },
   "locale-picker": {
-    "automatic": "Tự động (ngôn ngữ trình duyệt)",
+    "automatic": "Tự động",
     "current": "Ngôn ngữ: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Cài đặt trứng Phục sinh",
+    "description": "Kiểm soát những bất ngờ tùy chọn cho mọi người. Tất cả đều được bật theo mặc định. Lưu để áp dụng; tiến độ thu thập khách truy cập được lưu giữ.",
+    "disable-all": "Vô hiệu hóa tất cả trứng Phục sinh",
+    "master-hint": "Đồng thời vô hiệu hóa hiệu ứng ngày lễ. Các lựa chọn riêng lẻ được giữ lại khi tắt công tắc này lần nữa. Hình nền phong cách thông thường không bị ảnh hưởng.",
+    "individual": "Trứng Phục sinh cá nhân",
+    "disable-one": "Vô hiệu hóa {{name}}",
+    "names": {
+      "konami": "Mã Konami",
+      "cursor-trail": "con trỏ lấp lánh",
+      "terminal": "bảng điều khiển dành cho nhà phát triển (/)",
+      "vim-navigation": "Phím điều hướng Vim",
+      "midnight": "lời chào nửa đêm",
+      "glitch": "hiệu ứng trục trặc ngẫu nhiên",
+      "pixel-boss": "ông chủ pixel",
+      "shiny-cards": "thẻ sáng bóng hiếm",
+      "achievements": "thành tựu và phản ứng codex",
+      "rain": "mưa trên kính (#rain)",
+      "cat": "mèo đi dạo (#cat)",
+      "travel": "dấu bưu điện du lịch (#travel)",
+      "birthday": "hoa giấy sinh nhật (#sinh nhật)",
+      "void": "Trang trống (/void)",
+      "teapot": "trang ấm trà (/418)",
+      "museum": "trang bảo tàng (/bảo tàng)",
+      "time-machine": "trang cỗ máy thời gian (/time-machine)"
+    }
   }
 }

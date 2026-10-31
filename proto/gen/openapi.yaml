@@ -4149,6 +4149,14 @@ components:
                 disableDailyQuestion:
                     type: boolean
                     description: Disable the daily writing prompt. Default is false.
+                disableEasterEggs:
+                    type: boolean
+                    description: Disable all optional Easter eggs without removing visitor progress.
+                disabledEasterEggs:
+                    type: array
+                    items:
+                        type: string
+                    description: Individually disabled Easter egg IDs. Empty preserves the built-in behavior.
             description: General instance settings configuration.
         InstanceSetting_MemoRelatedSetting:
             type: object

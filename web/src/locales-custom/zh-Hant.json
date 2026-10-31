@@ -1371,12 +1371,39 @@
     "not-found": "{{command}}：指令不存在"
   },
   "locale-picker": {
-    "automatic": "自動（跟隨瀏覽器）",
+    "automatic": "自動",
     "current": "語言：{{language}}"
   },
   "attachment-library": {
     "tabs": {
       "blocked-word": "內容包含被屏蔽的字詞"
+    }
+  },
+  "easter-eggs": {
+    "title": "彩蛋設定",
+    "description": "對全站訪客生效，預設全部開啟。修改後儲存生效，不會刪除訪客已有的收集紀錄。",
+    "disable-all": "停用全部彩蛋",
+    "master-hint": "同時停用節日特效；關閉總開關後恢復各項原有選擇。一般風格背景不受影響。",
+    "individual": "個別彩蛋設定",
+    "disable-one": "停用{{name}}",
+    "names": {
+      "konami": "科樂美秘技",
+      "cursor-trail": "滑鼠星光軌跡",
+      "terminal": "開發者控制台（/）",
+      "vim-navigation": "Vim 導覽快捷鍵",
+      "midnight": "深夜問候",
+      "glitch": "隨機故障效果（Glitch）",
+      "pixel-boss": "像素 Boss",
+      "shiny-cards": "稀有閃光卡片",
+      "achievements": "成就和反應圖鑑",
+      "rain": "玻璃雨滴（#下雨）",
+      "cat": "路過的貓咪（#貓）",
+      "travel": "旅行郵戳（#旅行）",
+      "birthday": "生日彩紙（#生日）",
+      "void": "虛空頁面（/void）",
+      "teapot": "茶壺頁面（/418）",
+      "museum": "博物館頁面（/museum）",
+      "time-machine": "時光機頁面（/time-machine）"
     }
   }
 }

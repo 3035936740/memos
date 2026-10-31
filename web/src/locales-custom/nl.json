@@ -1784,7 +1784,34 @@
     "not-found": "{{command}}: opdracht niet gevonden"
   },
   "locale-picker": {
-    "automatic": "Automatisch (browsertaal)",
+    "automatic": "Automatisch",
     "current": "Taal: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Paasei-instellingen",
+    "description": "Beheer optionele verrassingen voor iedereen. Ze zijn allemaal standaard ingeschakeld. Opslaan om te solliciteren; De voortgang van de bezoekersverzameling wordt bijgehouden.",
+    "disable-all": "Schakel alle paaseieren uit",
+    "master-hint": "Schakelt ook vakantie-effecten uit. Individuele keuzes blijven behouden wanneer deze schakelaar weer wordt uitgeschakeld. Normale stijlachtergronden worden niet beïnvloed.",
+    "individual": "Individuele paaseieren",
+    "disable-one": "Schakel {{name}} uit",
+    "names": {
+      "konami": "Konami-code",
+      "cursor-trail": "cursor glinstert",
+      "terminal": "ontwikkelaarsconsole (/)",
+      "vim-navigation": "Vim-navigatietoetsen",
+      "midnight": "middernacht groet",
+      "glitch": "willekeurig glitch-effect",
+      "pixel-boss": "pixel baas",
+      "shiny-cards": "zeldzame glimmende kaarten",
+      "achievements": "prestaties en reactiecodex",
+      "rain": "regen op glas (#regen)",
+      "cat": "wandelende kat (#kat)",
+      "travel": "reisstempel (#reizen)",
+      "birthday": "verjaardagsconfetti (#verjaardag)",
+      "void": "Ongeldige pagina (/nietig)",
+      "teapot": "theepotpagina (/418)",
+      "museum": "museumpagina (/museum)",
+      "time-machine": "tijdmachinepagina (/time-machine)"
+    }
   }
 }

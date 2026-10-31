@@ -1781,7 +1781,34 @@
     "not-found": "{{command}}: komentoa ei löydy"
   },
   "locale-picker": {
-    "automatic": "Automaattinen (selaimen kieli)",
+    "automatic": "Automaattinen",
     "current": "Kieli: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Pääsiäismuna-asetukset",
+    "description": "Hallitse valinnaisia yllätyksiä kaikille. Kaikki ovat oletuksena käytössä. Tallenna hakeaksesi; vierailijakeräyksen edistymistä pidetään yllä.",
+    "disable-all": "Poista kaikki pääsiäismunat käytöstä",
+    "master-hint": "Poistaa myös lomatehosteet käytöstä. Yksittäiset valinnat säilyvät, kun tämä kytkin kytketään pois päältä. Normaalit tyylitaustat eivät muutu.",
+    "individual": "Yksittäiset pääsiäismunat",
+    "disable-one": "Poista käytöstä {{name}}",
+    "names": {
+      "konami": "Konami koodi",
+      "cursor-trail": "kohdistin kimaltelee",
+      "terminal": "kehittäjäkonsoli (/)",
+      "vim-navigation": "Vim-navigointinäppäimet",
+      "midnight": "keskiyön tervehdys",
+      "glitch": "satunnainen häiriöefekti",
+      "pixel-boss": "pikselin pomo",
+      "shiny-cards": "harvinaisia kiiltäviä kortteja",
+      "achievements": "saavutukset ja reaktiokoodi",
+      "rain": "sadetta lasille (#sade)",
+      "cat": "kävelykissa (#kissa)",
+      "travel": "matkapostileima (#matka)",
+      "birthday": "syntymäpäiväkonfetti (#syntymäpäivä)",
+      "void": "Tyhjä sivu (/void)",
+      "teapot": "teekannu sivu (/418)",
+      "museum": "museon sivu (/museo)",
+      "time-machine": "aikakonesivu (/aikakone)"
+    }
   }
 }

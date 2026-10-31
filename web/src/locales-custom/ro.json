@@ -1787,7 +1787,34 @@
     "not-found": "{{command}}: comanda nu a fost găsită"
   },
   "locale-picker": {
-    "automatic": "Automat (limba browserului)",
+    "automatic": "Automat",
     "current": "Limba: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Setari pentru ouă de Paște",
+    "description": "Controlați surprizele opționale pentru toată lumea. Toate sunt activate implicit. Salvați pentru a aplica; progresul colectării vizitatorilor este păstrat.",
+    "disable-all": "Dezactivează toate ouăle de Paște",
+    "master-hint": "Dezactivează, de asemenea, efectele de vacanță. Opțiunile individuale sunt păstrate atunci când acest comutator este oprit din nou. Fundalul stil obișnuit nu este afectat.",
+    "individual": "Ouă de Paște individuale",
+    "disable-one": "Dezactivați {{name}}",
+    "names": {
+      "konami": "Codul Konami",
+      "cursor-trail": "cursorul scânteie",
+      "terminal": "consola pentru dezvoltatori (/)",
+      "vim-navigation": "Tastele de navigare Vim",
+      "midnight": "salut de la miezul nopții",
+      "glitch": "efect de glitch aleatoriu",
+      "pixel-boss": "șeful pixelilor",
+      "shiny-cards": "cărți rare strălucitoare",
+      "achievements": "realizările și codexul de reacție",
+      "rain": "ploaie pe sticlă (#ploaie)",
+      "cat": "pisică care se plimbă (#pisică)",
+      "travel": "timbru poștal de călătorie (#travel)",
+      "birthday": "confetti de ziua de nastere (#zi de nastere)",
+      "void": "Pagina nulă (/void)",
+      "teapot": "pagina ceainic (/418)",
+      "museum": "pagina muzeului (/muzeu)",
+      "time-machine": "pagina mașinii timpului (/time-machine)"
+    }
   }
 }

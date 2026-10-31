@@ -1788,7 +1788,34 @@
     "not-found": "{{command}}: comando no encontrado"
   },
   "locale-picker": {
-    "automatic": "Automático (idioma del navegador)",
+    "automatic": "Automático",
     "current": "Idioma: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Configuraciones de huevos de Pascua",
+    "description": "Controla sorpresas opcionales para todos. Todos están habilitados de forma predeterminada. Guardar para aplicar; Se mantiene el progreso de la recolección de visitantes.",
+    "disable-all": "Desactivar todos los huevos de Pascua",
+    "master-hint": "También desactiva los efectos festivos. Las opciones individuales se mantienen cuando este interruptor se apaga nuevamente. Los fondos de estilo normal no se ven afectados.",
+    "individual": "Huevos de Pascua individuales",
+    "disable-one": "Deshabilitar {{name}}",
+    "names": {
+      "konami": "código konami",
+      "cursor-trail": "el cursor brilla",
+      "terminal": "consola de desarrollador (/)",
+      "vim-navigation": "Teclas de navegación de Vim",
+      "midnight": "saludo de medianoche",
+      "glitch": "efecto de falla aleatoria",
+      "pixel-boss": "jefe de píxeles",
+      "shiny-cards": "cartas raras y brillantes",
+      "achievements": "logros y códice de reacción",
+      "rain": "lluvia sobre vidrio (#lluvia)",
+      "cat": "gato caminante (#cat)",
+      "travel": "matasellos de viaje (#travel)",
+      "birthday": "confeti de cumpleaños (#cumpleaños)",
+      "void": "Página vacía (/void)",
+      "teapot": "página de tetera (/418)",
+      "museum": "página del museo (/museo)",
+      "time-machine": "página de la máquina del tiempo (/time-machine)"
+    }
   }
 }

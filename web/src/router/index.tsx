@@ -4,6 +4,7 @@ import { ChunkLoadErrorFallback } from "@/components/ErrorBoundary";
 import MainLayout from "@/layouts/MainLayout";
 import RootLayout from "@/layouts/RootLayout";
 import { lazyWithReload } from "@/utils/lazy";
+import EasterEggRoute from "./EasterEggRoute";
 import {
   LandingRoute,
   RequireAuthRoute,
@@ -92,10 +93,38 @@ export const routeConfig: RouteObject[] = [
               { path: "pages/:slug", element: <CustomMarkdownPage /> },
               { path: "categories/:slug", element: <MemoCategory /> },
               { path: "u/:username", element: <UserProfile /> },
-              { path: "void", element: <Void /> },
-              { path: "418", element: <Teapot /> },
-              { path: "museum", element: <Museum /> },
-              { path: "time-machine", element: <TimeMachine /> },
+              {
+                path: "void",
+                element: (
+                  <EasterEggRoute id="void">
+                    <Void />
+                  </EasterEggRoute>
+                ),
+              },
+              {
+                path: "418",
+                element: (
+                  <EasterEggRoute id="teapot">
+                    <Teapot />
+                  </EasterEggRoute>
+                ),
+              },
+              {
+                path: "museum",
+                element: (
+                  <EasterEggRoute id="museum">
+                    <Museum />
+                  </EasterEggRoute>
+                ),
+              },
+              {
+                path: "time-machine",
+                element: (
+                  <EasterEggRoute id="time-machine">
+                    <TimeMachine />
+                  </EasterEggRoute>
+                ),
+              },
               {
                 element: <RequireAuthRoute />,
                 children: [

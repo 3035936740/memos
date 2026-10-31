@@ -20,14 +20,12 @@ import { queryClient } from "@/lib/query-client";
 import router from "./router";
 import { applyEffectsAttribute } from "./utils/effects";
 import { applyLocaleEarly } from "./utils/i18n";
-import { printOdditiesHint } from "./utils/oddities";
 import { applyThemeEarly } from "./utils/theme";
 
 // Apply theme and locale early to prevent flash
 applyThemeEarly();
 applyLocaleEarly();
 applyEffectsAttribute();
-printOdditiesHint();
 
 initializeFrontendDiagnostics();
 let previousDiagnosticNavigation = "";

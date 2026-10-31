@@ -1792,7 +1792,34 @@
     "not-found": "{{command}}: ukaz ni bil najden"
   },
   "locale-picker": {
-    "automatic": "Samodejno (jezik brskalnika)",
+    "automatic": "Samodejno",
     "current": "Jezik: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Nastavitve velikonočnih jajc",
+    "description": "Nadzirajte neobvezna presenečenja za vse. Vsi so privzeto omogočeni. Shranite za uporabo; napredek zbiranja obiskovalcev se ohranja.",
+    "disable-all": "Onemogoči vsa velikonočna jajca",
+    "master-hint": "Onemogoči tudi počitniške učinke. Individualne izbire se ohranijo, ko to stikalo znova izklopite. Ozadja običajnega sloga niso prizadeta.",
+    "individual": "Posamezna velikonočna jajca",
+    "disable-one": "Onemogoči {{name}}",
+    "names": {
+      "konami": "Koda Konami",
+      "cursor-trail": "kazalec se iskri",
+      "terminal": "razvijalska konzola (/)",
+      "vim-navigation": "Vim navigacijske tipke",
+      "midnight": "polnočni pozdrav",
+      "glitch": "učinek naključne napake",
+      "pixel-boss": "pixel šef",
+      "shiny-cards": "redke sijoče karte",
+      "achievements": "dosežki in odzivni kodeks",
+      "rain": "dež na steklu (#dež)",
+      "cat": "hodeča mačka (#cat)",
+      "travel": "potovalni poštni žig (#travel)",
+      "birthday": "rojstnodnevni konfeti (#rojstnidan)",
+      "void": "Prazna stran (/void)",
+      "teapot": "stran s čajnikom (/418)",
+      "museum": "muzejska stran (/muzej)",
+      "time-machine": "stran časovnega stroja (/time-machine)"
+    }
   }
 }

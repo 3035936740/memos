@@ -1270,7 +1270,34 @@
     "not-found": "{{command}}: command not found"
   },
   "locale-picker": {
-    "automatic": "Automatic (browser language)",
+    "automatic": "Automatic",
     "current": "Language: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Easter egg settings",
+    "description": "Control optional surprises for everyone. All are enabled by default. Save to apply; visitor collection progress is kept.",
+    "disable-all": "Disable all Easter eggs",
+    "master-hint": "Also disables holiday effects. Individual choices are kept when this switch is turned off again. Regular style backgrounds are unaffected.",
+    "individual": "Individual Easter eggs",
+    "disable-one": "Disable {{name}}",
+    "names": {
+      "konami": "Konami code",
+      "cursor-trail": "cursor sparkles",
+      "terminal": "developer console (/)",
+      "vim-navigation": "Vim navigation keys",
+      "midnight": "midnight greeting",
+      "glitch": "random glitch effect",
+      "pixel-boss": "pixel boss",
+      "shiny-cards": "rare shiny cards",
+      "achievements": "achievements and reaction codex",
+      "rain": "rain on glass (#rain)",
+      "cat": "walking cat (#cat)",
+      "travel": "travel postmark (#travel)",
+      "birthday": "birthday confetti (#birthday)",
+      "void": "Void page (/void)",
+      "teapot": "teapot page (/418)",
+      "museum": "museum page (/museum)",
+      "time-machine": "time machine page (/time-machine)"
+    }
   }
 }

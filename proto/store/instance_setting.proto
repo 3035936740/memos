@@ -114,6 +114,11 @@ message InstanceGeneralSetting {
   string daily_questions_json = 29;
   // Disable the daily writing prompt. Default is false.
   bool disable_daily_question = 30;
+
+  // Disable all optional Easter eggs without removing visitor progress.
+  bool disable_easter_eggs = 31;
+  // Individually disabled Easter egg IDs. Empty preserves the built-in behavior.
+  repeated string disabled_easter_eggs = 32;
 }
 
 message InstanceCustomProfile {

@@ -310,6 +310,11 @@ func (s *APIV1Service) UpdateInstanceSetting(ctx context.Context, request *v1pb.
 		}
 	case storepb.InstanceSettingKey_GENERAL:
 		if general := updateSetting.GetGeneralSetting(); general != nil {
+			disabledEggs, err := normalizeDisabledEasterEggs(general.DisabledEasterEggs)
+			if err != nil {
+				return nil, err
+			}
+			general.DisabledEasterEggs = disabledEggs
 			_, questions, err := dailyquestion.NormalizeQuestions(general.DailyQuestionsJson)
 			if err != nil {
 				return nil, status.Error(codes.InvalidArgument, err.Error())

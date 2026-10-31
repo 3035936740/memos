@@ -1769,7 +1769,34 @@
     "not-found": "{{command}}: nie znaleziono polecenia"
   },
   "locale-picker": {
-    "automatic": "Automatyczny (język przeglądarki)",
+    "automatic": "Automatyczny",
     "current": "Język: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Ustawienia jajek wielkanocnych",
+    "description": "Kontroluj opcjonalne niespodzianki dla wszystkich. Wszystkie są domyślnie włączone. Zapisz, aby złożyć wniosek; postęp w gromadzeniu odwiedzających jest utrzymywany.",
+    "disable-all": "Wyłącz wszystkie pisanki",
+    "master-hint": "Wyłącza także efekty świąteczne. Indywidualne wybory zostają zachowane po ponownym wyłączeniu tego przełącznika. Tła w stylu regularnym pozostają niezmienione.",
+    "individual": "Indywidualne pisanki",
+    "disable-one": "Wyłącz {{name}}",
+    "names": {
+      "konami": "Kod Konami",
+      "cursor-trail": "kursor błyszczy",
+      "terminal": "konsola programisty (/)",
+      "vim-navigation": "Klawisze nawigacyjne Vima",
+      "midnight": "powitanie o północy",
+      "glitch": "losowy efekt usterki",
+      "pixel-boss": "szef pikseli",
+      "shiny-cards": "rzadkie błyszczące karty",
+      "achievements": "osiągnięcia i kodeks reakcji",
+      "rain": "deszcz na szkle (#deszcz)",
+      "cat": "chodzący kot (#kot)",
+      "travel": "stempel pocztowy podróży (#travel)",
+      "birthday": "konfetti urodzinowe (#urodziny)",
+      "void": "Unieważnij stronę (/void)",
+      "teapot": "strona z czajnikiem (/418)",
+      "museum": "strona muzeum (/muzeum)",
+      "time-machine": "strona wehikułu czasu (/maszyna czasu)"
+    }
   }
 }

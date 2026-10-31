@@ -2059,7 +2059,34 @@
     "not-found": "{{command}}: comando não encontrado"
   },
   "locale-picker": {
-    "automatic": "Automático (idioma do navegador)",
+    "automatic": "Automático",
     "current": "Idioma: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Configurações de ovo de Páscoa",
+    "description": "Controle surpresas opcionais para todos. Todos estão habilitados por padrão. Salve para aplicar; o progresso da coleta de visitantes é mantido.",
+    "disable-all": "Desative todos os ovos de Páscoa",
+    "master-hint": "Também desativa os efeitos de feriados. As escolhas individuais são mantidas quando esta chave é desligada novamente. Os planos de fundo de estilo regular não são afetados.",
+    "individual": "Ovos de Páscoa individuais",
+    "disable-one": "Desativar {{name}}",
+    "names": {
+      "konami": "Código da Konami",
+      "cursor-trail": "cursor brilha",
+      "terminal": "console do desenvolvedor (/)",
+      "vim-navigation": "Teclas de navegação do Vim",
+      "midnight": "saudação da meia-noite",
+      "glitch": "efeito de falha aleatória",
+      "pixel-boss": "chefe de pixel",
+      "shiny-cards": "cartas brilhantes raras",
+      "achievements": "conquistas e códice de reação",
+      "rain": "chuva no vidro (#chuva)",
+      "cat": "gato andando (#cat)",
+      "travel": "carimbo postal de viagem (#travel)",
+      "birthday": "confete de aniversário (#aniversário)",
+      "void": "Página nula (/void)",
+      "teapot": "página do bule (/418)",
+      "museum": "página do museu (/museu)",
+      "time-machine": "página da máquina do tempo (/máquina do tempo)"
+    }
   }
 }

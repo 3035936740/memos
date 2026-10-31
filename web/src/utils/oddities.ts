@@ -7,15 +7,15 @@ import type { BlogStyle } from "./blog-style";
 
 /** The odd pages, in the order their dots sit at the bottom of /about. */
 export const ODDITY_PAGES = [
-  { path: "/void", labelKey: "oddities.void.name" },
-  { path: "/418", labelKey: "oddities.teapot.name" },
-  { path: "/museum", labelKey: "oddities.museum.name" },
-  { path: "/time-machine", labelKey: "oddities.time.name" },
+  { id: "void", path: "/void", labelKey: "oddities.void.name" },
+  { id: "teapot", path: "/418", labelKey: "oddities.teapot.name" },
+  { id: "museum", path: "/museum", labelKey: "oddities.museum.name" },
+  { id: "time-machine", path: "/time-machine", labelKey: "oddities.time.name" },
 ] as const;
 
 /** Leaves a note in the browser console for whoever goes looking there. */
-export const printOdditiesHint = () => {
-  console.info(`%cCurious? Try ${ODDITY_PAGES.map((page) => page.path).join("  ")}`, "color: #8a8f98");
+export const printOdditiesHint = (pages: readonly { path: string }[] = ODDITY_PAGES) => {
+  console.info(`%cCurious? Try ${pages.map((page) => page.path).join("  ")}`, "color: #8a8f98");
 };
 
 const readNumber = (key: string) => {

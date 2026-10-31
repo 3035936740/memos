@@ -1763,8 +1763,12 @@ type InstanceSetting_GeneralSetting struct {
 	DailyQuestionsJson string `protobuf:"bytes,29,opt,name=daily_questions_json,json=dailyQuestionsJson,proto3" json:"daily_questions_json,omitempty"`
 	// Disable the daily writing prompt. Default is false.
 	DisableDailyQuestion bool `protobuf:"varint,30,opt,name=disable_daily_question,json=disableDailyQuestion,proto3" json:"disable_daily_question,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Disable all optional Easter eggs without removing visitor progress.
+	DisableEasterEggs bool `protobuf:"varint,31,opt,name=disable_easter_eggs,json=disableEasterEggs,proto3" json:"disable_easter_eggs,omitempty"`
+	// Individually disabled Easter egg IDs. Empty preserves the built-in behavior.
+	DisabledEasterEggs []string `protobuf:"bytes,32,rep,name=disabled_easter_eggs,json=disabledEasterEggs,proto3" json:"disabled_easter_eggs,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *InstanceSetting_GeneralSetting) Reset() {
@@ -1998,6 +2002,20 @@ func (x *InstanceSetting_GeneralSetting) GetDisableDailyQuestion() bool {
 		return x.DisableDailyQuestion
 	}
 	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDisableEasterEggs() bool {
+	if x != nil {
+		return x.DisableEasterEggs
+	}
+	return false
+}
+
+func (x *InstanceSetting_GeneralSetting) GetDisabledEasterEggs() []string {
+	if x != nil {
+		return x.DisabledEasterEggs
+	}
+	return nil
 }
 
 // Storage is a configured attachment storage instance.
@@ -3283,7 +3301,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\vaccess_mode\x18\n" +
 	" \x01(\x0e2 .memos.api.v1.InstanceAccessModeR\n" +
 	"accessMode\"\x1b\n" +
-	"\x19GetInstanceProfileRequest\"\xb13\n" +
+	"\x19GetInstanceProfileRequest\"\x934\n" +
 	"\x0fInstanceSetting\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12W\n" +
 	"\x0fgeneral_setting\x18\x02 \x01(\v2,.memos.api.v1.InstanceSetting.GeneralSettingH\x00R\x0egeneralSetting\x12W\n" +
@@ -3293,7 +3311,7 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x14notification_setting\x18\x06 \x01(\v21.memos.api.v1.InstanceSetting.NotificationSettingH\x00R\x13notificationSetting\x12H\n" +
 	"\n" +
 	"ai_setting\x18\a \x01(\v2'.memos.api.v1.InstanceSetting.AISettingH\x00R\taiSetting\x12T\n" +
-	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\x96\x0e\n" +
+	"\x0eaccess_setting\x18\b \x01(\v2+.memos.api.v1.InstanceSetting.AccessSettingH\x00R\raccessSetting\x1a\xf8\x0e\n" +
 	"\x0eGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -3324,7 +3342,9 @@ const file_api_v1_instance_service_proto_rawDesc = "" +
 	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x12.\n" +
 	"\x13daily_question_seed\x18\x1c \x01(\tR\x11dailyQuestionSeed\x120\n" +
 	"\x14daily_questions_json\x18\x1d \x01(\tR\x12dailyQuestionsJson\x124\n" +
-	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x1a\x90\x01\n" +
+	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x12.\n" +
+	"\x13disable_easter_eggs\x18\x1f \x01(\bR\x11disableEasterEggs\x120\n" +
+	"\x14disabled_easter_eggs\x18  \x03(\tR\x12disabledEasterEggs\x1a\x90\x01\n" +
 	"\rCustomProfile\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x19\n" +

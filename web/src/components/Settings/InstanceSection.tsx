@@ -35,6 +35,7 @@ import { isValidTheme, THEME_OPTIONS } from "@/utils/theme";
 import UpdateCustomizedProfileDialog from "../UpdateCustomizedProfileDialog";
 import AppearancePackGroup from "./AppearancePackGroup";
 import DailyQuestionEditor from "./DailyQuestionEditor";
+import EasterEggSettings from "./EasterEggSettings";
 import InstanceCategoryEditor from "./InstanceCategoryEditor";
 import InstanceContentEditor from "./InstanceContentEditor";
 import InstanceMusicEditor from "./InstanceMusicEditor";
@@ -398,13 +399,6 @@ const InstanceSection = () => {
                 />
               </SettingListItem>
 
-              <SettingListItem label={t("setting.system.festival-effects")} description={t("setting.system.festival-effects-description")}>
-                <Switch
-                  checked={!instanceGeneralSetting.disableFestivalEffects}
-                  onCheckedChange={(checked) => updatePartialSetting({ disableFestivalEffects: !checked })}
-                />
-              </SettingListItem>
-
               <SettingListItem label={t("setting.instance.week-start-day")} description={t("setting.instance.week-start-day-description")}>
                 <Select
                   value={instanceGeneralSetting.weekStartDayOffset.toString()}
@@ -427,6 +421,8 @@ const InstanceSection = () => {
               </SettingListItem>
             </SettingList>
           </SettingGroup>
+
+          <EasterEggSettings setting={instanceGeneralSetting} onChange={updatePartialSetting} disabled={profile.demo} />
 
           <SettingGroup title={t("setting.system.accounts-title")} description={t("setting.system.accounts-description")} showSeparator>
             <SettingList>

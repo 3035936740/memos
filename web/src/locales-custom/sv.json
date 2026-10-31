@@ -1782,7 +1782,34 @@
     "not-found": "{{command}}: kommandot hittades inte"
   },
   "locale-picker": {
-    "automatic": "Automatisk (webbläsarspråk)",
+    "automatic": "Automatisk",
     "current": "Språk: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Påskäggsinställningar",
+    "description": "Kontrollera valfria överraskningar för alla. Alla är aktiverade som standard. Spara för att ansöka; besöksinsamlingens framsteg hålls.",
+    "disable-all": "Inaktivera alla påskägg",
+    "master-hint": "Inaktiverar även semestereffekter. Individuella val behålls när denna strömbrytare stängs av igen. Vanliga stilbakgrunder påverkas inte.",
+    "individual": "Enskilda påskägg",
+    "disable-one": "Inaktivera {{name}}",
+    "names": {
+      "konami": "Konami kod",
+      "cursor-trail": "markören gnistrar",
+      "terminal": "utvecklarkonsol (/)",
+      "vim-navigation": "Vim navigeringsknappar",
+      "midnight": "midnattshälsning",
+      "glitch": "slumpmässig glitch-effekt",
+      "pixel-boss": "pixel boss",
+      "shiny-cards": "sällsynta glänsande kort",
+      "achievements": "prestationer och reaktionscodex",
+      "rain": "regn på glas (#regn)",
+      "cat": "promenadkatt (#katt)",
+      "travel": "resepoststämpel (#travel)",
+      "birthday": "födelsedagskonfetti (#födelsedag)",
+      "void": "Ogiltig sida (/void)",
+      "teapot": "tekanna sida (/418)",
+      "museum": "museumssida (/museum)",
+      "time-machine": "tidsmaskinsida (/tidsmaskin)"
+    }
   }
 }

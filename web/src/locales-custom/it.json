@@ -1793,7 +1793,34 @@
     "not-found": "{{command}}: comando non trovato"
   },
   "locale-picker": {
-    "automatic": "Automatico (lingua del browser)",
+    "automatic": "Automatico",
     "current": "Lingua: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Impostazioni delle uova di Pasqua",
+    "description": "Controlla le sorprese opzionali per tutti. Sono tutti abilitati per impostazione predefinita. Salva per applicare; l'avanzamento della raccolta dei visitatori viene mantenuto.",
+    "disable-all": "Disabilita tutte le uova di Pasqua",
+    "master-hint": "Disabilita anche gli effetti festivi. Le scelte individuali vengono mantenute quando questo interruttore viene nuovamente disattivato. Gli sfondi in stile normale non sono interessati.",
+    "individual": "Uova di Pasqua individuali",
+    "disable-one": "Disabilita {{name}}",
+    "names": {
+      "konami": "Codice Konami",
+      "cursor-trail": "il cursore brilla",
+      "terminal": "console per sviluppatori (/)",
+      "vim-navigation": "Tasti di navigazione Vim",
+      "midnight": "saluto di mezzanotte",
+      "glitch": "effetto glitch casuale",
+      "pixel-boss": "capo pixel",
+      "shiny-cards": "rare carte lucenti",
+      "achievements": "risultati e codice di reazione",
+      "rain": "pioggia sul vetro (#pioggia)",
+      "cat": "gatto che cammina (#gatto)",
+      "travel": "timbro postale di viaggio (#viaggio)",
+      "birthday": "coriandoli di compleanno (#compleanno)",
+      "void": "Pagina vuota (/void)",
+      "teapot": "pagina teiera (/418)",
+      "museum": "pagina del museo (/museo)",
+      "time-machine": "pagina della macchina del tempo (/time-machine)"
+    }
   }
 }

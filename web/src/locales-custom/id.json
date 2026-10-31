@@ -2055,7 +2055,34 @@
     "not-found": "{{command}}: perintah tidak ditemukan"
   },
   "locale-picker": {
-    "automatic": "Otomatis (bahasa browser)",
+    "automatic": "Otomatis",
     "current": "Bahasa: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Pengaturan telur paskah",
+    "description": "Kontrol kejutan opsional untuk semua orang. Semua diaktifkan secara default. Simpan untuk diterapkan; kemajuan pengumpulan pengunjung disimpan.",
+    "disable-all": "Nonaktifkan semua telur Paskah",
+    "master-hint": "Juga menonaktifkan efek liburan. Pilihan individu disimpan ketika saklar ini dimatikan lagi. Latar belakang gaya reguler tidak terpengaruh.",
+    "individual": "Telur Paskah individu",
+    "disable-one": "Nonaktifkan {{name}}",
+    "names": {
+      "konami": "kode Konami",
+      "cursor-trail": "kursor berkilau",
+      "terminal": "konsol pengembang (/)",
+      "vim-navigation": "Tombol navigasi Vim",
+      "midnight": "salam tengah malam",
+      "glitch": "efek kesalahan acak",
+      "pixel-boss": "bos piksel",
+      "shiny-cards": "kartu mengkilap yang langka",
+      "achievements": "kodeks pencapaian dan reaksi",
+      "rain": "hujan di atas kaca (#hujan)",
+      "cat": "kucing berjalan (#kucing)",
+      "travel": "cap pos perjalanan (#travel)",
+      "birthday": "konfeti ulang tahun (#ulang tahun)",
+      "void": "Halaman kosong (/ batal)",
+      "teapot": "halaman teko (/418)",
+      "museum": "halaman museum (/museum)",
+      "time-machine": "halaman mesin waktu (/mesin waktu)"
+    }
   }
 }

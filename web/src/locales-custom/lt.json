@@ -1791,7 +1791,34 @@
     "not-found": "{{command}}: komanda nerasta"
   },
   "locale-picker": {
-    "automatic": "Automatinis (naršyklės kalba)",
+    "automatic": "Automatinis",
     "current": "Kalba: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Velykinių kiaušinių nustatymai",
+    "description": "Kontroliuokite neprivalomus siurprizus kiekvienam. Visi yra įjungti pagal numatytuosius nustatymus. Išsaugokite, kad galėtumėte kreiptis; išlaikoma lankytojų rinkimo eiga.",
+    "disable-all": "Išjunkite visus Velykinius kiaušinius",
+    "master-hint": "Taip pat išjungia atostogų efektus. Atskiri pasirinkimai išlieka, kai šis jungiklis vėl išjungiamas. Įprasto stiliaus fonai neturi įtakos.",
+    "individual": "Atskiri velykiniai kiaušiniai",
+    "disable-one": "Išjungti {{name}}",
+    "names": {
+      "konami": "Konami kodas",
+      "cursor-trail": "žymeklis blizga",
+      "terminal": "kūrėjų pultas (/)",
+      "vim-navigation": "Vim naršymo mygtukai",
+      "midnight": "vidurnakčio sveikinimas",
+      "glitch": "atsitiktinis trikdžių efektas",
+      "pixel-boss": "pikselių bosas",
+      "shiny-cards": "retos blizgančios kortelės",
+      "achievements": "pasiekimai ir reakcijos kodeksas",
+      "rain": "lietus ant stiklo (#lietus)",
+      "cat": "vaikščiojanti katė (#katė)",
+      "travel": "kelionių pašto antspaudas (#travel)",
+      "birthday": "gimtadienio konfeti (#gimtadienis)",
+      "void": "Tuščias puslapis (/void)",
+      "teapot": "arbatinuko puslapis (/418)",
+      "museum": "muziejaus puslapis (/muziejus)",
+      "time-machine": "laiko mašinos puslapis (/laiko mašina)"
+    }
   }
 }

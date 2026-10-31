@@ -1781,7 +1781,34 @@
     "not-found": "{{command}}: komut bulunamadı"
   },
   "locale-picker": {
-    "automatic": "Otomatik (tarayıcı dili)",
+    "automatic": "Otomatik",
     "current": "Dil: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Paskalya yumurtası ayarları",
+    "description": "Herkes için isteğe bağlı sürprizleri kontrol edin. Hepsi varsayılan olarak etkindir. Başvurmak için kaydedin; ziyaretçi toplama ilerlemesi tutulur.",
+    "disable-all": "Tüm Paskalya yumurtalarını devre dışı bırak",
+    "master-hint": "Ayrıca tatil efektlerini de devre dışı bırakır. Bu anahtar tekrar kapatıldığında bireysel seçimler korunur. Normal stildeki arka planlar etkilenmez.",
+    "individual": "Bireysel Paskalya yumurtaları",
+    "disable-one": "{{name}}'yi devre dışı bırak",
+    "names": {
+      "konami": "Konami kodu",
+      "cursor-trail": "imleç parlıyor",
+      "terminal": "geliştirici konsolu (/)",
+      "vim-navigation": "Vim gezinme tuşları",
+      "midnight": "gece yarısı tebrik",
+      "glitch": "rastgele aksaklık efekti",
+      "pixel-boss": "piksel patronu",
+      "shiny-cards": "nadir parlak kartlar",
+      "achievements": "başarılar ve reaksiyon kodeksi",
+      "rain": "cama yağmur (#yağmur)",
+      "cat": "yürüyen kedi (#kedi)",
+      "travel": "seyahat posta damgası (#seyahat)",
+      "birthday": "doğum günü konfeti (#doğum günü)",
+      "void": "Geçersiz sayfa (/void)",
+      "teapot": "çaydanlık sayfası (/418)",
+      "museum": "müze sayfası (/müze)",
+      "time-machine": "zaman makinesi sayfası (/zaman makinesi)"
+    }
   }
 }

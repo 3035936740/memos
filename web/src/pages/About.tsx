@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import BrandImage from "@/components/BrandImage";
 import { Badge } from "@/components/ui/badge";
 import { useInstance } from "@/contexts/InstanceContext";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import { WEB_CLIPPER_URL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
@@ -45,6 +46,7 @@ interface ProjectLink {
 
 const About = () => {
   const t = useTranslate();
+  const { isEnabled } = useEasterEggs();
   const { profile, generalSetting } = useInstance();
 
   const customProfile = generalSetting.customProfile;
@@ -172,7 +174,7 @@ const About = () => {
 
         {/* For the curious: one faint dot for each odd page beside the app. */}
         <nav aria-label={t("oddities.title")} className="mt-12 flex justify-center gap-3">
-          {ODDITY_PAGES.map((page) => (
+          {ODDITY_PAGES.filter((page) => isEnabled(page.id)).map((page) => (
             <Link
               key={page.path}
               to={page.path}

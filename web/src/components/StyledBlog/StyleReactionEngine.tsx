@@ -1,10 +1,11 @@
 import { BatteryLowIcon, MoonIcon, RotateCcwIcon, TrophyIcon } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useMusicEffects } from "@/contexts/MusicPlayerContext";
 import { useView } from "@/contexts/ViewContext";
 import useCurrentTheme from "@/hooks/useCurrentTheme";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import { parseInstanceSiteConfig } from "@/lib/instance-content";
 import {
   ACHIEVEMENTS,
@@ -106,7 +107,13 @@ interface Banner {
  */
 const StyleReactionEngine = () => {
   const t = useTranslate();
-  const { generalSetting, isInitialized } = useInstance();
+  const { generalSetting } = useInstance();
+  const { isEnabled, allDisabled, ready } = useEasterEggs();
+  const achievementsEnabled = isEnabled("achievements");
+  const glitchEnabled = isEnabled("glitch");
+  const midnightEnabled = isEnabled("midnight");
+  const travelEnabled = isEnabled("travel");
+  const arrivalRef = useRef(false);
   const { feedLayout, blogStyle, sceneStyle, applyFirstVisitStyle, resetToDefaults } = useView();
   const { getEnergy, resetPrefs } = useMusicEffects();
   useStylePackLoader();
@@ -119,9 +126,9 @@ const StyleReactionEngine = () => {
   const activeStyle = styled ? blogStyle : undefined;
   const fusion = useMemo(() => computeFusion(activeStyle, theme), [activeStyle, theme]);
   const daypart = getDaypart(now);
-  const festival = isInitialized && !generalSetting.disableFestivalEffects ? getFestival(now) : undefined;
+  const festival = ready && !allDisabled && !generalSetting.disableFestivalEffects ? getFestival(now) : undefined;
   const transformations = useMemo(() => computeTransformations(progress), [progress]);
-  const mastered = !!activeStyle && transformations.masteredStyles.includes(activeStyle);
+  const mastered = achievementsEnabled && !!activeStyle && transformations.masteredStyles.includes(activeStyle);
   const siteConfig = useMemo(() => parseInstanceSiteConfig(generalSetting?.customPagesJson ?? ""), [generalSetting?.customPagesJson]);
   const firstVisitStyle = generalSetting?.firstVisitDefaultStyle || siteConfig.firstVisitStyle;
   const preferencesResetAt = Number(generalSetting?.preferencesResetAt ?? 0n) || siteConfig.preferencesResetAt;
@@ -156,17 +163,25 @@ const StyleReactionEngine = () => {
 
   // Arrival: count the day, greet night owls, and very rarely glitch.
   useEffect(() => {
-    recordVisitDay();
-    if (getDaypart(new Date()) === "midnight" && firstTimeThisSession(MIDNIGHT_KEY)) {
+    if (!ready || arrivalRef.current) return;
+    arrivalRef.current = true;
+    if (achievementsEnabled) recordVisitDay();
+    if (midnightEnabled && getDaypart(new Date()) === "midnight" && firstTimeThisSession(MIDNIGHT_KEY)) {
       toast(t("fusion.midnight"), { icon: <MoonIcon aria-hidden className="size-5 text-primary" /> });
     }
-    if (Math.random() < GLITCH_CHANCE && !isMotionReduced()) {
+    if (glitchEnabled && Math.random() < GLITCH_CHANCE && !isMotionReduced()) {
       setGlitching(true);
-      bumpCounter("glitches");
-      discover("glitch");
+      if (achievementsEnabled) {
+        bumpCounter("glitches");
+        discover("glitch");
+      }
     }
     // Arrival happens once.
-  }, []);
+  }, [achievementsEnabled, glitchEnabled, midnightEnabled, ready, t]);
+
+  useEffect(() => {
+    if (!glitchEnabled) setGlitching(false);
+  }, [glitchEnabled]);
 
   useEffect(() => {
     if (!glitching) return;
@@ -182,14 +197,28 @@ const StyleReactionEngine = () => {
     setRootAttribute("data-legend", styled ? fusion.legendary?.id : undefined);
     setRootAttribute("data-daypart", daypart);
     setRootAttribute("data-festival", styled ? festival : undefined);
-    setRootAttribute("data-transform", styled ? transforms : undefined);
+    setRootAttribute("data-transform", styled && achievementsEnabled ? transforms : undefined);
     setRootAttribute("data-mastery", mastered ? "1" : undefined);
-    setRootAttribute("data-glitch", glitching ? "1" : undefined);
-  }, [daypart, festival, fusion, glitching, mastered, styled, transformations]);
+    setRootAttribute("data-glitch", glitchEnabled && glitching ? "1" : undefined);
+    return () => {
+      for (const attribute of [
+        "data-fusion",
+        "data-elements",
+        "data-legend",
+        "data-daypart",
+        "data-festival",
+        "data-transform",
+        "data-mastery",
+        "data-glitch",
+      ]) {
+        document.documentElement.removeAttribute(attribute);
+      }
+    };
+  }, [achievementsEnabled, daypart, festival, fusion, glitchEnabled, glitching, mastered, styled, transformations]);
 
   // New discoveries get the banner, a legendary one first.
   useEffect(() => {
-    if (!styled || !activeStyle) return;
+    if (!achievementsEnabled || !styled || !activeStyle) return;
     const fresh = fusion.reactionIds.filter((id) => discover(id));
     if (fresh.length === 0) return;
     const legend = fusion.legendary && fresh.includes(fusion.legendary.id) ? fusion.legendary : undefined;
@@ -211,7 +240,7 @@ const StyleReactionEngine = () => {
         legendary: false,
       });
     }
-  }, [activeStyle, fusion, styled, t]);
+  }, [achievementsEnabled, activeStyle, fusion, styled, t]);
 
   useEffect(() => {
     if (!banner) return;
@@ -221,6 +250,7 @@ const StyleReactionEngine = () => {
 
   // Achievements unlock as the run goes on.
   useEffect(() => {
+    if (!achievementsEnabled) return;
     const legendaryCount = LEGENDARY_REACTIONS.filter((reaction) => progress.discovered.includes(reaction.id)).length;
     const unlocked = ACHIEVEMENTS.filter((rule) => !progress.achievements.includes(rule.id) && rule.test(progress, legendaryCount));
     if (unlocked.length === 0) return;
@@ -239,7 +269,11 @@ const StyleReactionEngine = () => {
         legendary: true,
       });
     }
-  }, [progress, t]);
+  }, [achievementsEnabled, progress, t]);
+
+  useEffect(() => {
+    if (!achievementsEnabled) setBanner(undefined);
+  }, [achievementsEnabled]);
 
   const kinds = useMemo(() => {
     if (!styled) return [];
@@ -275,11 +309,11 @@ const StyleReactionEngine = () => {
           <ReactionCanvas layer="front" kinds={NO_KINDS} look={look} density={1} getEnergy={getEnergy} />
         </>
       )}
-      {styled && sceneStyle === "pixel" && <PixelBoss />}
-      {styled && transformations.traveler && (
+      {styled && sceneStyle === "pixel" && isEnabled("pixel-boss") && <PixelBoss recordProgress={achievementsEnabled} />}
+      {styled && achievementsEnabled && travelEnabled && transformations.traveler && (
         <div data-travel-stamp="" aria-hidden className="pointer-events-none fixed bottom-6 end-6 z-[4]" />
       )}
-      {banner && (
+      {achievementsEnabled && banner && (
         <div
           role="status"
           data-reaction-banner=""

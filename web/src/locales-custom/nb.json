@@ -1782,7 +1782,34 @@
     "not-found": "{{command}}: kommando ikke funnet"
   },
   "locale-picker": {
-    "automatic": "Automatisk (nettleserspråk)",
+    "automatic": "Automatisk",
     "current": "Språk: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Innstillinger for påskeegg",
+    "description": "Kontroller valgfrie overraskelser for alle. Alle er aktivert som standard. Lagre for å søke; fremdriften for innsamling av besøkende holdes.",
+    "disable-all": "Deaktiver alle påskeegg",
+    "master-hint": "Deaktiverer også ferieeffekter. Individuelle valg beholdes når denne bryteren slås av igjen. Vanlige stilbakgrunner påvirkes ikke.",
+    "individual": "Individuelle påskeegg",
+    "disable-one": "Deaktiver {{name}}",
+    "names": {
+      "konami": "Konami-kode",
+      "cursor-trail": "markøren glitrer",
+      "terminal": "utviklerkonsoll (/)",
+      "vim-navigation": "Vim navigasjonstaster",
+      "midnight": "midnattshilsen",
+      "glitch": "tilfeldig feileffekt",
+      "pixel-boss": "pikselboss",
+      "shiny-cards": "sjeldne skinnende kort",
+      "achievements": "prestasjoner og reaksjonskodeks",
+      "rain": "regn på glass (#regn)",
+      "cat": "gåkatt (#katt)",
+      "travel": "reisepoststempel (#travel)",
+      "birthday": "bursdagskonfetti (#bursdag)",
+      "void": "Ugyldig side (/void)",
+      "teapot": "tekanne side (/418)",
+      "museum": "museumsside (/museum)",
+      "time-machine": "tidsmaskinside (/tidsmaskin)"
+    }
   }
 }

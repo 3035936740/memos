@@ -1781,7 +1781,34 @@
     "not-found": "{{command}}: kommando ikke fundet"
   },
   "locale-picker": {
-    "automatic": "Automatisk (browsersprog)",
+    "automatic": "Automatisk",
     "current": "Sprog: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Indstillinger for påskeæg",
+    "description": "Styr valgfri overraskelser for alle. Alle er aktiveret som standard. Gem for at anvende; besøgsindsamlingens fremskridt holdes.",
+    "disable-all": "Deaktiver alle påskeæg",
+    "master-hint": "Deaktiverer også ferieeffekter. Individuelle valg bevares, når denne kontakt slukkes igen. Almindelige stilbaggrunde påvirkes ikke.",
+    "individual": "Individuelle påskeæg",
+    "disable-one": "Deaktiver {{name}}",
+    "names": {
+      "konami": "Konami kode",
+      "cursor-trail": "markøren funkler",
+      "terminal": "udviklerkonsol (/)",
+      "vim-navigation": "Vim navigationstaster",
+      "midnight": "midnatshilsen",
+      "glitch": "tilfældig fejleffekt",
+      "pixel-boss": "pixel boss",
+      "shiny-cards": "sjældne skinnende kort",
+      "achievements": "præstationer og reaktionskodeks",
+      "rain": "regn på glas (#regn)",
+      "cat": "gående kat (#kat)",
+      "travel": "rejsepoststemplet (#travel)",
+      "birthday": "fødselsdagskonfetti (#fødselsdag)",
+      "void": "Ugyldig side (/void)",
+      "teapot": "tekande side (/418)",
+      "museum": "museumsside (/museum)",
+      "time-machine": "tidsmaskine side (/tidsmaskine)"
+    }
   }
 }

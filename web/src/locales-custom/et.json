@@ -1781,7 +1781,34 @@
     "not-found": "{{command}}: käsku ei leitud"
   },
   "locale-picker": {
-    "automatic": "Automaatne (brauseri keel)",
+    "automatic": "Automaatne",
     "current": "Keel: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Lihavõttemunade seaded",
+    "description": "Kontrollige valikulisi üllatusi kõigile. Kõik on vaikimisi lubatud. Salvestage kandideerimiseks; külastajate kogumise edenemist hoitakse.",
+    "disable-all": "Keela kõik lihavõttemunad",
+    "master-hint": "Samuti keelab puhkuseefektid. Kui see lüliti uuesti välja lülitatakse, jäävad individuaalsed valikud alles. Tavapärase stiili taustad ei muutu.",
+    "individual": "Üksikud lihavõttemunad",
+    "disable-one": "Keela {{name}}",
+    "names": {
+      "konami": "Konami kood",
+      "cursor-trail": "kursor sädeleb",
+      "terminal": "arendajakonsool (/)",
+      "vim-navigation": "Vimi navigeerimisklahvid",
+      "midnight": "südaöine tervitus",
+      "glitch": "juhusliku tõrke efekt",
+      "pixel-boss": "piksli boss",
+      "shiny-cards": "haruldased läikivad kaardid",
+      "achievements": "saavutused ja reaktsioonikoodeks",
+      "rain": "vihm klaasile (#vihm)",
+      "cat": "jalutav kass (#cat)",
+      "travel": "reisipostitempel (#travel)",
+      "birthday": "sünnipäeva konfetti (#sünnipäev)",
+      "void": "Kehtetu leht (/void)",
+      "teapot": "teekannu leht (/418)",
+      "museum": "muuseumi leht (/muuseum)",
+      "time-machine": "ajamasina leht (/time-masina)"
+    }
   }
 }

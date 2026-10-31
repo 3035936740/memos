@@ -1791,7 +1791,34 @@
     "not-found": "{{command}}: príkaz nenájdený"
   },
   "locale-picker": {
-    "automatic": "Automaticky (jazyk prehliadača)",
+    "automatic": "Automaticky",
     "current": "Jazyk: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Nastavenie veľkonočných vajíčok",
+    "description": "Ovládajte voliteľné prekvapenia pre každého. Všetky sú predvolene povolené. Uložiť na použitie; priebeh zhromažďovania návštevníkov sa udržiava.",
+    "disable-all": "Zakázať všetky veľkonočné vajíčka",
+    "master-hint": "Tiež deaktivuje efekty dovolenky. Po opätovnom vypnutí tohto spínača ostanú jednotlivé voľby zachované. Pozadia bežného štýlu nie sú ovplyvnené.",
+    "individual": "Jednotlivé veľkonočné vajíčka",
+    "disable-one": "Zakázať {{name}}",
+    "names": {
+      "konami": "Kód Konami",
+      "cursor-trail": "kurzor sa leskne",
+      "terminal": "vývojárska konzola (/)",
+      "vim-navigation": "Navigačné klávesy Vim",
+      "midnight": "polnočný pozdrav",
+      "glitch": "náhodný glitch efekt",
+      "pixel-boss": "šéf pixelov",
+      "shiny-cards": "vzácne lesklé karty",
+      "achievements": "úspechy a reakčný kódex",
+      "rain": "dážď na skle (#dážď)",
+      "cat": "chodiaca mačka (#mačka)",
+      "travel": "cestovná poštová pečiatka (#travel)",
+      "birthday": "narodeninové konfety (#birthday)",
+      "void": "Void page (/void)",
+      "teapot": "strana čajníka (/418)",
+      "museum": "stránka múzea (/museum)",
+      "time-machine": "stránka stroja času (/time-machine)"
+    }
   }
 }

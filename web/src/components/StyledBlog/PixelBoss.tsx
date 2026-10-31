@@ -23,7 +23,7 @@ const alreadyAppeared = () => {
  * Pixel retro's random event: now and then a pixel boss drifts across the page. Ten clicks bring it down for a coin.
  * At most once a visit, and only sometimes.
  */
-const PixelBoss = () => {
+const PixelBoss = ({ recordProgress = true }: { recordProgress?: boolean }) => {
   const t = useTranslate();
   const [flying, setFlying] = useState(false);
   const [hp, setHp] = useState(BOSS_HP);
@@ -49,7 +49,7 @@ const PixelBoss = () => {
     setHp(remaining);
     burst({ kind: "confetti", x: event.clientX, y: event.clientY, count: remaining > 0 ? 6 : 60 });
     if (remaining > 0) return;
-    bumpCounter("bossKills");
+    if (recordProgress) bumpCounter("bossKills");
     toast(t("fusion.boss-defeated"), { icon: <CoinsIcon aria-hidden className="size-5 text-primary" /> });
     setFlying(false);
   };

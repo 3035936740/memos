@@ -1,4 +1,5 @@
 import { type RefObject, useEffect, useRef } from "react";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import useLiteEffects from "@/hooks/useLiteEffects";
 import { recordRead } from "@/utils/blog-progress";
 import { tagItemsOf } from "@/utils/tag-items";
@@ -22,6 +23,10 @@ interface Props {
  * the width and the text bar are written straight to the DOM so scrolling never re-renders React.
  */
 const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
+  const { isEnabled } = useEasterEggs();
+  const birthdayEnabled = isEnabled("birthday");
+  const achievementsEnabled = isEnabled("achievements");
+  const birthdayMemoRef = useRef<string | undefined>(undefined);
   const fillRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const readRef = useRef({ memoName, tags, style });
@@ -34,9 +39,10 @@ const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
 
   // A birthday post opens with confetti.
   useEffect(() => {
-    if (tagItemsOf(tags).includes("birthday")) burst({ kind: "confetti", count: 80 });
-    // Once per article.
-  }, [memoName]);
+    if (!birthdayEnabled || birthdayMemoRef.current === memoName || !tagItemsOf(tags).includes("birthday")) return;
+    birthdayMemoRef.current = memoName;
+    burst({ kind: "confetti", count: 80 });
+  }, [birthdayEnabled, memoName, tags]);
 
   useEffect(() => {
     let frame = 0;
@@ -58,7 +64,7 @@ const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
       // A short article that fits the window counts as read straight away.
       if (complete && !recorded) {
         const { memoName: name, tags: readTags, style: readStyle } = readRef.current;
-        recordRead(name, readTags, readStyle);
+        if (achievementsEnabled) recordRead(name, readTags, readStyle);
         recorded = true;
       }
       if (labelRef.current) {
@@ -82,12 +88,12 @@ const ReadingProgress = ({ memoName, tags, style, articleRef }: Props) => {
       observer?.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [articleRef, memoName]);
+  }, [achievementsEnabled, articleRef, memoName]);
 
   return (
     <>
       {/* The rain is a WebGL shader; low-power mode leaves it out. */}
-      {items.includes("rain") && !lite && <RainyGlass />}
+      {isEnabled("rain") && items.includes("rain") && !lite && <RainyGlass />}
       <div data-reading-progress="" aria-hidden className="pointer-events-none fixed inset-x-0 top-0 z-40 h-[3px]">
         <div ref={fillRef} data-reading-progress-fill="" className="h-full w-0 bg-primary" />
         <span ref={labelRef} data-reading-progress-label="" className="hidden" />

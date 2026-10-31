@@ -17,6 +17,7 @@ import ReactionCodex from "@/components/StyledBlog/ReactionCodex";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useView } from "@/contexts/ViewContext";
 import useCurrentTheme from "@/hooks/useCurrentTheme";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import i18n from "@/i18n";
 import { cn } from "@/lib/utils";
 import { useBlogProgress } from "@/utils/blog-progress";
@@ -54,6 +55,8 @@ interface Props {
 /** Picks the Blog 2 style. Styles dress the Blog 2 layout, so choosing one switches to it. Also opens the codex. */
 const StyleSelect = ({ className, iconOnly = false }: Props) => {
   const t = useTranslate();
+  const { isEnabled } = useEasterEggs();
+  const codexEnabled = isEnabled("achievements");
   const { blogStyle, styleId, setBlogStyle, setStylePack, stylePacks, feedLayout, setFeedLayout } = useView();
   const progress = useBlogProgress();
   const [codexOpen, setCodexOpen] = useState(false);
@@ -79,7 +82,7 @@ const StyleSelect = ({ className, iconOnly = false }: Props) => {
 
   const handleStyleChange = (value: string) => {
     if (value === CODEX_VALUE) {
-      setCodexOpen(true);
+      if (codexEnabled) setCodexOpen(true);
       return;
     }
     if (isBlogStyle(value)) {
@@ -136,16 +139,20 @@ const StyleSelect = ({ className, iconOnly = false }: Props) => {
               </div>
             </SelectItem>
           ))}
-          <SelectSeparator />
-          <SelectItem value={CODEX_VALUE}>
-            <div className="flex items-center gap-2">
-              <BookOpenIcon className="size-4" />
-              <span>{t("fusion.codex")}</span>
-            </div>
-          </SelectItem>
+          {codexEnabled && (
+            <>
+              <SelectSeparator />
+              <SelectItem value={CODEX_VALUE}>
+                <div className="flex items-center gap-2">
+                  <BookOpenIcon className="size-4" />
+                  <span>{t("fusion.codex")}</span>
+                </div>
+              </SelectItem>
+            </>
+          )}
         </SelectContent>
       </Select>
-      <ReactionCodex open={codexOpen} onOpenChange={setCodexOpen} />
+      {codexEnabled && <ReactionCodex open={codexOpen} onOpenChange={setCodexOpen} />}
     </>
   );
 };

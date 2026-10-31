@@ -632,8 +632,12 @@ type InstanceGeneralSetting struct {
 	DailyQuestionsJson string `protobuf:"bytes,29,opt,name=daily_questions_json,json=dailyQuestionsJson,proto3" json:"daily_questions_json,omitempty"`
 	// Disable the daily writing prompt. Default is false.
 	DisableDailyQuestion bool `protobuf:"varint,30,opt,name=disable_daily_question,json=disableDailyQuestion,proto3" json:"disable_daily_question,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Disable all optional Easter eggs without removing visitor progress.
+	DisableEasterEggs bool `protobuf:"varint,31,opt,name=disable_easter_eggs,json=disableEasterEggs,proto3" json:"disable_easter_eggs,omitempty"`
+	// Individually disabled Easter egg IDs. Empty preserves the built-in behavior.
+	DisabledEasterEggs []string `protobuf:"bytes,32,rep,name=disabled_easter_eggs,json=disabledEasterEggs,proto3" json:"disabled_easter_eggs,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *InstanceGeneralSetting) Reset() {
@@ -867,6 +871,20 @@ func (x *InstanceGeneralSetting) GetDisableDailyQuestion() bool {
 		return x.DisableDailyQuestion
 	}
 	return false
+}
+
+func (x *InstanceGeneralSetting) GetDisableEasterEggs() bool {
+	if x != nil {
+		return x.DisableEasterEggs
+	}
+	return false
+}
+
+func (x *InstanceGeneralSetting) GetDisabledEasterEggs() []string {
+	if x != nil {
+		return x.DisabledEasterEggs
+	}
+	return nil
 }
 
 type InstanceCustomProfile struct {
@@ -1715,6 +1733,7 @@ type TranscriptionConfig struct {
 	//   - whisper-1 (legacy, lower cost)
 	//   - gpt-4o-transcribe, gpt-4o-mini-transcribe (higher quality)
 	//   - gpt-4o-transcribe-diarize (includes speaker labels)
+	//
 	// GEMINI examples:
 	//   - gemini-2.5-flash (default, multimodal call)
 	//   - gemini-2.5-pro
@@ -1969,7 +1988,7 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x14InstanceBasicSetting\x12\x1d\n" +
 	"\n" +
 	"secret_key\x18\x01 \x01(\tR\tsecretKey\x12%\n" +
-	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xf3\f\n" +
+	"\x0eschema_version\x18\x02 \x01(\tR\rschemaVersion\"\xd5\r\n" +
 	"\x16InstanceGeneralSetting\x12<\n" +
 	"\x1adisallow_user_registration\x18\x02 \x01(\bR\x18disallowUserRegistration\x124\n" +
 	"\x16disallow_password_auth\x18\x03 \x01(\bR\x14disallowPasswordAuth\x12+\n" +
@@ -2000,7 +2019,9 @@ const file_store_instance_setting_proto_rawDesc = "" +
 	"\x15hide_about_navigation\x18\x1b \x01(\bR\x13hideAboutNavigation\x12.\n" +
 	"\x13daily_question_seed\x18\x1c \x01(\tR\x11dailyQuestionSeed\x120\n" +
 	"\x14daily_questions_json\x18\x1d \x01(\tR\x12dailyQuestionsJson\x124\n" +
-	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestionB\x17\n" +
+	"\x16disable_daily_question\x18\x1e \x01(\bR\x14disableDailyQuestion\x12.\n" +
+	"\x13disable_easter_eggs\x18\x1f \x01(\bR\x11disableEasterEggs\x120\n" +
+	"\x14disabled_easter_eggs\x18  \x03(\tR\x12disabledEasterEggsB\x17\n" +
 	"\x15_trash_retention_daysB\x16\n" +
 	"\x14_memo_revision_limitB\x12\n" +
 	"\x10_show_powered_by\"\x98\x01\n" +

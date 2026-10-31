@@ -20,6 +20,7 @@ import RelativeTime from "@/components/RelativeTime";
 import UserAvatar from "@/components/UserAvatar";
 import VideoPoster from "@/components/VideoPoster";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import useEasterEggs from "@/hooks/useEasterEggs";
 import i18n from "@/i18n";
 import type { MemoNavigationScope } from "@/lib/memo-navigation";
 import { extractUsernameFromName } from "@/lib/resource-names";
@@ -53,6 +54,8 @@ interface Props {
 /** A post card for the styled Blog 2 layout. The markup is shared; each style restyles it in CSS. */
 const StyledBlogCard = ({ memo, showCreator = false, parentPage, navigationScope, shiny = false }: Props) => {
   const t = useTranslate();
+  const { isEnabled } = useEasterEggs();
+  const shinyEnabled = shiny && isEnabled("shiny-cards");
   const [coverFailed, setCoverFailed] = useState(false);
   const currentUser = useCurrentUser();
   const anonymousForViewer = memo.anonymous && !isSuperUser(currentUser);
@@ -74,7 +77,7 @@ const StyledBlogCard = ({ memo, showCreator = false, parentPage, navigationScope
   const readingMinutes = useMemo(() => estimateReadingMinutes(memo.content), [memo.content]);
   // Pinned posts carry a label for styles that annotate them (the hand-drawn "must read" note).
   const pinnedNote = memo.pinned ? t("blog-extra.must-read") : undefined;
-  const items = useMemo(() => tagItemsOf(memo.tags), [memo.tags]);
+  const items = useMemo(() => tagItemsOf(memo.tags).filter(isEnabled), [memo.tags, isEnabled]);
   const createTime = !memo.hideTime && memo.createTime ? timestampDate(memo.createTime) : undefined;
   const commentAmount = computeCommentAmount(memo);
   const creatorUsername = creator?.username || extractUsernameFromName(memo.creator);
@@ -90,11 +93,11 @@ const StyledBlogCard = ({ memo, showCreator = false, parentPage, navigationScope
       data-sb-card=""
       data-sb-pinned={pinnedNote}
       data-sb-items={items.length > 0 ? items.join(" ") : undefined}
-      data-sb-shiny={shiny || undefined}
+      data-sb-shiny={shinyEnabled || undefined}
       // Y2K draws this into each post's Notepad title bar.
       data-sb-window-title={t("y2k.notepad-title", { name: title || t("memo.blog-untitled") })}
       onClickCapture={() => {
-        if (!shiny) return;
+        if (!shinyEnabled || !isEnabled("achievements")) return;
         bumpCounter("shinies");
         discover("shiny");
       }}

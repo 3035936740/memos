@@ -1782,7 +1782,7 @@
     "not-found": "{{command}}: comando non atopado"
   },
   "locale-picker": {
-    "automatic": "Automático (idioma do navegador)",
+    "automatic": "Automático",
     "current": "Idioma: {{language}}"
   },
   "resource": {
@@ -1790,6 +1790,33 @@
       "external-link": {
         "type-placeholder": "Tipo"
       }
+    }
+  },
+  "easter-eggs": {
+    "title": "Configuración de ovos de Pascua",
+    "description": "Controla sorpresas opcionais para todos. Todos están activados por defecto. Gardar para aplicar; mantense o progreso da recollida de visitantes.",
+    "disable-all": "Desactiva todos os ovos de Pascua",
+    "master-hint": "Tamén desactiva os efectos de vacacións. As opcións individuais mantéñense cando se desactiva de novo este interruptor. Os fondos de estilo normal non se ven afectados.",
+    "individual": "Ovos de Pascua individuais",
+    "disable-one": "Desactivar {{name}}",
+    "names": {
+      "konami": "Código de Konami",
+      "cursor-trail": "o cursor brilla",
+      "terminal": "consola de desenvolvedores (/)",
+      "vim-navigation": "Teclas de navegación Vim",
+      "midnight": "saúdo de medianoite",
+      "glitch": "efecto de falla aleatoria",
+      "pixel-boss": "xefe de píxeles",
+      "shiny-cards": "tarxetas brillantes raras",
+      "achievements": "logros e códice de reacción",
+      "rain": "choiva sobre vidro (#choiva)",
+      "cat": "gato andante (#cat)",
+      "travel": "matasellos de viaxe (#travel)",
+      "birthday": "confeti de aniversario (#aniversario)",
+      "void": "Páxina vacía (/void)",
+      "teapot": "páxina de tetera (/418)",
+      "museum": "páxina do museo (/museo)",
+      "time-machine": "páxina da máquina do tempo (/time-machine)"
     }
   }
 }

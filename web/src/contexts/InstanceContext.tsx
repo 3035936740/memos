@@ -49,6 +49,8 @@ interface InstanceState {
   // Remains false if initialization failed, so consumers can distinguish
   // "no admin exists" from "failed to load profile".
   profileLoaded: boolean;
+  /** Unlike isInitialized, this remains false when the public GENERAL request fails. */
+  generalSettingLoaded: boolean;
 }
 
 interface InstanceContextValue extends InstanceState {
@@ -84,6 +86,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     isInitialized: false,
     isLoading: true,
     profileLoaded: false,
+    generalSettingLoaded: false,
   });
 
   const fetchedSettingsRef = useRef<Set<string>>(new Set());
@@ -169,7 +172,11 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
         for (const setting of settingsResponse.settings) {
           fetchedSettingsRef.current.add(setting.name);
         }
-        setState((prev) => ({ ...prev, settings: settingsResponse.settings }));
+        setState((prev) => ({
+          ...prev,
+          settings: settingsResponse.settings,
+          generalSettingLoaded: settingsResponse.settings.some((setting) => setting.value.case === "generalSetting"),
+        }));
       })
       .catch((error) => {
         console.error("Failed to initialize instance settings:", error);
@@ -205,6 +212,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({
         ...prev,
         settings: [...prev.settings.filter((setting) => !fetchedNames.has(setting.name)), ...response.settings],
+        generalSettingLoaded: prev.generalSettingLoaded || response.settings.some((setting) => setting.value.case === "generalSetting"),
       }));
     } catch (error) {
       for (const name of names) {
@@ -231,6 +239,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       setState((prev) => ({
         ...prev,
         settings: [...prev.settings.filter((s) => s.name !== setting.name), setting],
+        generalSettingLoaded: prev.generalSettingLoaded || setting.value.case === "generalSetting",
       }));
     } catch (error) {
       fetchedSettingsRef.current.delete(name);
@@ -255,6 +264,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
               }
             : prev.profile,
         settings: isAccessSetting ? prev.settings : [...prev.settings.filter((s) => s.name !== updatedSetting.name), updatedSetting],
+        generalSettingLoaded: prev.generalSettingLoaded || updatedSetting.value.case === "generalSetting",
       }));
     },
     [updateAccessSetting],

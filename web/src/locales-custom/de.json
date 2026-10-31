@@ -1782,7 +1782,34 @@
     "not-found": "{{command}}: Befehl nicht gefunden"
   },
   "locale-picker": {
-    "automatic": "Automatisch (Browsersprache)",
+    "automatic": "Automatisch",
     "current": "Sprache: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "Osterei-Einstellungen",
+    "description": "Kontrollieren Sie optionale Überraschungen für alle. Alle sind standardmäßig aktiviert. Speichern, um sich zu bewerben; Der Fortschritt der Besuchersammlung wird gespeichert.",
+    "disable-all": "Deaktivieren Sie alle Easter Eggs",
+    "master-hint": "Deaktiviert außerdem Feiertagseffekte. Individuelle Auswahlmöglichkeiten bleiben erhalten, wenn dieser Schalter wieder ausgeschaltet wird. Hintergründe im regulären Stil sind davon nicht betroffen.",
+    "individual": "Einzelne Ostereier",
+    "disable-one": "Deaktivieren Sie {{name}}",
+    "names": {
+      "konami": "Konami-Code",
+      "cursor-trail": "Cursor funkelt",
+      "terminal": "Entwicklerkonsole (/)",
+      "vim-navigation": "Vim-Navigationstasten",
+      "midnight": "Mitternachtsgruß",
+      "glitch": "zufälliger Glitch-Effekt",
+      "pixel-boss": "Pixelboss",
+      "shiny-cards": "seltene glänzende Karten",
+      "achievements": "Erfolge und Reaktionskodex",
+      "rain": "Regen auf Glas (#rain)",
+      "cat": "gehende Katze (#cat)",
+      "travel": "Reisestempel (#Reise)",
+      "birthday": "Geburtstagskonfetti (#birthday)",
+      "void": "Leere Seite (/void)",
+      "teapot": "Teekannenseite (/418)",
+      "museum": "Museumsseite (/museum)",
+      "time-machine": "Zeitmaschinenseite (/time-machine)"
+    }
   }
 }

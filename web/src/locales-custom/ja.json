@@ -1669,7 +1669,34 @@
     "not-found": "{{command}}: コマンドが見つかりません"
   },
   "locale-picker": {
-    "automatic": "自動 (ブラウザ言語)",
+    "automatic": "自動",
     "current": "言語: {{language}}"
+  },
+  "easter-eggs": {
+    "title": "イースターエッグの設定",
+    "description": "誰もが楽しめるオプションのサプライズをコントロールします。デフォルトではすべて有効になっています。保存して適用します。訪問者収集の進行状況は保持されます。",
+    "disable-all": "すべてのイースターエッグを無効にする",
+    "master-hint": "休日の効果も無効になります。このスイッチを再度オフにしても、個々の選択は保持されます。通常のスタイルの背景は影響を受けません。",
+    "individual": "個々のイースターエッグ",
+    "disable-one": "{{name}} を無効にする",
+    "names": {
+      "konami": "コナミコード",
+      "cursor-trail": "カーソルが光る",
+      "terminal": "開発者コンソール (/)",
+      "vim-navigation": "Vim ナビゲーション キー",
+      "midnight": "真夜中の挨拶",
+      "glitch": "ランダムなグリッチ効果",
+      "pixel-boss": "ピクセルボス",
+      "shiny-cards": "レアな光沢のあるカード",
+      "achievements": "実績と反応コーデックス",
+      "rain": "ガラスに雨が降る (#雨)",
+      "cat": "歩く猫 (#猫)",
+      "travel": "旅行の消印 (#travel)",
+      "birthday": "誕生日紙吹雪 (#誕生日)",
+      "void": "ボイドページ (/void)",
+      "teapot": "ティーポットのページ (/418)",
+      "museum": "博物館ページ (/museum)",
+      "time-machine": "タイムマシンページ (/time-machine)"
+    }
   }
 }
