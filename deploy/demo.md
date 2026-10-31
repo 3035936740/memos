@@ -1,6 +1,6 @@
 # 隔离的演示模式
 
-[中文项目文档](../README.md) · [English deployment and demo instructions](../README.en.md#disposable-demo-mode)
+[English deployment and demo instructions](../README.md#disposable-demo-mode) · [中文项目文档](../README_zh.md)
 
 现有演示地址是 <https://memos.bing.tomato-universe.tech/>。这个地址本身不意味着允许删除站点数据：普通部署继续使用默认的生产模式。
 

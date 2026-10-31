@@ -101,7 +101,11 @@ describe("daily question banks", () => {
     expect(bankLanguageFor("zh-Hant")).toBe("zh-Hant");
     expect(bankLanguageFor("zh-TW")).toBe("zh-Hant");
     expect(bankLanguageFor("zh")).toBe("zh-Hans");
-    expect(bankLanguageFor("ja")).toBe("en");
+    expect(bankLanguageFor("ja")).toBe("ja");
+    expect(bankLanguageFor("fr-CA")).toBe("fr");
+    expect(bankLanguageFor("EN_gb")).toBe("en-GB");
+    expect(bankLanguageFor("no-NO")).toBe("nb");
+    expect(bankLanguageFor("unknown")).toBe("en");
   });
 });
 

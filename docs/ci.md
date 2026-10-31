@@ -1,6 +1,6 @@
 # Memos Plus CI and database support
 
-[English README](../README.en.md) · [中文 README](../README.md)
+[English README](../README.md) · [中文 README](../README_zh.md)
 
 ## Database boundary
 

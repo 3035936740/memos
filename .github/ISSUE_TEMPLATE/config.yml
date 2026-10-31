@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/3035936740
     about: Maintainer profile; public channels must not contain vulnerability details
   - name: Documentation
-    url: https://github.com/3035936740/memos-plus/blob/main/README.en.md
+    url: https://github.com/3035936740/memos-plus/blob/main/README.md
     about: Read the Memos Plus deployment, upgrade, and contribution guide

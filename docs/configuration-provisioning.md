@@ -1,6 +1,6 @@
 # Configuration Provisioning
 
-[English project and deployment guide](../README.en.md) · [中文项目文档](../README.md)
+[English project and deployment guide](../README.md) · [中文项目文档](../README_zh.md)
 
 Status: Implemented
 

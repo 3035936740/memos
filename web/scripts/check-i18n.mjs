@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { parseSync } from "@babel/core";
 
 const root = new URL("../src/", import.meta.url);
 const codes = JSON.parse(readFileSync(new URL("locale-codes.json", root), "utf8"));
@@ -31,6 +32,37 @@ function catalog(code) {
 const placeholders = (text) => (text.match(/{{[^{}]+}}/g) ?? []).sort().join("|");
 const reference = catalog("en");
 const errors = [];
+const questionBanks = new Map();
+for (const code of codes) {
+  try {
+    const source = readFileSync(new URL(`utils/daily-questions/${code}.ts`, root), "utf8");
+    const parsed = parseSync(source, { configFile: false, babelrc: false, parserOpts: { sourceType: "module", plugins: ["typescript"] } });
+    const declaration = parsed.program.body
+      .filter((node) => node.type === "VariableDeclaration")
+      .flatMap((node) => node.declarations)
+      .find((node) => node.id.type === "Identifier" && node.id.name === "questions");
+    if (declaration?.init?.type !== "ArrayExpression") throw new Error("expected a static question array");
+    const bank = declaration.init.elements.map((element) => {
+      if (element?.type !== "StringLiteral") throw new Error("questions must be string literals");
+      return element.value;
+    });
+    if (!Array.isArray(bank) || bank.length !== 365) throw new Error("expected exactly 365 questions");
+    if (bank.some((question) => typeof question !== "string" || !question.trim() || [...question].length > 200)) {
+      throw new Error("questions must be nonempty strings of at most 200 Unicode characters");
+    }
+    if (new Set(bank).size !== 365) throw new Error("duplicate questions");
+    if (bank.some((question) => /__(?:DQ\d+|9\d{5})__/i.test(question))) throw new Error("untranslated question markers");
+    questionBanks.set(code, bank);
+  } catch (error) {
+    errors.push(`${code}: invalid daily question bank: ${error.message}`);
+  }
+}
+const englishQuestions = questionBanks.get("en");
+for (const [code, bank] of questionBanks) {
+  if (code !== "en" && code !== "en-GB" && englishQuestions && bank.every((text, index) => text === englishQuestions[index])) {
+    errors.push(`${code}: daily question bank is an untranslated English copy`);
+  }
+}
 for (const code of codes) {
   const translations = catalog(code);
   for (const [key, source] of Object.entries(reference)) {
@@ -51,6 +83,6 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(
-    `Checked ${codes.length} languages and ${Object.keys(reference).length} reference keys: no missing translations or interpolation errors.`,
+    `Checked ${codes.length} languages, ${Object.keys(reference).length} reference keys and ${questionBanks.size} × 365 daily questions: no missing translations or structural errors.`,
   );
 }

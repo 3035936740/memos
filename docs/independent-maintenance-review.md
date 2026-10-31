@@ -1,14 +1,14 @@
 # Independent maintenance review
 
-> **Policy update, 2026-10-31:** upstream Memos database compatibility is no longer supported. The migration discussion below records the earlier 2026-10-30 review, not the current support policy. Use the current [README](../README.en.md#migrating-from-upstream-memos) and [CI guide](ci.md); CI now verifies fresh Plus databases and restart persistence.
+> **Policy update, 2026-10-31:** upstream Memos database compatibility is no longer supported. The migration discussion below records the earlier 2026-10-30 review, not the current support policy. Use the current [README](../README.md#migrating-from-upstream-memos) and [CI guide](ci.md); CI now verifies fresh Plus databases and restart persistence.
 
-[English README](../README.en.md) · [中文 README](../README.md)
+[English README](../README.md) · [中文 README](../README_zh.md)
 
 Reviewed on **2026-10-30**, starting from local `main` at `8ee47d07005eaab3972ae39f98bb905f97558b78`. This records a documentation and release-packaging review, not a release, migration certification, or complete dependency-license audit.
 
 ## English documentation
 
-`README.en.md` is a full standalone guide. The default `README.md` remains Chinese; both have language-switch links at the top. They cover project scope and upstream attribution, implemented features, the maintainer-provided demo, Docker/Compose/native deployment, ports and persistence, configuration, blog import, styles, backups and recovery, upstream migration limits, source builds, development, feedback, and licensing.
+The full standalone English guide is now the default `README.md`; the Chinese guide is `README_zh.md`. English appears first in both language-switch links. They cover project scope and upstream attribution, implemented features, the maintainer-provided demo, Docker/Compose/native deployment, ports and persistence, configuration, blog import, styles, backups and recovery, upstream migration limits, source builds, development, feedback, and licensing.
 
 Important corrections shared by both guides:
 
@@ -26,7 +26,7 @@ The README no longer includes an inactive placeholder for a nonexistent screensh
 
 | Files | Purpose |
 | --- | --- |
-| `README.md`, `README.en.md` | Full bilingual entry points and verified operational guidance. |
+| `README.md`, `README_zh.md` | Full bilingual entry points and verified operational guidance. |
 | `deploy/demo.md`, `docs/configuration-provisioning.md` | Add English/Chinese project-guide navigation. |
 | `CODEOWNERS` | Replace the upstream default team with `@3035936740`; there were no finer-grained rules to preserve. |
 | `SECURITY.md` | Scope the policy to Plus, remove the upstream contact and unsupported version-policy assumptions, and document the missing verified private channel. |

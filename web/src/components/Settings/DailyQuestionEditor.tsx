@@ -1,5 +1,5 @@
 import { ChevronRightIcon, PlusIcon, RotateCcwIcon, SearchIcon, Trash2Icon } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import LocalePicker from "@/components/LocalePicker";
@@ -19,6 +19,8 @@ import {
   isBuiltinQuestion,
   isDailyQuestionEntry,
   loadAllQuestionBanks,
+  loadBuiltInQuestions,
+  loadQuestionBanks,
   MAX_DAILY_QUESTIONS,
   MAX_QUESTION_CHARACTERS,
   type QuestionBanks,
@@ -29,6 +31,40 @@ import SettingGroup from "./SettingGroup";
 import { SettingList, SettingListItem } from "./SettingList";
 
 const PAGE_SIZE = 20;
+
+/** One built-in translation at a time; choosing a language downloads only that bank. */
+const BuiltinQuestionPreview = ({ builtin, language }: { builtin: number; language: string }) => {
+  const t = useTranslate();
+  const [locale, setLocale] = useState(language);
+  const [loaded, setLoaded] = useState<{ locale: string; bank: readonly string[] }>();
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setFailed(false);
+    loadBuiltInQuestions(locale)
+      .then((bank) => {
+        if (!cancelled) setLoaded({ locale, bank });
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <LocalePicker value={locale} onChange={setLocale} className="w-48" />
+      <p dir="auto" role={failed ? "alert" : undefined} className="break-words text-sm">
+        {failed
+          ? t("daily-question-admin.load-failed")
+          : loaded?.locale === locale
+            ? loaded.bank[builtin]
+            : t("daily-question-admin.loading")}
+      </p>
+    </div>
+  );
+};
 
 interface Props {
   setting: InstanceSetting_GeneralSetting;
@@ -93,6 +129,7 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
   const t = useTranslate();
   const [open, setOpen] = useState(false);
   const [banks, setBanks] = useState<QuestionBanks>();
+  const [converting, setConverting] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [query, setQuery] = useState("");
@@ -125,11 +162,17 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
     return Array.from({ length: BUILTIN_QUESTION_COUNT }, (_, builtin) => ({ builtin }));
   }, [setting.dailyQuestionsJson]);
   const usingDefault = !setting.dailyQuestionsJson.trim();
+  const entriesRef = useRef(entries);
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    entriesRef.current = entries;
+    onChangeRef.current = onChange;
+  }, [entries, onChange]);
 
   useEffect(() => {
-    if (!open || banks) return;
+    if (!open || banks?.[language]) return;
     let cancelled = false;
-    loadAllQuestionBanks()
+    loadQuestionBanks([language, "en"])
       .then((loaded) => {
         if (!cancelled) {
           setBanks(loaded);
@@ -142,7 +185,7 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
     return () => {
       cancelled = true;
     };
-  }, [open, banks]);
+  }, [open, banks, language]);
 
   const preview = (entry: DailyQuestionEntry) =>
     resolveDailyQuestion(entry, i18n.language, banks?.[language]) || t("daily-question-admin.empty-question");
@@ -151,7 +194,7 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
     .filter(({ entry }) => {
       if (!query.trim()) return true;
       const texts = isBuiltinQuestion(entry)
-        ? BUILTIN_QUESTION_LANGUAGES.map((locale) => banks?.[locale][entry.builtin] ?? "")
+        ? Object.values(banks ?? {}).map((bank) => bank?.[entry.builtin] ?? "")
         : typeof entry === "string"
           ? [entry]
           : [entry.text, ...Object.values(entry.translations ?? {})];
@@ -178,15 +221,29 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
     writeEntries(entries.filter((_, position) => position !== index));
     setExpanded(new Set());
   };
-  const editBuiltin = (index: number, builtin: number) => {
-    if (!banks) return;
-    changeEntry(index, {
-      text: banks[language][builtin],
-      locale: language,
-      translations: Object.fromEntries(
-        BUILTIN_QUESTION_LANGUAGES.filter((locale) => locale !== language).map((locale) => [locale, banks[locale][builtin]]),
-      ),
-    });
+  const editBuiltin = async (index: number, builtin: number) => {
+    if (converting) return;
+    setConverting(true);
+    try {
+      const allBanks = await loadAllQuestionBanks();
+      // Other changes made while the language chunks load must not be overwritten.
+      const current = entriesRef.current[index];
+      if (!current || !isBuiltinQuestion(current) || current.builtin !== builtin) return;
+      const custom: CustomDailyQuestion = {
+        text: allBanks[language]![builtin],
+        locale: language,
+        translations: Object.fromEntries(
+          BUILTIN_QUESTION_LANGUAGES.filter((locale) => locale !== language).map((locale) => [locale, allBanks[locale]![builtin]]),
+        ),
+      };
+      onChangeRef.current({
+        dailyQuestionsJson: JSON.stringify(entriesRef.current.map((entry, position) => (position === index ? custom : entry))),
+      });
+    } catch {
+      toast.error(t("daily-question-admin.load-failed"));
+    } finally {
+      setConverting(false);
+    }
   };
   const addQuestion = () => {
     if (entries.length >= MAX_DAILY_QUESTIONS) return;
@@ -396,19 +453,14 @@ const DailyQuestionEditor = ({ setting, onChange, disabled = false }: Props) => 
                       <div className="mt-3 flex min-w-0 flex-col gap-3 ps-6">
                         {builtin ? (
                           <>
-                            {BUILTIN_QUESTION_LANGUAGES.map((locale) => (
-                              <div key={locale} className="text-sm">
-                                <span className="text-xs text-muted-foreground">{getLocaleDisplayName(locale as Locale)}</span>
-                                <p className="mt-1 break-words">{banks?.[locale][entry.builtin] || t("daily-question-admin.loading")}</p>
-                              </div>
-                            ))}
+                            <BuiltinQuestionPreview builtin={entry.builtin} language={language} />
                             <Button
                               variant="outline"
                               className="self-start"
-                              disabled={disabled || !banks}
+                              disabled={disabled || !banks?.[language] || converting}
                               onClick={() => editBuiltin(index, entry.builtin)}
                             >
-                              {t("daily-question-admin.edit-builtin")}
+                              {t(converting ? "daily-question-admin.loading" : "daily-question-admin.edit-builtin")}
                             </Button>
                           </>
                         ) : (

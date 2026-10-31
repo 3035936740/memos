@@ -82,8 +82,8 @@ export const readDailyQuestionSettings = (setting: object): DailyQuestionSetting
   return { seed: raw.dailyQuestionSeed || window.location.host || "memos-plus", questions, disabled: raw.disableDailyQuestion === true };
 };
 
-export type BankLanguage = "zh-Hans" | "zh-Hant" | "en";
-export const BUILTIN_QUESTION_LANGUAGES: BankLanguage[] = ["en", "zh-Hans", "zh-Hant"];
+export type BankLanguage = (typeof supportedLocaleCodes)[number];
+export const BUILTIN_QUESTION_LANGUAGES: readonly BankLanguage[] = supportedLocaleCodes;
 export const QUESTION_LANGUAGES: readonly string[] = supportedLocaleCodes;
 export const BUILTIN_QUESTION_COUNT = 365;
 export const MAX_DAILY_QUESTIONS = 2000;
@@ -95,7 +95,7 @@ export type CustomDailyQuestion = {
   translations?: Record<string, string>;
 };
 export type DailyQuestionEntry = string | { builtin: number } | CustomDailyQuestion;
-export type QuestionBanks = Record<BankLanguage, readonly string[]>;
+export type QuestionBanks = Partial<Record<BankLanguage, readonly string[]>>;
 export const isBuiltinQuestion = (entry: DailyQuestionEntry): entry is { builtin: number } =>
   typeof entry === "object" && "builtin" in entry;
 export const isDailyQuestionEntry = (entry: unknown): entry is DailyQuestionEntry => {
@@ -157,28 +157,44 @@ export const dailyQuestionBankIssue = (raw: string): "invalid" | "too-many" | "t
   return undefined;
 };
 
-/** All three banks are loaded together only by the administrator's editor. */
-export const loadAllQuestionBanks = async (): Promise<QuestionBanks> => {
-  const [en, simplified, traditional] = await Promise.all(BUILTIN_QUESTION_LANGUAGES.map(loadBuiltInQuestions));
-  return { en, "zh-Hans": simplified, "zh-Hant": traditional };
-};
+/** Load selected banks for previews; all banks are needed only when converting a built-in question to an editable one. */
+export const loadQuestionBanks = async (languages: readonly string[], fallbackToEnglish = true): Promise<QuestionBanks> =>
+  Object.fromEntries(
+    await Promise.all(
+      [...new Set(languages.map(bankLanguageFor))].map(async (locale) => [locale, await loadBuiltInQuestions(locale, fallbackToEnglish)]),
+    ),
+  );
 
-/** The built-in bank that suits a UI language: Traditional for zh-Hant / TW / HK, Simplified for other Chinese, else English. */
+export const loadAllQuestionBanks = () => loadQuestionBanks(BUILTIN_QUESTION_LANGUAGES, false);
+
+/** Match the same language codes as the UI, including regional and Chinese variants; unknown languages use English. */
 export const bankLanguageFor = (language: string): BankLanguage => {
-  const lower = language.toLowerCase();
+  const lower = language.replaceAll("_", "-").toLowerCase();
+  const exact = BUILTIN_QUESTION_LANGUAGES.find((locale) => locale.toLowerCase() === lower);
+  if (exact) return exact;
   if (/^zh-(hant|tw|hk|mo)/.test(lower)) return "zh-Hant";
   if (lower.startsWith("zh")) return "zh-Hans";
-  return "en";
+  const parent = lower.split("-")[0];
+  if (parent === "no") return "nb";
+  return (
+    BUILTIN_QUESTION_LANGUAGES.find((locale) => locale.toLowerCase() === parent) ??
+    BUILTIN_QUESTION_LANGUAGES.find((locale) => locale.split("-")[0] === parent) ??
+    "en"
+  );
 };
 
-const BANKS: Record<BankLanguage, () => Promise<{ default: readonly string[] }>> = {
-  "zh-Hans": () => import("./daily-questions/zh-Hans"),
-  "zh-Hant": () => import("./daily-questions/zh-Hant"),
-  en: () => import("./daily-questions/en"),
-};
+const BANKS = import.meta.glob<{ default: readonly string[] }>("./daily-questions/*.ts");
 
 /** Loads a built-in bank on demand, so only the reader's language is downloaded. */
-export const loadBuiltInQuestions = async (language: string) => (await BANKS[bankLanguageFor(language)]()).default;
+export const loadBuiltInQuestions = async (language: string, fallbackToEnglish = true) => {
+  const locale = bankLanguageFor(language);
+  try {
+    return (await BANKS[`./daily-questions/${locale}.ts`]()).default;
+  } catch (error) {
+    if (!fallbackToEnglish || locale === "en") throw error;
+    return (await BANKS["./daily-questions/en.ts"]()).default;
+  }
+};
 
 /** The tag that gathers a day's answers; English like the style tags, so it reads the same on every site. */
 export const dailyQuestionTag = (dayKey: string) => `daily/${dayKey}`;
