@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Measure a disposable SQLite container; never touches an existing instance."""
 import concurrent.futures
+import http.client
 import json
 import secrets
 import statistics
@@ -11,8 +12,31 @@ import urllib.error
 import urllib.request
 
 
-def docker(*args):
-    return subprocess.check_output(["docker", *args], text=True).strip()
+def docker(*args, capture_stderr=False):
+    return subprocess.check_output(["docker", *args], text=True,
+                                   stderr=subprocess.STDOUT if capture_stderr else None).strip()
+
+
+def wait_for_ready(base, timeout=90):
+    deadline = time.monotonic() + timeout
+    last_error = None
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            # Readiness is an HTTP status check, not a JSON API request.
+            # Docker can accept TCP connections before the app starts listening.
+            with urllib.request.urlopen(base + "/healthz", timeout=min(2, remaining)) as response:
+                if response.status == 200:
+                    return
+                last_error = RuntimeError(f"healthz returned HTTP {response.status}")
+        except (urllib.error.URLError, OSError, http.client.HTTPException) as error:
+            last_error = error
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            time.sleep(min(1, remaining))
+    raise RuntimeError(f"container did not become ready within {timeout}s: {last_error}") from last_error
 
 
 def run(image):
@@ -35,19 +59,7 @@ def run(image):
                 body = response.read()
                 return json.loads(body) if body else None
 
-        for _ in range(90):
-            try:
-                request("/healthz")
-                break
-            except (urllib.error.URLError, json.JSONDecodeError):
-                # healthz may return plain text; an HTTP 200 still proves readiness.
-                try:
-                    with urllib.request.urlopen(base + "/healthz", timeout=2):
-                        break
-                except urllib.error.URLError:
-                    time.sleep(1)
-        else:
-            raise RuntimeError("container did not start")
+        wait_for_ready(base)
         password = secrets.token_hex(16)
         request("/api/v1/users", {"username": "benchmark-admin", "password": password})
         token = request("/api/v1/auth/signin", {"passwordCredentials": {
@@ -87,6 +99,20 @@ def run(image):
         if result["oomKilled"]:
             raise RuntimeError("container exceeded memory limit")
         print(json.dumps(result, indent=2))
+    except Exception as error:
+        result["error"] = str(error)
+        for field, command in [
+            ("containerState", ("inspect", "--format", "{{json .State}}", name)),
+            ("containerLogs", ("logs", "--tail", "100", name)),
+        ]:
+            try:
+                result[field] = docker(*command, capture_stderr=True)
+            except (OSError, subprocess.CalledProcessError) as diagnostic_error:
+                result[field] = str(diagnostic_error)
+        # Keep diagnostics in the uploaded artifact as well as the failing job log.
+        print(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2), file=sys.stderr)
+        raise
     finally:
         subprocess.run(["docker", "rm", "-f", "-v", name], stdout=subprocess.DEVNULL, check=False)
 
