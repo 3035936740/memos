@@ -24,10 +24,10 @@ func TestPlusDirectoryDeepSQLPagination(t *testing.T) {
 		values := []string{}
 		args := []any{}
 		for i := start; i < start+500; i++ {
-			values = append(values, "(?,?,?)")
-			args = append(args, fmt.Sprintf("bulk-%05d", i), fmt.Sprintf("Space %05d", i), "PUBLIC")
+			values = append(values, "(?,?,?,?,?)")
+			args = append(args, fmt.Sprintf("bulk-%05d", i), fmt.Sprintf("Space %05d", i), "", "", "PUBLIC")
 		}
-		_, err = tx.ExecContext(ctx, store.BindSQL(driver, "INSERT INTO space(uid,title,access_mode) VALUES "+strings.Join(values, ",")), args...)
+		_, err = tx.ExecContext(ctx, store.BindSQL(driver, "INSERT INTO space(uid,title,description,avatar_url,access_mode) VALUES "+strings.Join(values, ",")), args...)
 		require.NoError(t, err)
 	}
 	require.NoError(t, tx.Commit())

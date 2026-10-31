@@ -137,11 +137,23 @@ function SpaceSession({ viewerName, children }: { viewerName?: string; children:
   // existing page links while keeping refreshes and copied URLs Space-aware.
   useEffect(() => {
     if (!selectedSpacePath) return;
+    // Clear a confirmed stale session selection before it can become an
+    // authoritative Space URL. Explicit Space URLs still keep their scope.
+    if (!routeSpaceId && selectedQuery.isSuccess && selectedQuery.data.spaces.length === 0) return;
     const target = getSpaceNavigationPath(selectedSpacePath, location.pathname);
     if (target && target !== location.pathname) {
       navigateRef.current({ pathname: target, search: location.search, hash: location.hash }, { replace: true, state: location.state });
     }
-  }, [selectedSpacePath, location.pathname, location.search, location.hash, location.state]);
+  }, [
+    selectedSpacePath,
+    routeSpaceId,
+    selectedQuery.isSuccess,
+    selectedQuery.data,
+    location.pathname,
+    location.search,
+    location.hash,
+    location.state,
+  ]);
   const duplicateSpaceTitles = useMemo(
     () =>
       getDuplicateSpaceTitles(

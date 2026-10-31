@@ -21,6 +21,7 @@ const globalEditorState = vi.hoisted(() => ({
 const instanceState = vi.hoisted(() => ({
   memoCategoriesJson: "",
   navigationJson: "",
+  hideAboutNavigation: false,
 }));
 const spaceState = vi.hoisted(() => ({
   spaces: [] as Array<{ name: string; title: string; description: string }>,
@@ -90,12 +91,17 @@ vi.mock("@/contexts/GlobalMemoEditorContext", () => ({
   useGlobalMemoEditor: () => globalEditorState,
 }));
 
-vi.mock("@/contexts/InstanceContext", () => ({
-  useInstance: () => ({
+vi.mock("@/contexts/InstanceContext", () => {
+  const useInstance = () => ({
     isInitialized: true,
-    generalSetting: { memoCategoriesJson: instanceState.memoCategoriesJson, navigationJson: instanceState.navigationJson },
-  }),
-}));
+    generalSetting: {
+      memoCategoriesJson: instanceState.memoCategoriesJson,
+      navigationJson: instanceState.navigationJson,
+      hideAboutNavigation: instanceState.hideAboutNavigation,
+    },
+  });
+  return { useInstance, useOptionalInstance: useInstance };
+});
 
 vi.mock("@/contexts/MemoFilterContext", () => ({
   stringifyFilters: () => "",
@@ -138,7 +144,15 @@ vi.mock("@/hooks/useAttachmentLibrary", () => ({
 }));
 
 vi.mock("@/contexts/ViewContext", () => ({
-  useView: () => ({ blogStyle: "default", feedLayout: "memo", setBlogStyle: vi.fn(), setFeedLayout: vi.fn() }),
+  useView: () => ({
+    blogStyle: "default",
+    styleId: "default",
+    stylePacks: [],
+    feedLayout: "memo",
+    setBlogStyle: vi.fn(),
+    setStylePack: vi.fn(),
+    setFeedLayout: vi.fn(),
+  }),
 }));
 
 vi.mock("@/hooks/useMediaQuery", () => ({
@@ -195,6 +209,7 @@ describe("App sidebar logo", () => {
     sidebarState.memoScope = "home";
     instanceState.memoCategoriesJson = "";
     instanceState.navigationJson = "";
+    instanceState.hideAboutNavigation = false;
     localStorage.clear();
     sidebarState.mobileOpen = false;
     globalEditorState.canOpen = true;
@@ -397,7 +412,7 @@ describe("App sidebar logo", () => {
 
     expect(screen.getByRole("button", { name: "space.switch: common.memos" })).toHaveTextContent("Memos logo");
     expect(screen.getByRole("link", { name: "common.explore" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
     expect(screen.queryByRole("button", { name: "editor.new-memo" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
@@ -418,7 +433,7 @@ describe("App sidebar logo", () => {
     expect(screen.getByRole("link", { name: "common.attachments" })).toHaveAttribute("href", "/attachments");
     expect(screen.queryByRole("link", { name: "common.inbox" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
     expect(screen.getByText("User menu").closest("footer")).not.toBeNull();
   });
 
@@ -434,12 +449,13 @@ describe("App sidebar logo", () => {
     expect(screen.queryByRole("link", { name: "common.home" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.attachments" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "common.inbox" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "common.about" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "common.about" })).toHaveAttribute("href", "/about");
     expect(screen.getByRole("link", { name: "common.sign-in-to-memos" }).closest("footer")).not.toBeNull();
   });
 
   it.each(["/about", "/About/"])("keeps the About sidebar entry hidden for a guest on %s", (path) => {
     authState.currentUser = undefined;
+    instanceState.hideAboutNavigation = true;
     render(
       <MemoryRouter initialEntries={[path]}>
         <AppSidebar />

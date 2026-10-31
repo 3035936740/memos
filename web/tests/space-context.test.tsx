@@ -23,6 +23,10 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 
 vi.mock("@/hooks/useSpaceQueries", () => ({
   useSpaces: () => state.query,
+  useSpace: (_viewer: unknown, name?: string) => ({
+    data: [...state.query.data, newlyCreatedSpace].find((space) => space.name === name),
+    isError: false,
+  }),
   usePagedSpaces: () => ({ data: undefined }),
   useBatchSpaces: (_viewer: unknown, names: string[]) => ({
     data: { spaces: [...state.query.data, newlyCreatedSpace].filter((space) => names.includes(space.name)) },
@@ -88,6 +92,7 @@ const renderProvider = (initialPath = "/explore") =>
 describe("SpaceProvider", () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     state.currentUser = { name: "users/alice" };
     state.query = { data: [], isSuccess: true, isPending: false, isError: false };
   });
@@ -138,6 +143,7 @@ describe("SpaceProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("selected-name")).toHaveTextContent("Memos"));
     expect(sessionStorage.getItem(key)).toBeNull();
+    expect(screen.getByTestId("path").textContent).toBe("/explore");
   });
 
   it("preserves a stored selection when the Space list fails transiently", () => {
@@ -239,25 +245,30 @@ describe("SpaceProvider", () => {
     expect(sessionStorage.getItem(getSelectedSpaceStorageKey("users/alice"))).toBeNull();
   });
 
-  it("isolates the active selection across account changes", () => {
+  it.each([
+    ["/memos/123", "spaces/personal"],
+    ["/space/product", "spaces/product"],
+  ])("isolates account selections while respecting the explicit Space URL on %s", (initialPath, expectedSpaceName) => {
     const product = { name: "spaces/product", title: "Product", description: "" };
     const personal = { name: "spaces/personal", title: "Personal", description: "" };
     state.query.data = [product, personal];
     sessionStorage.setItem(getSelectedSpaceStorageKey("users/alice"), product.name);
     sessionStorage.setItem(getSelectedSpaceStorageKey("users/bob"), personal.name);
-    const view = renderProvider();
+    const view = renderProvider(initialPath);
 
     expect(screen.getByTestId("selected-name")).toHaveTextContent(product.name);
 
     state.currentUser = { name: "users/bob" };
     view.rerender(
-      <MemoryRouter initialEntries={["/explore"]}>
+      <MemoryRouter initialEntries={[initialPath]}>
         <SpaceProvider>
           <Probe />
         </SpaceProvider>
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId("selected-name")).toHaveTextContent(personal.name);
+    expect(screen.getByTestId("selected-name")).toHaveTextContent(expectedSpaceName);
+    expect(sessionStorage.getItem(getSelectedSpaceStorageKey("users/alice"))).toBe(product.name);
+    expect(sessionStorage.getItem(getSelectedSpaceStorageKey("users/bob"))).toBe(personal.name);
   });
 });

@@ -38,6 +38,10 @@ vi.mock("@/hooks/useCurrentUser", () => ({
 
 vi.mock("@/hooks/useSpaceQueries", () => ({
   useSpaces: () => ({ data: state.spaces, isSuccess: true, isPending: false, isError: false }),
+  useSpace: (_viewer: unknown, name?: string) => ({
+    data: state.spaces.find((space) => space.name === name),
+    isError: false,
+  }),
   usePagedSpaces: () => ({ data: undefined }),
   useBatchSpaces: (_viewer: unknown, names: string[]) => ({
     data: { spaces: state.spaces.filter((space) => names.includes(space.name)) },
@@ -74,6 +78,7 @@ const Harness = () => {
 describe("Quick Find navigation", () => {
   beforeEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
     state.currentUser = { name: "users/alice" };
     state.spaces = [{ name: "spaces/product", title: "Product", description: "" }];
     state.filters = [];

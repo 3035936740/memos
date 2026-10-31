@@ -52,6 +52,10 @@ vi.mock("@/components/StyledBlog/StyleReactionEngine", () => ({
   default: () => null,
 }));
 
+vi.mock("@/components/StylePackPreviewBar", () => ({
+  default: () => null,
+}));
+
 vi.mock("@/contexts/MusicPlayerContext", () => ({
   MusicPlayerProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));

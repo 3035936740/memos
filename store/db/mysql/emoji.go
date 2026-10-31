@@ -62,8 +62,8 @@ func (d *DB) DeleteEmojiGroup(ctx context.Context, id int32) error {
 }
 
 func (d *DB) CreateEmoji(ctx context.Context, emoji *store.Emoji) (*store.Emoji, error) {
-	result, err := d.db.ExecContext(ctx, `INSERT INTO emoji(group_id,name,filename,type,size,storage_type,reference,storage_id,storage_key,blob)
-		VALUES(?,?,?,?,?,?,?,?,?,?)`, emoji.GroupID, emoji.Name, emoji.Filename, emoji.Type, emoji.Size, emoji.StorageType, emoji.Reference,
+	result, err := d.db.ExecContext(ctx, "INSERT INTO emoji(group_id,name,filename,type,size,storage_type,reference,storage_id,storage_key,`blob`) "+
+		"VALUES(?,?,?,?,?,?,?,?,?,?)", emoji.GroupID, emoji.Name, emoji.Filename, emoji.Type, emoji.Size, emoji.StorageType, emoji.Reference,
 		emoji.StorageID, emoji.StorageKey, emoji.Blob)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (d *DB) CreateEmoji(ctx context.Context, emoji *store.Emoji) (*store.Emoji,
 func (d *DB) ListEmojis(ctx context.Context, find *store.FindEmoji) ([]*store.Emoji, error) {
 	fields := []string{"id", "group_id", "created_ts", "updated_ts", "name", "filename", "type", "size", "storage_type", "reference", "storage_id", "storage_key"}
 	if find != nil && find.GetBlob {
-		fields = append(fields, "blob")
+		fields = append(fields, "`blob`")
 	}
 	where, args := []string{}, []any{}
 	if find != nil {

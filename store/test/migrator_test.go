@@ -62,15 +62,15 @@ func TestFreshInstall(t *testing.T) {
 	// The fresh schema supports memo-local Space placement without adding a
 	// canonical thread shape. COMMENT remains an ordinary relation row.
 	driver := getDriverFromEnv()
-	insertSpace := "INSERT INTO space (id, uid, title, description) VALUES (?, ?, ?, ?)"
+	insertSpace := "INSERT INTO space (id, uid, title, description, avatar_url) VALUES (?, ?, ?, ?, ?)"
 	insertMemo := "INSERT INTO memo (id, uid, creator_id, content, visibility, payload, space_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
 	insertRelation := "INSERT INTO memo_relation (memo_id, related_memo_id, type) VALUES (?, ?, ?)"
 	if driver == "postgres" {
-		insertSpace = "INSERT INTO space (id, uid, title, description) VALUES ($1, $2, $3, $4)"
+		insertSpace = "INSERT INTO space (id, uid, title, description, avatar_url) VALUES ($1, $2, $3, $4, $5)"
 		insertMemo = "INSERT INTO memo (id, uid, creator_id, content, visibility, payload, space_id) VALUES ($1, $2, $3, $4, $5, $6, $7)"
 		insertRelation = "INSERT INTO memo_relation (memo_id, related_memo_id, type) VALUES ($1, $2, $3)"
 	}
-	_, err = ts.GetDriver().GetDB().ExecContext(ctx, insertSpace, 900001, "fresh-space", "Fresh Space", "schema fixture")
+	_, err = ts.GetDriver().GetDB().ExecContext(ctx, insertSpace, 900001, "fresh-space", "Fresh Space", "schema fixture", "")
 	require.NoError(t, err)
 	_, err = ts.GetDriver().GetDB().ExecContext(ctx, insertMemo, 900001, "fresh-context", 1, "context", store.Public, `{}`, nil)
 	require.NoError(t, err)
